@@ -1,0 +1,91 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block title %}Login - InventTech{% endblock %}
+
+{% block content %}
+<div class="shell">
+    <div class="frame">
+
+        <!-- LEFT GLASS WINDOW -->
+        <section class="left">
+            <div class="pill">TEXTILE ERP</div>
+
+            <div class="left-bottom">
+                <h1>Track<br>Every Lot,<br>Every Stitch</h1>
+                <p>
+                    Purchase → Inward (GRN) → Lot Stock → Program → Cutting → Stitching → Finishing → Dispatch.
+                    Manage your complete factory workflow in one system.
+                </p>
+            </div>
+        </section>
+
+        <!-- RIGHT LOGIN CARD -->
+        <section class="right">
+            <div class="brand">
+                <img src="{% static 'img/loginlogo.jpg' %}" alt="InventTech">
+                <div class="brand-text">
+                    <div class="brand-name">InventTech</div>
+                    <div class="brand-sub">Inventory • Production • Dispatch</div>
+                </div>
+            </div>
+
+            <div class="title">
+                <h2>Welcome Back</h2>
+                <p>Sign in to continue to your dashboard.</p>
+            </div>
+
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form class="form" method="post">
+                {% csrf_token %}
+
+                <div class="field">
+                    <label>Username</label>
+                    <input class="input" name="username" placeholder="Enter your username" required>
+                </div>
+
+                <div class="field">
+                    <label>Password</label>
+                    <div class="pw-wrap">
+                        <input id="password" class="input" name="password" type="password"
+                            placeholder="Enter your password" required>
+                        <button class="pw-btn" type="button" onclick="togglePassword(event)">Show</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <label class="chk">
+                        <input type="checkbox" name="remember_me">
+                        Remember me
+                    </label>
+
+                    <a class="link" href="{% url 'password_reset' %}">Forgot Password?</a>
+                </div>
+
+                <button class="btn" type="submit">Sign In</button>
+
+                <div class="footer">
+                    Don’t have an account? <a class="link" href="{% url 'signup' %}">Sign Up</a>
+                </div>
+            </form>
+        </section>
+
+    </div>
+</div>
+
+<script>
+    function togglePassword(e) {
+        const inp = document.getElementById("password");
+        const btn = e.currentTarget;
+        if (inp.type === "password") {
+            inp.type = "text";
+            btn.textContent = "Hide";
+        } else {
+            inp.type = "password";
+            btn.textContent = "Show";
+        }
+    }
+</script>
+{% endblock %}

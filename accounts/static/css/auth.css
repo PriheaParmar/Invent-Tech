@@ -1,0 +1,334 @@
+/* accounts/static/css/auth.css */
+
+:root{
+  /* Your 3 brand colors */
+  --blue: rgba(28, 109, 216, 1);
+  --pink: rgba(238, 61, 133, 1);
+  --orange: rgba(250, 189, 100, 1);
+
+  --radius: 28px;
+  --text: #0f172a;
+  --muted:#6b7280;
+
+  /* Background image config (TUNE ONLY THESE 2 if needed) */
+  --bg-img: url("../img/bglogin3.jpg");
+  --img-size: cover;
+
+  /* ✅ Adjust these 2 numbers to align left panel with body */
+  --img-pos-x: 78%;
+  --img-pos-y: 62%;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  color:white;
+
+  /* SAME image scale/position used here and in .left for perfect “window” effect */
+  background-image:
+    radial-gradient(1100px 650px at 18% 20%, rgba(238, 61, 133, .35), transparent 60%),
+    radial-gradient(900px 520px at 82% 26%, rgba(28, 109, 216, .28), transparent 60%),
+    radial-gradient(900px 560px at 76% 88%, rgba(250, 189, 100, .22), transparent 60%),
+    var(--bg-img),
+    linear-gradient(120deg, #070711, #0b0b12);
+
+  background-repeat: no-repeat;
+
+  background-size:
+    auto, auto, auto,
+    var(--img-size),
+    auto;
+
+  background-position:
+    18% 20%,
+    82% 26%,
+    76% 88%,
+    var(--img-pos-x) var(--img-pos-y),
+    center;
+
+  /* Key for window alignment */
+  background-attachment: fixed, fixed, fixed, fixed, fixed;
+
+  overflow:hidden;
+}
+
+/* OUTER CONTAINER */
+.shell{
+  width:min(1180px, 100%);
+  border-radius: var(--radius);
+  box-shadow: 0 26px 90px rgba(0,0,0,.42);
+}
+
+/* FRAME (small dark padding like reference) */
+.frame{
+  display:grid;
+  grid-template-columns: 1.06fr 1fr;
+  gap:18px;
+  border-radius: var(--radius);
+  overflow:hidden;
+  padding:18px;
+  background:white; 
+}
+
+/* LEFT PANEL — Window effect by using SAME bg image position/size */
+.left{
+  position:relative;
+  border-radius: 22px;
+  overflow:hidden;
+  min-height: 640px;
+  padding:28px;
+  isolation:isolate;
+
+  background-image:
+    radial-gradient(1100px 650px at 18% 20%, rgba(238, 61, 133, .20), transparent 60%),
+    radial-gradient(900px 520px at 82% 26%, rgba(28, 109, 216, .18), transparent 60%),
+    radial-gradient(900px 560px at 76% 88%, rgba(250, 189, 100, .14), transparent 60%),
+    var(--bg-img);
+
+  background-repeat: no-repeat;
+
+  background-size: auto, auto, auto, var(--img-size);
+
+  background-position:
+    18% 20%,
+    82% 26%,
+    76% 88%,
+    var(--img-pos-x) var(--img-pos-y);
+
+  background-attachment: fixed, fixed, fixed, fixed;
+
+  border: 1px solid rgba(255,255,255,.22);
+}
+
+/* SINGLE inner white frame (like reference) */
+.left::before{
+  content:"";
+  position:absolute;
+  inset:18px;
+  border-radius: 18px;
+  z-index:1;
+  pointer-events:none;
+}
+
+/* bottom fade (no blur) */
+.left::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.52));
+  pointer-events:none;
+}
+
+.pill, .left-bottom{ position:relative; z-index:2; }
+
+.pill{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:999px;
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,255,255,.25);
+  font-size:11px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  opacity:.95;
+}
+
+.left-bottom{
+  position:absolute;
+  left:30px;
+  right:30px;
+  bottom:26px;
+}
+
+.left h1{
+  margin:0;
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  font-weight:900;
+  font-size:62px;
+  line-height:.98;
+  letter-spacing:-.02em;
+}
+
+.left p{
+  margin:10px 0 0;
+  font-size:13px;
+  line-height:1.45;
+  opacity:.88;
+  max-width: 560px;
+}
+
+/* RIGHT LOGIN CARD */
+.right{
+  background:#fff;
+  border-radius: 22px;
+  padding:30px 40px;
+  color: var(--text);
+  display:flex;
+  flex-direction:column;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  margin-top:4px;
+}
+
+.brand img{
+  width:28px;height:28px;
+  border-radius:8px;
+  object-fit:cover;
+  border:1px solid rgba(15,23,42,.12);
+}
+
+.brand-name{ font-weight:900; }
+.brand-sub{ font-size:11px; color: var(--muted); margin-top:2px; }
+
+.title{ margin-top:32px; text-align:center; }
+.title h2{
+  margin:0;
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  font-size:40px;
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+.title p{ margin:8px 0 0; color: var(--muted); font-size:12px; }
+
+/* form */
+.error{
+  margin-top:18px;
+  background:#fff1f2;
+  border:1px solid #ffe4e6;
+  color:#9f1239;
+  padding:10px 12px;
+  border-radius:14px;
+  font-size:13px;
+}
+
+.form{
+  margin-top:22px;
+  width:min(440px, 100%);
+  margin-left:auto;
+  margin-right:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.field{ display:flex; flex-direction:column; gap:7px; }
+label{ font-size:12px; color: rgba(15,23,42,.82); }
+
+.input{
+  background:#f5f7fb;
+  border:1px solid #eef0f6;
+  border-radius:14px;
+  padding:13px 14px;
+  outline:none;
+  font-size:14px;
+}
+.input:focus{
+  border-color: rgba(28, 109, 216, .35);
+  box-shadow: 0 0 0 5px rgba(28, 109, 216, .14);
+  background:#fff;
+}
+
+.pw-wrap{ position:relative; }
+.pw-btn{
+  position:absolute;
+  right:10px; top:50%;
+  transform: translateY(-50%);
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  padding:8px 10px;
+  border-radius:10px;
+  color:#475569;
+  font-size:12px;
+}
+.pw-btn:hover{ background: rgba(15,23,42,.06); }
+
+.row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  font-size:12px;
+  color: var(--muted);
+}
+.chk{ display:flex; align-items:center; gap:8px; }
+
+.link{
+  color:#0f172a;
+  font-weight:800;
+  text-decoration:none;
+}
+.link:hover{ text-decoration:underline; }
+
+/* gradient button with your 3 colors */
+.btn{
+  margin-top:6px;
+  border:none;
+  border-radius:14px;
+  padding:13px 14px;
+  cursor:pointer;
+  font-weight:900;
+  font-size:14px;
+  color:white;
+background: #000;}
+
+.footer{ margin-top:14px; text-align:center; color: var(--muted); font-size:12px; }
+
+/* responsive */
+@media (max-width: 940px){
+  .frame{ grid-template-columns: 1fr; }
+  .left{ min-height: 320px; }
+  .left h1{ font-size:44px; }
+}
+
+/* Make Django form widgets match our input style */
+.form input[type="text"],
+.form input[type="email"],
+.form input[type="password"]{
+  width: 100%;
+  background:#f5f7fb;
+  border:1px solid #eef0f6;
+  border-radius:14px;
+  padding:13px 14px;
+  outline:none;
+  font-size:14px;
+}
+.form input:focus{
+  border-color: rgba(28, 109, 216, .35);
+  box-shadow: 0 0 0 5px rgba(28, 109, 216, .14);
+  background:#fff;
+}
+/* --- FIX: allow clicking/typing in inputs --- */
+
+/* Background overlays must never capture clicks */
+body::before,
+body::after,
+.left::before,
+.left::after{
+  pointer-events: none !important;
+}
+
+/* Ensure right card is above anything */
+.shell, .frame, .left, .right{
+  position: relative;
+}
+.right{
+  z-index: 10;
+}
+.left{
+  z-index: 1;
+}

@@ -1,0 +1,46 @@
+InventTech/
+├─ manage.py
+├─ requirements.txt
+├─ README.md
+├─ .env
+├─ .gitignore
+│
+├─ config/                         # project config
+│  ├─ __init__.py
+│  ├─ settings/
+│  │  ├─ __init__.py
+│  │  ├─ base.py
+│  │  ├─ dev.py
+│  │  └─ prod.py
+│  ├─ urls.py
+│  ├─ wsgi.py
+│  └─ asgi.py
+│
+├─ apps/                           # all modules
+│  ├─ __init__.py
+│  │
+│  ├─ accounts/                    # login, users, roles, permissions
+│  ├─ masters/                     # materials, parties, warehouse, uom
+│  ├─ procurement/                 # purchase orders
+│  ├─ inventory/                   # lots, GRN/inward, stock ledger
+│  ├─ production/                  # program, cutting, stitching, finishing
+│  ├─ sales/                       # sales order, dispatch, invoice
+│  ├─ reports/                     # dashboards, exports
+│  └─ integrations/                # e-invoice/e-way bill etc.
+│
+├─ templates/                      # global templates
+│  ├─ base.html
+│  └─ partials/
+│     ├─ navbar.html
+│     └─ messages.html
+│
+├─ static/
+│  ├─ css/
+│  ├─ js/
+│  └─ img/
+│
+├─ media/                          # uploads (techpacks, docs)
+│
+└─ scripts/                        # imports, seeders
+   ├─ seed_data.py
+   └─ import_materials.py

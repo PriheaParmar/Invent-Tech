@@ -1,0 +1,94 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block title %}Sign Up - InventTech{% endblock %}
+
+{% block content %}
+<div class="shell">
+  <div class="frame">
+
+    <!-- LEFT PANEL -->
+    <section class="left">
+      <div class="pill">TEXTILE ERP</div>
+
+      <div class="left-bottom">
+        <h1>Create<br>Your Admin<br>Account</h1>
+        <p>
+          Start using Invent Tech to manage Inventory → Production → Dispatch.
+        </p>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL -->
+    <section class="right">
+
+      <div class="brand">
+        <img src="{% static 'img/loginlogo.jpg' %}" alt="InventTech">
+        <div>
+          <div class="brand-name">Invent Tech</div>
+          <div class="brand-sub">Inventory • Production • Dispatch</div>
+        </div>
+      </div>
+
+      <div class="title">
+        <h2>Sign Up</h2>
+        <p>Create your account to continue.</p>
+      </div>
+
+      {% if error %}
+        <div class="error">{{ error }}</div>
+      {% endif %}
+
+      <form class="form" method="post">
+        {% csrf_token %}
+
+        <div class="field">
+          <label>Username</label>
+          <input class="input" name="username" type="text" placeholder="Enter your username" required>
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <input class="input" name="email" type="email" placeholder="Enter your email" required>
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input id="pw1" class="input" name="password" type="password" placeholder="Create a password" required>
+            <button class="pw-btn" type="button" onclick="togglePw('pw1', this)">Show</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Confirm Password</label>
+          <div class="pw-wrap">
+            <input id="pw2" class="input" name="password2" type="password" placeholder="Confirm password" required>
+            <button class="pw-btn" type="button" onclick="togglePw('pw2', this)">Show</button>
+          </div>
+        </div>
+
+        <button class="btn" type="submit">Create Account</button>
+
+        <div class="footer">
+          Already have an account? <a class="link" href="{% url 'login' %}">Sign In</a>
+        </div>
+      </form>
+
+    </section>
+
+  </div>
+</div>
+
+<script>
+  function togglePw(id, btn){
+    const inp = document.getElementById(id);
+    if(inp.type === "password"){
+      inp.type = "text";
+      btn.textContent = "Hide";
+    } else {
+      inp.type = "password";
+      btn.textContent = "Show";
+    }
+  }
+</script>
+{% endblock %}
