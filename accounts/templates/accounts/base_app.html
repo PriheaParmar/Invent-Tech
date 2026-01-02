@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}InventTech{% endblock %}</title>
 
-  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=6001">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=6002">
   {% block extra_head %}{% endblock %}
 </head>
 
@@ -25,7 +25,6 @@
 
       <!-- cute collapse arrow -->
       <button id="sbToggle" class="sb-toggle" type="button" aria-label="Toggle sidebar">
-        <!-- Chevron Left (rotates when collapsed via CSS) -->
         <svg class="sb-toggle-ico" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M15 18l-6-6 6-6" />
         </svg>
@@ -34,12 +33,22 @@
       <div class="sb-nav">
         <div class="sb-label">General</div>
 
-        <a class="sb-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
-           href="{% url 'dashboard' %}">
+        <!-- ✅ SAME PAGE SECTION SWITCH -->
+        <a class="sb-link active" href="#" data-section="dashboard">
           <span class="sb-ico">
             <svg class="ico" viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10.5z"/></svg>
           </span>
           <span class="sb-text">Dashboard</span>
+        </a>
+
+        <a class="sb-link" href="#" data-section="utilities">
+          <span class="sb-ico">
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+              <path d="M19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/>
+            </svg>
+          </span>
+          <span class="sb-text">Utilities</span>
         </a>
 
         <a class="sb-link" href="#">
@@ -115,7 +124,7 @@
     <!-- MAIN -->
     <main class="main">
 
-      <!-- HEADER (formal, SVG icons, no logo) -->
+      <!-- HEADER -->
       <header class="app-header">
         <div class="h-left">
           <div class="h-title">{% block page_title %}Dashboard{% endblock %}</div>
@@ -145,7 +154,7 @@
             <svg class="ico" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7zM9.5 19a2.5 2.5 0 0 0 5 0"/></svg>
           </button>
           <button class="iconbtn" type="button" title="Settings">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/></svg>
+            <svg class="ico" viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/></svg>
           </button>
         </div>
       </header>
@@ -155,8 +164,43 @@
 
   </div>
 
-  <!-- use your existing JS file -->
+  <!-- existing JS -->
   <script src="{% static 'js/dashboard.js' %}?v=6001"></script>
+
+  <!-- ✅ SECTION SWITCHER (dashboard ⇄ utilities) -->
+  <script>
+  (function(){
+    function show(sectionName){
+      document.querySelectorAll(".page-section").forEach(sec=>{
+        sec.classList.remove("is-active");
+      });
+
+      const active = document.getElementById("section-" + sectionName);
+      if(active) active.classList.add("is-active");
+
+      document.querySelectorAll(".sb-link[data-section]").forEach(a=>{
+        a.classList.toggle("active", a.dataset.section === sectionName);
+      });
+
+      // update hash so refresh keeps section
+      if(sectionName === "utilities") location.hash = "utilities";
+      if(sectionName === "dashboard") location.hash = "";
+    }
+
+    document.addEventListener("click", function(e){
+      const link = e.target.closest(".sb-link[data-section]");
+      if(!link) return;
+      e.preventDefault();
+      show(link.dataset.section);
+    });
+
+    // initial load: if hash is #utilities, open that
+    const start = (location.hash || "").replace("#","").trim();
+    if(start === "utilities") show("utilities");
+    else show("dashboard");
+  })();
+  </script>
+
   {% block extra_js %}{% endblock %}
 </body>
 </html>

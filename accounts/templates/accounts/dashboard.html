@@ -5,6 +5,8 @@
 {% block page_subtitle %}Track lots, programs, and dispatch in one system.{% endblock %}
 
 {% block content %}
+<!-- =============================SECTION: Dashboard============================= -->
+<section id="section-dashboard" class="page-section is-active">
 <div class="canvas">
   <section class="grid">
 
@@ -146,6 +148,7 @@
     </div>
 
   </section>
+  
 
   <aside class="right">
     <div class="card right-card">
@@ -181,4 +184,112 @@
     </div>
   </aside>
 </div>
+</section>
+<!-- ============================================================================ -->
+
+<!--========================[ SECTION: Utilities]==============================-->
+<section id="section-utilities" class="page-section">
+  <div class="canvas">
+    <section class="grid">
+
+      <div class="card soft big c8">
+        <div class="card-head util-head">
+          <div>
+            <div class="card-title">Utilities</div>
+            <div class="card-sub">Masters & setup shortcuts (Material, Party, BOM, Units…)</div>
+          </div>
+
+          <div class="util-search util-search-sm">
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M21 21l-4.3-4.3"/>
+              <path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"/>
+            </svg>
+            <input id="utilSearch" type="text" placeholder="Search utilities...">
+          </div>
+        </div>
+
+        <div class="util-grid" id="utilGrid">
+          <a class="util-tile" href="#" data-key="jobber jobworker">
+            <span class="util-ico">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </span>
+            <div class="util-meta">
+              <div class="util-title">Jobber</div>
+              <div class="util-desc">Job workers & mapping</div>
+            </div>
+            <span class="util-tag">Masters</span>
+          </a>
+
+          <a class="util-tile" href="#" data-key="material trim yarn fabric">
+            <span class="util-ico">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+            </span>
+            <div class="util-meta">
+              <div class="util-title">Material / Trim</div>
+              <div class="util-desc">Fabric • Trims • Yarn</div>
+            </div>
+            <span class="util-tag">Masters</span>
+          </a>
+
+          <a class="util-tile" href="#" data-key="party customer supplier">
+            <span class="util-ico">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M3 21v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <div class="util-meta">
+              <div class="util-title">Party</div>
+              <div class="util-desc">Customers • Suppliers</div>
+            </div>
+            <span class="util-tag">Masters</span>
+          </a>
+
+          <a class="util-tile" href="#" data-key="location warehouse godown">
+            <span class="util-ico">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-8h6v8"/></svg>
+            </span>
+            <div class="util-meta">
+              <div class="util-title">Location</div>
+              <div class="util-desc">Warehouse setup</div>
+            </div>
+            <span class="util-tag">Masters</span>
+          </a>
+
+          <a class="util-tile" href="#" data-key="firm company gst">
+            <span class="util-ico">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 21V7l6-4 6 4v14"/></svg>
+            </span>
+            <div class="util-meta">
+              <div class="util-title">Firm</div>
+              <div class="util-desc">Company & branch</div>
+            </div>
+            <span class="util-tag">Admin</span>
+          </a>
+
+          <a class="util-tile" href="#" data-key="bom sku techpack">
+            <span class="util-ico">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M9 3h6v6H9z"/><path d="M4 14h7v7H4z"/><path d="M13 14h7v7h-7z"/></svg>
+            </span>
+            <div class="util-meta">
+              <div class="util-title">BOM</div>
+              <div class="util-desc">Bill of material</div>
+            </div>
+            <span class="util-tag">Production</span>
+          </a>
+
+          <a class="util-tile" href="#" data-key="units kg meter pcs">
+            <span class="util-ico">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M6 21h12"/></svg>
+            </span>
+            <div class="util-meta">
+              <div class="util-title">Material Unit</div>
+              <div class="util-desc">kg • meter • pcs</div>
+            </div>
+            <span class="util-tag">Masters</span>
+          </a>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</section>
+
 {% endblock %}

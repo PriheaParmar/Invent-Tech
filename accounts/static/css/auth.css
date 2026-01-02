@@ -11,7 +11,7 @@
   --muted:#6b7280;
 
   /* Background image config (TUNE ONLY THESE 2 if needed) */
-  --bg-img: url("../img/bglogin.png");
+  --bg-img: url("../img/bglogin5.png");
   --img-size: cover;
 
   /* ✅ Adjust these 2 numbers to align left panel with body */
@@ -39,9 +39,10 @@ body{
     radial-gradient(900px 560px at 76% 88%, rgba(250, 189, 100, .22), transparent 60%),
     var(--bg-img),
     linear-gradient(120deg, #070711, #0b0b12);
+    opacity: 95%;
 
   background-repeat: no-repeat;
-
+  
   background-size:
     auto, auto, auto,
     var(--img-size),
@@ -92,6 +93,7 @@ body{
     radial-gradient(900px 520px at 82% 26%, rgba(28, 109, 216, .18), transparent 60%),
     radial-gradient(900px 560px at 76% 88%, rgba(250, 189, 100, .14), transparent 60%),
     var(--bg-img);
+    opacity: 95%;
 
   background-repeat: no-repeat;
 
