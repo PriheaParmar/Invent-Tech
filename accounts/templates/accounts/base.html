@@ -6,10 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}InventTech{% endblock %}</title>
 
-  <!-- bump v= to avoid cache -->
-  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=100">
+  <!-- Auth CSS (login/signup window design) -->
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=1000">
+  {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="auth">
   {% block content %}{% endblock %}
 </body>
 </html>

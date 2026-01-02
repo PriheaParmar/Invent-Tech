@@ -1,14 +1,184 @@
-<!doctype html>
-<html>
-<head>
-  <title>InventTech Dashboard</title>
-</head>
-<body>
-  <h2>Welcome, {{ request.user.username }}</h2>
+{% extends "accounts/base_app.html" %}
+{% block title %}Dashboard - InventTech{% endblock %}
 
-  <form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-  </form>
-</body>
-</html>
+{% block page_title %}Good morning, {{ request.user.username|default:"Admin" }}{% endblock %}
+{% block page_subtitle %}Track lots, programs, and dispatch in one system.{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  <section class="grid">
+
+    <div class="card soft c1">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Inward (GRN)</div>
+          <div class="card-sub">Today’s incoming materials</div>
+        </div>
+        <span class="pill">Live</span>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-big">9</div>
+        <div class="kpi-sub">pending GRNs</div>
+      </div>
+
+      <div class="mini-bars">
+        <span style="height:18px"></span><span style="height:30px"></span><span style="height:14px"></span>
+        <span style="height:34px"></span><span style="height:22px"></span><span style="height:28px"></span>
+      </div>
+    </div>
+
+    <div class="card soft c2">
+      <div class="card-head">
+        <div>
+          <div class="card-title">WIP Programs</div>
+          <div class="card-sub">Cutting → Stitching → Finishing</div>
+        </div>
+        <span class="pill">Shift A</span>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-big">38</div>
+        <div class="kpi-sub">running programs</div>
+      </div>
+
+      <div class="chips">
+        <span class="chip">Cutting: 11</span>
+        <span class="chip">Stitching: 19</span>
+        <span class="chip">Finishing: 8</span>
+      </div>
+    </div>
+
+    <div class="card soft c3">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Dispatch</div>
+          <div class="card-sub">Invoices • E-way • Challan</div>
+        </div>
+        <span class="pill">Today</span>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-big">14</div>
+        <div class="kpi-sub">scheduled</div>
+      </div>
+
+      <div class="chips">
+        <span class="chip">Pending: 6</span>
+        <span class="chip">Done: 8</span>
+      </div>
+    </div>
+
+    <div class="card soft big c4">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Production Trend</div>
+          <div class="card-sub">Last 14 days output</div>
+        </div>
+        <span class="pill">Overview</span>
+      </div>
+
+      <div class="chart">
+        <div class="chart-grid"></div>
+        <div class="chart-line"></div>
+      </div>
+
+      <div class="tiny-note">Later we connect this to real program + stock ledger data.</div>
+    </div>
+
+    <div class="card soft mid c5">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Stage Load</div>
+          <div class="card-sub">Capacity snapshot</div>
+        </div>
+        <span class="pill">Now</span>
+      </div>
+
+      <div class="prog">
+        <div class="row"><div class="nm">Cutting</div><div class="bar"><span style="width:62%"></span></div><div class="vl">62%</div></div>
+        <div class="row"><div class="nm">Stitching</div><div class="bar"><span style="width:44%"></span></div><div class="vl">44%</div></div>
+        <div class="row"><div class="nm">Finishing</div><div class="bar"><span style="width:28%"></span></div><div class="vl">28%</div></div>
+      </div>
+
+      <div class="chips" style="margin-top:10px;">
+        <span class="chip">QC Hold: 2</span>
+        <span class="chip">Delayed: 5</span>
+      </div>
+    </div>
+
+    <div class="card soft list c6">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Active Programs</div>
+          <div class="card-sub">Recent production runs</div>
+        </div>
+        <a class="link" href="#">Show all</a>
+      </div>
+
+      <table class="table">
+        <thead><tr><th>Program</th><th>Style</th><th>Stage</th><th>Qty</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>PRG-0091</td><td>S-22</td><td>Stitching</td><td>2,400</td><td><span class="status warn">In Progress</span></td></tr>
+          <tr><td>PRG-0090</td><td>S-18</td><td>Cutting</td><td>1,200</td><td><span class="status ok">On Track</span></td></tr>
+          <tr><td>PRG-0087</td><td>S-12</td><td>Finishing</td><td>900</td><td><span class="status bad">Delayed</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card soft list c7">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Lot Watch</div>
+          <div class="card-sub">Lots needing attention</div>
+        </div>
+        <span class="pill">Alerts</span>
+      </div>
+
+      <table class="table">
+        <thead><tr><th>Lot</th><th>Material</th><th>Available</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td>Y-102</td><td>Yarn</td><td>120 kg</td><td><span class="status bad">Low</span></td></tr>
+          <tr><td>G-211</td><td>Greige</td><td>480 m</td><td><span class="status warn">QC</span></td></tr>
+          <tr><td>T-044</td><td>Trims</td><td>2,600 pcs</td><td><span class="status ok">OK</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+  <aside class="right">
+    <div class="card right-card">
+      <div class="right-head">
+        <div class="rh-title">May 2024</div>
+        <span class="pill">Shift A</span>
+      </div>
+
+      <div class="calendar">
+        <div class="wk">M</div><div class="wk">T</div><div class="wk">W</div><div class="wk">T</div><div class="wk">F</div><div class="wk">S</div><div class="wk">S</div>
+        <div class="d">1</div><div class="d">2</div><div class="d">3</div><div class="d">4</div><div class="d">5</div><div class="d">6</div><div class="d">7</div>
+        <div class="d">8</div><div class="d">9</div><div class="d">10</div><div class="d">11</div><div class="d active">12</div><div class="d">13</div><div class="d">14</div>
+        <div class="d">15</div><div class="d">16</div><div class="d">17</div><div class="d">18</div><div class="d">19</div><div class="d">20</div><div class="d">21</div>
+        <div class="d">22</div><div class="d">23</div><div class="d">24</div><div class="d">25</div><div class="d">26</div><div class="d">27</div><div class="d">28</div>
+        <div class="d">29</div><div class="d">30</div><div class="d">31</div>
+      </div>
+    </div>
+
+    <div class="card right-card">
+      <div class="right-head">
+        <div>
+          <div class="card-title">Today’s Timeline</div>
+          <div class="card-sub">Dispatch + GRN + checkpoints</div>
+        </div>
+        <span class="pill">May 12</span>
+      </div>
+
+      <div class="timeline">
+        <div class="titem"><div class="t-time">09:30</div><div class="t-dot"></div><div><div class="t-title">GRN Verification</div><div class="t-sub">Yarn Lot Y-148 QC pending</div></div></div>
+        <div class="titem"><div class="t-time">12:00</div><div class="t-dot"></div><div><div class="t-title">Stitching Handover</div><div class="t-sub">PRG-0091 bundle issue to line-3</div></div></div>
+        <div class="titem"><div class="t-time">04:00</div><div class="t-dot"></div><div><div class="t-title">Dispatch Window</div><div class="t-sub">INV-00211 invoice + e-way</div></div></div>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

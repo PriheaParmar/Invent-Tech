@@ -11,7 +11,7 @@
   --muted:#6b7280;
 
   /* Background image config (TUNE ONLY THESE 2 if needed) */
-  --bg-img: url("../img/bglogin3.jpg");
+  --bg-img: url("../img/bglogin.png");
   --img-size: cover;
 
   /* ✅ Adjust these 2 numbers to align left panel with body */
@@ -185,10 +185,9 @@ body{
 }
 
 .brand img{
-  width:28px;height:28px;
+  width:35px;height:35px;
   border-radius:8px;
   object-fit:cover;
-  border:1px solid rgba(15,23,42,.12);
 }
 
 .brand-name{ font-weight:900; }

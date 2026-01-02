@@ -1,0 +1,162 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}InventTech{% endblock %}</title>
+
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=6001">
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="app">
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sb-brand">
+        <div class="sb-mark"></div>
+        <div class="sb-brand-text">
+          <div class="sb-title">Invent Tech</div>
+          <div class="sb-sub">Textile ERP</div>
+        </div>
+      </div>
+
+      <!-- cute collapse arrow -->
+      <button id="sbToggle" class="sb-toggle" type="button" aria-label="Toggle sidebar">
+        <!-- Chevron Left (rotates when collapsed via CSS) -->
+        <svg class="sb-toggle-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
+      <div class="sb-nav">
+        <div class="sb-label">General</div>
+
+        <a class="sb-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+           href="{% url 'dashboard' %}">
+          <span class="sb-ico">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10.5z"/></svg>
+          </span>
+          <span class="sb-text">Dashboard</span>
+        </a>
+
+        <a class="sb-link" href="#">
+          <span class="sb-ico">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v10l9 5 9-5V8zM3 8l9 5 9-5"/></svg>
+          </span>
+          <span class="sb-text">Inventory</span>
+        </a>
+
+        <a class="sb-link" href="#">
+          <span class="sb-ico">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12M9 21v-8h6v8"/></svg>
+          </span>
+          <span class="sb-text">Production</span>
+        </a>
+
+        <a class="sb-link" href="#">
+          <span class="sb-ico">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M3 17V6a1 1 0 0 1 1-1h12v12H4a1 1 0 0 1-1-1zm13 0h3l2 2v2h-5v-4z"/></svg>
+          </span>
+          <span class="sb-text">Dispatch</span>
+        </a>
+
+        <div class="sb-label">Masters</div>
+
+        <a class="sb-link" href="#">
+          <span class="sb-ico">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M6 20V10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10M8 8V6a4 4 0 1 1 8 0v2"/></svg>
+          </span>
+          <span class="sb-text">Material Master</span>
+        </a>
+
+        <a class="sb-link" href="#">
+          <span class="sb-ico">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21a8 8 0 0 1 16 0"/></svg>
+          </span>
+          <span class="sb-text">Parties</span>
+        </a>
+
+        <div class="sb-label">Reports</div>
+
+        <a class="sb-link" href="#">
+          <span class="sb-ico">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 17V9m4 8V7m4 10v-5"/></svg>
+          </span>
+          <span class="sb-text">Reports</span>
+        </a>
+
+        <a class="sb-link" href="#">
+          <span class="sb-ico">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/></svg>
+          </span>
+          <span class="sb-text">Settings</span>
+        </a>
+      </div>
+
+      <div class="sb-footer">
+        <div class="sb-user">
+          <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
+          <div class="sb-user-meta">
+            <div class="sb-user-name">{{ request.user.username }}</div>
+            <div class="sb-user-role">Admin</div>
+          </div>
+        </div>
+
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button class="btn btn-ghost" type="submit">Logout</button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- HEADER (formal, SVG icons, no logo) -->
+      <header class="app-header">
+        <div class="h-left">
+          <div class="h-title">{% block page_title %}Dashboard{% endblock %}</div>
+          <div class="h-sub">{% block page_subtitle %}Inventory • Production • Dispatch{% endblock %}</div>
+        </div>
+
+        <div class="h-center">
+          <div class="h-search">
+            <span class="h-search-ico">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M10.5 18a7.5 7.5 0 1 1 5.3-12.8A7.5 7.5 0 0 1 10.5 18zm0 0l7 7"/></svg>
+            </span>
+            <input placeholder="Search lot / program / party / invoice…" />
+            <div class="h-tabs">
+              <button class="h-tab active" type="button">Inventory</button>
+              <button class="h-tab" type="button">Production</button>
+              <button class="h-tab" type="button">Dispatch</button>
+              <button class="h-tab" type="button">Reports</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="h-right">
+          <button class="iconbtn" type="button" title="Profile">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-8 9a8 8 0 0 1 16 0"/></svg>
+          </button>
+          <button class="iconbtn" type="button" title="Notifications">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7zM9.5 19a2.5 2.5 0 0 0 5 0"/></svg>
+          </button>
+          <button class="iconbtn" type="button" title="Settings">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      {% block content %}{% endblock %}
+    </main>
+
+  </div>
+
+  <!-- use your existing JS file -->
+  <script src="{% static 'js/dashboard.js' %}?v=6001"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
