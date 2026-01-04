@@ -1,295 +1,721 @@
 {% extends "accounts/base_app.html" %}
+{% load static %}
+
 {% block title %}Dashboard - InventTech{% endblock %}
 
 {% block page_title %}Good morning, {{ request.user.username|default:"Admin" }}{% endblock %}
 {% block page_subtitle %}Track lots, programs, and dispatch in one system.{% endblock %}
 
 {% block content %}
-<!-- =============================SECTION: Dashboard============================= -->
+
+<!-- =========================================================
+  SECTION 1: DASHBOARD
+========================================================= -->
 <section id="section-dashboard" class="page-section is-active">
-<div class="canvas">
-  <section class="grid">
-
-    <div class="card soft c1">
-      <div class="card-head">
-        <div>
-          <div class="card-title">Inward (GRN)</div>
-          <div class="card-sub">Today’s incoming materials</div>
-        </div>
-        <span class="pill">Live</span>
-      </div>
-
-      <div class="kpi">
-        <div class="kpi-big">9</div>
-        <div class="kpi-sub">pending GRNs</div>
-      </div>
-
-      <div class="mini-bars">
-        <span style="height:18px"></span><span style="height:30px"></span><span style="height:14px"></span>
-        <span style="height:34px"></span><span style="height:22px"></span><span style="height:28px"></span>
-      </div>
-    </div>
-
-    <div class="card soft c2">
-      <div class="card-head">
-        <div>
-          <div class="card-title">WIP Programs</div>
-          <div class="card-sub">Cutting → Stitching → Finishing</div>
-        </div>
-        <span class="pill">Shift A</span>
-      </div>
-
-      <div class="kpi">
-        <div class="kpi-big">38</div>
-        <div class="kpi-sub">running programs</div>
-      </div>
-
-      <div class="chips">
-        <span class="chip">Cutting: 11</span>
-        <span class="chip">Stitching: 19</span>
-        <span class="chip">Finishing: 8</span>
-      </div>
-    </div>
-
-    <div class="card soft c3">
-      <div class="card-head">
-        <div>
-          <div class="card-title">Dispatch</div>
-          <div class="card-sub">Invoices • E-way • Challan</div>
-        </div>
-        <span class="pill">Today</span>
-      </div>
-
-      <div class="kpi">
-        <div class="kpi-big">14</div>
-        <div class="kpi-sub">scheduled</div>
-      </div>
-
-      <div class="chips">
-        <span class="chip">Pending: 6</span>
-        <span class="chip">Done: 8</span>
-      </div>
-    </div>
-
-    <div class="card soft big c4">
-      <div class="card-head">
-        <div>
-          <div class="card-title">Production Trend</div>
-          <div class="card-sub">Last 14 days output</div>
-        </div>
-        <span class="pill">Overview</span>
-      </div>
-
-      <div class="chart">
-        <div class="chart-grid"></div>
-        <div class="chart-line"></div>
-      </div>
-
-      <div class="tiny-note">Later we connect this to real program + stock ledger data.</div>
-    </div>
-
-    <div class="card soft mid c5">
-      <div class="card-head">
-        <div>
-          <div class="card-title">Stage Load</div>
-          <div class="card-sub">Capacity snapshot</div>
-        </div>
-        <span class="pill">Now</span>
-      </div>
-
-      <div class="prog">
-        <div class="row"><div class="nm">Cutting</div><div class="bar"><span style="width:62%"></span></div><div class="vl">62%</div></div>
-        <div class="row"><div class="nm">Stitching</div><div class="bar"><span style="width:44%"></span></div><div class="vl">44%</div></div>
-        <div class="row"><div class="nm">Finishing</div><div class="bar"><span style="width:28%"></span></div><div class="vl">28%</div></div>
-      </div>
-
-      <div class="chips" style="margin-top:10px;">
-        <span class="chip">QC Hold: 2</span>
-        <span class="chip">Delayed: 5</span>
-      </div>
-    </div>
-
-    <div class="card soft list c6">
-      <div class="card-head">
-        <div>
-          <div class="card-title">Active Programs</div>
-          <div class="card-sub">Recent production runs</div>
-        </div>
-        <a class="link" href="#">Show all</a>
-      </div>
-
-      <table class="table">
-        <thead><tr><th>Program</th><th>Style</th><th>Stage</th><th>Qty</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>PRG-0091</td><td>S-22</td><td>Stitching</td><td>2,400</td><td><span class="status warn">In Progress</span></td></tr>
-          <tr><td>PRG-0090</td><td>S-18</td><td>Cutting</td><td>1,200</td><td><span class="status ok">On Track</span></td></tr>
-          <tr><td>PRG-0087</td><td>S-12</td><td>Finishing</td><td>900</td><td><span class="status bad">Delayed</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card soft list c7">
-      <div class="card-head">
-        <div>
-          <div class="card-title">Lot Watch</div>
-          <div class="card-sub">Lots needing attention</div>
-        </div>
-        <span class="pill">Alerts</span>
-      </div>
-
-      <table class="table">
-        <thead><tr><th>Lot</th><th>Material</th><th>Available</th><th>State</th></tr></thead>
-        <tbody>
-          <tr><td>Y-102</td><td>Yarn</td><td>120 kg</td><td><span class="status bad">Low</span></td></tr>
-          <tr><td>G-211</td><td>Greige</td><td>480 m</td><td><span class="status warn">QC</span></td></tr>
-          <tr><td>T-044</td><td>Trims</td><td>2,600 pcs</td><td><span class="status ok">OK</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-
-  </section>
-  
-
-  <aside class="right">
-    <div class="card right-card">
-      <div class="right-head">
-        <div class="rh-title">May 2024</div>
-        <span class="pill">Shift A</span>
-      </div>
-
-      <div class="calendar">
-        <div class="wk">M</div><div class="wk">T</div><div class="wk">W</div><div class="wk">T</div><div class="wk">F</div><div class="wk">S</div><div class="wk">S</div>
-        <div class="d">1</div><div class="d">2</div><div class="d">3</div><div class="d">4</div><div class="d">5</div><div class="d">6</div><div class="d">7</div>
-        <div class="d">8</div><div class="d">9</div><div class="d">10</div><div class="d">11</div><div class="d active">12</div><div class="d">13</div><div class="d">14</div>
-        <div class="d">15</div><div class="d">16</div><div class="d">17</div><div class="d">18</div><div class="d">19</div><div class="d">20</div><div class="d">21</div>
-        <div class="d">22</div><div class="d">23</div><div class="d">24</div><div class="d">25</div><div class="d">26</div><div class="d">27</div><div class="d">28</div>
-        <div class="d">29</div><div class="d">30</div><div class="d">31</div>
-      </div>
-    </div>
-
-    <div class="card right-card">
-      <div class="right-head">
-        <div>
-          <div class="card-title">Today’s Timeline</div>
-          <div class="card-sub">Dispatch + GRN + checkpoints</div>
-        </div>
-        <span class="pill">May 12</span>
-      </div>
-
-      <div class="timeline">
-        <div class="titem"><div class="t-time">09:30</div><div class="t-dot"></div><div><div class="t-title">GRN Verification</div><div class="t-sub">Yarn Lot Y-148 QC pending</div></div></div>
-        <div class="titem"><div class="t-time">12:00</div><div class="t-dot"></div><div><div class="t-title">Stitching Handover</div><div class="t-sub">PRG-0091 bundle issue to line-3</div></div></div>
-        <div class="titem"><div class="t-time">04:00</div><div class="t-dot"></div><div><div class="t-title">Dispatch Window</div><div class="t-sub">INV-00211 invoice + e-way</div></div></div>
-      </div>
-    </div>
-  </aside>
-</div>
-</section>
-<!-- ============================================================================ -->
-
-<!--========================[ SECTION: Utilities]==============================-->
-<section id="section-utilities" class="page-section">
   <div class="canvas">
     <section class="grid">
 
-      <div class="card soft big c8">
-        <div class="card-head util-head">
+      <div class="card soft c1">
+        <div class="card-head">
           <div>
-            <div class="card-title">Utilities</div>
-            <div class="card-sub">Masters & setup shortcuts (Material, Party, BOM, Units…)</div>
+            <div class="card-title">Inward (GRN)</div>
+            <div class="card-sub">Today’s incoming materials</div>
           </div>
-
-          <div class="util-search util-search-sm">
-            <svg class="ico" viewBox="0 0 24 24">
-              <path d="M21 21l-4.3-4.3"/>
-              <path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"/>
-            </svg>
-            <input id="utilSearch" type="text" placeholder="Search utilities...">
-          </div>
+          <span class="pill">Live</span>
         </div>
 
-        <div class="util-grid" id="utilGrid">
-          <a class="util-tile" href="#" data-key="jobber jobworker">
-            <span class="util-ico">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            </span>
-            <div class="util-meta">
-              <div class="util-title">Jobber</div>
-              <div class="util-desc">Job workers & mapping</div>
-            </div>
-            <span class="util-tag">Masters</span>
-          </a>
+        <div class="kpi">
+          <div class="kpi-big">9</div>
+          <div class="kpi-sub">pending GRNs</div>
+        </div>
 
-          <a class="util-tile" href="#" data-key="material trim yarn fabric">
-            <span class="util-ico">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
-            </span>
-            <div class="util-meta">
-              <div class="util-title">Material / Trim</div>
-              <div class="util-desc">Fabric • Trims • Yarn</div>
-            </div>
-            <span class="util-tag">Masters</span>
-          </a>
-
-          <a class="util-tile" href="#" data-key="party customer supplier">
-            <span class="util-ico">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M3 21v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </span>
-            <div class="util-meta">
-              <div class="util-title">Party</div>
-              <div class="util-desc">Customers • Suppliers</div>
-            </div>
-            <span class="util-tag">Masters</span>
-          </a>
-
-          <a class="util-tile" href="#" data-key="location warehouse godown">
-            <span class="util-ico">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-8h6v8"/></svg>
-            </span>
-            <div class="util-meta">
-              <div class="util-title">Location</div>
-              <div class="util-desc">Warehouse setup</div>
-            </div>
-            <span class="util-tag">Masters</span>
-          </a>
-
-          <a class="util-tile" href="#" data-key="firm company gst">
-            <span class="util-ico">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 21V7l6-4 6 4v14"/></svg>
-            </span>
-            <div class="util-meta">
-              <div class="util-title">Firm</div>
-              <div class="util-desc">Company & branch</div>
-            </div>
-            <span class="util-tag">Admin</span>
-          </a>
-
-          <a class="util-tile" href="#" data-key="bom sku techpack">
-            <span class="util-ico">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M9 3h6v6H9z"/><path d="M4 14h7v7H4z"/><path d="M13 14h7v7h-7z"/></svg>
-            </span>
-            <div class="util-meta">
-              <div class="util-title">BOM</div>
-              <div class="util-desc">Bill of material</div>
-            </div>
-            <span class="util-tag">Production</span>
-          </a>
-
-          <a class="util-tile" href="#" data-key="units kg meter pcs">
-            <span class="util-ico">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M6 21h12"/></svg>
-            </span>
-            <div class="util-meta">
-              <div class="util-title">Material Unit</div>
-              <div class="util-desc">kg • meter • pcs</div>
-            </div>
-            <span class="util-tag">Masters</span>
-          </a>
+        <div class="mini-bars">
+          <span style="height:18px"></span><span style="height:30px"></span><span style="height:14px"></span>
+          <span style="height:34px"></span><span style="height:22px"></span><span style="height:28px"></span>
         </div>
       </div>
 
+      <div class="card soft c2">
+        <div class="card-head">
+          <div>
+            <div class="card-title">WIP Programs</div>
+            <div class="card-sub">Cutting → Stitching → Finishing</div>
+          </div>
+          <span class="pill">Shift A</span>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-big">38</div>
+          <div class="kpi-sub">running programs</div>
+        </div>
+
+        <div class="chips">
+          <span class="chip">Cutting: 11</span>
+          <span class="chip">Stitching: 19</span>
+          <span class="chip">Finishing: 8</span>
+        </div>
+      </div>
+
+      <div class="card soft c3">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Dispatch</div>
+            <div class="card-sub">Invoices • E-way • Challan</div>
+          </div>
+          <span class="pill">Today</span>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-big">14</div>
+          <div class="kpi-sub">scheduled</div>
+        </div>
+
+        <div class="chips">
+          <span class="chip">Pending: 6</span>
+          <span class="chip">Done: 8</span>
+        </div>
+      </div>
+
+      <div class="card soft big c4">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Production Trend</div>
+            <div class="card-sub">Last 14 days output</div>
+          </div>
+          <span class="pill">Overview</span>
+        </div>
+
+        <div class="chart">
+          <div class="chart-grid"></div>
+          <div class="chart-line"></div>
+        </div>
+
+        <div class="tiny-note">Later we connect this to real program + stock ledger data.</div>
+      </div>
+
+      <div class="card soft mid c5">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Stage Load</div>
+            <div class="card-sub">Capacity snapshot</div>
+          </div>
+          <span class="pill">Now</span>
+        </div>
+
+        <div class="prog">
+          <div class="row">
+            <div class="nm">Cutting</div>
+            <div class="bar"><span style="width:62%"></span></div>
+            <div class="vl">62%</div>
+          </div>
+          <div class="row">
+            <div class="nm">Stitching</div>
+            <div class="bar"><span style="width:44%"></span></div>
+            <div class="vl">44%</div>
+          </div>
+          <div class="row">
+            <div class="nm">Finishing</div>
+            <div class="bar"><span style="width:28%"></span></div>
+            <div class="vl">28%</div>
+          </div>
+        </div>
+
+        <div class="chips" style="margin-top:10px;">
+          <span class="chip">QC Hold: 2</span>
+          <span class="chip">Delayed: 5</span>
+        </div>
+      </div>
+
+      <div class="card soft list c6">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Active Programs</div>
+            <div class="card-sub">Recent production runs</div>
+          </div>
+          <a class="link" href="#">Show all</a>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Program</th>
+              <th>Style</th>
+              <th>Stage</th>
+              <th>Qty</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>PRG-0091</td>
+              <td>S-22</td>
+              <td>Stitching</td>
+              <td>2,400</td>
+              <td><span class="status warn">In Progress</span></td>
+            </tr>
+            <tr>
+              <td>PRG-0090</td>
+              <td>S-18</td>
+              <td>Cutting</td>
+              <td>1,200</td>
+              <td><span class="status ok">On Track</span></td>
+            </tr>
+            <tr>
+              <td>PRG-0087</td>
+              <td>S-12</td>
+              <td>Finishing</td>
+              <td>900</td>
+              <td><span class="status bad">Delayed</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card soft list c7">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Lot Watch</div>
+            <div class="card-sub">Lots needing attention</div>
+          </div>
+          <span class="pill">Alerts</span>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Lot</th>
+              <th>Material</th>
+              <th>Available</th>
+              <th>State</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Y-102</td>
+              <td>Yarn</td>
+              <td>120 kg</td>
+              <td><span class="status bad">Low</span></td>
+            </tr>
+            <tr>
+              <td>G-211</td>
+              <td>Greige</td>
+              <td>480 m</td>
+              <td><span class="status warn">QC</span></td>
+            </tr>
+            <tr>
+              <td>T-044</td>
+              <td>Trims</td>
+              <td>2,600 pcs</td>
+              <td><span class="status ok">OK</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <aside class="right">
+      <div class="card right-card">
+        <div class="right-head">
+          <div class="rh-title">May 2024</div>
+          <span class="pill">Shift A</span>
+        </div>
+
+        <div class="calendar">
+          <div class="wk">M</div>
+          <div class="wk">T</div>
+          <div class="wk">W</div>
+          <div class="wk">T</div>
+          <div class="wk">F</div>
+          <div class="wk">S</div>
+          <div class="wk">S</div>
+          <div class="d">1</div>
+          <div class="d">2</div>
+          <div class="d">3</div>
+          <div class="d">4</div>
+          <div class="d">5</div>
+          <div class="d">6</div>
+          <div class="d">7</div>
+          <div class="d">8</div>
+          <div class="d">9</div>
+          <div class="d">10</div>
+          <div class="d">11</div>
+          <div class="d active">12</div>
+          <div class="d">13</div>
+          <div class="d">14</div>
+          <div class="d">15</div>
+          <div class="d">16</div>
+          <div class="d">17</div>
+          <div class="d">18</div>
+          <div class="d">19</div>
+          <div class="d">20</div>
+          <div class="d">21</div>
+          <div class="d">22</div>
+          <div class="d">23</div>
+          <div class="d">24</div>
+          <div class="d">25</div>
+          <div class="d">26</div>
+          <div class="d">27</div>
+          <div class="d">28</div>
+          <div class="d">29</div>
+          <div class="d">30</div>
+          <div class="d">31</div>
+        </div>
+      </div>
+
+      <div class="card right-card">
+        <div class="right-head">
+          <div>
+            <div class="card-title">Today’s Timeline</div>
+            <div class="card-sub">Dispatch + GRN + checkpoints</div>
+          </div>
+          <span class="pill">May 12</span>
+        </div>
+
+        <div class="timeline">
+          <div class="titem">
+            <div class="t-time">09:30</div>
+            <div class="t-dot"></div>
+            <div>
+              <div class="t-title">GRN Verification</div>
+              <div class="t-sub">Yarn Lot Y-148 QC pending</div>
+            </div>
+          </div>
+          <div class="titem">
+            <div class="t-time">12:00</div>
+            <div class="t-dot"></div>
+            <div>
+              <div class="t-title">Stitching Handover</div>
+              <div class="t-sub">PRG-0091 bundle issue to line-3</div>
+            </div>
+          </div>
+          <div class="titem">
+            <div class="t-time">04:00</div>
+            <div class="t-dot"></div>
+            <div>
+              <div class="t-title">Dispatch Window</div>
+              <div class="t-sub">INV-00211 invoice + e-way</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+
+<!-- =========================================================
+  SECTION 2: UTILITIES
+========================================================= -->
+<section id="section-utilities" class="page-section">
+  <div class="canvas">
+    <section class="grid util-grid-section">
+      <div class="card soft big c8">
+
+        <div class="card-head util-head">
+          <div>
+            <div class="card-title">Utilities</div>
+            <div class="card-sub">Masters, setup, uploads & configuration — everything in one place.</div>
+          </div>
+
+          <div class="util-search">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 21l-4.3-4.3"></path>
+              <path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"></path>
+            </svg>
+            <input id="utilSearch" type="text"
+              placeholder="Search utilities… (jobber, shade, greige, bom, catalogue)" />
+          </div>
+        </div>
+
+        <div id="utilSections" class="util-sections"></div>
+
+        <div class="tiny-note" style="margin-top:10px;">
+          Clicking a tile will open the module inside dashboard (no new page).
+        </div>
+
+      </div>
     </section>
   </div>
 </section>
+
+
+
+
+{% endblock %}
+{% block extra_js %}
+<script>
+  (function () {
+    "use strict";
+
+
+    /* ==============================
+       UTILITIES CONFIG (YOUR ORDER)
+       ============================== */
+    const TAG_LABEL = {
+      Masters: "MASTERS",
+      Production: "PRODUCTION",
+      Dyeing: "DYEING",
+      Design: "DESIGN",
+      Admin: "ADMIN TOOLS",
+      Inventory: "INVENTORY",
+      Dispatch: "DISPATCH",
+      Accounts: "ACCOUNTS",
+      Uploads: "UPLOADS",
+    };
+
+    // STRICT ROW ORDER + STRICT SPANS (8 columns base)
+    const ROW_LAYOUT = {
+      row1: [{ tag: "Masters", span: 8 }],
+      row2: [{ tag: "Production", span: 5 }, { tag: "Dyeing", span: 3 }],
+      row3: [{ tag: "Design", span: 8 }],
+      row4: [
+        { tag: "Admin", span: 2 },
+        { tag: "Inventory", span: 2 },
+        { tag: "Dispatch", span: 2 },
+        { tag: "Accounts", span: 1 },
+        { tag: "Uploads", span: 1 },
+      ],
+    };
+
+    // Item order inside each section
+    const INTRA_ORDER = {
+      Masters: [
+        "Firm", "Material / Trim", "Material Type", "Material Shades", "Material Unit", "Brand", "Category",
+        "Main Category", "Sub Category", "Party", "Client", "Location", "Jobber Type", "Jobber", "Material Type Linking",
+      ],
+      Production: ["Techpack", "BOM", "Job Card Details", "Branch SKU"],
+      Dyeing: ["Dyeing Master", "Greige Master", "Dyeing Other Charge Headers"],
+      Design: ["Catalogue", "Pattern Type", "Designer", "Season", "Theme"],
+      Admin: ["Jobber Bulk Changes"],
+      Inventory: ["Inward Type"],
+      Dispatch: ["Terms & Condition"],
+      Accounts: ["Expense"],
+      Uploads: ["Material Bulk Upload"],
+    };
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getPriority(tag, title) {
+      const arr = INTRA_ORDER[tag] || [];
+      const idx = arr.indexOf(title);
+      return idx === -1 ? 999 : idx;
+    }
+
+    // KEEP YOUR ICON FUNCTION (unchanged style)
+    function iconSvg(name) {
+      const icons = {
+        settings: `
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+        <path d="M19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/>
+      </svg>
+    `,
+
+        jobber: `
+      <svg class="ico icon-jobber" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(238, 61, 133, 1)" height="30px"><path d="M2 22C2 17.5817 5.58172 14 10 14C14.4183 14 18 17.5817 18 22H16C16 18.6863 13.3137 16 10 16C6.68629 16 4 18.6863 4 22H2ZM10 13C6.685 13 4 10.315 4 7C4 3.685 6.685 1 10 1C13.315 1 16 3.685 16 7C16 10.315 13.315 13 10 13ZM10 11C12.21 11 14 9.21 14 7C14 4.79 12.21 3 10 3C7.79 3 6 4.79 6 7C6 9.21 7.79 11 10 11ZM18.2837 14.7028C21.0644 15.9561 23 18.752 23 22H21C21 19.564 19.5483 17.4671 17.4628 16.5271L18.2837 14.7028ZM17.5962 3.41321C19.5944 4.23703 21 6.20361 21 8.5C21 11.3702 18.8042 13.7252 16 13.9776V11.9646C17.6967 11.7222 19 10.264 19 8.5C19 7.11935 18.2016 5.92603 17.041 5.35635L17.5962 3.41321Z"></path></svg>
+    `,
+
+        jobberType: `
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16"/>
+        <path d="M4 12h10"/>
+        <path d="M4 17h16"/>
+        <path d="M18 12l2 2 3-3"/>
+      </svg>
+    `,
+      };
+
+      return icons[name] || icons.settings;
+    }
+
+
+    // ✅ COMPLETE UTILITIES LIST (so rows don’t break)
+    const UTILITIES = [
+      // Masters
+      { title: "Firm", tag: "Masters", key: "firm" },
+      { title: "Material / Trim", tag: "Masters", key: "material trim" },
+      { title: "Material Type", tag: "Masters", key: "material type" },
+      { title: "Material Shades", tag: "Masters", key: "shade shades" },
+      { title: "Material Unit", tag: "Masters", key: "unit uom" },
+      { title: "Brand", tag: "Masters", key: "brand" },
+      { title: "Category", tag: "Masters", key: "category" },
+      { title: "Main Category", tag: "Masters", key: "main category" },
+      { title: "Sub Category", tag: "Masters", key: "sub category" },
+      { title: "Party", tag: "Masters", key: "party" },
+      { title: "Client", tag: "Masters", key: "client" },
+      { title: "Location", tag: "Masters", key: "location" },
+      { title: "Jobber Type", tag: "Masters", key: "jobber type" },
+      { title: "Jobber", tag: "Masters", key: "jobber", icon: "jobber" },
+      { title: "Material Type Linking", tag: "Masters", key: "type linking" },
+
+      // Production
+      { title: "Techpack", tag: "Production", key: "techpack" },
+      { title: "BOM", tag: "Production", key: "bom" },
+      { title: "Job Card Details", tag: "Production", key: "job card" },
+      { title: "Branch SKU", tag: "Production", key: "branch sku" },
+
+      // Dyeing
+      { title: "Dyeing Master", tag: "Dyeing", key: "dyeing" },
+      { title: "Greige Master", tag: "Dyeing", key: "greige" },
+      { title: "Dyeing Other Charge Headers", tag: "Dyeing", key: "other charge headers" },
+
+      // Design
+      { title: "Catalogue", tag: "Design", key: "catalogue" },
+      { title: "Pattern Type", tag: "Design", key: "pattern type" },
+      { title: "Designer", tag: "Design", key: "designer" },
+      { title: "Season", tag: "Design", key: "season" },
+      { title: "Theme", tag: "Design", key: "theme" },
+
+      // Admin / Inventory / Dispatch / Accounts / Uploads
+      { title: "Jobber Bulk Changes", tag: "Admin", key: "jobber bulk changes" },
+      { title: "Inward Type", tag: "Inventory", key: "inward type grn" },
+      { title: "Terms & Condition", tag: "Dispatch", key: "terms condition" },
+      { title: "Expense", tag: "Accounts", key: "expense" },
+      { title: "Material Bulk Upload", tag: "Uploads", key: "material bulk upload" },
+    ];
+
+    // ROUTES (keep your names)
+    const ROUTES = {
+      "Jobber": "{% url 'accounts:jobber_list' %}",
+      "Jobber Type": "{% url 'accounts:jobbertype_list' %}",
+    };
+
+    function tileHtml(u) {
+      const href = ROUTES[u.title] || "#";
+      return `
+      <a class="util-tile" href="${href}" data-title="${escapeHtml(u.title)}" data-tag="${escapeHtml(u.tag)}">
+        <span class="util-ico">${iconSvg(u.icon)}</span>
+        <div class="util-meta">
+          <div class="util-title">${escapeHtml(u.title)}</div>
+        </div>
+      </a>
+    `;
+    }
+
+    // ✅ groupHtml now supports SPAN to prevent cramping
+    function groupHtml(tag, items, span) {
+      const label = TAG_LABEL[tag] || tag.toUpperCase();
+
+      const inlinePanel = (tag === "Masters") ? `
+      <div id="mastersEmbedPanel" class="util-inline-panel" style="display:none;">
+        <div id="mastersEmbedMount"></div>
+      </div>
+    ` : "";
+
+      return `
+      <div class="util-group" data-tag="${escapeHtml(tag)}" style="grid-column: span ${span}; --cols:${span};">
+        <div class="util-group-head">
+          <div class="util-group-title">${escapeHtml(label)}</div>
+          <div class="util-group-line"></div>
+          <div class="util-group-count">${items.length}</div>
+        </div>
+
+        ${inlinePanel}
+
+        <div class="util-group-grid">
+          ${items.map(tileHtml).join("")}
+        </div>
+      </div>
+    `;
+    }
+
+    function withEmbed(url) {
+      const u = new URL(url, window.location.origin);
+      u.searchParams.set("embed", "1");
+      return u.toString();
+    }
+
+    // ✅ robust matcher (your old /master paths + your ROUTES)
+    function isMastersUrl(hrefOrAction) {
+      if (!hrefOrAction) return false;
+      let path = "";
+      try {
+        path = new URL(hrefOrAction, window.location.origin).pathname;
+      } catch {
+        path = hrefOrAction;
+      }
+
+      const routeJobber = (ROUTES["Jobber"] ? new URL(ROUTES["Jobber"], window.location.origin).pathname : "");
+      const routeType = (ROUTES["Jobber Type"] ? new URL(ROUTES["Jobber Type"], window.location.origin).pathname : "");
+
+      const prefixes = [
+        "/master/jobbers",
+        "/master/jobber-types",
+        routeJobber,
+        routeType,
+      ].filter(Boolean);
+
+      return prefixes.some(p => path.startsWith(p));
+    }
+
+    function bootUtilities() {
+      const container = document.getElementById("utilSections");
+      const input = document.getElementById("utilSearch");
+      if (!container || !input) return;
+
+      // Close handler from embedded pages
+      container.addEventListener("click", (e) => {
+        const closeBtn = e.target.closest("[data-embed-close]");
+        if (!closeBtn) return;
+
+        const panel = container.querySelector("#mastersEmbedPanel");
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!panel || !mount) return;
+
+        panel.style.display = "none";
+        mount.innerHTML = "";
+      });
+
+      function openMastersPanel(title, url) {
+        const panel = container.querySelector("#mastersEmbedPanel");
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!panel || !mount) return;
+
+        panel.style.display = "block";
+        mount.innerHTML = `<div class="tiny-note">Loading…</div>`;
+
+        fetch(withEmbed(url), {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        })
+          .then(r => r.text())
+          .then(html => { mount.innerHTML = html; });
+      }
+
+      // delegate clicks inside embed (pagination, links)
+      container.addEventListener("click", (e) => {
+        const panel = container.querySelector("#mastersEmbedPanel");
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!panel || !mount || panel.style.display === "none") return;
+
+        const a = e.target.closest("a");
+        if (!a) return;
+
+        const href = a.getAttribute("href") || "";
+        if (isMastersUrl(href)) {
+          e.preventDefault();
+          openMastersPanel("Masters", href);
+        }
+      });
+
+      // delegate submits inside embed
+      container.addEventListener("submit", async (e) => {
+        const form = e.target.closest("form");
+        if (!form) return;
+
+        const action = form.getAttribute("action") || "";
+        if (!isMastersUrl(action)) return;
+
+        e.preventDefault();
+
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!mount) return;
+
+        const method = (form.getAttribute("method") || "GET").toUpperCase();
+
+        if (method === "GET") {
+          const params = new URLSearchParams(new FormData(form));
+          openMastersPanel("Masters", action.split("?")[0] + "?" + params.toString());
+          return;
+        }
+
+        const fd = new FormData(form);
+        const res = await fetch(withEmbed(action), {
+          method,
+          body: fd,
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        });
+
+        const ct = (res.headers.get("content-type") || "").toLowerCase();
+
+        if (ct.includes("application/json")) {
+          const data = await res.json();
+          if (data.ok && data.url) {
+            openMastersPanel("Masters", data.url);
+            return;
+          }
+        }
+
+        mount.innerHTML = await res.text();
+      });
+
+      function render(query) {
+        const q = (query || "").toLowerCase().trim();
+
+        const filtered = UTILITIES.filter((u) => {
+          if (!q) return true;
+          const hay = `${u.title} ${u.tag} ${u.key}`.toLowerCase();
+          return hay.includes(q);
+        });
+
+        // Group
+        const groups = {};
+        for (const u of filtered) (groups[u.tag] ||= []).push(u);
+
+        // Sort inside group
+        Object.keys(groups).forEach((tag) => {
+          groups[tag].sort((a, b) => {
+            const pa = getPriority(tag, a.title);
+            const pb = getPriority(tag, b.title);
+            if (pa !== pb) return pa - pb;
+            return a.title.localeCompare(b.title);
+          });
+        });
+
+        // Build rows STRICTLY (keep structure even if empty => NO CRAM)
+        const buildRow = (rowSpec, rowClass) => {
+          const html = rowSpec.map(({ tag, span }) => groupHtml(tag, groups[tag] || [], span)).join("");
+          return `<div class="util-row ${rowClass}">${html}</div>`;
+        };
+
+        container.innerHTML = `
+        <div class="util-layout">
+          ${buildRow(ROW_LAYOUT.row1, "util-row-1")}
+          ${buildRow(ROW_LAYOUT.row2, "util-row-2")}
+          ${buildRow(ROW_LAYOUT.row3, "util-row-3")}
+          ${buildRow(ROW_LAYOUT.row4, "util-row-4")}
+        </div>
+      `;
+
+        // Tile clicks
+        container.querySelectorAll(".util-tile").forEach((tile) => {
+          tile.addEventListener("click", (e) => {
+            const title = tile.dataset.title || "";
+            const href = tile.getAttribute("href") || "#";
+
+            // Only these open embed for now
+            if (title === "Jobber" || title === "Jobber Type") {
+              e.preventDefault();
+              openMastersPanel(title, href);
+              return;
+            }
+
+            // keep no navigation for others (your requirement)
+            e.preventDefault();
+          });
+        });
+      }
+
+      render("");
+      input.addEventListener("input", () => render(input.value));
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", bootUtilities);
+    } else {
+      bootUtilities();
+    }
+  })();
+</script>
 
 {% endblock %}

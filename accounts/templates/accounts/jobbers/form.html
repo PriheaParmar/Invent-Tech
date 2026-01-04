@@ -1,0 +1,14 @@
+{% extends "accounts/base.html" %}
+{% block content %}
+
+<h2>{% if mode == "add" %}Add Jobber{% else %}Edit Jobber{% endif %}</h2>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+
+  <button type="submit">Save</button>
+  <a href="{% url 'accounts:jobber_list' %}" style="margin-left:10px;">Cancel</a>
+</form>
+
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "accounts/base.html" %}
+{% block content %}
+
+<h2>Jobbers</h2>
+
+<form method="get" style="margin: 12px 0;">
+  <input name="q" value="{{ q }}" placeholder="Search name/email/phone/role/type" />
+  <button type="submit">Search</button>
+
+  <a href="{% url 'accounts:jobber_add' %}" style="margin-left:10px;">+ Add Jobber</a>
+  <a href="{% url 'accounts:jobbertype_list' %}" style="margin-left:10px;">Manage Types</a>
+</form>
+
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+  <tr>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Phone</th>
+    <th>Role</th>
+    <th>Type</th>
+    <th>Active</th>
+    <th>Actions</th>
+  </tr>
+
+  {% for j in jobbers %}
+  <tr>
+    <td>{{ j.name }}</td>
+    <td>{{ j.email|default:"-" }}</td>
+    <td>{{ j.phone|default:"-" }}</td>
+    <td>{{ j.role }}</td>
+    <td>{{ j.jobber_type.name|default:"-" }}</td>
+    <td>{{ j.is_active }}</td>
+    <td>
+      <a href="{% url 'accounts:jobber_edit' j.id %}">Edit</a> |
+      <a href="{% url 'accounts:jobber_delete' j.id %}">Delete</a>
+    </td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="7">No jobbers found.</td></tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

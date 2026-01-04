@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # your app
     "accounts",
 ]
@@ -127,3 +126,11 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+# Session cookie lives for 30 days
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
+
+# Refresh expiry on every request (so active users never get logged out)
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Optional: expire session on browser close if user DID NOT click "remember me"
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False

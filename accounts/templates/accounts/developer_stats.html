@@ -1,0 +1,60 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Developer Stats - InventTech{% endblock %}
+{% block page_title %}Developer Stats{% endblock %}
+{% block page_subtitle %}See how many users are using InventTech{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  <section class="grid" style="grid-column: 1 / -1;">
+    <div class="card soft" style="grid-column: 1 / -1;">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Usage Overview</div>
+          <div class="card-sub">Counts are based on Django User table (auth_user).</div>
+        </div>
+        <span class="pill">Live</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:14px;">
+        <div class="card" style="box-shadow:none;">
+          <div class="card-title">Total Users</div>
+          <div class="kpi"><div class="kpi-big">{{ total_users }}</div></div>
+        </div>
+
+        <div class="card" style="box-shadow:none;">
+          <div class="card-title">New Today</div>
+          <div class="kpi"><div class="kpi-big">{{ new_today }}</div></div>
+        </div>
+
+        <div class="card" style="box-shadow:none;">
+          <div class="card-title">New (7 Days)</div>
+          <div class="kpi"><div class="kpi-big">{{ new_7_days }}</div></div>
+        </div>
+
+        <div class="card" style="box-shadow:none;">
+          <div class="card-title">Active (24h)</div>
+          <div class="kpi"><div class="kpi-big">{{ active_24h }}</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px; display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:14px;">
+        <div class="card" style="box-shadow:none;">
+          <div class="card-title">Active (7 Days)</div>
+          <div class="kpi"><div class="kpi-big">{{ active_7d }}</div></div>
+          <div class="tiny-note">Active means user logged in during last 7 days.</div>
+        </div>
+
+        <div class="card" style="box-shadow:none;">
+          <div class="card-title">Tip</div>
+          <div class="tiny-note">
+            If you want “active users currently online”, we can track sessions too.
+            For now this is “recent logins” which is simplest and reliable.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+{% endblock %}

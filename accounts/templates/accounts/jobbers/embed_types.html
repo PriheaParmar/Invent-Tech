@@ -1,0 +1,29 @@
+<div class="jobbers-embed">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;">
+    <div style="font-weight:800;font-size:16px;">Jobber Types</div>
+    <a class="btn btn-ghost" href="{% url 'accounts:jobber_list' %}?embed=1">← Back to Jobbers</a>
+  </div>
+
+  <form method="post" action="{% url 'accounts:jobbertype_list' %}?embed=1" style="display:flex;gap:10px;align-items:end;margin-bottom:12px;">
+    {% csrf_token %}
+    <input type="hidden" name="embed" value="1" />
+    <div class="f" style="flex:1;">
+      <label>New Type</label>
+      {{ form.name }}
+    </div>
+    <button class="btn" type="submit">Add</button>
+  </form>
+
+  <div style="overflow:auto;">
+    <table class="table">
+      <thead><tr><th>Name</th></tr></thead>
+      <tbody>
+        {% for t in types %}
+          <tr><td>{{ t.name }}</td></tr>
+        {% empty %}
+          <tr><td style="opacity:.7;">No types yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

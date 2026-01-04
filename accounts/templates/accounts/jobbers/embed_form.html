@@ -1,0 +1,82 @@
+<div class="jobbers-embed jobber-form-embed">
+
+  <div class="jb-head">
+    <div>
+      <div class="jb-title">
+        {% if mode == "add" %}Add Jobber{% else %}Edit Jobber{% endif %}
+      </div>
+      <div class="jb-sub">People working in the company</div>
+    </div>
+
+    <div class="jf-head-actions">
+      <a class="jb-back" href="{% url 'accounts:jobber_list' %}?embed=1"><svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg"height="18px" viewBox="0 0 24 24" ><path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path></svg></a>
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+            <svg class="jb-ico " viewBox="0 0 24 24" aria-hidden="true" fill="rgba(238, 61, 133, 1)">
+                <path d="M18 6L6 18"></path>
+                <path d="M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+  </div>
+
+  {% if mode == "add" %}
+    {% url "accounts:jobber_add" as action_url %}
+  {% else %}
+    {% url "accounts:jobber_edit" jobber.id as action_url %}
+  {% endif %}
+
+  <form method="post" action="{{ action_url }}?embed=1" class="jf-form">
+    {% csrf_token %}
+    <input type="hidden" name="embed" value="1">
+
+    <div class="jf-grid">
+      <div class="jf-field">
+        <label>Name</label>
+        {{ form.name }}
+        {{ form.name.errors }}
+      </div>
+
+      <div class="jf-field">
+        <label>Role</label>
+        {{ form.role }}
+        {{ form.role.errors }}
+      </div>
+
+      <div class="jf-field">
+        <label>Jobber Type</label>
+        {{ form.jobber_type }}
+        {{ form.jobber_type.errors }}
+      </div>
+
+      <div class="jf-field">
+        <label>Phone</label>
+        {{ form.phone }}
+        {{ form.phone.errors }}
+      </div>
+
+      <div class="jf-field jf-full">
+        <label>Email</label>
+        {{ form.email }}
+        {{ form.email.errors }}
+      </div>
+
+      <div class="jf-field jf-full">
+        <label>Address</label>
+        {{ form.address }}
+        {{ form.address.errors }}
+      </div>
+
+      <div class="jf-field jf-full jf-check">
+        <label>Active</label>
+        <div class="jf-check-row">
+          {{ form.is_active }}
+          <span class="jf-muted">Enable/Disable this jobber</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="jf-footer">
+      <button type="submit" style="color: white;"" class="jb-add">Save</button>
+    </div>
+  </form>
+</div>

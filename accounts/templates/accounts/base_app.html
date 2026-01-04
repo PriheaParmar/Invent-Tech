@@ -5,8 +5,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}InventTech{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'css/app.css' %}?v=6009">
 
-  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=6002">
   {% block extra_head %}{% endblock %}
 </head>
 
@@ -114,7 +114,7 @@
           </div>
         </div>
 
-        <form method="post" action="{% url 'logout' %}">
+        <form method="post" action="{% url 'accounts:logout' %}">
           {% csrf_token %}
           <button class="btn btn-ghost" type="submit">Logout</button>
         </form>
@@ -147,7 +147,7 @@
         </div>
 
         <div class="h-right">
-          <button class="iconbtn" type="button" title="Profile">
+          <button class="iconbtn" id="btnProfile" type="button" title="Profile">
             <svg class="ico" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-8 9a8 8 0 0 1 16 0"/></svg>
           </button>
           <button class="iconbtn" type="button" title="Notifications">
@@ -163,6 +163,107 @@
     </main>
 
   </div>
+  <!-- ===================== PROFILE MODAL (UI only) ===================== -->
+<!-- PROFILE MODAL -->
+<div id="profileModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Profile</div>
+        <div class="modal-sub">Update your basic details</div>
+      </div>
+      <button id="profileClose" class="iconbtn" type="button" title="Close">✕</button>
+    </div>
+
+    <form id="profileForm" method="post" action="{% url 'accounts:profile_save' %}">
+
+      {% csrf_token %}
+
+      <div class="modal-grid">
+        <div class="f">
+          <label>Username</label>
+          <input value="{{ request.user.username }}" readonly>
+        </div>
+
+        <div class="f">
+          <label>Email</label>
+          <input name="email" value="{{ request.user.email }}" placeholder="admin@inventtech.com">
+        </div>
+
+        <div class="f">
+          <label>First name</label>
+          <input name="first_name" value="{{ request.user.first_name }}" placeholder="Your name">
+        </div>
+
+        <div class="f">
+          <label>Last name</label>
+          <input name="last_name" value="{{ request.user.last_name }}" placeholder="Surname">
+        </div>
+
+        <div class="f">
+          <label>Mobile</label>
+          <input name="phone" placeholder="98XXXXXXXX">
+        </div>
+
+        <div class="f full">
+          <label>Address</label>
+          <textarea name="address" rows="3" placeholder="Optional"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" type="button" id="profileCancel">Cancel</button>
+        <button class="btn" type="submit">Save</button>
+      </div>
+    </form>
+
+    <div id="toast" class="toast"></div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+ 
+<!-- ==================[Profile POP up JS]======================== -->
+<script>
+(function(){
+  const btn = document.querySelector('[title="Profile"]'); // your header profile iconbtn
+  const modal = document.getElementById("profileModal");
+  const closeBtn = document.getElementById("profileClose");
+  const cancelBtn = document.getElementById("profileCancel");
+  const form = document.getElementById("profileForm");
+  const toast = document.getElementById("toast");
+
+  if(!btn || !modal || !form) return;
+
+  function open(){ modal.classList.add("show"); }
+  function close(){ modal.classList.remove("show"); }
+
+  btn.addEventListener("click", open);
+  closeBtn?.addEventListener("click", close);
+  cancelBtn?.addEventListener("click", close);
+  modal.addEventListener("click", (e)=>{ if(e.target === modal) close(); });
+
+  form.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    toast.textContent = "Saving...";
+
+    const formData = new FormData(form);
+
+    const res = await fetch(form.action, {
+      method: "POST",
+      body: formData,
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    const data = await res.json();
+    toast.textContent = data.ok ? data.message : "Error saving ❌";
+    if(data.ok) setTimeout(close, 800);
+  });
+})();
+
+</script>
+
+<!-- =========================================================== -->
 
   <!-- existing JS -->
   <script src="{% static 'js/dashboard.js' %}?v=6001"></script>
