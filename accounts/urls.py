@@ -26,4 +26,10 @@ urlpatterns = [
 
     # Optional alias URL (if you want Jobbers also under utilities)
     path("utilities/jobbers/", views.jobber_list, name="utilities_jobber_list"),
+    
+    path("master/materials/", views.material_list, name="material_list"),
+    path("master/materials/add/", views.material_create, name="material_create"),
+    path("master/materials/<int:pk>/edit/", views.material_edit, name="material_edit"),
+    path("master/materials/<int:pk>/delete/", views.material_delete, name="material_delete"),
 ]
+

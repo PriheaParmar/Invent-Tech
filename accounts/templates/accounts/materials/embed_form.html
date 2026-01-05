@@ -1,0 +1,106 @@
+<div class="material-form-embed" data-material-form>
+  <div class="mf-head">
+    <div>
+      <div class="mf-title">{% if mode == "edit" %}Edit Material{% else %}Add Material{% endif %}</div>
+      <div class="mf-sub">Step 1: Select Material Type • Step 2: Fill details • Save</div>
+    </div>
+
+    <button type="button" class="mf-iconbtn" data-embed-close aria-label="Close">
+      <svg class="mf-ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 6L6 18"></path>
+        <path d="M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  <form method="post" action="{{ request.path }}" enctype="multipart/form-data" class="mf-form">
+    {% csrf_token %}
+
+    <!-- STEP 1 ONLY -->
+    <div class="mf-kind" data-step1>
+      {{ form.material_type }}
+    </div>
+
+    <!-- STEP 2 (hidden until selection) -->
+    <div data-step2 style="display:none;">
+
+      <div class="mf-row">
+        <div class="mf-label">{{ form.name.label }}</div>
+        <div class="mf-control">{{ form.name }}</div>
+      </div>
+
+      <div class="mf-row mf-row-top">
+        <div class="mf-label">{{ form.remarks.label }}</div>
+        <div class="mf-control">{{ form.remarks }}</div>
+      </div>
+
+      <div class="mf-row">
+        <div class="mf-label">{{ form.image.label }}</div>
+        <div class="mf-control">
+          {{ form.image }}
+          <div class="mf-help">Preview will show below.</div>
+        </div>
+      </div>
+
+      <div class="mf-preview-wrap">
+        <div class="mf-preview" id="matPreview">
+          <svg class="mf-preview-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14"></path>
+            <path d="M3 17l6-6 4 4 3-3 5 5"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- YARN -->
+      <div class="mf-section" data-type="yarn" style="display:none; margin-top:14px;">
+        <div class="mat-type-title">Yarn Fields</div>
+
+        <div class="mf-row"><div class="mf-label">{{ form.yarn_type.label }}</div><div class="mf-control">{{ form.yarn_type }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.yarn_subtype.label }}</div><div class="mf-control">{{ form.yarn_subtype }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.count_denier.label }}</div><div class="mf-control">{{ form.count_denier }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.yarn_color.label }}</div><div class="mf-control">{{ form.yarn_color }}</div></div>
+      </div>
+
+      <!-- GREIGE -->
+      <div class="mf-section" data-type="greige" style="display:none; margin-top:14px;">
+        <div class="mat-type-title">Greige Fields</div>
+
+        <div class="mf-row"><div class="mf-label">{{ form.fabric_type.label }}</div><div class="mf-control">{{ form.fabric_type }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.gsm.label }}</div><div class="mf-control">{{ form.gsm }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.width.label }}</div><div class="mf-control">{{ form.width }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.construction.label }}</div><div class="mf-control">{{ form.construction }}</div></div>
+      </div>
+
+      <!-- FINISHED -->
+      <div class="mf-section" data-type="finished" style="display:none; margin-top:14px;">
+        <div class="mat-type-title">Finished Material Fields</div>
+
+        <div class="mf-row"><div class="mf-label">{{ form.base_fabric_type.label }}</div><div class="mf-control">{{ form.base_fabric_type }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.finish_type.label }}</div><div class="mf-control">{{ form.finish_type }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.finished_gsm.label }}</div><div class="mf-control">{{ form.finished_gsm }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.finished_width.label }}</div><div class="mf-control">{{ form.finished_width }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.end_use.label }}</div><div class="mf-control">{{ form.end_use }}</div></div>
+      </div>
+
+      <!-- TRIM -->
+      <div class="mf-section" data-type="trim" style="display:none; margin-top:14px;">
+        <div class="mat-type-title">Trim Fields</div>
+
+        <div class="mf-row"><div class="mf-label">{{ form.trim_type.label }}</div><div class="mf-control">{{ form.trim_type }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.trim_size.label }}</div><div class="mf-control">{{ form.trim_size }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.trim_color.label }}</div><div class="mf-control">{{ form.trim_color }}</div></div>
+        <div class="mf-row"><div class="mf-label">{{ form.brand.label }}</div><div class="mf-control">{{ form.brand }}</div></div>
+      </div>
+
+      {% if form.errors %}
+        <div class="mat-errors" style="margin-top:12px;">Please fix the errors and try again.</div>
+      {% endif %}
+
+      <div class="mf-actions">
+        <button type="submit" class="mf-btn mf-btn-save">Save</button>
+        <button type="button" class="mf-btn mf-btn-close" data-embed-close>Close</button>
+      </div>
+
+    </div>
+  </form>
+</div>

@@ -1,5 +1,5 @@
 from datetime import timedelta
-
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -14,6 +14,8 @@ from django.views.decorators.http import require_POST, require_http_methods
 from .forms import JobberForm, JobberTypeForm
 from .models import Jobber, JobberType, UserExtra
 
+from .models import Material
+from .forms import MaterialForm
 
 def _is_embed(request) -> bool:
     return request.GET.get("embed") == "1" or request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -300,3 +302,83 @@ def jobber_update(request, pk):
         form = JobberForm(instance=jobber)
 
     return render(request, tpl, {"form": form, "mode": "edit", "jobber": jobber})
+
+def _is_embed(request):
+    return request.GET.get("embed") == "1"
+
+
+def _wants_json(request):
+    return request.headers.get("x-requested-with") == "XMLHttpRequest"
+def _is_embed(request) -> bool:
+    return request.GET.get("embed") == "1"
+
+
+def material_list(request):
+    q = (request.GET.get("q") or "").strip()
+    material_type = (request.GET.get("type") or "").strip()
+
+    qs = Material.objects.all().order_by("-id").select_related("yarn", "greige", "finished", "trim")
+
+    if material_type:
+        qs = qs.filter(material_type=material_type)
+
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(remarks__icontains=q) |
+            Q(yarn__yarn_type__icontains=q) |
+            Q(greige__fabric_type__icontains=q) |
+            Q(finished__base_fabric_type__icontains=q) |
+            Q(trim__trim_type__icontains=q)
+        )
+
+    ctx = {"materials": qs, "q": q, "type": material_type}
+
+    tpl = "accounts/materials/list_embed.html" if _is_embed(request) else "accounts/materials/list_page.html"
+    return render(request, tpl, ctx)
+
+
+def material_create(request):
+    if request.method == "POST":
+        form = MaterialForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            url = reverse("accounts:material_list")
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+    else:
+        form = MaterialForm()
+
+    ctx = {"form": form, "mode": "create"}
+    tpl = "accounts/materials/form_embed.html" if _is_embed(request) else "accounts/materials/form_page.html"
+    return render(request, tpl, ctx)
+
+
+def material_edit(request, pk: int):
+    material = get_object_or_404(Material.objects.select_related("yarn", "greige", "finished", "trim"), pk=pk)
+
+    if request.method == "POST":
+        form = MaterialForm(request.POST, request.FILES, instance=material)
+        if form.is_valid():
+            form.save()
+            url = reverse("accounts:material_list")
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+    else:
+        form = MaterialForm(instance=material)
+
+    ctx = {"form": form, "mode": "edit", "material": material}
+    tpl = "accounts/materials/form_embed.html" if _is_embed(request) else "accounts/materials/form_page.html"
+    return render(request, tpl, ctx)
+
+
+@require_POST
+def material_delete(request, pk: int):
+    material = get_object_or_404(Material, pk=pk)
+    material.delete()
+    url = reverse("accounts:material_list")
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)

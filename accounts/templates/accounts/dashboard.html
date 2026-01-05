@@ -340,15 +340,16 @@
   </div>
 </section>
 
-
-
-
 {% endblock %}
 {% block extra_js %}
 <script>
+  /* ============================
+     UPDATED MATERIALS JS (Dashboard)
+     - Materials-only changes
+     ============================ */
+
   (function () {
     "use strict";
-
 
     /* ==============================
        UTILITIES CONFIG (YOUR ORDER)
@@ -417,32 +418,39 @@
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
         <path d="M19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/>
-      </svg>
-    `,
-
+      </svg>`,
         jobber: `
-      <svg class="ico icon-jobber" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(238, 61, 133, 1)" height="30px"><path d="M2 22C2 17.5817 5.58172 14 10 14C14.4183 14 18 17.5817 18 22H16C16 18.6863 13.3137 16 10 16C6.68629 16 4 18.6863 4 22H2ZM10 13C6.685 13 4 10.315 4 7C4 3.685 6.685 1 10 1C13.315 1 16 3.685 16 7C16 10.315 13.315 13 10 13ZM10 11C12.21 11 14 9.21 14 7C14 4.79 12.21 3 10 3C7.79 3 6 4.79 6 7C6 9.21 7.79 11 10 11ZM18.2837 14.7028C21.0644 15.9561 23 18.752 23 22H21C21 19.564 19.5483 17.4671 17.4628 16.5271L18.2837 14.7028ZM17.5962 3.41321C19.5944 4.23703 21 6.20361 21 8.5C21 11.3702 18.8042 13.7252 16 13.9776V11.9646C17.6967 11.7222 19 10.264 19 8.5C19 7.11935 18.2016 5.92603 17.041 5.35635L17.5962 3.41321Z"></path></svg>
-    `,
-
+        <svg class="ico icon-jobber" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(238, 61, 133, 1)" height="30px">
+          <path d="M2 22C2 17.5817 5.58172 14 10 14C14.4183 14 18 17.5817 18 22H16C16 18.6863 13.3137 16 10 16C6.68629 16 4 18.6863 4 22H2ZM10 13C6.685 13 4 10.315 4 7C4 3.685 6.685 1 10 1C13.315 1 16 3.685 16 7C16 10.315 13.315 13 10 13ZM10 11C12.21 11 14 9.21 14 7C14 4.79 12.21 3 10 3C7.79 3 6 4.79 6 7C6 9.21 7.79 11 10 11ZM18.2837 14.7028C21.0644 15.9561 23 18.752 23 22H21C21 19.564 19.5483 17.4671 17.4628 16.5271L18.2837 14.7028ZM17.5962 3.41321C19.5944 4.23703 21 6.20361 21 8.5C21 11.3702 18.8042 13.7252 16 13.9776V11.9646C17.6967 11.7222 19 10.264 19 8.5C19 7.11935 18.2016 5.92603 17.041 5.35635L17.5962 3.41321Z"></path>
+        </svg>`,
         jobberType: `
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 7h16"/>
-        <path d="M4 12h10"/>
-        <path d="M4 17h16"/>
-        <path d="M18 12l2 2 3-3"/>
-      </svg>
-    `,
+        <svg class="ico " viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 7h16"/>
+          <path d="M4 12h10"/>
+          <path d="M4 17h16"/>
+          <path d="M18 12l2 2 3-3"/>
+        </svg>
+        `,
+        material: `<svg class="ico icon-material" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" height="800px" width="800px" version="1.1" id="Layer_1" viewBox="0 0 512 512" xml:space="preserve" stroke="#000000" stroke-width="26.112000000000002">
+
+<g id="SVGRepo_bgCarrier" stroke-width="0"/>
+
+<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+
+<g id="SVGRepo_iconCarrier"> <g transform="translate(1 1)"> <g> <g> <path d="M470.043,287.976c-1.736-1.736-4.339-2.603-6.942-2.603c-15.62,0-27.769-4.339-37.315-14.753 c-26.034-26.902-23.431-79.837-23.431-80.705c0-96.325,24.298-143.186,25.166-143.186c0.868-2.603,0.868-5.207,0-7.81 s-3.471-4.339-6.075-5.207L256.565-1c-2.603,0-4.339,0-6.942,1.736s-3.471,4.339-3.471,6.942 c0,26.034-8.678,47.729-26.902,64.217c-53.803,49.464-170.956,39.919-171.824,39.919c-2.603,0-5.207,0.868-6.942,2.603 s-2.603,3.471-2.603,6.075v381.831c0,5.207,3.471,8.678,8.678,8.678h199.593c4.339,0,7.81-2.603,8.678-6.942l18.224-112.814 l25.166,112.814c0.868,4.339,4.339,6.942,8.678,6.942h130.169c4.339,0,7.81-3.471,8.678-7.81l26.034-208.271 C472.647,292.315,471.779,289.712,470.043,287.976z M429.257,493.644H313.84l-32.976-149.261 c-0.868-4.339-4.339-6.942-8.678-6.942c-4.339,0-7.81,2.603-8.678,6.942l-24.298,149.261H55.237V241.983h8.678 c5.207,0,8.678-3.471,8.678-8.678c0-5.207-3.471-8.678-8.678-8.678h-8.678v-94.59c30.373,0.868,124.963,0.868,175.295-45.993 c19.092-17.356,29.505-39.919,32.109-65.953l144.922,31.241c-7.81,19.091-22.563,65.085-22.563,140.583 c0,0.869-0.653,15.895,2.623,34.712h-11.301c-5.207,0-8.678,3.471-8.678,8.678c0,5.207,3.471,8.678,8.678,8.678h15.34 c4.201,14.136,10.996,28.635,21.975,39.919c10.414,11.281,24.298,18.224,39.919,19.959L429.257,493.644z"/> <path d="M150.694,224.627h-34.712c-5.207,0-8.678,3.471-8.678,8.678c0,5.207,3.471,8.678,8.678,8.678h34.712 c5.207,0,8.678-3.471,8.678-8.678C159.372,228.098,155.901,224.627,150.694,224.627z"/> <path d="M324.253,224.627h-34.712c-5.207,0-8.678,3.471-8.678,8.678c0,5.207,3.471,8.678,8.678,8.678h34.712 c5.207,0,8.678-3.471,8.678-8.678C332.931,228.098,329.46,224.627,324.253,224.627z"/> <path d="M237.474,224.627h-34.712c-5.207,0-8.678,3.471-8.678,8.678c0,5.207,3.471,8.678,8.678,8.678h34.712 c5.207,0,8.678-3.471,8.678-8.678C246.152,228.098,242.681,224.627,237.474,224.627z"/> </g> </g> </g> </g>
+
+</svg>`
       };
+
 
       return icons[name] || icons.settings;
     }
-
 
     // ✅ COMPLETE UTILITIES LIST (so rows don’t break)
     const UTILITIES = [
       // Masters
       { title: "Firm", tag: "Masters", key: "firm" },
-      { title: "Material / Trim", tag: "Masters", key: "material trim" },
+      { title: "Material / Trim", tag: "Masters", key: "material trim", icon: "material" },
       { title: "Material Type", tag: "Masters", key: "material type" },
       { title: "Material Shades", tag: "Masters", key: "shade shades" },
       { title: "Material Unit", tag: "Masters", key: "unit uom" },
@@ -487,6 +495,7 @@
     const ROUTES = {
       "Jobber": "{% url 'accounts:jobber_list' %}",
       "Jobber Type": "{% url 'accounts:jobbertype_list' %}",
+      "Material / Trim": "{% url 'accounts:material_list' %}",
     };
 
     function tileHtml(u) {
@@ -528,33 +537,44 @@
     `;
     }
 
+    let LAST_MASTERS_URL = null; // remembers currently opened embed page
+
+    // resolve embed URL against LAST_MASTERS_URL so ?page=2 / relative links work
     function withEmbed(url) {
-      const u = new URL(url, window.location.origin);
+      const base = LAST_MASTERS_URL || window.location.origin;
+      const u = new URL(url, base);
       u.searchParams.set("embed", "1");
       return u.toString();
     }
 
-    // ✅ robust matcher (your old /master paths + your ROUTES)
     function isMastersUrl(hrefOrAction) {
       if (!hrefOrAction) return false;
-      let path = "";
+
+      const base = LAST_MASTERS_URL || window.location.origin;
+
+      let urlObj;
       try {
-        path = new URL(hrefOrAction, window.location.origin).pathname;
+        urlObj = new URL(hrefOrAction, base);
       } catch {
-        path = hrefOrAction;
+        return false;
       }
 
-      const routeJobber = (ROUTES["Jobber"] ? new URL(ROUTES["Jobber"], window.location.origin).pathname : "");
-      const routeType = (ROUTES["Jobber Type"] ? new URL(ROUTES["Jobber Type"], window.location.origin).pathname : "");
+      const path = (urlObj.pathname || "").replace(/\/+$/, "") + "/";
+
+      const routeJobber = ROUTES["Jobber"] ? new URL(ROUTES["Jobber"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeType = ROUTES["Jobber Type"] ? new URL(ROUTES["Jobber Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeMaterial = ROUTES["Material / Trim"] ? new URL(ROUTES["Material / Trim"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
 
       const prefixes = [
-        "/master/jobbers",
-        "/master/jobber-types",
+        "/master/jobbers/",
+        "/master/jobber-types/",
+        "/master/materials/",
         routeJobber,
         routeType,
+        routeMaterial,
       ].filter(Boolean);
 
-      return prefixes.some(p => path.startsWith(p));
+      return prefixes.some((p) => path.startsWith(p));
     }
 
     function bootUtilities() {
@@ -575,6 +595,171 @@
         mount.innerHTML = "";
       });
 
+      // ==========================
+      // MATERIALS ONLY: initEmbedMount
+      // - Step1: only 4 options, nothing else visible
+      // - Step2: show only selected type fields
+      // - Disable hidden fields to prevent browser blocking save
+      // - Image preview
+      // ==========================
+      function initEmbedMount(mount, contextUrl) {
+        if (!mount) return;
+
+        const formWrap = mount.querySelector("[data-material-form]");
+        if (!formWrap) return;
+
+        const step2 = formWrap.querySelector("[data-step2]");
+        if (!step2) return;
+
+        const ALLOWED_TYPES = new Set(["yarn", "greige", "finished", "trim"]);
+
+        const hasErrors = !!formWrap.querySelector(".mat-errors, .errorlist, [aria-invalid='true']");
+        const ctx = String(contextUrl || "");
+        const isAdd = ctx.includes("/master/materials/add");
+        const isEdit = ctx.includes("/edit/");
+
+        const typeEl = formWrap.querySelector('[name="material_type"]');
+
+        function ensureOnly4Options_Select(selectEl) {
+          if (!selectEl) return;
+
+          // hide everything except allowed 4
+          Array.from(selectEl.options).forEach((opt) => {
+            const v = (opt.value || "").trim();
+            if (!ALLOWED_TYPES.has(v)) opt.hidden = true;
+          });
+
+          // ensure hidden placeholder exists so Step2 stays hidden until user selects
+          let placeholder = selectEl.querySelector('option[value=""]');
+          if (!placeholder) {
+            placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = "Select";
+            placeholder.disabled = true;
+            placeholder.hidden = true; // not visible -> still only 4 visible options
+            selectEl.insertBefore(placeholder, selectEl.firstChild);
+          } else {
+            placeholder.disabled = true;
+            placeholder.hidden = true;
+          }
+
+          // On add screen (fresh), force no selection
+          if (isAdd && !isEdit && !hasErrors) {
+            placeholder.selected = true;
+            selectEl.value = "";
+          }
+        }
+
+        function ensureOnly4Options_Radios() {
+          const radios = Array.from(formWrap.querySelectorAll('input[type="radio"][name="material_type"]'));
+          if (!radios.length) return;
+
+          radios.forEach((r) => {
+            if (!ALLOWED_TYPES.has((r.value || "").trim())) {
+              // hide radio + its label container if possible
+              const wrap = r.closest("label") || r.parentElement;
+              if (wrap) wrap.style.display = "none";
+              r.checked = false;
+            }
+          });
+
+          // On add screen (fresh), force none checked
+          if (isAdd && !isEdit && !hasErrors) {
+            radios.forEach((r) => { r.checked = false; });
+          }
+        }
+
+        // Disable/enable helpers to prevent hidden required fields blocking submit
+        function primeReqState(el) {
+          if (el.dataset.reqInit === undefined) {
+            el.dataset.reqInit = el.required ? "1" : "0";
+          }
+        }
+
+        function setEnabled(root, enabled) {
+          const ctrls = root.querySelectorAll("input, select, textarea, button");
+          ctrls.forEach((el) => {
+            // never disable material_type control itself
+            if (el.name === "material_type") return;
+
+            if (el.matches("input, select, textarea")) {
+              primeReqState(el);
+              if (!enabled) el.required = false;
+              else el.required = (el.dataset.reqInit === "1");
+            }
+
+            el.disabled = !enabled;
+          });
+        }
+
+        const sections = Array.from(formWrap.querySelectorAll(".mf-section[data-type]"));
+
+        function detectValue() {
+          const el = formWrap.querySelector('[name="material_type"]');
+          if (!el) return "";
+
+          if (el.tagName === "SELECT") return (el.value || "").trim();
+
+          const checked = formWrap.querySelector('[name="material_type"]:checked');
+          return checked ? (checked.value || "").trim() : "";
+        }
+
+        function showType(val) {
+          const v = (val || "").trim();
+          const ok = ALLOWED_TYPES.has(v);
+
+          if (!ok) {
+            step2.style.display = "none";
+            // disable everything in step2 so required fields don't block submit
+            setEnabled(step2, false);
+            sections.forEach((s) => { s.style.display = "none"; });
+            return;
+          }
+
+          step2.style.display = "block";
+          // enable step2 common controls first
+          setEnabled(step2, true);
+
+          sections.forEach((s) => {
+            const active = (s.dataset.type === v);
+            s.style.display = active ? "block" : "none";
+            // critical: disable controls in hidden sections
+            setEnabled(s, active);
+          });
+        }
+
+        // 1) enforce ONLY 4 options visible (Materials only)
+        if (typeEl && typeEl.tagName === "SELECT") ensureOnly4Options_Select(typeEl);
+        else ensureOnly4Options_Radios();
+
+        // 2) bind change
+        formWrap.addEventListener("change", (e) => {
+          if (e.target && e.target.name === "material_type") {
+            showType(detectValue());
+          }
+        });
+
+        // 3) initial state: Step2 hidden until selection (unless edit / errors)
+        showType(detectValue());
+
+        // 4) image preview (Materials only)
+        const fileInput = formWrap.querySelector('input[type="file"]');
+        const preview = formWrap.querySelector("#matPreview");
+        if (fileInput && preview && !fileInput.dataset.bound) {
+          fileInput.dataset.bound = "1";
+          fileInput.addEventListener("change", () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              preview.innerHTML = `<img src="${ev.target.result}" alt="preview">`;
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+      }
+
+      // open embed + init materials logic after load
       function openMastersPanel(title, url) {
         const panel = container.querySelector("#mastersEmbedPanel");
         const mount = container.querySelector("#mastersEmbedMount");
@@ -583,12 +768,19 @@
         panel.style.display = "block";
         mount.innerHTML = `<div class="tiny-note">Loading…</div>`;
 
-        fetch(withEmbed(url), {
+        const base = LAST_MASTERS_URL || window.location.origin;
+        const absUrl = new URL(url, base).toString();
+        LAST_MASTERS_URL = absUrl;
+
+        fetch(withEmbed(absUrl), {
           headers: { "X-Requested-With": "XMLHttpRequest" },
           credentials: "same-origin",
         })
-          .then(r => r.text())
-          .then(html => { mount.innerHTML = html; });
+          .then((r) => r.text())
+          .then((html) => {
+            mount.innerHTML = html;
+            initEmbedMount(mount, absUrl); // Materials-only init (no-op for others)
+          });
       }
 
       // delegate clicks inside embed (pagination, links)
@@ -612,8 +804,19 @@
         const form = e.target.closest("form");
         if (!form) return;
 
-        const action = form.getAttribute("action") || "";
-        if (!isMastersUrl(action)) return;
+        // Materials-only: allow empty action by resolving to LAST_MASTERS_URL
+        const isMaterialsForm =
+          !!form.closest(".material-form-embed") ||
+          !!form.closest(".materials-embed") ||
+          !!form.querySelector("[data-material-form]") ||
+          !!form.closest("[data-material-form]");
+
+        const actionAttr = (form.getAttribute("action") || "").trim();
+        const resolvedAction = (isMaterialsForm && !actionAttr)
+          ? (LAST_MASTERS_URL || window.location.href)
+          : (actionAttr || "");
+
+        if (!isMastersUrl(resolvedAction)) return;
 
         e.preventDefault();
 
@@ -624,12 +827,13 @@
 
         if (method === "GET") {
           const params = new URLSearchParams(new FormData(form));
-          openMastersPanel("Masters", action.split("?")[0] + "?" + params.toString());
+          const baseUrl = resolvedAction.split("?")[0];
+          openMastersPanel("Masters", baseUrl + "?" + params.toString());
           return;
         }
 
         const fd = new FormData(form);
-        const res = await fetch(withEmbed(action), {
+        const res = await fetch(withEmbed(resolvedAction), {
           method,
           body: fd,
           headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -647,6 +851,7 @@
         }
 
         mount.innerHTML = await res.text();
+        initEmbedMount(mount, resolvedAction); // Materials-only init (no-op for others)
       });
 
       function render(query) {
@@ -694,7 +899,7 @@
             const href = tile.getAttribute("href") || "#";
 
             // Only these open embed for now
-            if (title === "Jobber" || title === "Jobber Type") {
+            if (title === "Jobber" || title === "Jobber Type" || title === "Material / Trim") {
               e.preventDefault();
               openMastersPanel(title, href);
               return;
@@ -717,5 +922,4 @@
     }
   })();
 </script>
-
 {% endblock %}
