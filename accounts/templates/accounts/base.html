@@ -8,9 +8,11 @@
 
   <!-- Auth CSS (login/signup window design) -->
   <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=1000">
+
   {% block extra_head %}{% endblock %}
 </head>
 <body class="auth">
   {% block content %}{% endblock %}
 </body>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 </html>

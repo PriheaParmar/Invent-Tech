@@ -1,0 +1,18 @@
+<div class="card soft">
+  <div class="card-head" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+    <div>
+      <div class="card-title">{% if mode == "edit" %}Edit Party{% else %}Create Party{% endif %}</div>
+      <div class="card-sub">Enter details</div>
+    </div>
+
+    <a class="btn" href="{% url 'accounts:party_list' %}">← Back</a>
+  </div>
+
+  <form method="post"
+        action="{% if mode == 'edit' %}{% url 'accounts:party_edit' party.id %}{% else %}{% url 'accounts:party_add' %}{% endif %}"
+        style="margin-top:12px;">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn primary">Save</button>
+  </form>
+</div>

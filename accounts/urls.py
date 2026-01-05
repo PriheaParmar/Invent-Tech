@@ -31,5 +31,10 @@ urlpatterns = [
     path("master/materials/add/", views.material_create, name="material_create"),
     path("master/materials/<int:pk>/edit/", views.material_edit, name="material_edit"),
     path("master/materials/<int:pk>/delete/", views.material_delete, name="material_delete"),
+    
+    path("master/parties/", views.party_list, name="party_list"),
+    path("master/parties/add/", views.party_create, name="party_add"),
+    path("master/parties/<int:pk>/edit/", views.party_update, name="party_edit"),
+    path("master/parties/<int:pk>/delete/", views.party_delete, name="party_delete"),
 ]
 

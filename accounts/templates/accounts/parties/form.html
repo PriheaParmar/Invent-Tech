@@ -1,0 +1,88 @@
+<div class="jobber-form-embed">
+  <div class="jb-head">
+    <div>
+      <div class="jb-title">
+        {% if mode == "edit" %}Edit Party{% else %}Create Party{% endif %}
+      </div>
+      <div class="jb-sub">Enter party details and save</div>
+    </div>
+
+    <button type="button" class="jb-close" data-embed-close aria-label="Close">
+      <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 6L6 18"></path>
+        <path d="M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  {% if form.errors %}
+    <div class="toast-stack">
+      <div class="toast-msg error">Please fix the errors and try again.</div>
+    </div>
+  {% endif %}
+
+  <form method="post" class="jf-form">
+    {% csrf_token %}
+
+    <div class="jf-grid">
+      <div class="jf-field">
+        <label>Party Name *</label>
+        {{ form.party_name }}
+        {% for e in form.party_name.errors %}<div class="mat-err">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="jf-field">
+        <label>Full Name</label>
+        {{ form.full_name }}
+      </div>
+
+      <div class="jf-field jf-full">
+        <label>Address</label>
+        {{ form.address }}
+      </div>
+
+      <div class="jf-field">
+        <label>PAN Number</label>
+        {{ form.pan_number }}
+        {% for e in form.pan_number.errors %}<div class="mat-err">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="jf-field">
+        <label>GST Number</label>
+        {{ form.gst_number }}
+        {% for e in form.gst_number.errors %}<div class="mat-err">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="jf-field">
+        <label>TAN Number</label>
+        {{ form.tan_number }}
+      </div>
+
+      <div class="jf-field">
+        <label>State</label>
+        {{ form.state }}
+      </div>
+
+      <div class="jf-field">
+        <label>Phone Number</label>
+        {{ form.phone_number }}
+        {% for e in form.phone_number.errors %}<div class="mat-err">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="jf-field">
+        <label>Email</label>
+        {{ form.email }}
+      </div>
+    </div>
+
+    <div class="jf-footer">
+      <button type="submit" class="jb-add">
+        <svg class="jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h14"></path>
+          <path d="M12 5v14"></path>
+        </svg>
+        Save
+      </button>
+    </div>
+  </form>
+</div>

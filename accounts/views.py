@@ -17,6 +17,9 @@ from .models import Jobber, JobberType, UserExtra
 from .models import Material
 from .forms import MaterialForm
 
+from .models import Party
+from .forms import PartyForm
+
 def _is_embed(request) -> bool:
     return request.GET.get("embed") == "1" or request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
@@ -398,4 +401,64 @@ def material_delete(request, pk: int):
     url = reverse("accounts:material_list")
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+    # ==============================================
+def _is_embed(request) -> bool:
+    return request.GET.get("embed") == "1" or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+
+@login_required
+def party_list(request):
+    parties = Party.objects.all().order_by("-id")
+    tpl = "accounts/parties/list_embed.html" if _is_embed(request) else "accounts/parties/list.html"
+    return render(request, tpl, {"parties": parties})
+
+
+@login_required
+def party_create(request):
+    form = PartyForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        url = reverse("accounts:party_list")
+
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+
+        return redirect(url)
+
+    tpl = "accounts/parties/form_embed.html" if _is_embed(request) else "accounts/parties/form.html"
+    return render(request, tpl, {"form": form, "mode": "add"})
+
+
+@login_required
+def party_update(request, pk):
+    party = get_object_or_404(Party, pk=pk)
+    form = PartyForm(request.POST or None, instance=party)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        url = reverse("accounts:party_list")
+
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+
+        return redirect(url)
+
+    tpl = "accounts/parties/form_embed.html" if _is_embed(request) else "accounts/parties/form.html"
+    return render(request, tpl, {"form": form, "mode": "edit", "party": party})
+
+
+@login_required
+@require_POST
+def party_delete(request, pk):
+    party = get_object_or_404(Party, pk=pk)
+    party.delete()
+
+    url = reverse("accounts:party_list")
+
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+
     return redirect(url)

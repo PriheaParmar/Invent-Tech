@@ -149,3 +149,64 @@ class TrimDetail(models.Model):
 
     def __str__(self):
         return f"TrimDetail({self.material_id})"
+
+INDIA_STATE_CHOICES = [
+    ("AN", "Andaman & Nicobar Islands"),
+    ("AP", "Andhra Pradesh"),
+    ("AR", "Arunachal Pradesh"),
+    ("AS", "Assam"),
+    ("BR", "Bihar"),
+    ("CH", "Chandigarh"),
+    ("CG", "Chhattisgarh"),
+    ("DN", "Dadra & Nagar Haveli and Daman & Diu"),
+    ("DL", "Delhi"),
+    ("GA", "Goa"),
+    ("GJ", "Gujarat"),
+    ("HR", "Haryana"),
+    ("HP", "Himachal Pradesh"),
+    ("JK", "Jammu & Kashmir"),
+    ("JH", "Jharkhand"),
+    ("KA", "Karnataka"),
+    ("KL", "Kerala"),
+    ("LA", "Ladakh"),
+    ("LD", "Lakshadweep"),
+    ("MP", "Madhya Pradesh"),
+    ("MH", "Maharashtra"),
+    ("MN", "Manipur"),
+    ("ML", "Meghalaya"),
+    ("MZ", "Mizoram"),
+    ("NL", "Nagaland"),
+    ("OR", "Odisha"),
+    ("PB", "Punjab"),
+    ("PY", "Puducherry"),
+    ("RJ", "Rajasthan"),
+    ("SK", "Sikkim"),
+    ("TN", "Tamil Nadu"),
+    ("TS", "Telangana"),
+    ("TR", "Tripura"),
+    ("UP", "Uttar Pradesh"),
+    ("UK", "Uttarakhand"),
+    ("WB", "West Bengal"),
+]
+
+class Party(models.Model):
+    party_name = models.CharField(max_length=150)
+    full_name = models.CharField(max_length=200, blank=True)
+    address = models.TextField(blank=True)
+
+    pan_number = models.CharField(max_length=10, blank=True)
+    gst_number = models.CharField(max_length=15, blank=True)
+    tan_number = models.CharField(max_length=10, blank=True)
+
+    state = models.CharField(max_length=2, choices=INDIA_STATE_CHOICES, blank=True)
+    phone_number = models.CharField(max_length=15, blank=True)
+    email = models.EmailField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-id"]
+
+    def __str__(self):
+        return self.party_name

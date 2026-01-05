@@ -46,6 +46,22 @@ body.app{
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+#btnProfile:hover {
+  background: var(--blue);
+}
+
+#btnProfile:hover .ico {
+  stroke: white;
+}
+#btnProfile:hover{
+  
+  border: 4px solid black;
+}
+
+#btnProfile:hover .ico path {
+  stroke: white;
+  border: 2px solid black;
+}
 
 .icon-jobber{
   width: 18px;
@@ -1810,6 +1826,406 @@ body.sb-collapsed .sb-toggle-ico{
     justify-content:stretch;
   }
   .material-form-embed .mf-btn{
+    flex: 1;
+  }
+}
+/* =========================================================
+   PARTIES EMBED (SAME UI AS JOBBERS + MATERIALS)
+   Drop this at the END of your app.css
+   - Styles are scoped to .parties-embed / .party-form-embed
+   - Matches your existing look (orange add, icon buttons, table wrap, etc.)
+========================================================= */
+
+/* --------- List wrapper (same spacing as jobbers/materials) --------- */
+.parties-embed{
+  padding: 10px 6px;
+}
+
+/* Header */
+.parties-embed .pt-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 12px;
+}
+
+.parties-embed .pt-title{
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.parties-embed .pt-sub{
+  font-size: 12px;
+  opacity: .7;
+  margin-top: 4px;
+}
+
+/* Header actions (Add + Close) */
+.parties-embed .pt-head-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* Close icon button (like materials/jobbers) */
+.parties-embed .pt-close{
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.10);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  text-decoration:none;
+  color:#000;
+}
+.parties-embed .pt-close:hover{ color: red; }
+
+.parties-embed .pt-ico{
+  width: 18px;
+  height: 18px;
+  fill:none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Add button (orange like materials/jobbers) */
+.parties-embed .pt-add{
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--orange);
+  color: #fff;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight: 800;
+  text-decoration:none;
+  border: 1px solid rgba(0,0,0,.10);
+}
+.parties-embed .pt-add:hover{ background:#000; color:#fff; }
+
+.parties-embed .pt-add-ico{
+  width: 18px;
+  height: 18px;
+  fill:none;
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Tools row (search) */
+.parties-embed .pt-tools{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom: 12px;
+}
+
+.parties-embed .pt-search{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  min-width: 320px;
+}
+
+.parties-embed .pt-search input[type="text"]{
+  appearance:none;
+  flex:1;
+  min-width: 220px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.9);
+  outline:none;
+  box-sizing:border-box;
+}
+
+.parties-embed .pt-search input[type="text"]:focus{
+  border-color: rgba(0,0,0,.22);
+}
+
+/* Search button */
+.parties-embed .pt-search-btn{
+  appearance:none;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.9);
+  font-weight: 800;
+  cursor:pointer;
+}
+.parties-embed .pt-search-btn:hover{
+  background:#000;
+  color:#fff;
+}
+
+/* Table wrap (same as jobbers/materials) */
+.parties-embed .pt-tablewrap{
+  overflow:auto;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.06);
+  background: rgba(255,255,255,.65);
+}
+
+.parties-embed .pt-table{
+  width:100%;
+  border-collapse: collapse;
+}
+
+.parties-embed .pt-table th,
+.parties-embed .pt-table td{
+  padding: 10px 12px;
+  text-align:left;
+  font-size: 12px;
+}
+
+.parties-embed .pt-table thead th{
+  font-size: 11px;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  opacity: .7;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+
+.parties-embed .pt-table tbody tr + tr td{
+  border-top: 1px solid rgba(0,0,0,.06);
+}
+
+.parties-embed .pt-actions{
+  white-space:nowrap;
+}
+
+/* Links (orange) */
+.parties-embed .pt-link{
+  font-weight: 700;
+  text-decoration:none;
+  color: var(--orange);
+  background:none;
+  border:none;
+  padding:0;
+  cursor:pointer;
+}
+.parties-embed .pt-link:hover{ text-decoration: underline; }
+
+.parties-embed .pt-link.danger{ color: rgba(238,61,133,1); }
+
+.parties-embed .pt-dot{
+  margin: 0 6px;
+  opacity: .45;
+}
+
+.parties-embed .pt-empty{
+  padding: 14px 12px;
+  opacity: .7;
+}
+
+/* =========================================================
+   PARTY FORM EMBED (same style as jobber form embed)
+========================================================= */
+
+.party-form-embed{
+  padding: 10px 6px;
+}
+
+/* Head row */
+.party-form-embed .pf-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 12px;
+}
+
+.party-form-embed .pf-title{
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.party-form-embed .pf-sub{
+  font-size: 12px;
+  opacity: .7;
+  margin-top: 4px;
+}
+
+.party-form-embed .pf-head-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* Back icon button */
+.party-form-embed .pf-back{
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.10);
+  color:#000;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+}
+.party-form-embed .pf-back:hover{ color: var(--orange); }
+
+.party-form-embed .pf-back-ico{
+  width: 18px;
+  height: 18px;
+  fill:none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Close icon button */
+.party-form-embed .pf-close{
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.10);
+  color:#000;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+.party-form-embed .pf-close:hover{ color: red; }
+
+.party-form-embed .pf-ico{
+  width: 18px;
+  height: 18px;
+  fill:none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Form grid (2 columns like jobber form embed) */
+.party-form-embed .pf-form{
+  margin-top: 8px;
+}
+
+.party-form-embed .pf-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 12px;
+}
+
+.party-form-embed .pf-full{ grid-column: 1 / -1; }
+
+.party-form-embed .pf-field label{
+  display:block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  opacity: .75;
+  margin: 0 0 6px;
+}
+
+.party-form-embed input,
+.party-form-embed select,
+.party-form-embed textarea{
+  width: 100% !important;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.92);
+  outline: none;
+  appearance: none;
+}
+
+.party-form-embed textarea{
+  height: auto;
+  min-height: 96px;
+  resize: vertical;
+  padding: 10px 12px;
+}
+
+/* Nice select arrow */
+.party-form-embed select{
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(0,0,0,.45) 50%),
+    linear-gradient(135deg, rgba(0,0,0,.45) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 17px, calc(100% - 12px) 17px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+/* Errors */
+.party-form-embed .pf-err{
+  color: var(--pink);
+  font-size: 12px;
+  margin-top: 6px;
+  font-weight: 700;
+}
+
+/* Footer buttons */
+.party-form-embed .pf-footer{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  margin-top: 14px;
+}
+
+.party-form-embed .pf-btn{
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-weight: 800;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.95);
+  cursor:pointer;
+  text-decoration:none;
+  color:#000;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.party-form-embed .pf-btn-save{
+  background: var(--orange);
+  color: #fff;
+  border: none;
+}
+.party-form-embed .pf-btn-save:hover{
+  background: #000;
+  color:#fff;
+}
+
+.party-form-embed .pf-btn-cancel:hover{
+  background:#000;
+  color:#fff;
+}
+
+/* Responsive */
+@media (max-width: 560px){
+  .party-form-embed .pf-grid{
+    grid-template-columns: 1fr;
+  }
+  .party-form-embed .pf-footer{
+    justify-content:stretch;
+  }
+  .party-form-embed .pf-btn{
     flex: 1;
   }
 }

@@ -496,6 +496,7 @@
       "Jobber": "{% url 'accounts:jobber_list' %}",
       "Jobber Type": "{% url 'accounts:jobbertype_list' %}",
       "Material / Trim": "{% url 'accounts:material_list' %}",
+      "Party": "{% url 'accounts:party_list' %}", //
     };
 
     function tileHtml(u) {
@@ -564,14 +565,16 @@
       const routeJobber = ROUTES["Jobber"] ? new URL(ROUTES["Jobber"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
       const routeType = ROUTES["Jobber Type"] ? new URL(ROUTES["Jobber Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
       const routeMaterial = ROUTES["Material / Trim"] ? new URL(ROUTES["Material / Trim"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-
+      const routeParty = ROUTES["Party"] ? new URL(ROUTES["Party"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
       const prefixes = [
         "/master/jobbers/",
         "/master/jobber-types/",
         "/master/materials/",
+        "/master/parties/",
         routeJobber,
         routeType,
         routeMaterial,
+        routeParty, 
       ].filter(Boolean);
 
       return prefixes.some((p) => path.startsWith(p));
@@ -920,7 +923,7 @@
             const href = tile.getAttribute("href") || "#";
 
             // Only these open embed for now
-            if (title === "Jobber" || title === "Jobber Type" || title === "Material / Trim") {
+            if (title === "Jobber" || title === "Jobber Type" || title === "Material / Trim" || title === "Party") {
               e.preventDefault();
               openMastersPanel(title, href);
               return;

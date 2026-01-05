@@ -1,0 +1,16 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Party - InventTech{% endblock %}
+{% block page_title %}{% if mode == "edit" %}Edit Party{% else %}Create Party{% endif %}{% endblock %}
+{% block page_subtitle %}Party details{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="grid">
+      <div class="card c8">
+        {% include "accounts/parties/form_embed.html" %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

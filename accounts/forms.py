@@ -8,6 +8,10 @@ from .models import (
     Material, YarnDetail, GreigeDetail, FinishedDetail, TrimDetail
 )
 
+from .models import Party
+from .models import Party
+import re
+
 class JobberForm(forms.ModelForm):
     class Meta:
         model = Jobber
@@ -226,3 +230,48 @@ class MaterialForm(forms.Form):
             )
 
         return material
+
+
+# ========================================================================
+PAN_RE = re.compile(r"^[A-Z]{5}[0-9]{4}[A-Z]$")
+GST_RE = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
+PHONE_RE = re.compile(r"^[0-9]{10,15}$")
+
+class PartyForm(forms.ModelForm):
+    class Meta:
+        model = Party
+        fields = [
+            "party_name",
+            "full_name",
+            "address",
+            "pan_number",
+            "gst_number",
+            "tan_number",
+            "state",
+            "phone_number",
+            "email",
+        ]
+
+    def clean_party_name(self):
+        v = (self.cleaned_data.get("party_name") or "").strip()
+        if not v:
+            raise forms.ValidationError("Party Name is required.")
+        return v
+
+    def clean_pan_number(self):
+        v = (self.cleaned_data.get("pan_number") or "").strip().upper()
+        if v and not PAN_RE.match(v):
+            raise forms.ValidationError("Invalid PAN format. Example: ABCDE1234F")
+        return v
+
+    def clean_gst_number(self):
+        v = (self.cleaned_data.get("gst_number") or "").strip().upper()
+        if v and not GST_RE.match(v):
+            raise forms.ValidationError("Invalid GST format. Example: 27ABCDE1234F1Z5")
+        return v
+
+    def clean_phone_number(self):
+        v = (self.cleaned_data.get("phone_number") or "").strip()
+        if v and not PHONE_RE.match(v):
+            raise forms.ValidationError("Phone must be numeric (10–15 digits).")
+        return v
