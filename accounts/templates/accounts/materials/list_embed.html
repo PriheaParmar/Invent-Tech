@@ -1,119 +1,127 @@
 <div class="materials-embed">
-  <div class="mat-head">
-    <div>
-      <div class="mat-title">Materials</div>
-      <div class="mat-sub">Yarn • Greige • Finished • Trim</div>
+    <div class="mat-head">
+        <div>
+            <div class="mat-title">Materials</div>
+            <div class="mat-sub">Yarn • Greige • Finished • Trim</div>
+        </div>
+
+        <div class="mat-head-actions">
+
+            <a class="mat-btn ghost btn-refresh" href="{% url 'accounts:material_list' %}"><svg class="refresh-svg"
+                    xmlns="http://www.w3.org/2000/svg" fill="#000000" width="20px" height="20px" viewBox="0 0 32 32">
+                    <path
+                        d="M27.1 14.313V5.396L24.158 8.34c-2.33-2.325-5.033-3.503-8.11-3.503C9.902 4.837 4.901 9.847 4.899 16c.001 6.152 5.003 11.158 11.15 11.16 4.276 0 9.369-2.227 10.836-8.478l.028-.122h-3.23l-.022.068c-1.078 3.242-4.138 5.421-7.613 5.421a8 8 0 0 1-5.691-2.359A7.993 7.993 0 0 1 8 16.001c0-4.438 3.611-8.049 8.05-8.049 2.069 0 3.638.58 5.924 2.573l-3.792 3.789H27.1z" />
+                </svg></a>
+
+            <button type="button" class="mat-iconbtn" data-embed-close aria-label="Close">
+                <svg class="mat-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18 6L6 18"></path>
+                    <path d="M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
     </div>
 
-    <div class="mat-head-actions">
-      
-      <a class="mat-btn ghost btn-refresh" href="{% url 'accounts:material_list' %}"><svg class="refresh-svg" xmlns="http://www.w3.org/2000/svg" fill="#000000" width="20px" height="20px" viewBox="0 0 32 32"><path d="M27.1 14.313V5.396L24.158 8.34c-2.33-2.325-5.033-3.503-8.11-3.503C9.902 4.837 4.901 9.847 4.899 16c.001 6.152 5.003 11.158 11.15 11.16 4.276 0 9.369-2.227 10.836-8.478l.028-.122h-3.23l-.022.068c-1.078 3.242-4.138 5.421-7.613 5.421a8 8 0 0 1-5.691-2.359A7.993 7.993 0 0 1 8 16.001c0-4.438 3.611-8.049 8.05-8.049 2.069 0 3.638.58 5.924 2.573l-3.792 3.789H27.1z"/></svg></a>
+    <div class="mat-tools">
+        <form method="get" action="{% url 'accounts:material_list' %}" class="mat-search">
+  <input type="text" name="q" placeholder="Search materials…" value="{{ q|default:'' }}">
+  <button class="mat-btn primary" type="submit">Search</button>
 
-      <button type="button" class="mat-iconbtn" data-embed-close aria-label="Close">
-        <svg class="mat-ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M18 6L6 18"></path>
-          <path d="M6 6l12 12"></path>
-        </svg>
-      </button>
+  <select name="type" class="mat-btn" onchange="this.form.submit()">
+    <option value="">All Types</option>
+    {% for val, label in type_choices %}
+      <option value="{{ val }}" {% if selected_type == val %}selected{% endif %}>
+        {{ label }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <a class="mat-add" href="{% url 'accounts:material_create' %}">
+    <svg class="mat-ico" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 5v14"></path>
+      <path d="M5 12h14"></path>
+    </svg>
+  </a>
+</form>
+
     </div>
-  </div>
 
-  <div class="mat-tools">
-    <form method="get" action="{% url 'accounts:material_list' %}" class="mat-search">
-      <input type="text" name="q" placeholder="Search materials…" value="{{ q|default:'' }}">
-    
-    <button class="mat-btn primary" type="submit">Search</button>
-      <select name="type">
-        <option value="">All Types</option>
-        <option value="yarn" {% if type == "yarn" %}selected{% endif %}>Yarn</option>
-        <option value="greige" {% if type == "greige" %}selected{% endif %}>Greige</option>
-        <option value="finished" {% if type == "finished" %}selected{% endif %}>Finished Material</option>
-        <option value="trim" {% if type == "trim" %}selected{% endif %}>Trim</option>
-      </select>
+    <div class="mat-tablewrap">
+        <table class="mat-table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Material Type</th>
+                    <th>Material Name</th>
+                    <th>Key Attributes</th>
+                    <th>Remarks</th>
+                    <th class="mat-actions">Actions</th>
+                </tr>
+            </thead>
 
-      
-      <a class="mat-add" href="{% url 'accounts:material_create' %}">
-        <svg class="mat-ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 5v14"></path>
-          <path d="M5 12h14"></path>
-        </svg>
-      </a>
-    </form>
-  </div>
+            <tbody>
+                {% for m in materials %}
+                <tr>
+                    <td>
+                        {% if m.image %}
+                        <img src="{{ m.image.url }}" alt=""
+                            style="width:38px;height:38px;object-fit:cover;border-radius:10px;border:1px solid rgba(0,0,0,.10);">
+                        {% else %}
+                        <span
+                            style="display:inline-block;width:38px;height:38px;border-radius:10px;border:1px solid rgba(0,0,0,.10);background:rgba(0,0,0,.03);"></span>
+                        {% endif %}
+                    </td>
 
-  <div class="mat-tablewrap">
-    <table class="mat-table">
-      <thead>
-        <tr>
-          <th>Image</th>
-          <th>Material Type</th>
-          <th>Material Name</th>
-          <th>Key Attributes</th>
-          <th>Remarks</th>
-          <th class="mat-actions">Actions</th>
-        </tr>
-      </thead>
+                    <td><span class="mat-badge">{{ m.get_material_type_display }}</span></td>
+                    <td><strong>{{ m.name }}</strong></td>
 
-      <tbody>
-        {% for m in materials %}
-          <tr>
-            <td>
-              {% if m.image %}
-                <img src="{{ m.image.url }}" alt=""
-                     style="width:38px;height:38px;object-fit:cover;border-radius:10px;border:1px solid rgba(0,0,0,.10);">
-              {% else %}
-                <span style="display:inline-block;width:38px;height:38px;border-radius:10px;border:1px solid rgba(0,0,0,.10);background:rgba(0,0,0,.03);"></span>
-              {% endif %}
-            </td>
+                    <td>
+                        {% if m.material_type == "yarn" and m.yarn %}
+                        {{ m.yarn.yarn_type }}{% if m.yarn.yarn_subtype %} / {{ m.yarn.yarn_subtype }}{% endif %}
+                        {% if m.yarn.count_denier %} • {{ m.yarn.count_denier }}{% endif %}
+                        {% if m.yarn.color %} • {{ m.yarn.color }}{% endif %}
 
-            <td><span class="mat-badge">{{ m.get_material_type_display }}</span></td>
-            <td><strong>{{ m.name }}</strong></td>
+                        {% elif m.material_type == "greige" and m.greige %}
+                        {{ m.greige.fabric_type }}
+                        {% if m.greige.gsm %} • GSM: {{ m.greige.gsm }}{% endif %}
+                        {% if m.greige.width %} • W: {{ m.greige.width }}{% endif %}
+                        {% if m.greige.construction %} • {{ m.greige.construction }}{% endif %}
 
-            <td>
-              {% if m.material_type == "yarn" and m.yarn %}
-                {{ m.yarn.yarn_type }}{% if m.yarn.yarn_subtype %} / {{ m.yarn.yarn_subtype }}{% endif %}
-                {% if m.yarn.count_denier %} • {{ m.yarn.count_denier }}{% endif %}
-                {% if m.yarn.color %} • {{ m.yarn.color }}{% endif %}
+                        {% elif m.material_type == "finished" and m.finished %}
+                        {{ m.finished.base_fabric_type }} • {{ m.finished.get_finish_type_display }}
+                        {% if m.finished.gsm %} • GSM: {{ m.finished.gsm }}{% endif %}
+                        {% if m.finished.width %} • W: {{ m.finished.width }}{% endif %}
+                        {% if m.finished.end_use %} • {{ m.finished.end_use }}{% endif %}
 
-              {% elif m.material_type == "greige" and m.greige %}
-                {{ m.greige.fabric_type }}
-                {% if m.greige.gsm %} • GSM: {{ m.greige.gsm }}{% endif %}
-                {% if m.greige.width %} • W: {{ m.greige.width }}{% endif %}
-                {% if m.greige.construction %} • {{ m.greige.construction }}{% endif %}
+                        {% elif m.material_type == "trim" and m.trim %}
+                        {{ m.trim.trim_type }}
+                        {% if m.trim.size %} • {{ m.trim.size }}{% endif %}
+                        {% if m.trim.color %} • {{ m.trim.color }}{% endif %}
+                        {% if m.trim.brand %} • {{ m.trim.brand }}{% endif %}
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
 
-              {% elif m.material_type == "finished" and m.finished %}
-                {{ m.finished.base_fabric_type }} • {{ m.finished.get_finish_type_display }}
-                {% if m.finished.gsm %} • GSM: {{ m.finished.gsm }}{% endif %}
-                {% if m.finished.width %} • W: {{ m.finished.width }}{% endif %}
-                {% if m.finished.end_use %} • {{ m.finished.end_use }}{% endif %}
+                    <td>{{ m.remarks|default:"—" }}</td>
 
-              {% elif m.material_type == "trim" and m.trim %}
-                {{ m.trim.trim_type }}
-                {% if m.trim.size %} • {{ m.trim.size }}{% endif %}
-                {% if m.trim.color %} • {{ m.trim.color }}{% endif %}
-                {% if m.trim.brand %} • {{ m.trim.brand }}{% endif %}
-              {% else %}
-                —
-              {% endif %}
-            </td>
+                    <td class="mat-actions">
+                        <a class="mat-link" href="{% url 'accounts:material_edit' m.id %}">Edit</a>
+                        <span class="mat-dot">•</span>
 
-            <td>{{ m.remarks|default:"—" }}</td>
-
-            <td class="mat-actions">
-              <a class="mat-link" href="{% url 'accounts:material_edit' m.id %}">Edit</a>
-              <span class="mat-dot">•</span>
-
-              <form method="post" action="{% url 'accounts:material_delete' m.id %}" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="mat-link danger"
-                        onclick="return confirm('Delete this material?')">Delete</button>
-              </form>
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="6" class="mat-empty">No materials found.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+                        <form method="post" action="{% url 'accounts:material_delete' m.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="mat-link danger"
+                                onclick="return confirm('Delete this material?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="mat-empty">No materials found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>

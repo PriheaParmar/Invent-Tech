@@ -312,15 +312,20 @@ def _wants_json(request):
 def _is_embed(request) -> bool:
     return request.GET.get("embed") == "1"
 
+from django.db.models import Q
 
 def material_list(request):
     q = (request.GET.get("q") or "").strip()
-    material_type = (request.GET.get("type") or "").strip()
+    selected_type = (request.GET.get("type") or "").strip()
 
-    qs = Material.objects.all().order_by("-id").select_related("yarn", "greige", "finished", "trim")
+    qs = (
+        Material.objects.all()
+        .order_by("-id")
+        .select_related("yarn", "greige", "finished", "trim")
+    )
 
-    if material_type:
-        qs = qs.filter(material_type=material_type)
+    if selected_type:
+        qs = qs.filter(material_type=selected_type)
 
     if q:
         qs = qs.filter(
@@ -332,20 +337,32 @@ def material_list(request):
             Q(trim__trim_type__icontains=q)
         )
 
-    ctx = {"materials": qs, "q": q, "type": material_type}
+    ctx = {
+        "materials": qs,
+        "q": q,
+        "selected_type": selected_type,
+        "type_choices": Material.Type.choices,
+    }
 
     tpl = "accounts/materials/list_embed.html" if _is_embed(request) else "accounts/materials/list_page.html"
     return render(request, tpl, ctx)
+
+
+    
+
 
 
 def material_create(request):
     if request.method == "POST":
         form = MaterialForm(request.POST, request.FILES)
         if form.is_valid():
+            print("materialformerror", form.errors)
+            print("non-field", form.non_field_errors())
             form.save()
             url = reverse("accounts:material_list")
             if _is_embed(request):
                 return JsonResponse({"ok": True, "url": url})
+                
             return redirect(url)
     else:
         form = MaterialForm()

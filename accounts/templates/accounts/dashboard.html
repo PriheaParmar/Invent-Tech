@@ -605,6 +605,27 @@
       function initEmbedMount(mount, contextUrl) {
         if (!mount) return;
 
+        // ===== MATERIALS LIST FILTER (stay inside embed) =====
+        const materialsList = mount.querySelector(".materials-embed"); // CHANGED
+        if (materialsList) { // CHANGED
+          const listForm = materialsList.querySelector("form.mat-search"); // CHANGED
+          const selects = listForm ? listForm.querySelectorAll('select[name="type"]') : null; // CHANGED
+          const typeSelect = (selects && selects.length) ? selects[selects.length - 1] : null; // CHANGED (handles nested/duplicate selects safely)
+          if (listForm && typeSelect && !typeSelect.dataset.bound) { // CHANGED
+            typeSelect.dataset.bound = "1"; // CHANGED
+            typeSelect.removeAttribute("onchange"); // CHANGED (prevents inline this.form.submit() which bypasses submit event)
+            typeSelect.onchange = null; // CHANGED
+            typeSelect.addEventListener("change", () => { // CHANGED
+              if (typeof listForm.requestSubmit === "function") { // CHANGED
+                listForm.requestSubmit(); // CHANGED (fires submit event so embed submit handler intercepts)
+              } else { // CHANGED
+                listForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); // CHANGED (fallback)
+              }
+            }); // CHANGED
+          }
+        }
+        // ===== END MATERIALS LIST FILTER FIX =====
+
         const formWrap = mount.querySelector("[data-material-form]");
         if (!formWrap) return;
 

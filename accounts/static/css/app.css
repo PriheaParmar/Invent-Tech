@@ -1522,7 +1522,7 @@ body.sb-collapsed .sb-toggle-ico{
   font-size:11px; letter-spacing:.10em; text-transform:uppercase; opacity:.7;
   border-bottom: 1px solid rgba(0,0,0,.06);
 }
-.materials-embed .mat-table tbody tr + tr td{ border-top: 1px solid rgba(0,0,0,.06); }
+.materials-embed .mat-table tbody tr + tr td{ border-top: 1px solid rgba(0,0,0,.06); font-weight: 400; }
 .materials-embed .mat-empty{ padding: 14px 12px; opacity:.7; }
 
 .materials-embed .mat-badge{
@@ -1531,18 +1531,18 @@ body.sb-collapsed .sb-toggle-ico{
   border-radius: 999px;
   border: 1px solid rgba(0,0,0,.08);
   background: rgba(0,0,0,.03);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .materials-embed .mat-actions{ white-space:nowrap; }
 .materials-embed .mat-link{
-  font-weight: 800;
+  font-weight: 600;
   text-decoration:none;
+  font-size: 12px;
   color: var(--orange);
   background:none; border:none; padding:0; cursor:pointer;
 }
 .materials-embed .mat-link:hover{ text-decoration:underline; }
-.materials-embed .mat-link.danger{ color: var(--pink); }
 .materials-embed .mat-dot{ margin: 0 6px; opacity:.45; }
 .materials-embed .mat-del{ display:inline; }
 
@@ -1558,7 +1558,7 @@ body.sb-collapsed .sb-toggle-ico{
   border-radius: 14px;
   border: 1px solid rgba(0,0,0,.10);
   background: rgba(255,255,255,.85);
-  font-weight: 900;
+  font-weight: 600;
   cursor:pointer;
 }
 .materials-embed .mat-kind-pill input{ accent-color: var(--pink); }

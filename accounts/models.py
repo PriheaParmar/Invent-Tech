@@ -88,7 +88,7 @@ class Material(models.Model):
 class YarnDetail(models.Model):
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="yarn")
 
-    yarn_type = models.CharField(max_length=80)
+    yarn_type = models.CharField(max_length=80, blank=True)
     yarn_subtype = models.CharField(max_length=80, blank=True)
     count_denier = models.CharField(max_length=40, blank=True)
     color = models.CharField(max_length=60, blank=True)
@@ -100,7 +100,7 @@ class YarnDetail(models.Model):
 class GreigeDetail(models.Model):
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="greige")
 
-    fabric_type = models.CharField(max_length=120)
+    fabric_type = models.CharField(max_length=120, blank=True)
     gsm = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     width = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     construction = models.CharField(max_length=120, blank=True)
@@ -119,8 +119,8 @@ class FinishedDetail(models.Model):
 
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="finished")
 
-    base_fabric_type = models.CharField(max_length=120)
-    finish_type = models.CharField(max_length=20, choices=FinishType.choices)
+    base_fabric_type = models.CharField(max_length=120, blank=True)
+    finish_type = models.CharField(max_length=20, choices=FinishType.choices, blank=True)
     gsm = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     width = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     end_use = models.CharField(max_length=120, blank=True)
@@ -142,7 +142,7 @@ class TrimDetail(models.Model):
 
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="trim")
 
-    trim_type = models.CharField(max_length=80, choices=TRIM_TYPE_CHOICES)
+    trim_type = models.CharField(max_length=80, choices=TRIM_TYPE_CHOICES, blank=True)
     size = models.CharField(max_length=60, blank=True)
     color = models.CharField(max_length=60, blank=True)
     brand = models.CharField(max_length=80, blank=True)
