@@ -1,0 +1,62 @@
+{# Locations - Embed Form (opens inside Utilities embed panel) #}
+
+<div class="parties-embed party-form-embed">
+  <div class="pt-head">
+    <div>
+      <div class="pt-title">
+        {% if mode == "edit" %}Edit Location{% else %}Create Location{% endif %}
+      </div>
+      <div class="pt-sub">Enter location details</div>
+    </div>
+
+    <div class="pt-head-actions">
+      <a class="pt-back" href="{% url 'accounts:location_list' %}?embed=1" title="Back">
+        <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </a>
+
+      <button type="button" class="pt-close" data-embed-close title="Close">
+        <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <form method="post"
+        action="{% if mode == 'edit' %}{% url 'accounts:location_edit' location.id %}{% else %}{% url 'accounts:location_add' %}{% endif %}"
+        class="pt-form">
+    {% csrf_token %}
+    <input type="hidden" name="embed" value="1">
+
+    {% if form.non_field_errors %}
+      <div class="pt-errors">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <div class="pt-grid">
+      {% for field in form.visible_fields %}
+        <div class="pt-field {% if field.name == 'address' %}pt-full{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+
+          {% if field.help_text %}
+            <div class="pt-help">{{ field.help_text }}</div>
+          {% endif %}
+
+          {% for err in field.errors %}
+            <div class="pt-err">{{ err }}</div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="pt-actionsbar">
+      <button type="submit" class="pt-btn primary">Save</button>
+      <a class="pt-btn" href="{% url 'accounts:location_list' %}?embed=1">Cancel</a>
+    </div>
+  </form>
+</div>

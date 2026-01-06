@@ -1,0 +1,58 @@
+<div class="parties-embed">
+  {% include "accounts/_messages_embed.html" %}
+
+  <div class="pt-head">
+    <div>
+      <div class="pt-title">Material Types</div>
+      <div class="pt-sub">Single source of truth</div>
+    </div>
+
+    <div class="pt-head-actions">
+      <a class="pt-add" href="{% url 'accounts:materialtype_add' %}?embed=1">+ Create</a>
+      <button type="button" class="pt-close" data-embed-close title="Close">
+        <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="pt-tools">
+    <form class="pt-search" method="get" action="{% url 'accounts:materialtype_list' %}">
+      <input type="hidden" name="embed" value="1">
+      <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search type (name, description)…">
+      <button class="pt-search-btn" type="submit">Search</button>
+    </form>
+  </div>
+
+  <div class="pt-tablewrap">
+    <table class="pt-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th class="pt-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in types %}
+          <tr>
+            <td>{{ t.name }}</td>
+            <td>{{ t.description|default:"—" }}</td>
+            <td class="pt-actions">
+              <a class="pt-link" href="{% url 'accounts:materialtype_edit' t.id %}?embed=1">Edit</a>
+              <span class="pt-dot">•</span>
+              <form method="post" action="{% url 'accounts:materialtype_delete' t.id %}?embed=1" style="display:inline;">
+                {% csrf_token %}
+                <button class="pt-link danger" type="submit" onclick="return confirm('Delete this type?')">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3" class="pt-empty">No types found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

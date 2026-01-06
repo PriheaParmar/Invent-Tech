@@ -1,0 +1,30 @@
+<div class="parties-embed">
+    {% include "accounts/_messages_embed.html" %}
+
+    <div class="pt-head">
+        <div>
+            <div class="pt-title">{% if mode == "edit" %}Edit Shade{% else %}Create Shade{% endif %}</div>
+            <div class="pt-sub">Shade master</div>
+        </div>
+
+        <div class="pt-head-actions">
+            <a class="pt-link" href="{% url 'accounts:materialshade_list' %}?embed=1">Back</a>
+            <button type="button" class="pt-close" data-embed-close title="Close">
+                <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18 6L6 18"></path>
+                    <path d="M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="embed" value="1">
+        {{ form.as_p }}
+
+        <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+            <button class="pt-add" type="submit">Save</button>
+        </div>
+    </form>
+</div>

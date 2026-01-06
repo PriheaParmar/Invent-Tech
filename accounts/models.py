@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.db import models
 
+# ============================================================
+# USER
+# ============================================================
+
 class UserExtra(models.Model):
     """Extra user information (admin-side)."""
 
@@ -17,6 +21,7 @@ class UserExtra(models.Model):
     def __str__(self):
         return self.user.username
 
+
 class OwnedModel(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -25,6 +30,10 @@ class OwnedModel(models.Model):
     class Meta:
         abstract = True
 
+
+# ============================================================
+# JOBBERS
+# ============================================================
 
 class JobberType(OwnedModel):
     name = models.CharField(max_length=80)
@@ -64,15 +73,28 @@ class Jobber(OwnedModel):
     def __str__(self):
         return self.name
 
-class Material(models.Model):
-    class Type(models.TextChoices):
-        YARN = "yarn", "Yarn"
-        GREIGE = "greige", "Greige"
-        FINISHED = "finished", "Finished Material"
-        TRIM = "trim", "Trim"
 
-    material_type = models.CharField(max_length=16, choices=Type.choices,
-        default=Type.YARN,)
+# ============================================================
+# MATERIAL (UPDATED: Material.material_type is now FK to MaterialType)
+# ============================================================
+
+class Material(models.Model):
+    """
+    Material type is now driven by Utilities → MaterialType master.
+    This replaces the old static TextChoices and enables dynamic dropdown.
+    """
+
+    # 🔗 Material ↔ MaterialType link (single source of truth)
+    # - SET_NULL avoids breaking existing materials if a type is removed later.
+    # - Keep existing field name `material_type` to avoid template/form breakage.
+    material_type = models.ForeignKey(
+        "MaterialType",                 # string ref so class can be defined later in file
+        on_delete=models.SET_NULL,      # no breaking deletes; you can enforce protect in views
+        null=True,
+        blank=True,
+        related_name="materials",
+    )
+
     name = models.CharField(max_length=150)
     remarks = models.TextField(blank=True)
 
@@ -82,7 +104,10 @@ class Material(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.get_material_type_display()} - {self.name}"
+        # Previously used get_material_type_display(); FK doesn't have that.
+        # This keeps similar output without breaking.
+        mt = getattr(self.material_type, "name", "")
+        return f"{mt} - {self.name}" if mt else self.name
 
 
 class YarnDetail(models.Model):
@@ -150,6 +175,11 @@ class TrimDetail(models.Model):
     def __str__(self):
         return f"TrimDetail({self.material_id})"
 
+
+# ============================================================
+# PARTY
+# ============================================================
+
 INDIA_STATE_CHOICES = [
     ("AN", "Andaman & Nicobar Islands"),
     ("AP", "Andhra Pradesh"),
@@ -189,6 +219,7 @@ INDIA_STATE_CHOICES = [
     ("WB", "West Bengal"),
 ]
 
+
 class Party(models.Model):
     party_name = models.CharField(max_length=150)
     full_name = models.CharField(max_length=200, blank=True)
@@ -210,3 +241,138 @@ class Party(models.Model):
 
     def __str__(self):
         return self.party_name
+
+    @property
+    def ui_name(self):
+        for f in ("name", "party_name"):
+            v = getattr(self, f, None)
+            if v:
+                return v
+        return ""
+
+    @property
+    def ui_phone(self):
+        for f in (
+            "phone",
+            "mobile",
+            "phone_no",
+            "mobile_no",
+            "contact",
+            "contact_no",
+            "contact_number",
+            "whatsapp",
+            "whatsapp_no",
+            "tel",
+        ):
+            v = getattr(self, f, None)
+            if v:
+                return v
+        return ""
+
+    @property
+    def ui_gstin(self):
+        for f in ("gstin", "gst", "gst_no", "gst_number"):
+            v = getattr(self, f, None)
+            if v:
+                return v
+        return ""
+
+
+# ============================================================
+# LOCATION
+# ============================================================
+
+class Location(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="locations")
+    name = models.CharField(max_length=120)
+    city = models.CharField(max_length=80, blank=True, default="")
+    state = models.CharField(max_length=80, blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    pincode = models.CharField(max_length=10, blank=True, default="")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("owner", "name")]
+
+    def __str__(self):
+        return self.name
+
+
+# ============================================================
+# UTILITIES (MaterialType, MaterialShade)
+# ============================================================
+
+class MaterialShade(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="material_shades")
+    name = models.CharField(max_length=120)
+    code = models.CharField(max_length=40, blank=True, default="")
+    notes = models.TextField(blank=True, default="")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("owner", "name")
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class MaterialType(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="material_types")
+    name = models.CharField(max_length=120)
+    description = models.TextField(blank=True, default="")
+
+    class Meta:
+        unique_together = ("owner", "name")
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+# ============================================================
+# FIRM
+# ============================================================
+
+class Firm(models.Model):
+    FIRM_TYPES = [
+        ("proprietorship", "Proprietorship"),
+        ("partnership", "Partnership"),
+        ("llp", "LLP"),
+        ("pvt_ltd", "Pvt Ltd"),
+    ]
+
+    owner = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="firm")
+
+    # Professional / Firm Details
+    firm_name = models.CharField(max_length=180)
+    firm_type = models.CharField(max_length=30, choices=FIRM_TYPES)
+
+    address_line = models.CharField(max_length=255)
+    city = models.CharField(max_length=80)
+    state = models.CharField(max_length=80)
+    pincode = models.CharField(max_length=10)
+
+    phone = models.CharField(max_length=20, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+    website = models.URLField(blank=True, default="")
+
+    # Registration & Legal
+    gst_number = models.CharField(max_length=15, blank=True, default="")
+    pan_number = models.CharField(max_length=10, blank=True, default="")
+    tan_number = models.CharField(max_length=10, blank=True, default="")
+    cin_number = models.CharField(max_length=21, blank=True, default="")
+
+    # Bank
+    bank_name = models.CharField(max_length=120, blank=True, default="")
+    account_holder_name = models.CharField(max_length=120, blank=True, default="")
+    account_number = models.CharField(max_length=30, blank=True, default="")
+    ifsc_code = models.CharField(max_length=11, blank=True, default="")
+    branch_name = models.CharField(max_length=120, blank=True, default="")
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.firm_name

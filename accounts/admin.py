@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Jobber, JobberType, UserExtra
+from .models import Jobber, JobberType, UserExtra, Party, Location
 
 @admin.register(JobberType)
 class JobberTypeAdmin(admin.ModelAdmin):
@@ -18,3 +18,12 @@ class JobberAdmin(admin.ModelAdmin):
 class UserExtraAdmin(admin.ModelAdmin):
     list_display = ("user", "phone", "designation", "department")
     search_fields = ("user__username", "phone", "designation", "department")
+
+@admin.register(Party)
+class PartyAdmin(admin.ModelAdmin):
+    list_display = ("id", "party_name", "phone_number", "gst_number", "state", "created_at")
+    search_fields = ("party_name", "phone_number", "gst_number", "pan_number", "email")
+    
+
+
+admin.site.register(Location)

@@ -36,5 +36,31 @@ urlpatterns = [
     path("master/parties/add/", views.party_create, name="party_add"),
     path("master/parties/<int:pk>/edit/", views.party_update, name="party_edit"),
     path("master/parties/<int:pk>/delete/", views.party_delete, name="party_delete"),
+    
+    path("master/locations/", views.location_list, name="location_list"),
+    path("master/locations/add/", views.location_create, name="location_add"),
+    path("master/locations/<int:pk>/edit/", views.location_update, name="location_edit"),
+    path("master/locations/<int:pk>/delete/", views.location_delete, name="location_delete"),
+    
+    path("master/firms/", views.firm_list, name="firm_list"),
+    path("master/firms/add/", views.firm_create, name="firm_add"),
+    path("master/firms/<int:pk>/edit/", views.firm_update, name="firm_edit"),
+    path("master/firms/<int:pk>/delete/", views.firm_delete, name="firm_delete"),
+
+    # optional legacy alias (if you already linked to /master/firm/)
+    path("master/firm/", views.firm_list, name="firm"),
+
+    # Material Shades
+    path("master/material-shades/", views.materialshade_list, name="materialshade_list"),
+    path("master/material-shades/add/", views.materialshade_create, name="materialshade_add"),
+    path("master/material-shades/<int:pk>/edit/", views.materialshade_update, name="materialshade_edit"),
+    path("master/material-shades/<int:pk>/delete/", views.materialshade_delete, name="materialshade_delete"),
+
+    # Material Types
+    path("master/material-types/", views.materialtype_list, name="materialtype_list"),
+    path("master/material-types/add/", views.materialtype_create, name="materialtype_add"),
+    path("master/material-types/<int:pk>/edit/", views.materialtype_update, name="materialtype_edit"),
+    path("master/material-types/<int:pk>/delete/", views.materialtype_delete, name="materialtype_delete"),
+
 ]
 

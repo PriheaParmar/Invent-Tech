@@ -9,8 +9,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include(("accounts.urls", "accounts"), namespace="accounts")),
 
-    # Accounts app with namespace "accounts"
-    path("", include(("accounts.urls", "accounts"), namespace="accounts")),
 
     # Password reset URLs
     path(

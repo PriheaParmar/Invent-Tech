@@ -1,0 +1,59 @@
+<div class="parties-embed">
+  {% include "accounts/_messages_embed.html" %}
+
+  <div class="pt-head">
+    <div>
+      <div class="pt-title">Material Shades</div>
+      <div class="pt-sub">Manage shades</div>
+    </div>
+
+    <div class="pt-head-actions">
+      <a class="pt-add" href="{% url 'accounts:materialshade_add' %}?embed=1">+ Create</a>
+
+      <button type="button" class="pt-close" data-embed-close title="Close">
+        <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="pt-tools">
+    <form class="pt-search" method="get" action="{% url 'accounts:materialshade_list' %}">
+      <input type="hidden" name="embed" value="1">
+      <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search shade (name, code)…">
+      <button class="pt-search-btn" type="submit">Search</button>
+    </form>
+  </div>
+
+  <div class="pt-tablewrap">
+    <table class="pt-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Code</th>
+          <th class="pt-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in shades %}
+          <tr>
+            <td>{{ s.name }}</td>
+            <td>{{ s.code|default:"—" }}</td>
+            <td class="pt-actions">
+              <a class="pt-link" href="{% url 'accounts:materialshade_edit' s.id %}?embed=1">Edit</a>
+              <span class="pt-dot">•</span>
+              <form method="post" action="{% url 'accounts:shade_delete' s.id %}?embed=1" style="display:inline;">
+                {% csrf_token %}
+                <button class="pt-link danger" type="submit" onclick="return confirm('Delete this shade?')">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3" class="pt-empty">No shades found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,18 +1,47 @@
-<div class="card soft">
-  <div class="card-head" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+{# accounts/parties/form_embed.html #}
+
+<div class="party-form-embed">
+  <div class="pf-head">
     <div>
-      <div class="card-title">{% if mode == "edit" %}Edit Party{% else %}Create Party{% endif %}</div>
-      <div class="card-sub">Enter details</div>
+      <div class="pf-title">{% if mode == "edit" %}Edit Party{% else %}Create Party{% endif %}</div>
+      <div class="pf-sub">Enter details</div>
     </div>
 
-    <a class="btn" href="{% url 'accounts:party_list' %}">← Back</a>
+    <div class="pf-head-actions">
+      <a class="pf-back" href="{% url 'accounts:party_list' %}" title="Back">
+        <svg class="pf-back-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </a>
+
+      <button type="button" class="pf-close" data-embed-close title="Close">
+        <svg class="pf-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
   </div>
 
-  <form method="post"
-        action="{% if mode == 'edit' %}{% url 'accounts:party_edit' party.id %}{% else %}{% url 'accounts:party_add' %}{% endif %}"
-        style="margin-top:12px;">
+  <form class="pf-form"
+        method="post"
+        action="{% if mode == 'edit' %}{% url 'accounts:party_edit' party.id %}{% else %}{% url 'accounts:party_add' %}{% endif %}">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn primary">Save</button>
+
+    <div class="pf-grid">
+      {% for field in form %}
+        <div class="pf-field pf-full">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <div class="pf-err">{{ field.errors|striptags }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="pf-footer">
+      <button type="submit" class="pf-btn pf-btn-save">Save</button>
+    </div>
   </form>
 </div>

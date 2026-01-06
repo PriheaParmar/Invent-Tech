@@ -1,0 +1,11 @@
+<h2>Delete Jobber</h2>
+
+<p>
+  Are you sure you want to delete <b>{{ jobber }}</b>?
+</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Yes, delete</button>
+  <a href="{% url 'utilities:jobber_list' %}" style="margin-left:10px;">Cancel</a>
+</form>

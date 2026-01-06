@@ -1,0 +1,56 @@
+<div class="parties-embed">
+    <div class="pt-head">
+        <div>
+            <div class="pt-title">Firm</div>
+            <div class="pt-sub">Manage firm details</div>
+        </div>
+
+        <div class="pt-head-actions">
+            <a class="pt-add" href="{% url 'accounts:firm_add' %}?embed=1">
+                + Create
+            </a>
+
+            <button type="button" class="pt-close" data-embed-close title="Close">×</button>
+        </div>
+    </div>
+
+    <div class="pt-tablewrap">
+        <table class="pt-table">
+            <thead>
+                <tr>
+                    <th>Firm Name</th>
+                    <th>Type</th>
+                    <th>GST</th>
+                    <th>Phone</th>
+                    <th class="pt-actions">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for f in firms %}
+                <tr>
+                    <td>{{ f.firm_name }}</td>
+                    <td>{{ f.get_firm_type_display }}</td>
+                    <td>{{ f.gst_number|default:"—" }}</td>
+                    <td>{{ f.phone|default:"—" }}</td>
+                    <td class="pt-actions">
+                        <a class="pt-link" href="{% url 'accounts:firm_edit' f.id %}?embed=1">Edit</a>
+                        <span class="pt-dot">•</span>
+
+                        <form method="post" action="{% url 'accounts:firm_delete' f.id %}?embed=1"
+                            style="display:inline;">
+                            {% csrf_token %}
+                            <button class="pt-link danger" type="submit"
+                                onclick="return confirm('Delete firm?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="pt-empty">No firm details found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
