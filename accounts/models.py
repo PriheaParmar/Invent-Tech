@@ -78,18 +78,45 @@ class Jobber(OwnedModel):
 # MATERIAL (UPDATED: Material.material_type is now FK to MaterialType)
 # ============================================================
 
+# models.py (only Material + masters shown)
+
+from django.conf import settings
+from django.db import models
+
+
 class Material(models.Model):
     """
-    Material type is now driven by Utilities → MaterialType master.
-    This replaces the old static TextChoices and enables dynamic dropdown.
+    Step 1: material_kind (Yarn/Greige/Finished/Trim) controls which detail form opens.
+    Step 2: material_type is a master-driven FK (Utilities → MaterialType).
+    Step 3: material_shade is a master-driven FK (Utilities → MaterialShade).
     """
 
-    # 🔗 Material ↔ MaterialType link (single source of truth)
-    # - SET_NULL avoids breaking existing materials if a type is removed later.
-    # - Keep existing field name `material_type` to avoid template/form breakage.
+    # STEP 1 (fixed 4 options)
+    MATERIAL_KIND_CHOICES = [
+        ("yarn", "Yarn"),
+        ("greige", "Greige"),
+        ("finished", "Finished Material"),
+        ("trim", "Trim"),
+    ]
+    material_kind = models.CharField(
+        max_length=16,
+        choices=MATERIAL_KIND_CHOICES,
+        default="yarn",
+    )
+
+    # STEP 2 (dynamic master)
     material_type = models.ForeignKey(
-        "MaterialType",                 # string ref so class can be defined later in file
-        on_delete=models.SET_NULL,      # no breaking deletes; you can enforce protect in views
+        "MaterialType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="materials",
+    )
+
+    # STEP 3 (dynamic master)  ✅ REQUIRED so shade can be saved + reused
+    material_shade = models.ForeignKey(
+        "MaterialShade",
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="materials",
@@ -97,41 +124,30 @@ class Material(models.Model):
 
     name = models.CharField(max_length=150)
     remarks = models.TextField(blank=True)
-
     image = models.ImageField(upload_to="materials/%Y/%m/", blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        # Previously used get_material_type_display(); FK doesn't have that.
-        # This keeps similar output without breaking.
         mt = getattr(self.material_type, "name", "")
         return f"{mt} - {self.name}" if mt else self.name
 
 
 class YarnDetail(models.Model):
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="yarn")
-
     yarn_type = models.CharField(max_length=80, blank=True)
     yarn_subtype = models.CharField(max_length=80, blank=True)
     count_denier = models.CharField(max_length=40, blank=True)
     color = models.CharField(max_length=60, blank=True)
 
-    def __str__(self):
-        return f"YarnDetail({self.material_id})"
-
 
 class GreigeDetail(models.Model):
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="greige")
-
     fabric_type = models.CharField(max_length=120, blank=True)
     gsm = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     width = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     construction = models.CharField(max_length=120, blank=True)
-
-    def __str__(self):
-        return f"GreigeDetail({self.material_id})"
 
 
 class FinishedDetail(models.Model):
@@ -143,15 +159,11 @@ class FinishedDetail(models.Model):
         OTHER = "other", "Other"
 
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="finished")
-
     base_fabric_type = models.CharField(max_length=120, blank=True)
     finish_type = models.CharField(max_length=20, choices=FinishType.choices, blank=True)
     gsm = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     width = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     end_use = models.CharField(max_length=120, blank=True)
-
-    def __str__(self):
-        return f"FinishedDetail({self.material_id})"
 
 
 class TrimDetail(models.Model):
@@ -166,15 +178,37 @@ class TrimDetail(models.Model):
     ]
 
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="trim")
-
     trim_type = models.CharField(max_length=80, choices=TRIM_TYPE_CHOICES, blank=True)
     size = models.CharField(max_length=60, blank=True)
     color = models.CharField(max_length=60, blank=True)
     brand = models.CharField(max_length=80, blank=True)
 
-    def __str__(self):
-        return f"TrimDetail({self.material_id})"
 
+class MaterialShade(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="material_shades")
+    name = models.CharField(max_length=120)
+    code = models.CharField(max_length=40, blank=True, default="")
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        unique_together = ("owner", "name")
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class MaterialType(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="material_types")
+    name = models.CharField(max_length=120)
+    description = models.TextField(blank=True, default="")
+
+    class Meta:
+        unique_together = ("owner", "name")
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
 
 # ============================================================
 # PARTY

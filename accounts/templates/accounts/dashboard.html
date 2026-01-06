@@ -670,7 +670,7 @@
         const isAdd = ctx.includes("/master/materials/add");
         const isEdit = ctx.includes("/edit/");
 
-        const typeEl = formWrap.querySelector('[name="material_type"]');
+        const typeEl = formWrap.querySelector('[name="material_kind"]');
 
         function ensureOnly4Options_Select(selectEl) {
           if (!selectEl) return;
@@ -703,7 +703,7 @@
         }
 
         function ensureOnly4Options_Radios() {
-          const radios = Array.from(formWrap.querySelectorAll('input[type="radio"][name="material_type"]'));
+          const radios = Array.from(formWrap.querySelectorAll('input[type="radio"][name="material_kind"]'));
           if (!radios.length) return;
 
           radios.forEach((r) => {
@@ -731,8 +731,8 @@
         function setEnabled(root, enabled) {
           const ctrls = root.querySelectorAll("input, select, textarea, button");
           ctrls.forEach((el) => {
-            // never disable material_type control itself
-            if (el.name === "material_type") return;
+            // never disable material_kind control itself
+            if (el.name === "material_kind") return;
 
             if (el.matches("input, select, textarea")) {
               primeReqState(el);
@@ -747,12 +747,12 @@
         const sections = Array.from(formWrap.querySelectorAll(".mf-section[data-type]"));
 
         function detectValue() {
-          const el = formWrap.querySelector('[name="material_type"]');
+          const el = formWrap.querySelector('[name="material_kind"]');
           if (!el) return "";
 
           if (el.tagName === "SELECT") return (el.value || "").trim();
 
-          const checked = formWrap.querySelector('[name="material_type"]:checked');
+          const checked = formWrap.querySelector('[name="material_kind"]:checked');
           return checked ? (checked.value || "").trim() : "";
         }
 
@@ -786,7 +786,7 @@
 
         // 2) bind change
         formWrap.addEventListener("change", (e) => {
-          if (e.target && e.target.name === "material_type") {
+          if (e.target && e.target.name === "material_kind") {
             showType(detectValue());
           }
         });

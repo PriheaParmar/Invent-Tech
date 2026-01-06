@@ -279,44 +279,10 @@ def jobbertype_list_create(request):
 # MATERIALS (embed supported)
 # ==========================
 @login_required
-def material_list(request):
-    q = (request.GET.get("q") or "").strip()
-    selected_type = (request.GET.get("type") or "").strip()
-
-    qs = Material.objects.all().order_by("-id").select_related("yarn", "greige", "finished", "trim")
-
-    if selected_type:
-        if selected_type.isdigit():
-            qs = qs.filter(material_type_id=int(selected_type))
-
-
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q)
-            | Q(remarks__icontains=q)
-            | Q(yarn__yarn_type__icontains=q)
-            | Q(greige__fabric_type__icontains=q)
-            | Q(finished__base_fabric_type__icontains=q)
-            | Q(trim__trim_type__icontains=q)
-        )
-
-    ctx = {
-        "materials": qs,
-        "q": q,
-        "selected_type": selected_type,
-        "type_choices": MaterialType.objects.filter(owner=request.user).order_by("name"),
-
-    }
-
-    tpl = "accounts/materials/list_embed.html" if _is_embed(request) else "accounts/materials/list_page.html"
-    return render(request, tpl, ctx)
-
-@login_required
 @require_http_methods(["GET", "POST"])
 def material_create(request):
     if request.method == "POST":
         form = MaterialForm(request.POST, request.FILES, user=request.user)
-
 
         if form.is_valid():
             form.save()
@@ -327,10 +293,10 @@ def material_create(request):
     else:
         form = MaterialForm(user=request.user)
 
-
     ctx = {"form": form, "mode": "create"}
     tpl = "accounts/materials/form_embed.html" if _is_embed(request) else "accounts/materials/form_page.html"
     return render(request, tpl, ctx)
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -349,10 +315,34 @@ def material_edit(request, pk: int):
     else:
         form = MaterialForm(instance=material, user=request.user)
 
-
-
     ctx = {"form": form, "mode": "edit", "material": material}
     tpl = "accounts/materials/form_embed.html" if _is_embed(request) else "accounts/materials/form_page.html"
+    return render(request, tpl, ctx)
+
+@login_required
+def material_list(request):
+    q = (request.GET.get("q") or "").strip()
+    selected_type = (request.GET.get("type") or "").strip()
+
+    qs = Material.objects.all().order_by("-id").select_related("yarn", "greige", "finished", "trim")
+
+    if selected_type.isdigit():
+        qs = qs.filter(material_type_id=int(selected_type))
+
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(remarks__icontains=q)
+        )
+
+    ctx = {
+        "materials": qs,
+        "q": q,
+        "selected_type": selected_type,
+        "type_choices": MaterialType.objects.filter(owner=request.user).order_by("name"),
+    }
+
+    tpl = "accounts/materials/list_embed.html" if _is_embed(request) else "accounts/materials/list_page.html"
     return render(request, tpl, ctx)
 
 @login_required
@@ -365,8 +355,6 @@ def material_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
-
-
 # ==========================
 # PARTIES (embed supported)
 # ==========================

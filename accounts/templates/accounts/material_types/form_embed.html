@@ -18,7 +18,7 @@
     </div>
   </div>
 
-  <form method="post">
+  <form method="post" enctype="multipart/form-data" action="{% url 'accounts:materialtype_add' %}">
     {% csrf_token %}
     <input type="hidden" name="embed" value="1">
     {{ form.as_p }}

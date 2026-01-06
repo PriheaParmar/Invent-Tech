@@ -87,10 +87,18 @@ class CustomUserCreationForm(UserCreationForm):
 # ============================================================
 # MATERIALS (UPDATED for MaterialType FK)
 # ============================================================
-
+# ============================================================
+# MATERIAL FORM (Step-1 Kind → Step-2 Type master → Step-3 Shade master)
+# ============================================================
 class MaterialForm(forms.Form):
-    # STEP 1 (only this is shown initially)
-    # CHANGED: was ChoiceField(Material.Type.choices); now pulls from MaterialType master (FK)
+    # STEP 1: Material Kind (fixed 4 options)
+    material_kind = forms.ChoiceField(
+        choices=[("", "Select")] + list(Material.MATERIAL_KIND_CHOICES),
+        required=True,
+        label="Material Kind",
+    )
+
+    # STEP 2: Material Type (dynamic master)
     material_type = forms.ModelChoiceField(
         queryset=MaterialType.objects.none(),
         required=False,
@@ -98,7 +106,15 @@ class MaterialForm(forms.Form):
         label="Material Type",
     )
 
-    # STEP 2 common
+    # STEP 3: Material Shade (dynamic master)
+    material_shade = forms.ModelChoiceField(
+        queryset=MaterialShade.objects.none(),
+        required=False,
+        empty_label="Select",
+        label="Material Shade",
+    )
+
+    # common
     name = forms.CharField(max_length=150, label="Material Name")
     remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}))
     image = forms.ImageField(required=False)
@@ -132,117 +148,116 @@ class MaterialForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.instance = instance
 
-        # CHANGED: populate dropdown from MaterialType master
-        qs = MaterialType.objects.all().order_by("name")
+        # Dynamic dropdowns (single source of truth)
+        type_qs = MaterialType.objects.all().order_by("name")
+        shade_qs = MaterialShade.objects.all().order_by("name")
         if user is not None:
-            qs = qs.filter(owner=user)
-        self.fields["material_type"].queryset = qs
+            type_qs = type_qs.filter(owner=user)
+            shade_qs = shade_qs.filter(owner=user)
+
+        self.fields["material_type"].queryset = type_qs
+        self.fields["material_shade"].queryset = shade_qs
 
         self.fields["name"].widget.attrs.update({"placeholder": "Enter name"})
         self.fields["remarks"].widget.attrs.update({"placeholder": "Remarks (optional)"})
 
         if instance:
-            # CHANGED: instance.material_type is now a FK object; initial can be pk or object
+            self.fields["material_kind"].initial = instance.material_kind
             self.fields["material_type"].initial = instance.material_type_id
+            self.fields["material_shade"].initial = instance.material_shade_id
             self.fields["name"].initial = instance.name
             self.fields["remarks"].initial = instance.remarks
 
-            tkey = self._type_key(instance.material_type)
+            k = instance.material_kind
 
-            if tkey == "yarn" and hasattr(instance, "yarn"):
+            if k == "yarn" and hasattr(instance, "yarn"):
                 self.fields["yarn_type"].initial = instance.yarn.yarn_type
                 self.fields["yarn_subtype"].initial = instance.yarn.yarn_subtype
                 self.fields["count_denier"].initial = instance.yarn.count_denier
                 self.fields["yarn_color"].initial = instance.yarn.color
 
-            if tkey == "greige" and hasattr(instance, "greige"):
+            if k == "greige" and hasattr(instance, "greige"):
                 self.fields["fabric_type"].initial = instance.greige.fabric_type
                 self.fields["gsm"].initial = instance.greige.gsm
                 self.fields["width"].initial = instance.greige.width
                 self.fields["construction"].initial = instance.greige.construction
 
-            if tkey == "finished" and hasattr(instance, "finished"):
+            if k == "finished" and hasattr(instance, "finished"):
                 self.fields["base_fabric_type"].initial = instance.finished.base_fabric_type
                 self.fields["finish_type"].initial = instance.finished.finish_type
                 self.fields["finished_gsm"].initial = instance.finished.gsm
                 self.fields["finished_width"].initial = instance.finished.width
                 self.fields["end_use"].initial = instance.finished.end_use
 
-            if tkey == "trim" and hasattr(instance, "trim"):
+            if k == "trim" and hasattr(instance, "trim"):
                 self.fields["trim_type"].initial = instance.trim.trim_type
                 self.fields["trim_size"].initial = instance.trim.size
                 self.fields["trim_color"].initial = instance.trim.color
                 self.fields["brand"].initial = instance.trim.brand
 
-    # CHANGED: helper for backward-compatible per-type logic (based on MaterialType.name)
-    def _type_key(self, mt_obj) -> str:
-        if not mt_obj:
-            return ""
-        return (getattr(mt_obj, "name", "") or "").strip().lower()
-
     def clean(self):
-        cleaned = super().clean()
-        mt = cleaned.get("material_type")  # CHANGED: this is a MaterialType object
-        t = self._type_key(mt)
+        cd = super().clean()
+        k = (cd.get("material_kind") or "").strip()
 
-        # image rules (edit-safe: if instance already has image, allow no new upload)
+        # image rules (keeps your old behavior: finished requires image)
         IMAGE_REQUIRED = {
             "yarn": False,
             "greige": False,
             "finished": True,
             "trim": False,
         }
-        need_img = IMAGE_REQUIRED.get(t, False)
-        if need_img and not cleaned.get("image") and not (self.instance and self.instance.image):
-            raise ValidationError({"image": "Image is required for this material type."})
+        need_img = IMAGE_REQUIRED.get(k, False)
+        if need_img and not cd.get("image") and not (self.instance and self.instance.image):
+            raise ValidationError({"image": "Image is required for this material kind."})
 
-        # required per type (keeps your existing logic intact, now keyed by MaterialType.name)
-        if t == "yarn":
-            if not cleaned.get("yarn_type"):
+        # required fields per kind (same validations, just switched to material_kind)
+        if k == "yarn":
+            if not cd.get("yarn_type"):
                 raise ValidationError({"yarn_type": "Yarn Type is required."})
 
-        elif t == "greige":
-            if not cleaned.get("fabric_type"):
+        elif k == "greige":
+            if not cd.get("fabric_type"):
                 raise ValidationError({"fabric_type": "Fabric Type is required."})
 
-        elif t == "finished":
-            if not cleaned.get("base_fabric_type"):
+        elif k == "finished":
+            if not cd.get("base_fabric_type"):
                 raise ValidationError({"base_fabric_type": "Base Fabric Type is required."})
-            if not cleaned.get("finish_type"):
+            if not cd.get("finish_type"):
                 raise ValidationError({"finish_type": "Finish Type is required."})
 
-        elif t == "trim":
-            if not cleaned.get("trim_type"):
+        elif k == "trim":
+            if not cd.get("trim_type"):
                 raise ValidationError({"trim_type": "Trim Type is required."})
 
-        return cleaned
+        return cd
 
     def save(self) -> Material:
         if not self.is_valid():
             raise ValueError("Call is_valid() before save().")
 
         cd = self.cleaned_data
-        mt = cd["material_type"]  # CHANGED: MaterialType object
-        t = self._type_key(mt)
+        k = cd["material_kind"]
 
         material = self.instance or Material()
-        material.material_type = mt  # CHANGED: FK assignment
+        material.material_kind = k
+        material.material_type = cd.get("material_type")  # FK object
+        material.material_shade = cd.get("material_shade")  # FK object
         material.name = cd["name"]
         material.remarks = cd.get("remarks", "")
 
         img = cd.get("image")
         if img:
             material.image = img
+
         material.save()
 
-        # delete old details (if type changed / editing)
+        # Keep your old behavior: clear and recreate details
         YarnDetail.objects.filter(material=material).delete()
         GreigeDetail.objects.filter(material=material).delete()
         FinishedDetail.objects.filter(material=material).delete()
         TrimDetail.objects.filter(material=material).delete()
 
-        # keep your existing per-type detail creation logic
-        if t == "yarn":
+        if k == "yarn":
             YarnDetail.objects.create(
                 material=material,
                 yarn_type=cd["yarn_type"],
@@ -250,7 +265,8 @@ class MaterialForm(forms.Form):
                 count_denier=cd.get("count_denier", ""),
                 color=cd.get("yarn_color", ""),
             )
-        elif t == "greige":
+
+        elif k == "greige":
             GreigeDetail.objects.create(
                 material=material,
                 fabric_type=cd["fabric_type"],
@@ -258,7 +274,8 @@ class MaterialForm(forms.Form):
                 width=cd.get("width"),
                 construction=cd.get("construction", ""),
             )
-        elif t == "finished":
+
+        elif k == "finished":
             FinishedDetail.objects.create(
                 material=material,
                 base_fabric_type=cd["base_fabric_type"],
@@ -267,7 +284,8 @@ class MaterialForm(forms.Form):
                 width=cd.get("finished_width"),
                 end_use=cd.get("end_use", ""),
             )
-        elif t == "trim":
+
+        elif k == "trim":
             TrimDetail.objects.create(
                 material=material,
                 trim_type=cd["trim_type"],
@@ -277,7 +295,6 @@ class MaterialForm(forms.Form):
             )
 
         return material
-
 
 # ============================================================
 # PARTY
