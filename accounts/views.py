@@ -17,6 +17,7 @@ from .models import Jobber, JobberType, Location, Material, Party, UserExtra
 from .models import Firm, MaterialShade, MaterialType, Material
 from .forms import FirmForm, MaterialShadeForm, MaterialTypeForm
 
+from .models import Firm
 
 def _is_embed(request) -> bool:
     return (
@@ -716,3 +717,61 @@ def materialtype_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
+# ============================================
+
+@login_required
+@require_POST
+def firm_save(request):
+    # one firm per user (simple for now)
+    firm = Firm.objects.filter(owner=request.user).first()
+    if firm is None:
+        firm = Firm(owner=request.user)
+
+    firm_name = (request.POST.get("firm_name") or "").strip()
+    firm_type = (request.POST.get("firm_type") or "").strip()
+
+    if not firm_name:
+        return JsonResponse({"ok": False, "message": "Firm Name is required."})
+    if not firm_type:
+        return JsonResponse({"ok": False, "message": "Firm Type is required."})
+
+    firm.firm_name = firm_name
+    firm.firm_type = firm_type
+
+    # Optional fields (set only if your model has them)
+    reg = (request.POST.get("registration_number") or "").strip()
+    if hasattr(firm, "registration_number"):
+        firm.registration_number = reg
+    elif hasattr(firm, "cin_number"):
+        firm.cin_number = reg
+
+    for key, model_field in [
+        ("gst_number", "gst_number"),
+        ("email", "email"),
+        ("phone", "phone"),
+        ("city", "city"),
+        ("state", "state"),
+        ("country", "country"),
+    ]:
+        if hasattr(firm, model_field):
+            setattr(firm, model_field, (request.POST.get(key) or "").strip())
+
+    # address mapping (your model uses address_line often)
+    addr = request.POST.get("address") or ""
+    if hasattr(firm, "address_line"):
+        firm.address_line = addr
+    elif hasattr(firm, "address"):
+        firm.address = addr
+
+    firm.save()
+
+    created_at_display = ""
+    if hasattr(firm, "created_at") and firm.created_at:
+        created_at_display = timezone.localtime(firm.created_at).strftime("%d %b %Y, %H:%M")
+
+    return JsonResponse({
+        "ok": True,
+        "message": "Firm saved ✅",
+        "firm_name": firm.firm_name,
+        "created_at_display": created_at_display,
+    })

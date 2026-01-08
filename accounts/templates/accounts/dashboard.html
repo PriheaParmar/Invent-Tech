@@ -383,7 +383,7 @@
     // Item order inside each section
     const INTRA_ORDER = {
       Masters: [
-        "Firm", "Material / Trim", "Material Type", "Material Shades", "Material Unit", "Brand", "Category",
+        "Material / Trim", "Material Type", "Material Shades", "Material Unit", "Brand", "Category",
         "Main Category", "Sub Category", "Party", "Client", "Location", "Jobber Type", "Jobber", "Material Type Linking",
       ],
       Production: ["Techpack", "BOM", "Job Card Details", "Branch SKU"],
@@ -460,7 +460,6 @@
     // ✅ COMPLETE UTILITIES LIST (so rows don’t break)
     const UTILITIES = [
       // Masters
-      { title: "Firm", tag: "Masters", key: "firm" },
       { title: "Material / Trim", tag: "Masters", key: "material trim", icon: "material" },
       { title: "Material Type", tag: "Masters", key: "material type" },
       { title: "Material Shades", tag: "Masters", key: "shade shades" },
@@ -511,7 +510,6 @@
       "Location": "{% url 'accounts:location_list' %}",
       "Material Shades": "{% url 'accounts:materialshade_list' %}",
       "Material Type": "{% url 'accounts:materialtype_list' %}",
-      "Firm": "{% url 'accounts:firm_list' %}",
     };
 
     function tileHtml(u) {
@@ -582,7 +580,6 @@
       const routeMaterial = ROUTES["Material / Trim"] ? new URL(ROUTES["Material / Trim"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
       const routeParty = ROUTES["Party"] ? new URL(ROUTES["Party"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
       const routeLocation = ROUTES["Location"] ? new URL(ROUTES["Location"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeFirm = ROUTES["Firm"] ? new URL(ROUTES["Firm"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
       const routeMaterialShade = ROUTES["Material Shade"] ? new URL(ROUTES["Material Shade"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
       const routeMaterialType = ROUTES["Material Type"] ? new URL(ROUTES["Material Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
       const prefixes = [
@@ -591,7 +588,6 @@
         "/master/materials/",
         "/master/parties/",
         "/master/locations/",
-        "/master/firm/",
         "/master/material-shades/",
         "/master/material-types/",
 
@@ -600,7 +596,6 @@
         routeMaterial,
         routeParty,
         routeLocation,
-        routeFirm,
         routeMaterialShade,
         routeMaterialType,
       ].filter(Boolean);
@@ -951,7 +946,7 @@
             const href = tile.getAttribute("href") || "#";
 
             // Only these open embed for now
-            if (title === "Jobber" || title === "Jobber Type" || title === "Material / Trim" || title === "Party" || title === "Location" || title === "Firm" || title === "Material Shades" || title === "Material Type") {
+            if (title === "Jobber" || title === "Jobber Type" || title === "Material / Trim" || title === "Party" || title === "Location" || title === "Material Shades" || title === "Material Type") {
               e.preventDefault();
               openMastersPanel(title, href);
               return;

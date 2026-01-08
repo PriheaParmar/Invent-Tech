@@ -317,8 +317,14 @@ class Firm(models.Model):
     owner = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="firm")
 
     firm_name = models.CharField(max_length=180)
+    class FirmType(models.TextChoices):
+        LAW_FIRM = "law_firm", "Law Firm"
+        COMPANY = "company", "Company"
+        INDIVIDUAL = "individual", "Individual"
+        STARTUP = "startup", "Startup"
+        OTHER = "other", "Other"
     firm_type = models.CharField(max_length=30, choices=FIRM_TYPES)
-
+    
     address_line = models.CharField(max_length=255)
     city = models.CharField(max_length=80)
     state = models.CharField(max_length=80)
@@ -343,3 +349,6 @@ class Firm(models.Model):
 
     def __str__(self):
         return self.firm_name
+    
+    
+

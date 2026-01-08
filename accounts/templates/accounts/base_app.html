@@ -1,11 +1,12 @@
 {% load static %}
 <!doctype html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}InventTech{% endblock %}</title>
-<link rel="stylesheet" href="{% static 'css/app.css' %}?v=6009">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=6009">
 
   {% block extra_head %}{% endblock %}
 </head>
@@ -36,7 +37,9 @@
         <!-- ✅ SAME PAGE SECTION SWITCH -->
         <a class="sb-link active" href="#" data-section="dashboard">
           <span class="sb-ico">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10.5z"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10.5z" />
+            </svg>
           </span>
           <span class="sb-text">Dashboard</span>
         </a>
@@ -44,8 +47,9 @@
         <a class="sb-link" href="#" data-section="utilities">
           <span class="sb-ico">
             <svg class="ico" viewBox="0 0 24 24">
-              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
-              <path d="M19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/>
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" />
+              <path
+                d="M19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z" />
             </svg>
           </span>
           <span class="sb-text">Utilities</span>
@@ -53,21 +57,27 @@
 
         <a class="sb-link" href="#">
           <span class="sb-ico">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v10l9 5 9-5V8zM3 8l9 5 9-5"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M21 8l-9-5-9 5v10l9 5 9-5V8zM3 8l9 5 9-5" />
+            </svg>
           </span>
           <span class="sb-text">Inventory</span>
         </a>
 
         <a class="sb-link" href="#">
           <span class="sb-ico">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12M9 21v-8h6v8"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M3 21V9l9-6 9 6v12M9 21v-8h6v8" />
+            </svg>
           </span>
           <span class="sb-text">Production</span>
         </a>
 
         <a class="sb-link" href="#">
           <span class="sb-ico">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M3 17V6a1 1 0 0 1 1-1h12v12H4a1 1 0 0 1-1-1zm13 0h3l2 2v2h-5v-4z"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M3 17V6a1 1 0 0 1 1-1h12v12H4a1 1 0 0 1-1-1zm13 0h3l2 2v2h-5v-4z" />
+            </svg>
           </span>
           <span class="sb-text">Dispatch</span>
         </a>
@@ -76,14 +86,18 @@
 
         <a class="sb-link" href="#">
           <span class="sb-ico">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M6 20V10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10M8 8V6a4 4 0 1 1 8 0v2"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M6 20V10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10M8 8V6a4 4 0 1 1 8 0v2" />
+            </svg>
           </span>
           <span class="sb-text">Material Master</span>
         </a>
 
         <a class="sb-link" href="#">
           <span class="sb-ico">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21a8 8 0 0 1 16 0"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M16 11a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21a8 8 0 0 1 16 0" />
+            </svg>
           </span>
           <span class="sb-text">Parties</span>
         </a>
@@ -92,14 +106,19 @@
 
         <a class="sb-link" href="#">
           <span class="sb-ico">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 17V9m4 8V7m4 10v-5"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M4 19V5m0 14h16M8 17V9m4 8V7m4 10v-5" />
+            </svg>
           </span>
           <span class="sb-text">Reports</span>
         </a>
 
         <a class="sb-link" href="#">
           <span class="sb-ico">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path
+                d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z" />
+            </svg>
           </span>
           <span class="sb-text">Settings</span>
         </a>
@@ -134,7 +153,9 @@
         <div class="h-center">
           <div class="h-search">
             <span class="h-search-ico">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M10.5 18a7.5 7.5 0 1 1 5.3-12.8A7.5 7.5 0 0 1 10.5 18zm0 0l7 7"/></svg>
+              <svg class="ico" viewBox="0 0 24 24">
+                <path d="M10.5 18a7.5 7.5 0 1 1 5.3-12.8A7.5 7.5 0 0 1 10.5 18zm0 0l7 7" />
+              </svg>
             </span>
             <input placeholder="Search lot / program / party / invoice…" />
             <div class="h-tabs">
@@ -147,14 +168,27 @@
         </div>
 
         <div class="h-right">
+          <button class="iconbtn btnFirm" id="btnFirm" type="button" title="Firm">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 21V3h12v18H3zm14 0v-8h4v8h-4zM6 7h6M6 11h6M6 15h6" />
+            </svg>
+          </button>
+
           <button class="iconbtn btnProfile" id="btnProfile" type="button" title="Profile">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-8 9a8 8 0 0 1 16 0"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-8 9a8 8 0 0 1 16 0" />
+            </svg>
           </button>
           <button class="iconbtn btnNoti" id="btnProfile" type="button" title="Notifications">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7zM9.5 19a2.5 2.5 0 0 0 5 0"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7zM9.5 19a2.5 2.5 0 0 0 5 0" />
+            </svg>
           </button>
           <button class="iconbtn" id="btnProfile" type="button" title="Settings">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/></svg>
+            <svg class="ico" viewBox="0 0 24 24">
+              <path
+                d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z" />
+            </svg>
           </button>
         </div>
       </header>
@@ -164,79 +198,284 @@
 
   </div>
   <!-- ===================== PROFILE MODAL (UI only) ===================== -->
-<!-- PROFILE MODAL -->
-<div id="profileModal" class="modal-backdrop" aria-hidden="true">
+  <!-- PROFILE MODAL -->
+  <div id="profileModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Profile</div>
+          <div class="modal-sub">Update your basic details</div>
+        </div>
+        <button id="profileClose" class="iconbtn" type="button" title="Close">✕</button>
+      </div>
+
+      <form id="profileForm" method="post" action="{% url 'accounts:profile_save' %}">
+
+        {% csrf_token %}
+
+        <div class="modal-grid">
+          <div class="f">
+            <label>Firm Name (Auto-filled)</label>
+            <input id="profileFirmName" name="firm_name_display" value="{% if current_firm %}{{ current_firm.firm_name }}{% endif %}"
+
+              placeholder="Create firm first" readonly>
+          </div>
+          <div class="f">
+            <label>Username</label>
+            <input value="{{ request.user.username }}" readonly>
+          </div>
+
+          <div class="f">
+            <label>Email</label>
+            <input name="email" value="{{ request.user.email }}" placeholder="admin@inventtech.com">
+          </div>
+
+          <div class="f">
+            <label>First name</label>
+            <input name="first_name" value="{{ request.user.first_name }}" placeholder="Your name">
+          </div>
+
+          <div class="f">
+            <label>Last name</label>
+            <input name="last_name" value="{{ request.user.last_name }}" placeholder="Surname">
+          </div>
+
+          <div class="f">
+            <label>Mobile</label>
+            <input name="phone" placeholder="98XXXXXXXX">
+          </div>
+          <div class="f">
+            <label>Role</label>
+            <select name="role" id="profileRole">
+              <option value="">Select</option>
+              {% for val,label in ROLE_CHOICES %}
+              <option value="{{ val }}" {% if CURRENT_ROLE == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+
+          <div class="f full">
+            <label>Address</label>
+            <textarea name="address" rows="3" placeholder="Optional"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" type="button" id="profileCancel">Cancel</button>
+          <button class="btn btn-save" type="submit">Save</button>
+        </div>
+      </form>
+
+      <div id="toast" class="toast"></div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+<!-- ===================== FIRM MODAL ===================== -->
+<div id="firmModal" class="modal-backdrop" aria-hidden="true">
   <div class="modal-card">
     <div class="modal-head">
       <div>
-        <div class="modal-title">Profile</div>
-        <div class="modal-sub">Update your basic details</div>
+        <div class="modal-title">Firm Details</div>
+        <div class="modal-sub">Create or update your firm information</div>
       </div>
-      <button id="profileClose" class="iconbtn" type="button" title="Close">✕</button>
+      <button id="firmClose" class="iconbtn" type="button" title="Close">✕</button>
     </div>
 
-    <form id="profileForm" method="post" action="{% url 'accounts:profile_save' %}">
-
+    <form id="firmForm" method="post" action="{% url 'accounts:firm_save' %}">
       {% csrf_token %}
 
       <div class="modal-grid">
-        <div class="f">
-          <label>Username</label>
-          <input value="{{ request.user.username }}" readonly>
+
+        <div class="f full">
+          <label>Firm Name *</label>
+          <input name="firm_name"
+                 required
+                 placeholder="Enter firm name"
+                 value="{% if current_firm %}{{ current_firm.firm_name|default_if_none:'' }}{% endif %}">
         </div>
 
         <div class="f">
-          <label>Email</label>
-          <input name="email" value="{{ request.user.email }}" placeholder="admin@inventtech.com">
+          <label>Firm Type *</label>
+          <select name="firm_type" required>
+            <option value="">Select</option>
+            {% for val,label in FIRM_TYPE_CHOICES %}
+              <option value="{{ val }}"
+                {% if current_firm and current_firm.firm_type == val %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
 
         <div class="f">
-          <label>First name</label>
-          <input name="first_name" value="{{ request.user.first_name }}" placeholder="Your name">
+          <label>Firm Registration Number</label>
+          <input name="registration_number"
+                 placeholder="Optional"
+                 value="{% if current_firm %}{{ current_firm.cin_number|default_if_none:'' }}{% endif %}">
         </div>
 
         <div class="f">
-          <label>Last name</label>
-          <input name="last_name" value="{{ request.user.last_name }}" placeholder="Surname">
+          <label>GST Number (optional)</label>
+          <input name="gst_number"
+                 placeholder="Optional"
+                 value="{% if current_firm %}{{ current_firm.gst_number|default_if_none:'' }}{% endif %}">
         </div>
 
         <div class="f">
-          <label>Mobile</label>
-          <input name="phone" placeholder="98XXXXXXXX">
+          <label>Firm Email</label>
+          <input name="email"
+                 placeholder="name@firm.com"
+                 value="{% if current_firm %}{{ current_firm.email|default_if_none:'' }}{% endif %}">
+        </div>
+
+        <div class="f">
+          <label>Firm Phone Number</label>
+          <input name="phone"
+                 placeholder="98XXXXXXXX"
+                 value="{% if current_firm %}{{ current_firm.phone|default_if_none:'' }}{% endif %}">
         </div>
 
         <div class="f full">
-          <label>Address</label>
-          <textarea name="address" rows="3" placeholder="Optional"></textarea>
+          <label>Firm Address</label>
+          <textarea name="address" rows="3" placeholder="Address">{% if current_firm %}{{ current_firm.address_line|default_if_none:'' }}{% endif %}</textarea>
         </div>
+
+        <div class="f">
+          <label>City</label>
+          <input name="city"
+                 placeholder="City"
+                 value="{% if current_firm %}{{ current_firm.city|default_if_none:'' }}{% endif %}">
+        </div>
+
+        <div class="f">
+          <label>State</label>
+          <input name="state"
+                 placeholder="State"
+                 value="{% if current_firm %}{{ current_firm.state|default_if_none:'' }}{% endif %}">
+        </div>
+
+        <div class="f">
+          <label>Country</label>
+          <!-- only prefill if you actually added country to model -->
+          <input name="country" placeholder="Country" value="">
+        </div>
+
+        <div class="f full">
+          <label>Created Date (auto)</label>
+          <input id="firmCreatedAt"
+                 readonly
+                 value="{% if current_firm and current_firm.created_at %}{{ current_firm.created_at|date:'d M Y, H:i' }}{% endif %}">
+        </div>
+
       </div>
 
       <div class="modal-actions">
-        <button class="btn btn-ghost" type="button" id="profileCancel">Cancel</button>
+        <button class="btn btn-ghost" type="button" id="firmCancel">Cancel</button>
         <button class="btn btn-save" type="submit">Save</button>
       </div>
     </form>
 
-    <div id="toast" class="toast"></div>
+    <div id="firmToast" class="toast"></div>
   </div>
 </div>
 
-<!-- ================================================================ -->
- 
-<!-- ==================[Profile POP up JS]======================== -->
-<script>
+
+  <!-- ==================[Profile POP up JS]======================== -->
+  <script>
+    (function () {
+      const btn = document.querySelector('[title="Profile"]'); // your header profile iconbtn
+      const modal = document.getElementById("profileModal");
+      const closeBtn = document.getElementById("profileClose");
+      const cancelBtn = document.getElementById("profileCancel");
+      const form = document.getElementById("profileForm");
+      const toast = document.getElementById("toast");
+
+      if (!btn || !modal || !form) return;
+
+      function open() { modal.classList.add("show"); }
+      function close() { modal.classList.remove("show"); }
+
+      btn.addEventListener("click", open);
+      closeBtn?.addEventListener("click", close);
+      cancelBtn?.addEventListener("click", close);
+      modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        toast.textContent = "Saving...";
+
+        const formData = new FormData(form);
+
+        const res = await fetch(form.action, {
+          method: "POST",
+          body: formData,
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+
+        const data = await res.json();
+        toast.textContent = data.ok ? data.message : "Error saving ❌";
+        if (data.ok) setTimeout(close, 800);
+      });
+    })();
+
+  </script>
+
+  <!-- =========================================================== -->
+
+  <!-- existing JS -->
+  <script src="{% static 'js/dashboard.js' %}?v=6001"></script>
+
+  <!-- ✅ SECTION SWITCHER (dashboard ⇄ utilities) -->
+  <script>
+    (function () {
+      function show(sectionName) {
+        document.querySelectorAll(".page-section").forEach(sec => {
+          sec.classList.remove("is-active");
+        });
+
+        const active = document.getElementById("section-" + sectionName);
+        if (active) active.classList.add("is-active");
+
+        document.querySelectorAll(".sb-link[data-section]").forEach(a => {
+          a.classList.toggle("active", a.dataset.section === sectionName);
+        });
+
+        // update hash so refresh keeps section
+        if (sectionName === "utilities") location.hash = "utilities";
+        if (sectionName === "dashboard") location.hash = "";
+      }
+
+      document.addEventListener("click", function (e) {
+        const link = e.target.closest(".sb-link[data-section]");
+        if (!link) return;
+        e.preventDefault();
+        show(link.dataset.section);
+      });
+
+      // initial load: if hash is #utilities, open that
+      const start = (location.hash || "").replace("#", "").trim();
+      if (start === "utilities") show("utilities");
+      else show("dashboard");
+    })();
+
+    // ------------------------------------------------------------
+
+    
+
 (function(){
-  const btn = document.querySelector('[title="Profile"]'); // your header profile iconbtn
-  const modal = document.getElementById("profileModal");
-  const closeBtn = document.getElementById("profileClose");
-  const cancelBtn = document.getElementById("profileCancel");
-  const form = document.getElementById("profileForm");
-  const toast = document.getElementById("toast");
+  const btn = document.getElementById("btnFirm");
+  const modal = document.getElementById("firmModal");
+  const closeBtn = document.getElementById("firmClose");
+  const cancelBtn = document.getElementById("firmCancel");
+  const form = document.getElementById("firmForm");
+  const toast = document.getElementById("firmToast");
 
   if(!btn || !modal || !form) return;
 
   function open(){ modal.classList.add("show"); }
-  function close(){ modal.classList.remove("show"); }
+  function close(){ modal.classList.remove("show"); toast.textContent = ""; }
 
   btn.addEventListener("click", open);
   closeBtn?.addEventListener("click", close);
@@ -256,52 +495,32 @@
     });
 
     const data = await res.json();
-    toast.textContent = data.ok ? data.message : "Error saving ❌";
-    if(data.ok) setTimeout(close, 800);
+
+    if(!data.ok){
+      toast.textContent = data.message || "Error saving ❌";
+      return;
+    }
+
+    toast.textContent = data.message || "Firm saved ✅";
+
+    // Auto-fill firm name in Profile modal (read-only input)
+    const firmNameInput = document.getElementById("profileFirmName");
+    if (firmNameInput && data.firm_name) firmNameInput.value = data.firm_name;
+
+    // Update created date display
+    const createdAt = document.getElementById("firmCreatedAt");
+    if (createdAt && data.created_at_display) createdAt.value = data.created_at_display;
+
+    setTimeout(close, 800);
   });
 })();
 
-</script>
 
-<!-- =========================================================== -->
 
-  <!-- existing JS -->
-  <script src="{% static 'js/dashboard.js' %}?v=6001"></script>
 
-  <!-- ✅ SECTION SWITCHER (dashboard ⇄ utilities) -->
-  <script>
-  (function(){
-    function show(sectionName){
-      document.querySelectorAll(".page-section").forEach(sec=>{
-        sec.classList.remove("is-active");
-      });
-
-      const active = document.getElementById("section-" + sectionName);
-      if(active) active.classList.add("is-active");
-
-      document.querySelectorAll(".sb-link[data-section]").forEach(a=>{
-        a.classList.toggle("active", a.dataset.section === sectionName);
-      });
-
-      // update hash so refresh keeps section
-      if(sectionName === "utilities") location.hash = "utilities";
-      if(sectionName === "dashboard") location.hash = "";
-    }
-
-    document.addEventListener("click", function(e){
-      const link = e.target.closest(".sb-link[data-section]");
-      if(!link) return;
-      e.preventDefault();
-      show(link.dataset.section);
-    });
-
-    // initial load: if hash is #utilities, open that
-    const start = (location.hash || "").replace("#","").trim();
-    if(start === "utilities") show("utilities");
-    else show("dashboard");
-  })();
   </script>
 
   {% block extra_js %}{% endblock %}
 </body>
+
 </html>
