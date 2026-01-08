@@ -91,28 +91,9 @@ class CustomUserCreationForm(UserCreationForm):
 # MATERIAL FORM (Step-1 Kind → Step-2 Type master → Step-3 Shade master)
 # ============================================================
 class MaterialForm(forms.Form):
-    # STEP 1: Material Kind (fixed 4 options)
-    material_kind = forms.ChoiceField(
-        choices=[("", "Select")] + list(Material.MATERIAL_KIND_CHOICES),
-        required=True,
-        label="Material Kind",
-    )
-
-    # STEP 2: Material Type (dynamic master)
-    material_type = forms.ModelChoiceField(
-        queryset=MaterialType.objects.none(),
-        required=False,
-        empty_label="Select",
-        label="Material Type",
-    )
-
-    # STEP 3: Material Shade (dynamic master)
-    material_shade = forms.ModelChoiceField(
-        queryset=MaterialShade.objects.none(),
-        required=False,
-        empty_label="Select",
-        label="Material Shade",
-    )
+    material_kind = forms.ChoiceField(choices=Material.MATERIAL_KIND_CHOICES, label="Material Kind")
+    material_type = forms.ModelChoiceField(queryset=MaterialType.objects.none(), required=False, empty_label="Select")
+    material_shade = forms.ModelChoiceField(queryset=MaterialShade.objects.none(), required=False, empty_label="Select")
 
     # common
     name = forms.CharField(max_length=150, label="Material Name")
@@ -144,90 +125,49 @@ class MaterialForm(forms.Form):
     trim_color = forms.CharField(required=False, max_length=60, label="Color")
     brand = forms.CharField(required=False, max_length=80, label="Brand (optional)")
 
-    def __init__(self, *args, instance: Material | None = None, user=None, **kwargs):
+    def __init__(self, *args, instance=None, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.instance = instance
 
-        # Dynamic dropdowns (single source of truth)
-        type_qs = MaterialType.objects.all().order_by("name")
-        shade_qs = MaterialShade.objects.all().order_by("name")
+        # Determine selected kind (POST -> instance fallback)
+        kind = (self.data.get("material_kind") or "").strip()
+        if not kind and instance:
+            kind = (getattr(instance, "material_kind", "") or "").strip()
+
+        # Material Type queryset (owner-based + filtered by kind)
+        type_qs = MaterialType.objects.all()
         if user is not None:
             type_qs = type_qs.filter(owner=user)
+        if kind:
+            type_qs = type_qs.filter(material_kind=kind)
+        type_qs = type_qs.order_by("name")
+
+        # Material Shade queryset (owner-based; also filter by kind to match selection flow)
+        shade_qs = MaterialShade.objects.all()
+        if user is not None:
             shade_qs = shade_qs.filter(owner=user)
+        if kind:
+            shade_qs = shade_qs.filter(material_kind=kind)
+        shade_qs = shade_qs.order_by("name")
 
         self.fields["material_type"].queryset = type_qs
         self.fields["material_shade"].queryset = shade_qs
 
-        self.fields["name"].widget.attrs.update({"placeholder": "Enter name"})
-        self.fields["remarks"].widget.attrs.update({"placeholder": "Remarks (optional)"})
-
-        if instance:
-            self.fields["material_kind"].initial = instance.material_kind
-            self.fields["material_type"].initial = instance.material_type_id
-            self.fields["material_shade"].initial = instance.material_shade_id
-            self.fields["name"].initial = instance.name
-            self.fields["remarks"].initial = instance.remarks
-
-            k = instance.material_kind
-
-            if k == "yarn" and hasattr(instance, "yarn"):
-                self.fields["yarn_type"].initial = instance.yarn.yarn_type
-                self.fields["yarn_subtype"].initial = instance.yarn.yarn_subtype
-                self.fields["count_denier"].initial = instance.yarn.count_denier
-                self.fields["yarn_color"].initial = instance.yarn.color
-
-            if k == "greige" and hasattr(instance, "greige"):
-                self.fields["fabric_type"].initial = instance.greige.fabric_type
-                self.fields["gsm"].initial = instance.greige.gsm
-                self.fields["width"].initial = instance.greige.width
-                self.fields["construction"].initial = instance.greige.construction
-
-            if k == "finished" and hasattr(instance, "finished"):
-                self.fields["base_fabric_type"].initial = instance.finished.base_fabric_type
-                self.fields["finish_type"].initial = instance.finished.finish_type
-                self.fields["finished_gsm"].initial = instance.finished.gsm
-                self.fields["finished_width"].initial = instance.finished.width
-                self.fields["end_use"].initial = instance.finished.end_use
-
-            if k == "trim" and hasattr(instance, "trim"):
-                self.fields["trim_type"].initial = instance.trim.trim_type
-                self.fields["trim_size"].initial = instance.trim.size
-                self.fields["trim_color"].initial = instance.trim.color
-                self.fields["brand"].initial = instance.trim.brand
+        # Optional: show labels like "Yarn — Cotton"
+        self.fields["material_type"].label_from_instance = lambda o: f"{o.get_material_kind_display()} — {o.name}"
+        self.fields["material_shade"].label_from_instance = lambda o: f"{o.get_material_kind_display()} — {o.name}"
 
     def clean(self):
         cd = super().clean()
         k = (cd.get("material_kind") or "").strip()
 
-        # image rules (keeps your old behavior: finished requires image)
-        IMAGE_REQUIRED = {
-            "yarn": False,
-            "greige": False,
-            "finished": True,
-            "trim": False,
-        }
-        need_img = IMAGE_REQUIRED.get(k, False)
-        if need_img and not cd.get("image") and not (self.instance and self.instance.image):
-            raise ValidationError({"image": "Image is required for this material kind."})
+        mt = cd.get("material_type")
+        if k and mt and mt.material_kind != k:
+            self.add_error("material_type", "Selected Material Type does not belong to selected Kind.")
 
-        # required fields per kind (same validations, just switched to material_kind)
-        if k == "yarn":
-            if not cd.get("yarn_type"):
-                raise ValidationError({"yarn_type": "Yarn Type is required."})
-
-        elif k == "greige":
-            if not cd.get("fabric_type"):
-                raise ValidationError({"fabric_type": "Fabric Type is required."})
-
-        elif k == "finished":
-            if not cd.get("base_fabric_type"):
-                raise ValidationError({"base_fabric_type": "Base Fabric Type is required."})
-            if not cd.get("finish_type"):
-                raise ValidationError({"finish_type": "Finish Type is required."})
-
-        elif k == "trim":
-            if not cd.get("trim_type"):
-                raise ValidationError({"trim_type": "Trim Type is required."})
+        ms = cd.get("material_shade")
+        if k and ms and ms.material_kind != k:
+            self.add_error("material_shade", "Selected Material Shade does not belong to selected Kind.")
 
         return cd
 
@@ -240,8 +180,8 @@ class MaterialForm(forms.Form):
 
         material = self.instance or Material()
         material.material_kind = k
-        material.material_type = cd.get("material_type")  # FK object
-        material.material_shade = cd.get("material_shade")  # FK object
+        material.material_type = cd.get("material_type")   # FK object
+        material.material_shade = cd.get("material_shade") # FK object
         material.name = cd["name"]
         material.remarks = cd.get("remarks", "")
 
@@ -295,6 +235,7 @@ class MaterialForm(forms.Form):
             )
 
         return material
+
 
 # ============================================================
 # PARTY
@@ -391,10 +332,10 @@ class FirmForm(forms.ModelForm):
 class MaterialShadeForm(forms.ModelForm):
     class Meta:
         model = MaterialShade
-        fields = ["name", "code", "notes"]
+        fields = ["material_kind", "name", "code", "notes"]
 
 
 class MaterialTypeForm(forms.ModelForm):
     class Meta:
         model = MaterialType
-        fields = ["name", "description"]
+        fields = ["material_kind", "name", "description"]

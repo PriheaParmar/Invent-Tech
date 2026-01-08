@@ -3,11 +3,16 @@ from django.db import models
 
 # ============================================================
 # USER
+MATERIAL_KIND_CHOICES = (
+    ("yarn", "Yarn"),
+    ("greige", "Greige"),
+    ("finished", "Finished"),
+    ("trim", "Trim"),
+)
 # ============================================================
 
-class UserExtra(models.Model):
-    """Extra user information (admin-side)."""
 
+class UserExtra(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     phone = models.CharField(max_length=20, blank=True, null=True)
@@ -75,36 +80,25 @@ class Jobber(OwnedModel):
 
 
 # ============================================================
-# MATERIAL (UPDATED: Material.material_type is now FK to MaterialType)
+# MATERIAL
 # ============================================================
 
-# models.py (only Material + masters shown)
-
-from django.conf import settings
-from django.db import models
-
-
 class Material(models.Model):
-    """
-    Step 1: material_kind (Yarn/Greige/Finished/Trim) controls which detail form opens.
-    Step 2: material_type is a master-driven FK (Utilities → MaterialType).
-    Step 3: material_shade is a master-driven FK (Utilities → MaterialShade).
-    """
-
-    # STEP 1 (fixed 4 options)
+    # ✅ Needed because your forms.py uses Material.MATERIAL_KIND_CHOICES
     MATERIAL_KIND_CHOICES = [
         ("yarn", "Yarn"),
         ("greige", "Greige"),
-        ("finished", "Finished Material"),
+        ("finished", "Finished"),
         ("trim", "Trim"),
     ]
+
     material_kind = models.CharField(
         max_length=16,
         choices=MATERIAL_KIND_CHOICES,
         default="yarn",
     )
 
-    # STEP 2 (dynamic master)
+    # Step 2 (master-driven)
     material_type = models.ForeignKey(
         "MaterialType",
         on_delete=models.SET_NULL,
@@ -113,7 +107,6 @@ class Material(models.Model):
         related_name="materials",
     )
 
-    # STEP 3 (dynamic master)  ✅ REQUIRED so shade can be saved + reused
     material_shade = models.ForeignKey(
         "MaterialShade",
         on_delete=models.SET_NULL,
@@ -159,6 +152,7 @@ class FinishedDetail(models.Model):
         OTHER = "other", "Other"
 
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="finished")
+
     base_fabric_type = models.CharField(max_length=120, blank=True)
     finish_type = models.CharField(max_length=20, choices=FinishType.choices, blank=True)
     gsm = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
@@ -178,37 +172,12 @@ class TrimDetail(models.Model):
     ]
 
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="trim")
+
     trim_type = models.CharField(max_length=80, choices=TRIM_TYPE_CHOICES, blank=True)
     size = models.CharField(max_length=60, blank=True)
     color = models.CharField(max_length=60, blank=True)
     brand = models.CharField(max_length=80, blank=True)
 
-
-class MaterialShade(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="material_shades")
-    name = models.CharField(max_length=120)
-    code = models.CharField(max_length=40, blank=True, default="")
-    notes = models.TextField(blank=True, default="")
-
-    class Meta:
-        unique_together = ("owner", "name")
-        ordering = ["name"]
-
-    def __str__(self):
-        return self.name
-
-
-class MaterialType(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="material_types")
-    name = models.CharField(max_length=120)
-    description = models.TextField(blank=True, default="")
-
-    class Meta:
-        unique_together = ("owner", "name")
-        ordering = ["name"]
-
-    def __str__(self):
-        return self.name
 
 # ============================================================
 # PARTY
@@ -276,41 +245,6 @@ class Party(models.Model):
     def __str__(self):
         return self.party_name
 
-    @property
-    def ui_name(self):
-        for f in ("name", "party_name"):
-            v = getattr(self, f, None)
-            if v:
-                return v
-        return ""
-
-    @property
-    def ui_phone(self):
-        for f in (
-            "phone",
-            "mobile",
-            "phone_no",
-            "mobile_no",
-            "contact",
-            "contact_no",
-            "contact_number",
-            "whatsapp",
-            "whatsapp_no",
-            "tel",
-        ):
-            v = getattr(self, f, None)
-            if v:
-                return v
-        return ""
-
-    @property
-    def ui_gstin(self):
-        for f in ("gstin", "gst", "gst_no", "gst_number"):
-            v = getattr(self, f, None)
-            if v:
-                return v
-        return ""
-
 
 # ============================================================
 # LOCATION
@@ -334,33 +268,35 @@ class Location(models.Model):
 
 
 # ============================================================
-# UTILITIES (MaterialType, MaterialShade)
+# UTILITIES (SINGLE COPY ONLY ✅)
 # ============================================================
 
-class MaterialShade(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="material_shades")
+class MaterialType(OwnedModel):
+    material_kind = models.CharField(
+        max_length=20,
+        choices=MATERIAL_KIND_CHOICES,
+        db_index=True,
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=120)
-    code = models.CharField(max_length=40, blank=True, default="")
-    notes = models.TextField(blank=True, default="")
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ("owner", "name")
-        ordering = ["name"]
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
 
 
-class MaterialType(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="material_types")
+class MaterialShade(OwnedModel):
+    material_kind = models.CharField(
+        max_length=20,
+        choices=MATERIAL_KIND_CHOICES,
+        db_index=True,
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=120)
-    description = models.TextField(blank=True, default="")
-
-    class Meta:
-        unique_together = ("owner", "name")
-        ordering = ["name"]
+    code = models.CharField(max_length=50, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -380,7 +316,6 @@ class Firm(models.Model):
 
     owner = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="firm")
 
-    # Professional / Firm Details
     firm_name = models.CharField(max_length=180)
     firm_type = models.CharField(max_length=30, choices=FIRM_TYPES)
 
@@ -393,13 +328,11 @@ class Firm(models.Model):
     email = models.EmailField(blank=True, default="")
     website = models.URLField(blank=True, default="")
 
-    # Registration & Legal
     gst_number = models.CharField(max_length=15, blank=True, default="")
     pan_number = models.CharField(max_length=10, blank=True, default="")
     tan_number = models.CharField(max_length=10, blank=True, default="")
     cin_number = models.CharField(max_length=21, blank=True, default="")
 
-    # Bank
     bank_name = models.CharField(max_length=120, blank=True, default="")
     account_holder_name = models.CharField(max_length=120, blank=True, default="")
     account_number = models.CharField(max_length=30, blank=True, default="")
