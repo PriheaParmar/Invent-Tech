@@ -1,0 +1,10 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Material Shades - InventTech{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/pages/material_shades.css' %}?v=1">
+{% endblock %}
+
+{% block content %}{% include "accounts/material_shades/list_embed.html" %}{% endblock %}

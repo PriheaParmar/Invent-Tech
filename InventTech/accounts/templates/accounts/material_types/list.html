@@ -1,0 +1,22 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Material Types - InventTech{% endblock %}
+{% block page_title %}Material Types{% endblock %}
+{% block page_subtitle %}Manage material types{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/pages/material_types.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="grid">
+      <div class="card c8">
+        {% include "accounts/material_types/list_embed.html" %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

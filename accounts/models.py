@@ -351,4 +351,169 @@ class Firm(models.Model):
         return self.firm_name
     
     
+# ============================================================
+# PURCHASE ORDER: YARN
+# ============================================================
+
+class YarnPurchaseOrder(models.Model):
+    """Yarn Purchase Order header."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="yarn_pos")
+
+    # numbering
+    po_seq = models.PositiveIntegerField(default=0, db_index=True)
+    po_no = models.CharField(max_length=30, db_index=True)
+    internal_po_no = models.CharField(max_length=50, blank=True, default="")
+
+    po_date = models.DateField()
+    cancel_date = models.DateField(null=True, blank=True)
+
+    vendor = models.ForeignKey("Party", on_delete=models.PROTECT, related_name="yarn_pos")
+    firm = models.ForeignKey("Firm", on_delete=models.SET_NULL, null=True, blank=True, related_name="yarn_pos")
+    shipping_address = models.ForeignKey(
+        "Location", on_delete=models.SET_NULL, null=True, blank=True, related_name="yarn_pos_ship_to"
+    )
+
+    director = models.CharField(max_length=120, blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    remarks = models.TextField(blank=True, default="")
+    terms_conditions = models.TextField(blank=True, default="")
+
+    # totals
+    total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    sub_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    discount_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    after_discount_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    others = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    gst_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    gst_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    tcs_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    tcs_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True)
+
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="yarn_po_approved"
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejected_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="yarn_po_rejected"
+    )
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, default="")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-id"]
+        unique_together = [
+            ("owner", "po_seq"),
+            ("owner", "po_no"),
+        ]
+
+    def __str__(self):
+        return self.po_no
+
+    @staticmethod
+    def next_seq_for(owner):
+        last = (
+            YarnPurchaseOrder.objects.filter(owner=owner)
+            .order_by("-po_seq")
+            .values_list("po_seq", flat=True)
+            .first()
+        )
+        return int(last or 0) + 1
+
+    def recalc(self, save: bool = True):
+        from decimal import Decimal
+
+        items = list(self.items.all())
+        total_weight = sum((i.quantity or Decimal("0")) for i in items)
+        sub_total = sum((i.final_amount or Decimal("0")) for i in items)
+
+        disc_p = Decimal(self.discount_percent or 0)
+        disc_amt = (sub_total * disc_p / Decimal("100")) if disc_p else Decimal("0")
+        after_disc = sub_total - disc_amt
+
+        others = Decimal(self.others or 0)
+        base = after_disc + others
+
+        gst_p = Decimal(self.gst_percent or 0)
+        gst_amt = (base * gst_p / Decimal("100")) if gst_p else Decimal("0")
+
+        tcs_p = Decimal(self.tcs_percent or 0)
+        tcs_amt = (base * tcs_p / Decimal("100")) if tcs_p else Decimal("0")
+
+        final = base + gst_amt + tcs_amt
+
+        self.total_weight = total_weight
+        self.sub_total = sub_total
+        self.discount_amount = disc_amt
+        self.after_discount_value = after_disc
+        self.gst_amount = gst_amt
+        self.tcs_amount = tcs_amt
+        self.final_amount = final
+
+        if save:
+            self.save(update_fields=[
+                "total_weight","sub_total","discount_amount","after_discount_value",
+                "gst_amount","tcs_amount","final_amount","updated_at"
+            ])
+
+    def save(self, *args, **kwargs):
+        if not self.pk and (not self.po_seq or not self.po_no):
+            self.po_seq = self.po_seq or self.next_seq_for(self.owner)
+            self.po_no = self.po_no or f"VY-{self.po_seq}"
+        super().save(*args, **kwargs)
+
+
+class YarnPurchaseOrderItem(models.Model):
+    class Unit(models.TextChoices):
+        MTR = "MTR", "MTR"
+        KG = "KG", "KG"
+        PCS = "PCS", "PCS"
+
+    po = models.ForeignKey(YarnPurchaseOrder, on_delete=models.CASCADE, related_name="items")
+    material = models.ForeignKey("Material", on_delete=models.PROTECT, related_name="yarn_po_items")
+
+    unit = models.CharField(max_length=10, choices=Unit.choices, default=Unit.MTR)
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    value = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    dia = models.CharField(max_length=20, blank=True, default="")
+    gauge = models.CharField(max_length=20, blank=True, default="")
+
+    rolls = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    count = models.CharField(max_length=30, blank=True, default="")
+    gsm = models.CharField(max_length=30, blank=True, default="")
+    sl = models.CharField(max_length=30, blank=True, default="")
+
+    hsn_code = models.CharField(max_length=30, blank=True, default="")
+    remark = models.CharField(max_length=250, blank=True, default="")
+
+    rate = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"{self.po.po_no} • {self.material}"
+
+    def save(self, *args, **kwargs):
+        from decimal import Decimal
+        qty = Decimal(self.quantity or 0)
+        rate = Decimal(self.rate or 0)
+        self.final_amount = qty * rate
+        super().save(*args, **kwargs)
 

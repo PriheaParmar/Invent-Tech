@@ -1,0 +1,1405 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Dashboard - InventTech{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/pages/dashboard.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'css/pages/yarn_po.css' %}?v=1">
+
+{% endblock %}
+
+{% block page_title %}Good morning, {{ request.user.username|default:"Admin" }}{% endblock %}
+{% block page_subtitle %}Track lots, programs, and dispatch in one system.{% endblock %}
+
+{% block content %}
+
+<!-- =========================================================
+  SECTION 1: DASHBOARD
+========================================================= -->
+<section id="section-dashboard" class="page-section is-active">
+  <div class="canvas">
+    <section class="grid">
+
+      <div class="card soft c1">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Inward (GRN)</div>
+            <div class="card-sub">Today’s incoming materials</div>
+          </div>
+          <span class="pill">Live</span>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-big">9</div>
+          <div class="kpi-sub">pending GRNs</div>
+        </div>
+
+        <div class="mini-bars">
+          <span style="height:18px"></span><span style="height:30px"></span><span style="height:14px"></span>
+          <span style="height:34px"></span><span style="height:22px"></span><span style="height:28px"></span>
+        </div>
+      </div>
+
+      <div class="card soft c2">
+        <div class="card-head">
+          <div>
+            <div class="card-title">WIP Programs</div>
+            <div class="card-sub">Cutting → Stitching → Finishing</div>
+          </div>
+          <span class="pill">Shift A</span>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-big">38</div>
+          <div class="kpi-sub">running programs</div>
+        </div>
+
+        <div class="chips">
+          <span class="chip">Cutting: 11</span>
+          <span class="chip">Stitching: 19</span>
+          <span class="chip">Finishing: 8</span>
+        </div>
+      </div>
+
+      <div class="card soft c3">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Dispatch</div>
+            <div class="card-sub">Invoices • E-way • Challan</div>
+          </div>
+          <span class="pill">Today</span>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-big">14</div>
+          <div class="kpi-sub">scheduled</div>
+        </div>
+
+        <div class="chips">
+          <span class="chip">Pending: 6</span>
+          <span class="chip">Done: 8</span>
+        </div>
+      </div>
+
+      <div class="card soft big c4">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Production Trend</div>
+            <div class="card-sub">Last 14 days output</div>
+          </div>
+          <span class="pill">Overview</span>
+        </div>
+
+        <div class="chart">
+          <div class="chart-grid"></div>
+          <div class="chart-line"></div>
+        </div>
+
+        <div class="tiny-note">Later we connect this to real program + stock ledger data.</div>
+      </div>
+
+      <div class="card soft mid c5">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Stage Load</div>
+            <div class="card-sub">Capacity snapshot</div>
+          </div>
+          <span class="pill">Now</span>
+        </div>
+
+        <div class="prog">
+          <div class="row">
+            <div class="nm">Cutting</div>
+            <div class="bar"><span style="width:62%"></span></div>
+            <div class="vl">62%</div>
+          </div>
+          <div class="row">
+            <div class="nm">Stitching</div>
+            <div class="bar"><span style="width:44%"></span></div>
+            <div class="vl">44%</div>
+          </div>
+          <div class="row">
+            <div class="nm">Finishing</div>
+            <div class="bar"><span style="width:28%"></span></div>
+            <div class="vl">28%</div>
+          </div>
+        </div>
+
+        <div class="chips" style="margin-top:10px;">
+          <span class="chip">QC Hold: 2</span>
+          <span class="chip">Delayed: 5</span>
+        </div>
+      </div>
+
+      <div class="card soft list c6">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Active Programs</div>
+            <div class="card-sub">Recent production runs</div>
+          </div>
+          <a class="link" href="#">Show all</a>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Program</th>
+              <th>Style</th>
+              <th>Stage</th>
+              <th>Qty</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>PRG-0091</td>
+              <td>S-22</td>
+              <td>Stitching</td>
+              <td>2,400</td>
+              <td><span class="status warn">In Progress</span></td>
+            </tr>
+            <tr>
+              <td>PRG-0090</td>
+              <td>S-18</td>
+              <td>Cutting</td>
+              <td>1,200</td>
+              <td><span class="status ok">On Track</span></td>
+            </tr>
+            <tr>
+              <td>PRG-0087</td>
+              <td>S-12</td>
+              <td>Finishing</td>
+              <td>900</td>
+              <td><span class="status bad">Delayed</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card soft list c7">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Lot Watch</div>
+            <div class="card-sub">Lots needing attention</div>
+          </div>
+          <span class="pill">Alerts</span>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Lot</th>
+              <th>Material</th>
+              <th>Available</th>
+              <th>State</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Y-102</td>
+              <td>Yarn</td>
+              <td>120 kg</td>
+              <td><span class="status bad">Low</span></td>
+            </tr>
+            <tr>
+              <td>G-211</td>
+              <td>Greige</td>
+              <td>480 m</td>
+              <td><span class="status warn">QC</span></td>
+            </tr>
+            <tr>
+              <td>T-044</td>
+              <td>Trims</td>
+              <td>2,600 pcs</td>
+              <td><span class="status ok">OK</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <aside class="right">
+      <div class="card right-card">
+        <div class="right-head">
+          <div class="rh-title">May 2024</div>
+          <span class="pill">Shift A</span>
+        </div>
+
+        <div class="calendar">
+          <div class="wk">M</div>
+          <div class="wk">T</div>
+          <div class="wk">W</div>
+          <div class="wk">T</div>
+          <div class="wk">F</div>
+          <div class="wk">S</div>
+          <div class="wk">S</div>
+          <div class="d">1</div>
+          <div class="d">2</div>
+          <div class="d">3</div>
+          <div class="d">4</div>
+          <div class="d">5</div>
+          <div class="d">6</div>
+          <div class="d">7</div>
+          <div class="d">8</div>
+          <div class="d">9</div>
+          <div class="d">10</div>
+          <div class="d">11</div>
+          <div class="d active">12</div>
+          <div class="d">13</div>
+          <div class="d">14</div>
+          <div class="d">15</div>
+          <div class="d">16</div>
+          <div class="d">17</div>
+          <div class="d">18</div>
+          <div class="d">19</div>
+          <div class="d">20</div>
+          <div class="d">21</div>
+          <div class="d">22</div>
+          <div class="d">23</div>
+          <div class="d">24</div>
+          <div class="d">25</div>
+          <div class="d">26</div>
+          <div class="d">27</div>
+          <div class="d">28</div>
+          <div class="d">29</div>
+          <div class="d">30</div>
+          <div class="d">31</div>
+        </div>
+      </div>
+
+      <div class="card right-card">
+        <div class="right-head">
+          <div>
+            <div class="card-title">Today’s Timeline</div>
+            <div class="card-sub">Dispatch + GRN + checkpoints</div>
+          </div>
+          <span class="pill">May 12</span>
+        </div>
+
+        <div class="timeline">
+          <div class="titem">
+            <div class="t-time">09:30</div>
+            <div class="t-dot"></div>
+            <div>
+              <div class="t-title">GRN Verification</div>
+              <div class="t-sub">Yarn Lot Y-148 QC pending</div>
+            </div>
+          </div>
+          <div class="titem">
+            <div class="t-time">12:00</div>
+            <div class="t-dot"></div>
+            <div>
+              <div class="t-title">Stitching Handover</div>
+              <div class="t-sub">PRG-0091 bundle issue to line-3</div>
+            </div>
+          </div>
+          <div class="titem">
+            <div class="t-time">04:00</div>
+            <div class="t-dot"></div>
+            <div>
+              <div class="t-title">Dispatch Window</div>
+              <div class="t-sub">INV-00211 invoice + e-way</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+
+<!-- =========================================================
+  SECTION 2: UTILITIES
+========================================================= -->
+<section id="section-utilities" class="page-section">
+  <div class="canvas">
+    <section class="grid util-grid-section">
+      <div class="card soft big c8">
+
+        <div class="card-head util-head">
+          <div>
+            <div class="card-title">Utilities</div>
+            <div class="card-sub">Masters, setup, uploads & configuration — everything in one place.</div>
+          </div>
+
+          <div class="util-search">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 21l-4.3-4.3"></path>
+              <path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"></path>
+            </svg>
+            <input id="utilSearch" type="text"
+              placeholder="Search utilities… (jobber, shade, greige, bom, catalogue)" />
+          </div>
+        </div>
+
+        <div id="utilSections" class="util-sections"></div>
+
+        <div class="tiny-note" style="margin-top:10px;">
+          Clicking a tile will open the module inside dashboard (no new page).
+        </div>
+
+      </div>
+    </section>
+  </div>
+</section>
+
+<!-- =========================
+     POs Section (Yarn PO)
+========================= -->
+<section id="section-pos" class="page-section">
+  <div class="canvas">
+    <div class="po-shell">
+      <div class="po-headbar">
+        <div class="left">
+          <div class="title">Yarn POs</div>
+          <div class="sub">Generate PO, view list and admin approvals.</div>
+        </div>
+
+        <div class="right">
+          <input id="yarnPoSearch" class="po-search" placeholder="Search PO / vendor..." />
+          <button id="btnOpenPoCreate" class="btn btn-primary" type="button">Generate PO</button>
+        </div>
+      </div>
+
+      <div id="yarnPoListWrap">
+        <div class="po-empty">Loading...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     PO Create Modal
+========================= -->
+<div id="poCreateModal" class="modal-backdrop po-modal" style="display:none;">
+  <div class="modal-card">
+    <button type="button" class="modal-x" data-close-po-create>×</button>
+    <h2 style="margin:0 0 10px;font-weight:950;">Purchase Order For Yarn</h2>
+
+    <form id="poCreateForm" class="po-form">
+      {% csrf_token %}
+
+      <div class="po-form-grid">
+        <div class="f">
+          <label>Internal PO Number</label>
+          <input name="internal_po_no" placeholder="Internal PO No">
+        </div>
+
+        <div class="f">
+          <label>Date</label>
+          <input type="date" name="po_date" required>
+        </div>
+
+        <div class="f">
+          <label>Cancel Date</label>
+          <input type="date" name="cancel_date">
+        </div>
+
+        <div class="f">
+          <label>Vendor</label>
+          <select name="vendor" required>
+            <option value="">Select Vendor</option>
+            {% for v in vendors %}
+              <option value="{{ v.id }}">{{ v.party_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="f">
+          <label>Firm</label>
+          <select name="firm">
+            <option value="">Select Firm</option>
+            {% for f in firms %}
+              <option value="{{ f.id }}">{{ f.firm_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="f">
+          <label>Shipping Address</label>
+          <select name="shipping_address">
+            <option value="">Select Location</option>
+            {% for l in locations %}
+              <option value="{{ l.id }}">{{ l.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="f two">
+          <label>Remarks</label>
+          <input name="remarks" placeholder="Remarks">
+        </div>
+
+        <div class="f">
+          <label>Director</label>
+          <input name="director" placeholder="Director">
+        </div>
+
+        <div class="f full">
+          <label>Address</label>
+          <input name="address" placeholder="Address">
+        </div>
+      </div>
+
+      <div class="po-divider"></div>
+      <div class="po-section-title">Yarn Details</div>
+
+      <div class="po-items">
+        <div class="po-item-head">
+          <div>Yarn</div><div>Unit</div><div>Qty</div><div>Value</div><div>Dia</div><div>Gauge</div>
+          <div>Rolls</div><div>Count</div><div>GSM</div><div>SL</div>
+          <div>HSN</div><div>Remark</div><div>Rate</div><div>Final</div>
+          <div></div>
+        </div>
+
+        <div id="poItemsWrap"></div>
+      </div>
+
+      <div class="po-bottom">
+        <div class="left">
+          <label class="po-muted">Terms & Conditions</label>
+          <textarea name="terms_conditions" placeholder="Terms & Conditions"></textarea>
+        </div>
+
+        <div class="po-totals">
+          <div class="tw">Total Weight : <span id="poTotalWeight">0.00</span></div>
+
+          <div class="row"><span>Sub Total</span><input name="sub_total_ui" id="poSubTotal" readonly value="0"></div>
+          <div class="row"><span>Discount In(%)</span><input name="discount_percent" id="poDiscountP" value="0"></div>
+          <div class="row"><span>After Discount Value</span><input name="after_discount_ui" id="poAfterDiscount" readonly value="0"></div>
+          <div class="row"><span>Others</span><input name="others" id="poOthers" value="0"></div>
+
+          <div class="row">
+            <span>GST</span>
+            <input name="gst_percent" id="poGstP" value="0">
+          </div>
+          <div class="gst-split"><span>CGST</span><span id="poCgstLbl">0%</span><span>SGST</span><span id="poSgstLbl">0%</span></div>
+
+          <div class="row"><span>TCS(%)</span><input name="tcs_percent" id="poTcsP" value="0"></div>
+
+          <div class="row big"><span>Final Amount</span><input name="final_amount_ui" id="poFinalAmount" readonly value="0"></div>
+        </div>
+      </div>
+
+      <div class="po-form-actions">
+        <button class="btn btn-primary" type="submit">Submit</button>
+        <button class="btn btn-ghost" type="button" data-close-po-create>Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =========================
+     PO Detail Modal
+========================= -->
+<div id="poDetailModal" class="modal-backdrop po-modal" style="display:none;">
+  <div class="modal-card">
+    <button type="button" class="modal-x" data-close-po-detail>×</button>
+    <div id="poDetailBody" class="po-empty">Loading...</div>
+  </div>
+</div>
+
+<template id="poItemRowTpl">
+  <div class="po-item-row">
+    <select name="item_material[]">
+      <option value="">Select Yarn Name</option>
+      {% for m in yarn_materials %}
+        <option value="{{ m.id }}">{{ m.name }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="item_unit[]">
+      <option value="MTR">MTR</option>
+      <option value="KG">KG</option>
+      <option value="PCS">PCS</option>
+    </select>
+
+    <input name="item_qty[]" type="number" step="0.01" placeholder="Qty">
+    <input name="item_value[]" type="number" step="0.01" placeholder="Value">
+    <input name="item_dia[]" placeholder="Dia">
+    <input name="item_gauge[]" placeholder="Gauge">
+
+    <input name="item_rolls[]" type="number" step="0.01" placeholder="Rolls">
+    <input name="item_count[]" placeholder="Count">
+    <input name="item_gsm[]" placeholder="GSM">
+    <input name="item_sl[]" placeholder="SL">
+
+    <input name="item_hsn[]" placeholder="HSN">
+    <input name="item_remark[]" placeholder="Remark">
+
+    <input name="item_rate[]" type="number" step="0.01" placeholder="Rate">
+    <input name="item_final_ui" readonly placeholder="Final">
+
+    <div class="po-row-actions">
+      <button type="button" class="po-iconbtn add" data-add-row>+</button>
+      <button type="button" class="po-iconbtn remove" data-remove-row>−</button>
+    </div>
+  </div>
+</template>
+
+
+{% endblock %}
+{% block extra_js %}
+<script>
+  /* ============================
+     UPDATED MATERIALS JS (Dashboard)
+     - Materials-only changes
+     ============================ */
+
+  (function () {
+    "use strict";
+
+    /* ==============================
+       UTILITIES CONFIG (YOUR ORDER)
+       ============================== */
+    const TAG_LABEL = {
+      Masters: "MASTERS",
+      Production: "PRODUCTION",
+      Dyeing: "DYEING",
+      Design: "DESIGN",
+      Admin: "ADMIN TOOLS",
+      Inventory: "INVENTORY",
+      Dispatch: "DISPATCH",
+      Accounts: "ACCOUNTS",
+      Uploads: "UPLOADS",
+    };
+
+    // STRICT ROW ORDER + STRICT SPANS (8 columns base)
+    const ROW_LAYOUT = {
+      row1: [{ tag: "Masters", span: 8 }],
+      row2: [{ tag: "Production", span: 5 }, { tag: "Dyeing", span: 3 }],
+      row3: [{ tag: "Design", span: 8 }],
+      row4: [
+        { tag: "Admin", span: 2 },
+        { tag: "Inventory", span: 2 },
+        { tag: "Dispatch", span: 2 },
+        { tag: "Accounts", span: 1 },
+        { tag: "Uploads", span: 1 },
+      ],
+    };
+
+    // Item order inside each section
+    const INTRA_ORDER = {
+      Masters: [
+      "Material / Trim", "Material Type", "Material Shades", "Material Unit", "Brand", "Category",
+      "Main Category", "Sub Category",
+      "Vendor", "Party",
+      "Client", "Location", "Jobber Type", "Jobber", "Material Type Linking",
+    ],
+
+      Production: ["Techpack", "BOM", "Job Card Details", "Branch SKU"],
+      Dyeing: ["Dyeing Master", "Greige Master", "Dyeing Other Charge Headers"],
+      Design: ["Catalogue", "Pattern Type", "Designer", "Season", "Theme"],
+      Admin: ["Jobber Bulk Changes"],
+      Inventory: ["Inward Type"],
+      Dispatch: ["Terms & Condition"],
+      Accounts: ["Expense"],
+      Uploads: ["Material Bulk Upload"],
+    };
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getPriority(tag, title) {
+      const arr = INTRA_ORDER[tag] || [];
+      const idx = arr.indexOf(title);
+      return idx === -1 ? 999 : idx;
+    }
+
+    // KEEP YOUR ICON FUNCTION (unchanged style)
+    function iconSvg(name) {
+      const icons = {
+        settings: `
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                  <path d="M19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z"/>
+                </svg>`,
+        location: `<svg class="ico icon-location" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" width="800px" height="800px" viewBox="-4 0 32 32" version="1.1">
+                  <title>location</title>
+                  <desc>Created with Sketch Beta.</desc>
+                  <defs>
+                  </defs>
+                      <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+                          <g id="Icon-Set" sketch:type="MSLayerGroup" transform="translate(-104.000000, -411.000000)" fill="#ee3d85">
+                              <path d="M116,426 C114.343,426 113,424.657 113,423 C113,421.343 114.343,420 116,420 C117.657,420 119,421.343 119,423 C119,424.657 117.657,426 116,426 L116,426 Z M116,418 C113.239,418 111,420.238 111,423 C111,425.762 113.239,428 116,428 C118.761,428 121,425.762 121,423 C121,420.238 118.761,418 116,418 L116,418 Z M116,440 C114.337,440.009 106,427.181 106,423 C106,417.478 110.477,413 116,413 C121.523,413 126,417.478 126,423 C126,427.125 117.637,440.009 116,440 L116,440 Z M116,411 C109.373,411 104,416.373 104,423 C104,428.018 114.005,443.011 116,443 C117.964,443.011 128,427.95 128,423 C128,416.373 122.627,411 116,411 L116,411 Z" id="location" sketch:type="MSShapeGroup"> </path>
+                          </g>
+                      </g>
+                  </svg>`,
+        jobber: `
+              <svg class="ico icon-jobber" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(238, 61, 133, 1)" height="30px">
+                <path d="M2 22C2 17.5817 5.58172 14 10 14C14.4183 14 18 17.5817 18 22H16C16 18.6863 13.3137 16 10 16C6.68629 16 4 18.6863 4 22H2ZM10 13C6.685 13 4 10.315 4 7C4 3.685 6.685 1 10 1C13.315 1 16 3.685 16 7C16 10.315 13.315 13 10 13ZM10 11C12.21 11 14 9.21 14 7C14 4.79 12.21 3 10 3C7.79 3 6 4.79 6 7C6 9.21 7.79 11 10 11ZM18.2837 14.7028C21.0644 15.9561 23 18.752 23 22H21C21 19.564 19.5483 17.4671 17.4628 16.5271L18.2837 14.7028ZM17.5962 3.41321C19.5944 4.23703 21 6.20361 21 8.5C21 11.3702 18.8042 13.7252 16 13.9776V11.9646C17.6967 11.7222 19 10.264 19 8.5C19 7.11935 18.2016 5.92603 17.041 5.35635L17.5962 3.41321Z"></path>
+              </svg>`,
+              parties:`<svg class="ico" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  width="800px" height="1000px" viewBox="0 0 50 50"><path d="M7 2L7 7L2 7L2 46L14 46L14 44L4 44L4 9L9 9L9 4L29 4L29 7L11 7L11 9L34 9L34 20L36 20L36 7L31 7L31 2 Z M 8 12L8 14L12 14L12 12 Z M 17 12L17 14L21 14L21 12 Z M 26 12L26 14L30 14L30 12 Z M 8 17L8 19L12 19L12 17 Z M 17 17L17 19L21 19L21 17 Z M 26 17L26 19L30 19L30 17 Z M 29 20C25.742188 20 23.328125 21.324219 22.074219 23.296875C20.929688 25.09375 20.875 27.339844 21.59375 29.433594C21.515625 29.566406 21.402344 29.679688 21.328125 29.839844C21.171875 30.191406 21.035156 30.589844 21.054688 31.097656L21.054688 31.101563C21.109375 32.378906 21.851563 33.046875 22.398438 33.421875C22.628906 34.640625 23.207031 35.660156 24 36.390625L24 38.53125C23.824219 38.953125 23.472656 39.308594 22.796875 39.679688C22.089844 40.070313 21.132813 40.4375 20.144531 40.917969C19.15625 41.398438 18.125 42.011719 17.324219 42.988281C16.519531 43.96875 16 45.308594 16 47L16 48L48.050781 48L47.992188 46.941406C47.902344 45.363281 47.316406 44.117188 46.488281 43.222656C45.664063 42.328125 44.644531 41.765625 43.679688 41.320313C42.714844 40.875 41.785156 40.535156 41.109375 40.171875C40.464844 39.832031 40.148438 39.511719 40 39.160156L40 37.472656C40.597656 36.609375 40.859375 35.617188 40.9375 34.6875C41.414063 34.265625 41.96875 33.617188 42.125 32.457031C42.230469 31.625 42.019531 30.996094 41.695313 30.464844C42.144531 29.277344 42.328125 27.84375 41.933594 26.417969C41.707031 25.589844 41.277344 24.777344 40.5625 24.171875C40.003906 23.691406 39.238281 23.425781 38.390625 23.308594L37.75 22L37.125 22C36.097656 22 35.085938 22.238281 34.214844 22.578125C33.871094 22.714844 33.558594 22.863281 33.265625 23.027344C33.101563 22.808594 32.921875 22.601563 32.714844 22.414063C32.105469 21.863281 31.261719 21.550781 30.324219 21.421875L29.621094 20 Z M 8 22L8 24L12 24L12 22 Z M 17 22L17 24L19.484375 24L20.761719 22 Z M 28.4375 22.113281L29.027344 23.300781L29.644531 23.300781C30.464844 23.300781 30.96875 23.535156 31.371094 23.894531C31.773438 24.257813 32.066406 24.796875 32.238281 25.429688C32.582031 26.695313 32.289063 28.339844 32.007813 28.792969L31.644531 29.371094L32.050781 29.921875C32.289063 30.238281 32.441406 30.566406 32.363281 31.007813C32.253906 31.625 32.03125 31.707031 31.589844 32.089844L31.257813 32.375L31.246094 32.8125C31.210938 33.792969 30.871094 34.777344 30.300781 35.339844L30 35.632813L30 38.988281L30.058594 39.152344C30.453125 40.25 31.335938 40.933594 32.234375 41.429688C33.132813 41.925781 34.101563 42.289063 34.976563 42.714844C35.851563 43.140625 36.609375 43.625 37.132813 44.261719C37.496094 44.699219 37.71875 45.289063 37.855469 46L18.144531 46C18.28125 45.289063 18.503906 44.699219 18.867188 44.261719C19.390625 43.625 20.148438 43.140625 21.023438 42.714844C21.898438 42.289063 22.867188 41.925781 23.765625 41.429688C24.664063 40.933594 25.546875 40.25 25.941406 39.152344L26 38.988281L26 35.523438L25.5625 35.226563C25.101563 34.914063 24.34375 33.769531 24.238281 32.742188L24.183594 32.1875L23.683594 31.945313C23.398438 31.808594 23.082031 31.753906 23.050781 31.015625C23.050781 31.015625 23.082031 30.824219 23.15625 30.65625C23.234375 30.484375 23.375 30.304688 23.332031 30.347656L23.8125 29.867188L23.542969 29.242188C22.796875 27.523438 22.898438 25.722656 23.761719 24.367188C24.550781 23.125 26.097656 22.269531 28.4375 22.113281 Z M 36.558594 24.113281L37.089844 25.199219L37.714844 25.199219C38.472656 25.199219 38.921875 25.398438 39.265625 25.691406C39.613281 25.984375 39.859375 26.414063 40.003906 26.949219C40.300781 28.019531 40.085938 29.480469 39.746094 30.144531L39.417969 30.796875L39.933594 31.308594C39.867188 31.242188 40.195313 31.785156 40.140625 32.195313C40.011719 33.175781 39.871094 33.113281 39.449219 33.390625L39.03125 33.667969L39 34.171875C38.953125 35.042969 38.515625 36.351563 38.28125 36.589844L38 36.878906L38 39.621094L38.058594 39.78125C38.4375 40.835938 39.296875 41.476563 40.167969 41.9375C41.035156 42.398438 41.980469 42.738281 42.84375 43.136719C43.707031 43.535156 44.476563 43.984375 45.019531 44.578125C45.367188 44.953125 45.601563 45.433594 45.769531 46L39.921875 46C39.757813 44.777344 39.3125 43.765625 38.675781 42.988281C37.875 42.011719 36.84375 41.398438 35.855469 40.917969C34.867188 40.4375 33.910156 40.070313 33.203125 39.679688C32.527344 39.308594 32.175781 38.953125 32 38.53125L32 36.296875C32.691406 35.421875 33.054688 34.390625 33.15625 33.34375C33.542969 33.003906 34.144531 32.417969 34.332031 31.359375C34.484375 30.492188 34.226563 29.785156 33.90625 29.210938C34.4375 27.988281 34.59375 26.460938 34.167969 24.902344C34.164063 24.886719 34.15625 24.871094 34.152344 24.855469C34.367188 24.71875 34.640625 24.5625 34.949219 24.441406C35.4375 24.25 36.007813 24.179688 36.558594 24.113281 Z M 8 27L8 29L12 29L12 27 Z M 17 27L17 29L19.753906 29L19.394531 27 Z M 8 32L8 34L12 34L12 32 Z M 17 32L17 34L20.449219 34L19.613281 32 Z M 8 37L8 39L12 39L12 37 Z M 17 37L17 39L21 39L21 37Z"/></svg>`,
+        jobberType: `
+        <svg class="ico" xmlns="http://www.w3.org/2000/svg" width="800px" height="800px" viewBox="0 0 24 24" id="Layer_1" data-name="Layer 1"><defs><style>.cls-1{fill:none;stroke:#020202;stroke-miterlimit:10;stroke-width:1.95px;}</style></defs><circle class="cls-1" cx="12" cy="5.16" r="3.91"/><path class="cls-1" d="M17.34,12.52c3.24.66,5.41,1.93,5.41,3.39,0,1.91-3.79,3.51-8.8,3.84"/><path class="cls-1" d="M6.66,12.52c-3.24.66-5.41,1.93-5.41,3.39,0,2,4.28,3.71,9.75,3.89"/><polyline class="cls-1" points="8.09 16.89 11.02 19.82 8.09 22.75"/><path class="cls-1" d="M17.86,15.91v-1h0A5.86,5.86,0,0,0,12,9.07h0a5.86,5.86,0,0,0-5.86,5.86h0v1"/></svg>
+        `,
+        material: `<svg class="ico icon-material" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" height="800px" width="800px" version="1.1" id="Layer_1" viewBox="0 0 512 512" xml:space="preserve" stroke="#000000" stroke-width="26.112000000000002">
+
+<g id="SVGRepo_bgCarrier" stroke-width="0"/>
+
+<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+
+<g id="SVGRepo_iconCarrier"> <g transform="translate(1 1)"> <g> <g> <path d="M470.043,287.976c-1.736-1.736-4.339-2.603-6.942-2.603c-15.62,0-27.769-4.339-37.315-14.753 c-26.034-26.902-23.431-79.837-23.431-80.705c0-96.325,24.298-143.186,25.166-143.186c0.868-2.603,0.868-5.207,0-7.81 s-3.471-4.339-6.075-5.207L256.565-1c-2.603,0-4.339,0-6.942,1.736s-3.471,4.339-3.471,6.942 c0,26.034-8.678,47.729-26.902,64.217c-53.803,49.464-170.956,39.919-171.824,39.919c-2.603,0-5.207,0.868-6.942,2.603 s-2.603,3.471-2.603,6.075v381.831c0,5.207,3.471,8.678,8.678,8.678h199.593c4.339,0,7.81-2.603,8.678-6.942l18.224-112.814 l25.166,112.814c0.868,4.339,4.339,6.942,8.678,6.942h130.169c4.339,0,7.81-3.471,8.678-7.81l26.034-208.271 C472.647,292.315,471.779,289.712,470.043,287.976z M429.257,493.644H313.84l-32.976-149.261 c-0.868-4.339-4.339-6.942-8.678-6.942c-4.339,0-7.81,2.603-8.678,6.942l-24.298,149.261H55.237V241.983h8.678 c5.207,0,8.678-3.471,8.678-8.678c0-5.207-3.471-8.678-8.678-8.678h-8.678v-94.59c30.373,0.868,124.963,0.868,175.295-45.993 c19.092-17.356,29.505-39.919,32.109-65.953l144.922,31.241c-7.81,19.091-22.563,65.085-22.563,140.583 c0,0.869-0.653,15.895,2.623,34.712h-11.301c-5.207,0-8.678,3.471-8.678,8.678c0,5.207,3.471,8.678,8.678,8.678h15.34 c4.201,14.136,10.996,28.635,21.975,39.919c10.414,11.281,24.298,18.224,39.919,19.959L429.257,493.644z"/> <path d="M150.694,224.627h-34.712c-5.207,0-8.678,3.471-8.678,8.678c0,5.207,3.471,8.678,8.678,8.678h34.712 c5.207,0,8.678-3.471,8.678-8.678C159.372,228.098,155.901,224.627,150.694,224.627z"/> <path d="M324.253,224.627h-34.712c-5.207,0-8.678,3.471-8.678,8.678c0,5.207,3.471,8.678,8.678,8.678h34.712 c5.207,0,8.678-3.471,8.678-8.678C332.931,228.098,329.46,224.627,324.253,224.627z"/> <path d="M237.474,224.627h-34.712c-5.207,0-8.678,3.471-8.678,8.678c0,5.207,3.471,8.678,8.678,8.678h34.712 c5.207,0,8.678-3.471,8.678-8.678C246.152,228.098,242.681,224.627,237.474,224.627z"/> </g> </g> </g> </g>
+
+</svg>`
+      };
+
+
+      return icons[name] || icons.settings;
+    }
+
+    // ✅ COMPLETE UTILITIES LIST (so rows don’t break)
+    const UTILITIES = [
+      // Masters
+      { title: "Material / Trim", tag: "Masters", key: "material trim", icon: "material" },
+      { title: "Material Type", tag: "Masters", key: "material type" },
+      { title: "Material Shades", tag: "Masters", key: "shade shades" },
+      { title: "Material Unit", tag: "Masters", key: "unit uom" },
+      { title: "Brand", tag: "Masters", key: "brand" },
+      { title: "Category", tag: "Masters", key: "category" },
+      { title: "Main Category", tag: "Masters", key: "main category" },
+      { title: "Sub Category", tag: "Masters", key: "sub category" },
+      { title: "Vendor", tag: "Masters", key: "vendor supplier", icon: "parties" },
+      { title: "Party", tag: "Masters", key: "party", icon: "parties" },
+      { title: "Client", tag: "Masters", key: "client" },
+      { title: "Location", tag: "Masters", key: "location", icon: "location" },
+      { title: "Jobber Type", tag: "Masters", key: "jobber type", icon: "jobberType" },
+      { title: "Jobber", tag: "Masters", key: "jobber", icon: "jobber" },
+      { title: "Material Type Linking", tag: "Masters", key: "type linking" },
+
+      // Production
+      { title: "Techpack", tag: "Production", key: "techpack" },
+      { title: "BOM", tag: "Production", key: "bom" },
+      { title: "Job Card Details", tag: "Production", key: "job card" },
+      { title: "Branch SKU", tag: "Production", key: "branch sku" },
+
+      // Dyeing
+      { title: "Dyeing Master", tag: "Dyeing", key: "dyeing" },
+      { title: "Greige Master", tag: "Dyeing", key: "greige" },
+      { title: "Dyeing Other Charge Headers", tag: "Dyeing", key: "other charge headers" },
+
+      // Design
+      { title: "Catalogue", tag: "Design", key: "catalogue" },
+      { title: "Pattern Type", tag: "Design", key: "pattern type" },
+      { title: "Designer", tag: "Design", key: "designer" },
+      { title: "Season", tag: "Design", key: "season" },
+      { title: "Theme", tag: "Design", key: "theme" },
+
+      // Admin / Inventory / Dispatch / Accounts / Uploads
+      { title: "Jobber Bulk Changes", tag: "Admin", key: "jobber bulk changes" },
+      { title: "Inward Type", tag: "Inventory", key: "inward type grn" },
+      { title: "Terms & Condition", tag: "Dispatch", key: "terms condition" },
+      { title: "Expense", tag: "Accounts", key: "expense" },
+      { title: "Material Bulk Upload", tag: "Uploads", key: "material bulk upload" },
+    ];
+
+    // ROUTES (keep your names)
+    const ROUTES = {
+      "Jobber": "{% url 'accounts:jobber_list' %}",
+      "Jobber Type": "{% url 'accounts:jobbertype_list' %}",
+      "Material / Trim": "{% url 'accounts:material_list' %}",
+      "Vendor": "{% url 'accounts:party_list' %}",
+      "Party": "{% url 'accounts:party_list' %}",
+      "Location": "{% url 'accounts:location_list' %}",
+      "Material Shades": "{% url 'accounts:materialshade_list' %}",
+      "Material Type": "{% url 'accounts:materialtype_list' %}",
+    };
+
+    function tileHtml(u) {
+      const href = ROUTES[u.title] || "#";
+      return `
+      <a class="util-tile" href="${href}" data-title="${escapeHtml(u.title)}" data-tag="${escapeHtml(u.tag)}">
+        <span class="util-ico">${iconSvg(u.icon)}</span>
+        <div class="util-meta">
+          <div class="util-title">${escapeHtml(u.title)}</div>
+        </div>
+      </a>
+    `;
+    }
+
+    // ✅ groupHtml now supports SPAN to prevent cramping
+    function groupHtml(tag, items, span) {
+      const label = TAG_LABEL[tag] || tag.toUpperCase();
+
+      const inlinePanel = (tag === "Masters") ? `
+      <div id="mastersEmbedPanel" class="util-inline-panel" style="display:none;">
+        <div id="mastersEmbedMount"></div>
+      </div>
+    ` : "";
+
+      return `
+      <div class="util-group" data-tag="${escapeHtml(tag)}" style="grid-column: span ${span}; --cols:${span};">
+        <div class="util-group-head">
+          <div class="util-group-title">${escapeHtml(label)}</div>
+          <div class="util-group-line"></div>
+          <div class="util-group-count">${items.length}</div>
+        </div>
+
+        ${inlinePanel}
+
+        <div class="util-group-grid">
+          ${items.map(tileHtml).join("")}
+        </div>
+      </div>
+    `;
+    }
+
+    let LAST_MASTERS_URL = null; // remembers currently opened embed page
+
+    // resolve embed URL against LAST_MASTERS_URL so ?page=2 / relative links work
+    function withEmbed(url) {
+      const base = LAST_MASTERS_URL || window.location.origin;
+      const u = new URL(url, base);
+      u.searchParams.set("embed", "1");
+      return u.toString();
+    }
+
+    function isMastersUrl(hrefOrAction) {
+      if (!hrefOrAction) return false;
+
+      const base = LAST_MASTERS_URL || window.location.origin;
+
+      let urlObj;
+      try {
+        urlObj = new URL(hrefOrAction, base);
+      } catch {
+        return false;
+      }
+
+      const path = (urlObj.pathname || "").replace(/\/+$/, "") + "/";
+
+      const routeJobber = ROUTES["Jobber"] ? new URL(ROUTES["Jobber"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeType = ROUTES["Jobber Type"] ? new URL(ROUTES["Jobber Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeMaterial = ROUTES["Material / Trim"] ? new URL(ROUTES["Material / Trim"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeParty = ROUTES["Party"] ? new URL(ROUTES["Party"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeLocation = ROUTES["Location"] ? new URL(ROUTES["Location"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeMaterialShade = ROUTES["Material Shade"] ? new URL(ROUTES["Material Shade"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeMaterialType = ROUTES["Material Type"] ? new URL(ROUTES["Material Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const prefixes = [
+        "/master/jobbers/",
+        "/master/jobber-types/",
+        "/master/materials/",
+        "/master/parties/",
+        "/master/locations/",
+        "/master/material-shades/",
+        "/master/material-types/",
+
+        routeJobber,
+        routeType,
+        routeMaterial,
+        routeParty,
+        routeLocation,
+        routeMaterialShade,
+        routeMaterialType,
+      ].filter(Boolean);
+
+      return prefixes.some((p) => path.startsWith(p));
+    }
+
+    function bootUtilities() {
+      const container = document.getElementById("utilSections");
+      const input = document.getElementById("utilSearch");
+      if (!container || !input) return;
+
+      // Close handler from embedded pages
+      container.addEventListener("click", (e) => {
+        const closeBtn = e.target.closest("[data-embed-close]");
+        if (!closeBtn) return;
+
+        const panel = container.querySelector("#mastersEmbedPanel");
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!panel || !mount) return;
+
+        panel.style.display = "none";
+        mount.innerHTML = "";
+      });
+
+      // ==========================
+      // MATERIALS ONLY: initEmbedMount
+      // - Step1: only 4 options, nothing else visible
+      // - Step2: show only selected type fields
+      // - Disable hidden fields to prevent browser blocking save
+      // - Image preview
+      // ==========================
+      function initEmbedMount(mount, contextUrl) {
+        if (!mount) return;
+
+        // ===== MATERIALS LIST FILTER (stay inside embed) =====
+        const materialsList = mount.querySelector(".materials-embed"); // CHANGED
+        if (materialsList) { // CHANGED
+          const listForm = materialsList.querySelector("form.mat-search"); // CHANGED
+          const selects = listForm ? listForm.querySelectorAll('select[name="type"]') : null; // CHANGED
+          const typeSelect = (selects && selects.length) ? selects[selects.length - 1] : null; // CHANGED (handles nested/duplicate selects safely)
+          if (listForm && typeSelect && !typeSelect.dataset.bound) { // CHANGED
+            typeSelect.dataset.bound = "1"; // CHANGED
+            typeSelect.removeAttribute("onchange"); // CHANGED (prevents inline this.form.submit() which bypasses submit event)
+            typeSelect.onchange = null; // CHANGED
+            typeSelect.addEventListener("change", () => { // CHANGED
+              if (typeof listForm.requestSubmit === "function") { // CHANGED
+                listForm.requestSubmit(); // CHANGED (fires submit event so embed submit handler intercepts)
+              } else { // CHANGED
+                listForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); // CHANGED (fallback)
+              }
+            }); // CHANGED
+          }
+        }
+        // ===== END MATERIALS LIST FILTER FIX =====
+
+        const formWrap = mount.querySelector("[data-material-form]");
+        if (!formWrap) return;
+
+        const step2 = formWrap.querySelector("[data-step2]");
+        if (!step2) return;
+
+        const ALLOWED_TYPES = new Set(["yarn", "greige", "finished", "trim"]);
+
+        const hasErrors = !!formWrap.querySelector(".mat-errors, .errorlist, [aria-invalid='true']");
+        const ctx = String(contextUrl || "");
+        const isAdd = ctx.includes("/master/materials/add");
+        const isEdit = ctx.includes("/edit/");
+
+        const typeEl = formWrap.querySelector('[name="material_kind"]');
+
+        function ensureOnly4Options_Select(selectEl) {
+          if (!selectEl) return;
+
+          // hide everything except allowed 4
+          Array.from(selectEl.options).forEach((opt) => {
+            const v = (opt.value || "").trim();
+            if (!ALLOWED_TYPES.has(v)) opt.hidden = true;
+          });
+
+          // ensure hidden placeholder exists so Step2 stays hidden until user selects
+          let placeholder = selectEl.querySelector('option[value=""]');
+          if (!placeholder) {
+            placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = "Select";
+            placeholder.disabled = true;
+            placeholder.hidden = true; // not visible -> still only 4 visible options
+            selectEl.insertBefore(placeholder, selectEl.firstChild);
+          } else {
+            placeholder.disabled = true;
+            placeholder.hidden = true;
+          }
+
+          // On add screen (fresh), force no selection
+          if (isAdd && !isEdit && !hasErrors) {
+            placeholder.selected = true;
+            selectEl.value = "";
+          }
+        }
+
+        function ensureOnly4Options_Radios() {
+          const radios = Array.from(formWrap.querySelectorAll('input[type="radio"][name="material_kind"]'));
+          if (!radios.length) return;
+
+          radios.forEach((r) => {
+            if (!ALLOWED_TYPES.has((r.value || "").trim())) {
+              // hide radio + its label container if possible
+              const wrap = r.closest("label") || r.parentElement;
+              if (wrap) wrap.style.display = "none";
+              r.checked = false;
+            }
+          });
+
+          // On add screen (fresh), force none checked
+          if (isAdd && !isEdit && !hasErrors) {
+            radios.forEach((r) => { r.checked = false; });
+          }
+        }
+
+        // Disable/enable helpers to prevent hidden required fields blocking submit
+        function primeReqState(el) {
+          if (el.dataset.reqInit === undefined) {
+            el.dataset.reqInit = el.required ? "1" : "0";
+          }
+        }
+
+        function setEnabled(root, enabled) {
+          const ctrls = root.querySelectorAll("input, select, textarea, button");
+          ctrls.forEach((el) => {
+            // never disable material_kind control itself
+            if (el.name === "material_kind") return;
+
+            if (el.matches("input, select, textarea")) {
+              primeReqState(el);
+              if (!enabled) el.required = false;
+              else el.required = (el.dataset.reqInit === "1");
+            }
+
+            el.disabled = !enabled;
+          });
+        }
+
+        const sections = Array.from(formWrap.querySelectorAll(".mf-section[data-type]"));
+
+        function detectValue() {
+          const el = formWrap.querySelector('[name="material_kind"]');
+          if (!el) return "";
+
+          if (el.tagName === "SELECT") return (el.value || "").trim();
+
+          const checked = formWrap.querySelector('[name="material_kind"]:checked');
+          return checked ? (checked.value || "").trim() : "";
+        }
+
+        function showType(val) {
+          const v = (val || "").trim();
+          const ok = ALLOWED_TYPES.has(v);
+
+          if (!ok) {
+            step2.style.display = "none";
+            // disable everything in step2 so required fields don't block submit
+            setEnabled(step2, false);
+            sections.forEach((s) => { s.style.display = "none"; });
+            return;
+          }
+
+          step2.style.display = "block";
+          // enable step2 common controls first
+          setEnabled(step2, true);
+
+          sections.forEach((s) => {
+            const active = (s.dataset.type === v);
+            s.style.display = active ? "block" : "none";
+            // critical: disable controls in hidden sections
+            setEnabled(s, active);
+          });
+        }
+
+        // 1) enforce ONLY 4 options visible (Materials only)
+        if (typeEl && typeEl.tagName === "SELECT") ensureOnly4Options_Select(typeEl);
+        else ensureOnly4Options_Radios();
+
+        // 2) bind change
+        formWrap.addEventListener("change", (e) => {
+          if (e.target && e.target.name === "material_kind") {
+            showType(detectValue());
+          }
+        });
+
+        // 3) initial state: Step2 hidden until selection (unless edit / errors)
+        showType(detectValue());
+
+        // 4) image preview (Materials only)
+        const fileInput = formWrap.querySelector('input[type="file"]');
+        const preview = formWrap.querySelector("#matPreview");
+        if (fileInput && preview && !fileInput.dataset.bound) {
+          fileInput.dataset.bound = "1";
+          fileInput.addEventListener("change", () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              preview.innerHTML = `<img src="${ev.target.result}" alt="preview">`;
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+      }
+
+      // open embed + init materials logic after load
+      function openMastersPanel(title, url) {
+        const panel = container.querySelector("#mastersEmbedPanel");
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!panel || !mount) return;
+
+        panel.style.display = "block";
+        mount.innerHTML = `<div class="tiny-note">Loading…</div>`;
+
+        const base = LAST_MASTERS_URL || window.location.origin;
+        const absUrl = new URL(url, base).toString();
+        LAST_MASTERS_URL = absUrl;
+
+        fetch(withEmbed(absUrl), {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        })
+          .then((r) => r.text())
+          .then((html) => {
+            mount.innerHTML = html;
+            initEmbedMount(mount, absUrl); // Materials-only init (no-op for others)
+          });
+      }
+
+      // delegate clicks inside embed (pagination, links)
+      container.addEventListener("click", (e) => {
+        const panel = container.querySelector("#mastersEmbedPanel");
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!panel || !mount || panel.style.display === "none") return;
+
+        const a = e.target.closest("a");
+        if (!a) return;
+
+        const href = a.getAttribute("href") || "";
+        if (isMastersUrl(href)) {
+          e.preventDefault();
+          openMastersPanel("Masters", href);
+        }
+      });
+
+      // delegate submits inside embed
+      container.addEventListener("submit", async (e) => {
+        const form = e.target.closest("form");
+        if (!form) return;
+
+        // Materials-only: allow empty action by resolving to LAST_MASTERS_URL
+        const isMaterialsForm =
+          !!form.closest(".material-form-embed") ||
+          !!form.closest(".materials-embed") ||
+          !!form.querySelector("[data-material-form]") ||
+          !!form.closest("[data-material-form]");
+
+        const actionAttr = (form.getAttribute("action") || "").trim();
+        const resolvedAction = (isMaterialsForm && !actionAttr)
+          ? (LAST_MASTERS_URL || window.location.href)
+          : (actionAttr || "");
+
+        if (!isMastersUrl(resolvedAction)) return;
+
+        e.preventDefault();
+
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!mount) return;
+
+        const method = (form.getAttribute("method") || "GET").toUpperCase();
+
+        if (method === "GET") {
+          const params = new URLSearchParams(new FormData(form));
+          const baseUrl = resolvedAction.split("?")[0];
+          openMastersPanel("Masters", baseUrl + "?" + params.toString());
+          return;
+        }
+
+        const fd = new FormData(form);
+        const res = await fetch(withEmbed(resolvedAction), {
+          method,
+          body: fd,
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        });
+
+        const ct = (res.headers.get("content-type") || "").toLowerCase();
+
+        if (ct.includes("application/json")) {
+          const data = await res.json();
+          if (data.ok && data.url) {
+            openMastersPanel("Masters", data.url);
+            return;
+          }
+        }
+
+        mount.innerHTML = await res.text();
+        initEmbedMount(mount, resolvedAction); // Materials-only init (no-op for others)
+      });
+
+      function render(query) {
+        const q = (query || "").toLowerCase().trim();
+
+        const filtered = UTILITIES.filter((u) => {
+          if (!q) return true;
+          const hay = `${u.title} ${u.tag} ${u.key}`.toLowerCase();
+          return hay.includes(q);
+        });
+
+        // Group
+        const groups = {};
+        for (const u of filtered) (groups[u.tag] ||= []).push(u);
+
+        // Sort inside group
+        Object.keys(groups).forEach((tag) => {
+          groups[tag].sort((a, b) => {
+            const pa = getPriority(tag, a.title);
+            const pb = getPriority(tag, b.title);
+            if (pa !== pb) return pa - pb;
+            return a.title.localeCompare(b.title);
+          });
+        });
+
+        // Build rows STRICTLY (keep structure even if empty => NO CRAM)
+        const buildRow = (rowSpec, rowClass) => {
+          const html = rowSpec.map(({ tag, span }) => groupHtml(tag, groups[tag] || [], span)).join("");
+          return `<div class="util-row ${rowClass}">${html}</div>`;
+        };
+
+        container.innerHTML = `
+        <div class="util-layout">
+          ${buildRow(ROW_LAYOUT.row1, "util-row-1")}
+          ${buildRow(ROW_LAYOUT.row2, "util-row-2")}
+          ${buildRow(ROW_LAYOUT.row3, "util-row-3")}
+          ${buildRow(ROW_LAYOUT.row4, "util-row-4")}
+        </div>
+      `;
+
+        // Tile clicks
+        container.querySelectorAll(".util-tile").forEach((tile) => {
+          tile.addEventListener("click", (e) => {
+            const title = tile.dataset.title || "";
+            const href = tile.getAttribute("href") || "#";
+
+            // Only these open embed for now
+            if (title === "Jobber" || title === "Jobber Type" || title === "Material / Trim" || title === "Party" || title === "Vendor" || title === "Location" || title === "Material Shades" || title === "Material Type" || title === "Yarn PO") {
+              e.preventDefault();
+              openMastersPanel(title, href);
+              return;
+            }
+
+            // keep no navigation for others (your requirement)
+            e.preventDefault();
+          });
+        });
+      }
+
+      render("");
+      input.addEventListener("input", () => render(input.value));
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", bootUtilities);
+    } else {
+      bootUtilities();
+    }
+  })();
+
+
+(function(){
+  const listUrl   = "{% url 'accounts:yarn_po_list_partial' %}";
+  const createUrl = "{% url 'accounts:yarn_po_create' %}";
+  const detailUrl = (id) => `/pos/yarn/${id}/detail/`;
+  const approveUrl= (id) => `/pos/yarn/${id}/approve/`;
+  const rejectUrl = (id) => `/pos/yarn/${id}/reject/`;
+
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => Array.from(root.querySelectorAll(s));
+
+  const wrap = $("#yarnPoListWrap");
+  const search = $("#yarnPoSearch");
+
+  const createModal = $("#poCreateModal");
+  const detailModal = $("#poDetailModal");
+  const detailBody  = $("#poDetailBody");
+
+  const itemsWrap = $("#poItemsWrap");
+  const rowTpl = $("#poItemRowTpl");
+
+  function getCookie(name){
+    const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return m ? decodeURIComponent(m[2]) : '';
+  }
+  const csrf = getCookie('csrftoken');
+
+  function open(el){ el.style.display = "flex"; }
+  function close(el){ el.style.display = "none"; }
+
+  async function loadList(){
+    if(!wrap) return;
+    wrap.innerHTML = `<div class="po-empty">Loading...</div>`;
+    const r = await fetch(listUrl, {headers: {"X-Requested-With":"XMLHttpRequest"}});
+    if(!r.ok){
+      wrap.innerHTML = `<div class="po-empty">Error loading list. Open /pos/yarn/partial/ to see server error.</div>`;
+      return;
+    }
+    const html = await r.text();
+    wrap.innerHTML = html;
+    bindListActions();
+    filterList();
+  }
+
+  function filterList(){
+    if(!search) return;
+    const q = (search.value || "").toLowerCase().trim();
+    $$(".po-row", wrap).forEach(row=>{
+      row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
+    });
+  }
+
+  function bindListActions(){
+    if(!wrap) return;
+
+    wrap.querySelectorAll("[data-po-view]").forEach(btn=>{
+      btn.onclick = async () => {
+        const id = btn.getAttribute("data-po-view");
+        open(detailModal);
+        detailBody.innerHTML = `<div class="po-empty">Loading...</div>`;
+        const r = await fetch(detailUrl(id), {headers: {"X-Requested-With":"XMLHttpRequest"}});
+        detailBody.innerHTML = r.ok ? await r.text() : `<div class="po-empty">Failed to load detail</div>`;
+      };
+    });
+
+    wrap.querySelectorAll("[data-po-approve]").forEach(btn=>{
+      btn.onclick = async () => {
+        const id = btn.getAttribute("data-po-approve");
+        const r = await fetch(approveUrl(id), {
+          method:"POST",
+          headers: {"X-CSRFToken": csrf, "X-Requested-With":"XMLHttpRequest"},
+        });
+        if(!r.ok) alert("Approve failed");
+        await loadList();
+      };
+    });
+
+    wrap.querySelectorAll("[data-po-reject]").forEach(btn=>{
+      btn.onclick = async () => {
+        const id = btn.getAttribute("data-po-reject");
+        const reason = prompt("Reject reason (optional):") || "";
+        const fd = new FormData();
+        fd.append("reason", reason);
+        const r = await fetch(rejectUrl(id), {
+          method:"POST",
+          headers: {"X-CSRFToken": csrf, "X-Requested-With":"XMLHttpRequest"},
+          body: fd
+        });
+        if(!r.ok) alert("Reject failed");
+        await loadList();
+      };
+    });
+  }
+
+  function addRow(){
+    const node = rowTpl.content.cloneNode(true);
+    itemsWrap.appendChild(node);
+    bindRowActions();
+    recalc();
+  }
+
+  function bindRowActions(){
+    // Delegate: bind on every row
+    $$(".po-item-row", itemsWrap).forEach(row=>{
+      const addBtn = $("[data-add-row]", row);
+      const rmBtn  = $("[data-remove-row]", row);
+      if(addBtn) addBtn.onclick = () => addRow();
+      if(rmBtn) rmBtn.onclick = () => {
+        if($$(".po-item-row", itemsWrap).length <= 1) return;
+        row.remove();
+        recalc();
+      };
+
+      // qty/rate change => final
+      const qty = $("[name='item_qty[]']", row);
+      const rate= $("[name='item_rate[]']", row);
+      const fin = $("[name='item_final_ui']", row);
+
+      const handler = () => {
+        const q = parseFloat(qty?.value || "0") || 0;
+        const r = parseFloat(rate?.value || "0") || 0;
+        if(fin) fin.value = (q * r).toFixed(2);
+        recalc();
+      };
+      if(qty) qty.oninput = handler;
+      if(rate) rate.oninput = handler;
+    });
+
+    // totals fields recalc
+    ["poDiscountP","poOthers","poGstP","poTcsP"].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.oninput = recalc;
+    });
+  }
+
+  function recalc(){
+    const rows = $$(".po-item-row", itemsWrap);
+    let totalWeight = 0, subTotal = 0;
+
+    rows.forEach(row=>{
+      const q = parseFloat($("[name='item_qty[]']", row)?.value || "0") || 0;
+      const r = parseFloat($("[name='item_rate[]']", row)?.value || "0") || 0;
+      totalWeight += q;
+      subTotal += (q*r);
+      const fin = $("[name='item_final_ui']", row);
+      if(fin) fin.value = (q*r).toFixed(2);
+    });
+
+    const discP = parseFloat($("#poDiscountP")?.value || "0") || 0;
+    const others= parseFloat($("#poOthers")?.value || "0") || 0;
+    const gstP  = parseFloat($("#poGstP")?.value || "0") || 0;
+    const tcsP  = parseFloat($("#poTcsP")?.value || "0") || 0;
+
+    const discAmt = subTotal * discP / 100;
+    const afterDisc = subTotal - discAmt;
+    const base = afterDisc + others;
+    const gstAmt = base * gstP / 100;
+    const tcsAmt = base * tcsP / 100;
+    const final = base + gstAmt + tcsAmt;
+
+    $("#poTotalWeight").textContent = totalWeight.toFixed(2);
+    $("#poSubTotal").value = subTotal.toFixed(2);
+    $("#poAfterDiscount").value = afterDisc.toFixed(2);
+    $("#poFinalAmount").value = final.toFixed(2);
+
+    // show cgst/sgst labels
+    const half = (gstP/2).toFixed(2);
+    $("#poCgstLbl").textContent = `${half}%`;
+    $("#poSgstLbl").textContent = `${half}%`;
+  }
+
+  // open create modal
+  const btnOpen = $("#btnOpenPoCreate");
+  if(btnOpen){
+    btnOpen.onclick = () => {
+      open(createModal);
+      itemsWrap.innerHTML = "";
+      addRow();
+      recalc();
+    };
+  }
+
+  // close modals
+  $$("[data-close-po-create]").forEach(b=> b.onclick = ()=> close(createModal));
+  $$("[data-close-po-detail]").forEach(b=> b.onclick = ()=> close(detailModal));
+  if(createModal) createModal.addEventListener("click", (e)=>{ if(e.target === createModal) close(createModal); });
+  if(detailModal) detailModal.addEventListener("click", (e)=>{ if(e.target === detailModal) close(detailModal); });
+
+  // submit create
+  const form = $("#poCreateForm");
+  if(form){
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+
+      // remove UI-only fields (readonly)
+      fd.delete("sub_total_ui");
+      fd.delete("after_discount_ui");
+      fd.delete("final_amount_ui");
+
+      const r = await fetch(createUrl, {
+        method:"POST",
+        headers: {"X-CSRFToken": csrf, "X-Requested-With":"XMLHttpRequest"},
+        body: fd
+      });
+
+      const data = await r.json().catch(()=>null);
+      if(!r.ok){
+        alert(data?.message || "Create failed");
+        return;
+      }
+      close(createModal);
+      await loadList();
+    };
+  }
+
+  // search
+  if(search) search.oninput = filterList;
+
+  // load list when hash is #pos
+  function onHash(){
+    if(location.hash === "#pos"){
+      loadList();
+    }
+  }
+  window.addEventListener("hashchange", onHash);
+  onHash();
+
+})();
+
+</script>
+{% endblock %}

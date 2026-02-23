@@ -1,0 +1,17 @@
+<div class="jobbers-embed">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;">
+    <div style="font-weight:800;font-size:16px;">Delete Jobber</div>
+    <a class="btn btn-ghost" href="{% url 'accounts:jobber_list' %}?embed=1">← Back</a>
+  </div>
+
+  <p>Are you sure you want to delete <b>{{ jobber.name }}</b>?</p>
+
+  <form method="post" action="{% url 'accounts:jobber_delete' jobber.id %}?embed=1">
+    {% csrf_token %}
+    <input type="hidden" name="embed" value="1" />
+    <div style="display:flex;gap:10px;margin-top:12px;">
+      <button class="btn" type="submit">Yes, Delete</button>
+      <a class="btn btn-ghost" href="{% url 'accounts:jobber_list' %}?embed=1">Cancel</a>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,8 @@
+/* Dashboard page-specific styles.
+   Dashboard can open utilities modules (Jobbers/Materials/Parties/etc.) inside embeds,
+   so we import module CSS here to keep those UIs styled.
+*/
+
+@import url("../modules/jobbers.css");
+@import url("../modules/materials.css");
+@import url("../modules/parties.css");

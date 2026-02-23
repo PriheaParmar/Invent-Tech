@@ -1,0 +1,250 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Jobbers - InventTech{% endblock %}
+{% block page_title %}Jobbers{% endblock %}
+{% block page_subtitle %}Manage job workers / staff & their contact details.{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  <section class="grid" style="grid-column: 1 / -1;">
+
+    <div class="card soft big" style="grid-column: 1 / -1;">
+
+      <!-- Top bar -->
+      <div class="util-topbar">
+        <form class="util-searchbar" method="get">
+          <input name="q" value="{{ q }}" placeholder="Search jobber by name / mobile / email / role / type…" />
+          <button class="btn" type="submit">Search</button>
+          {% if q %}
+            <a class="btn btn-ghost" href="{% url 'jobber_list' %}">Clear</a>
+          {% endif %}
+        </form>
+
+        <button class="btn" type="button" id="openJobberModal">+ Add Jobber</button>
+      </div>
+
+      <!-- Messages (popup-style) -->
+      {% if messages %}
+        <div class="toast-stack">
+          {% for message in messages %}
+            <div class="toast-msg {{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Type</th>
+              <th>Mobile</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Updated</th>
+              <th style="width:140px;">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for j in jobbers %}
+            <tr>
+              <td><strong>{{ j.name }}</strong></td>
+              <td>{{ j.role }}</td>
+              <td>{{ j.jobber_type.name|default:"—" }}</td>
+              <td>{{ j.phone|default:"—" }}</td>
+              <td>{{ j.email|default:"—" }}</td>
+              <td>
+                {% if j.is_active %}
+                  <span class="status ok">Active</span>
+                {% else %}
+                  <span class="status bad">Inactive</span>
+                {% endif %}
+              </td>
+              <td>{{ j.updated_at|date:"d M Y, h:i A" }}</td>
+
+              <td class="actions">
+                <button
+                  class="btn btn-mini"
+                  type="button"
+                  data-edit="1"
+                  data-id="{{ j.id }}"
+                  data-name="{{ j.name|escape }}"
+                  data-phone="{{ j.phone|default_if_none:''|escape }}"
+                  data-email="{{ j.email|default_if_none:''|escape }}"
+                  data-role="{{ j.role|escape }}"
+                  data-type="{{ j.jobber_type_id|default_if_none:'' }}"
+                  data-active="{{ j.is_active|yesno:'1,0' }}"
+                  data-address="{{ j.address|default_if_none:''|escape }}"
+                >
+                  Edit
+                </button>
+
+                <form method="post" action="{% url 'jobber_delete' j.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button class="btn btn-mini btn-danger" type="submit"
+                          onclick="return confirm('Delete {{ j.name }}?');">
+                    Delete
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" style="text-align:center; padding:24px; color: rgba(15,23,42,.55);">
+                No jobbers yet. Click “Add Jobber”.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- Modal -->
+<div id="jobberModal" class="modal-backdrop">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="jobberModalTitle">Add Jobber</div>
+        <div class="modal-sub">Fill details and save. (Stored in database)</div>
+      </div>
+      <button class="iconbtn" type="button" id="closeJobberModal">✕</button>
+    </div>
+
+    <form id="jobberForm" method="post" action="{% url 'jobber_save' %}">
+      {% csrf_token %}
+      <input type="hidden" name="jobber_id" id="jobber_id" value="">
+
+      <div class="modal-grid">
+        <div class="f">
+          <label>Name *</label>
+          <input name="name" id="name" required placeholder="e.g. Rajesh Kumar" />
+        </div>
+
+        <div class="f">
+          <label>Mobile</label>
+          <input name="phone" id="phone" placeholder="98XXXXXXXX" />
+        </div>
+
+        <div class="f">
+          <label>Email</label>
+          <input name="email" id="email" placeholder="optional@email.com" />
+        </div>
+
+        <div class="f">
+          <label>Role</label>
+          <select name="role" id="role">
+            {% for value,label in form.fields.role.choices %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="f">
+          <label>Jobber Type</label>
+          <select name="jobber_type" id="jobber_type">
+            <option value="">— Select —</option>
+            {% for t in jobber_types %}
+              <option value="{{ t.id }}">{{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="f">
+          <label>Status</label>
+          <select name="is_active" id="is_active">
+            <option value="True">Active</option>
+            <option value="False">Inactive</option>
+          </select>
+        </div>
+
+        <div class="f full">
+          <label>Address / Note</label>
+          <textarea name="address" id="address" rows="3" placeholder="Optional note…"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" type="button" id="cancelJobberModal">Cancel</button>
+        <button class="btn" type="submit" id="saveJobberBtn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const modal = document.getElementById("jobberModal");
+  const openBtn = document.getElementById("openJobberModal");
+  const closeBtn = document.getElementById("closeJobberModal");
+  const cancelBtn = document.getElementById("cancelJobberModal");
+
+  const title = document.getElementById("jobberModalTitle");
+  const idEl = document.getElementById("jobber_id");
+
+  const nameEl = document.getElementById("name");
+  const phoneEl = document.getElementById("phone");
+  const emailEl = document.getElementById("email");
+  const roleEl = document.getElementById("role");
+  const typeEl = document.getElementById("jobber_type");
+  const activeEl = document.getElementById("is_active");
+  const addressEl = document.getElementById("address");
+
+  function openModal(){ modal.classList.add("show"); }
+  function closeModal(){ modal.classList.remove("show"); }
+
+  function clearForm(){
+    idEl.value = "";
+    title.textContent = "Add Jobber";
+    nameEl.value = "";
+    phoneEl.value = "";
+    emailEl.value = "";
+    roleEl.value = "Operator";
+    typeEl.value = "";
+    activeEl.value = "True";
+    addressEl.value = "";
+  }
+
+  openBtn?.addEventListener("click", () => {
+    clearForm();
+    openModal();
+  });
+
+  closeBtn?.addEventListener("click", closeModal);
+  cancelBtn?.addEventListener("click", closeModal);
+
+  modal?.addEventListener("click", (e) => {
+    if(e.target === modal) closeModal();
+  });
+
+  // Edit buttons
+  document.querySelectorAll("[data-edit='1']").forEach(btn => {
+    btn.addEventListener("click", () => {
+      title.textContent = "Edit Jobber";
+      idEl.value = btn.dataset.id || "";
+
+      nameEl.value = btn.dataset.name || "";
+      phoneEl.value = btn.dataset.phone || "";
+      emailEl.value = btn.dataset.email || "";
+
+      roleEl.value = btn.dataset.role || "Operator";
+      typeEl.value = btn.dataset.type || "";
+
+      activeEl.value = (btn.dataset.active === "1") ? "True" : "False";
+      addressEl.value = btn.dataset.address || "";
+
+      openModal();
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Firm - InventTech{% endblock %}
+{% block page_title %}Firm{% endblock %}
+{% block page_subtitle %}Manage firm details{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/pages/firms.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="grid">
+      <div class="card c8">
+        {% include "accounts/firms/list_embed.html" %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

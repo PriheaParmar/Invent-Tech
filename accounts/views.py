@@ -13,11 +13,15 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 from .forms import JobberForm, JobberTypeForm, LocationForm, MaterialForm, PartyForm
 from .models import Jobber, JobberType, Location, Material, Party, UserExtra
-
+from .models import JobberType
+from .forms import JobberTypeForm
 from .models import Firm, MaterialShade, MaterialType, Material
 from .forms import FirmForm, MaterialShadeForm, MaterialTypeForm
 
 from .models import Firm
+from decimal import Decimal
+from .models import YarnPurchaseOrder, YarnPurchaseOrderItem
+
 
 def _is_embed(request) -> bool:
     return (
@@ -102,7 +106,22 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    return render(request, "accounts/dashboard.html")
+    po_qs = YarnPurchaseOrder.objects.all() if request.user.is_staff else YarnPurchaseOrder.objects.filter(owner=request.user)
+    yarn_pos = po_qs.select_related("vendor", "firm", "shipping_address")
+
+    vendors = Party.objects.all().order_by("party_name")
+    yarn_materials = Material.objects.filter(material_kind="yarn").order_by("name")
+    firms = Firm.objects.filter(owner=request.user)
+    locations = Location.objects.filter(owner=request.user).order_by("name")
+
+    return render(request, "accounts/dashboard.html", {
+        "yarn_pos": yarn_pos,
+        "vendors": vendors,
+        "yarn_materials": yarn_materials,
+        "firms": firms,
+        "locations": locations,
+    })
+
 
 
 @login_required
@@ -575,7 +594,6 @@ def firm_view(request):
 
     template = "accounts/firm/form_embed.html" if _is_embed(request) else "accounts/firm/form.html"
     return render(request, template, {"form": form})
-
 # ==========================
 # MATERIAL SHADES (Utilities)
 # ==========================
@@ -596,6 +614,13 @@ def materialshade_list(request):
     return render(request, tpl, ctx)
 
 
+def _shade_list_url(request):
+    url = reverse("accounts:materialshade_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def materialshade_create(request):
@@ -603,12 +628,16 @@ def materialshade_create(request):
 
     if request.method == "POST" and form.is_valid():
         obj = form.save(commit=False)
-        obj.owner = request.user  # ✅ REQUIRED (owner is mandatory)
+        obj.owner = request.user  # ✅ REQUIRED
         obj.save()
 
-        url = reverse("accounts:materialshade_list")
-        if _is_embed(request):
+        url = _shade_list_url(request)
+
+        # ✅ If it was an AJAX submit, return JSON (optional)
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JsonResponse({"ok": True, "url": url})
+
+        # ✅ Normal form submit (most embed pages): redirect
         return redirect(url)
 
     tpl = "accounts/material_shades/form_embed.html" if _is_embed(request) else "accounts/material_shades/form.html"
@@ -622,10 +651,15 @@ def materialshade_update(request, pk: int):
     form = MaterialShadeForm(request.POST or None, instance=shade)
 
     if request.method == "POST" and form.is_valid():
-        form.save()
-        url = reverse("accounts:materialshade_list")
-        if _is_embed(request):
+        obj = form.save(commit=False)
+        obj.owner = request.user  # ✅ keep owner safe
+        obj.save()
+
+        url = _shade_list_url(request)
+
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JsonResponse({"ok": True, "url": url})
+
         return redirect(url)
 
     tpl = "accounts/material_shades/form_embed.html" if _is_embed(request) else "accounts/material_shades/form.html"
@@ -638,11 +672,12 @@ def materialshade_delete(request, pk: int):
     shade = get_object_or_404(MaterialShade, pk=pk, owner=request.user)
     shade.delete()
 
-    url = reverse("accounts:materialshade_list")
-    if _is_embed(request):
-        return JsonResponse({"ok": True, "url": url})
-    return redirect(url)
+    url = _shade_list_url(request)
 
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": True, "url": url})
+
+    return redirect(url)
 
 # ==========================
 # MATERIAL TYPES (Utilities)
@@ -775,3 +810,227 @@ def firm_save(request):
         "firm_name": firm.firm_name,
         "created_at_display": created_at_display,
     })
+    
+    
+    # =================================================================
+    
+def _jobbertype_qs_for_user(request):
+    qs = JobberType.objects.all()
+    # If your JobberType has owner field, enforce owner-based access automatically
+    if hasattr(JobberType, "owner") and request.user.is_authenticated:
+        qs = qs.filter(owner=request.user)
+    return qs
+
+
+@login_required
+def jobbertype_edit(request, pk):
+    jt = get_object_or_404(_jobbertype_qs_for_user(request), pk=pk)
+
+    if request.method == "POST":
+        form = JobberTypeForm(request.POST, instance=jt)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            # If model has owner, keep it tied to current user
+            if hasattr(obj, "owner_id") and not obj.owner_id:
+                obj.owner = request.user
+            obj.save()
+            return redirect(f"{redirect('accounts:jobbertype_list').url}?embed=1")
+    else:
+        form = JobberTypeForm(instance=jt)
+
+    return render(request, "accounts/jobbers/jobbertype_edit_embed.html", {
+        "form": form,
+        "obj": jt,
+        "embed": request.GET.get("embed") == "1",
+    })
+
+
+@login_required
+@require_POST
+def jobbertype_delete(request, pk):
+    jt = get_object_or_404(_jobbertype_qs_for_user(request), pk=pk)
+    jt.delete()
+    return redirect(f"{redirect('accounts:jobbertype_list').url}?embed=1")
+
+
+@login_required
+def yarn_po_list_partial(request):
+    qs = YarnPurchaseOrder.objects.all() if request.user.is_staff else YarnPurchaseOrder.objects.filter(owner=request.user)
+    qs = qs.select_related("vendor", "firm").order_by("-id")
+    return render(request, "accounts/pos/yarn_po_list_partial.html", {"yarn_pos": qs})
+
+
+@login_required
+@require_POST
+def yarn_po_create(request):
+    from datetime import date
+
+    def parse_date(val):
+        val = (val or "").strip()
+        if not val:
+            return None
+        try:
+            return date.fromisoformat(val)
+        except Exception:
+            return None
+
+    po_date = parse_date(request.POST.get("po_date"))
+    if not po_date:
+        return JsonResponse({"ok": False, "message": "PO Date is required"}, status=400)
+
+    vendor_id = request.POST.get("vendor")
+    if not vendor_id:
+        return JsonResponse({"ok": False, "message": "Vendor is required"}, status=400)
+
+    vendor = get_object_or_404(Party, pk=vendor_id)
+
+    firm_id = request.POST.get("firm") or None
+    firm = Firm.objects.filter(pk=firm_id, owner=request.user).first() if firm_id else None
+
+    ship_id = request.POST.get("shipping_address") or None
+    ship_to = Location.objects.filter(pk=ship_id, owner=request.user).first() if ship_id else None
+
+    def d(name, default="0"):
+        val = (request.POST.get(name) or "").strip()
+        if val == "":
+            val = default
+        try:
+            return Decimal(val)
+        except Exception:
+            return Decimal(default)
+
+    po = YarnPurchaseOrder.objects.create(
+        owner=request.user,
+        po_date=po_date,
+        cancel_date=parse_date(request.POST.get("cancel_date")),
+        internal_po_no=(request.POST.get("internal_po_no") or "").strip(),
+        vendor=vendor,
+        firm=firm,
+        shipping_address=ship_to,
+        director=(request.POST.get("director") or "").strip(),
+        remarks=(request.POST.get("remarks") or "").strip(),
+        address=(request.POST.get("address") or "").strip(),
+        terms_conditions=(request.POST.get("terms_conditions") or "").strip(),
+        discount_percent=d("discount_percent"),
+        others=d("others"),
+        gst_percent=d("gst_percent"),
+        tcs_percent=d("tcs_percent"),
+    )
+
+    mats = request.POST.getlist("item_material[]")
+    units = request.POST.getlist("item_unit[]")
+    qtys = request.POST.getlist("item_qty[]")
+    vals = request.POST.getlist("item_value[]")
+    dias = request.POST.getlist("item_dia[]")
+    gauges = request.POST.getlist("item_gauge[]")
+    rolls = request.POST.getlist("item_rolls[]")
+    counts = request.POST.getlist("item_count[]")
+    gsms = request.POST.getlist("item_gsm[]")
+    sls = request.POST.getlist("item_sl[]")
+    hsns = request.POST.getlist("item_hsn[]")
+    remarks = request.POST.getlist("item_remark[]")
+    rates = request.POST.getlist("item_rate[]")
+
+    created_any = False
+
+    def safe(lst, idx, default=""):
+        try:
+            return lst[idx]
+        except Exception:
+            return default
+
+    def dec(v, default="0"):
+        v = (v or "").strip()
+        if v == "":
+            v = default
+        try:
+            return Decimal(v)
+        except Exception:
+            return Decimal(default)
+
+    for i, mat_id in enumerate(mats):
+        mat_id = (mat_id or "").strip()
+        if not mat_id:
+            continue
+
+        material = get_object_or_404(Material, pk=mat_id)
+
+        YarnPurchaseOrderItem.objects.create(
+            po=po,
+            material=material,
+            unit=(safe(units, i, "MTR") or "MTR"),
+            quantity=dec(safe(qtys, i, "0")),
+            value=dec(safe(vals, i, "0")) if (safe(vals, i, "") or "").strip() else None,
+            dia=(safe(dias, i, "") or "").strip(),
+            gauge=(safe(gauges, i, "") or "").strip(),
+            rolls=dec(safe(rolls, i, "0")) if (safe(rolls, i, "") or "").strip() else None,
+            count=(safe(counts, i, "") or "").strip(),
+            gsm=(safe(gsms, i, "") or "").strip(),
+            sl=(safe(sls, i, "") or "").strip(),
+            hsn_code=(safe(hsns, i, "") or "").strip(),
+            remark=(safe(remarks, i, "") or "").strip(),
+            rate=dec(safe(rates, i, "0")),
+        )
+        created_any = True
+
+    if not created_any:
+        po.delete()
+        return JsonResponse({"ok": False, "message": "Add at least 1 yarn row"}, status=400)
+
+    po.recalc(save=True)
+    return JsonResponse({"ok": True, "message": "PO created", "po_no": po.po_no})
+
+
+@login_required
+def yarn_po_detail_partial(request, pk: int):
+    base_qs = YarnPurchaseOrder.objects.select_related("vendor","firm","shipping_address").prefetch_related("items__material")
+    if request.user.is_staff:
+        po = get_object_or_404(base_qs, pk=pk)
+    else:
+        po = get_object_or_404(base_qs, pk=pk, owner=request.user)
+
+    cgst_percent = (po.gst_percent or Decimal("0")) / Decimal("2")
+    sgst_percent = (po.gst_percent or Decimal("0")) / Decimal("2")
+    cgst_amount = (po.gst_amount or Decimal("0")) / Decimal("2")
+    sgst_amount = (po.gst_amount or Decimal("0")) / Decimal("2")
+
+    return render(request, "accounts/pos/yarn_po_detail_partial.html", {
+        "po": po,
+        "cgst_percent": cgst_percent,
+        "sgst_percent": sgst_percent,
+        "cgst_amount": cgst_amount,
+        "sgst_amount": sgst_amount,
+    })
+
+
+@login_required
+@require_POST
+def yarn_po_approve(request, pk: int):
+    if not request.user.is_staff:
+        return JsonResponse({"ok": False, "message": "Only admin can approve"}, status=403)
+
+    po = get_object_or_404(YarnPurchaseOrder, pk=pk)
+    po.status = YarnPurchaseOrder.Status.APPROVED
+    po.approved_by = request.user
+    po.approved_at = timezone.now()
+    po.rejected_by = None
+    po.rejected_at = None
+    po.rejection_reason = ""
+    po.save(update_fields=["status","approved_by","approved_at","rejected_by","rejected_at","rejection_reason","updated_at"])
+    return JsonResponse({"ok": True, "message": "Approved"})
+
+
+@login_required
+@require_POST
+def yarn_po_reject(request, pk: int):
+    if not request.user.is_staff:
+        return JsonResponse({"ok": False, "message": "Only admin can reject"}, status=403)
+       
+    reason = (request.POST.get("reason") or "").strip()
+    po = get_object_or_404(YarnPurchaseOrder, pk=pk)
+    po.status = YarnPurchaseOrder.Status.REJECTED
+    po.rejected_by = request.user
+    po.rejected_at = timezone.now()
+    po.rejection_reason = reason
+    po.save(update_fields=["status","rejected_by","rejected_at","rejection_reason","updated_at"])
+    return JsonResponse({"ok": True, "message": "Rejected"})

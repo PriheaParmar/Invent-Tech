@@ -1,0 +1,7 @@
+/* Login page tweaks (optional) */
+/* Uses shared auth styles from css/auth/core.css (loaded by base.html) */
+
+/* Example: slightly tighter right card on small screens */
+@media (max-width: 520px){
+  .right{ padding: 22px 18px; }
+}

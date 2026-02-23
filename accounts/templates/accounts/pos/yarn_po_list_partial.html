@@ -1,0 +1,54 @@
+<div class="po-list">
+  {% if yarn_pos %}
+    <div class="po-table">
+      <div class="po-thead">
+        <div>PO</div>
+        <div>Date</div>
+        <div>Vendor</div>
+        <div>PO Value</div>
+        <div>Status</div>
+        <div class="po-actions">Action</div>
+      </div>
+
+      {% for po in yarn_pos %}
+        <div class="po-row">
+          <div>
+            <div class="po-no">{{ po.po_no }}</div>
+            <div class="po-mini">Internal: {{ po.internal_po_no|default:"—" }}</div>
+          </div>
+          <div>{{ po.po_date|date:"d-m-Y" }}</div>
+          <div>
+            <div class="po-vendor">{{ po.vendor.party_name }}</div>
+            {% if po.firm %}<div class="po-mini">Firm: {{ po.firm.firm_name }}</div>{% endif %}
+          </div>
+          <div>₹{{ po.final_amount|floatformat:2 }}</div>
+          <div>
+            {% if po.status == 'approved' %}
+              <span class="po-status ok">Approved</span>
+            {% elif po.status == 'rejected' %}
+              <span class="po-status bad">Rejected</span>
+            {% else %}
+              <span class="po-status warn">Pending</span>
+              <div class="po-mini">Pending action from admin</div>
+            {% endif %}
+          </div>
+
+          <div class="po-actions">
+            <button class="btn btn-ghost" type="button" data-po-view="{{ po.id }}">View</button>
+
+            {% if request.user.is_staff %}
+              {% if po.status != 'approved' %}
+                <button class="btn btn-primary" type="button" data-po-approve="{{ po.id }}">Approve</button>
+              {% endif %}
+              {% if po.status != 'rejected' %}
+                <button class="btn btn-danger" type="button" data-po-reject="{{ po.id }}">Reject</button>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="po-empty">No Yarn POs yet.</div>
+  {% endif %}
+</div>

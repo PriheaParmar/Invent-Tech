@@ -1,0 +1,23 @@
+<div class="materials-embed">
+  <div class="mat-head">
+    <div>
+      <div class="mat-title">Delete Material</div>
+      <div class="mat-sub">Are you sure you want to delete “{{ obj.name }}”?</div>
+    </div>
+
+    <button type="button" class="jb-iconbtn" data-embed-close aria-label="Close">
+      <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 6L6 18"></path>
+        <path d="M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  <form method="post" action="">
+    {% csrf_token %}
+    <div class="mf-footer">
+      <a class="mat-btn" href="{% url 'accounts:material_list' %}?embed=1">Cancel</a>
+      <button class="mat-add danger" type="submit">Delete</button>
+    </div>
+  </form>
+</div>

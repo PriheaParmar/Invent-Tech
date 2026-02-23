@@ -1,0 +1,14 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Material - InventTech{% endblock %}
+{% block page_title %}{% if mode == "edit" %}Edit Material{% else %}Add Material{% endif %}{% endblock %}
+{% block page_subtitle %}Material details{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/pages/materials.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+  {% include "accounts/materials/form_embed.html" %}
+{% endblock %}

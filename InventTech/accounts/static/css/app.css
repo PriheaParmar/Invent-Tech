@@ -1,0 +1,5 @@
+/* InventTech - app.css (entry point)
+   This file only loads the shared core styles.
+   Page-specific CSS is loaded per-template from css/pages/*.css
+*/
+@import url("core.css");

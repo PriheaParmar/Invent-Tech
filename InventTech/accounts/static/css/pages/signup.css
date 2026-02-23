@@ -1,0 +1,4 @@
+/* Signup page tweaks (optional) */
+@media (max-width: 520px){
+  .right{ padding: 22px 18px; }
+}

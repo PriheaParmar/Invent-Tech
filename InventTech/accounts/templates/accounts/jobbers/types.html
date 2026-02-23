@@ -1,0 +1,22 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Jobber Types - InventTech{% endblock %}
+{% block page_title %}Jobber Types{% endblock %}
+{% block page_subtitle %}Manage jobber types{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/pages/jobber_types.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="grid">
+      <div class="card c8">
+        {% include "accounts/jobbers/embed_types.html" %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

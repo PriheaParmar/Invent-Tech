@@ -1,0 +1,42 @@
+<div class="jobbers-embed">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;">
+    <div style="font-weight:800;font-size:16px;width:300px;">Edit Jobber Type</div>
+
+    <div style="display:flex;gap:10px;align-items:center;">
+      <a class="btn btntypeback btn-ghost" href="{% url 'accounts:jobbertype_list' %}?embed=1">←</a>
+      <button class="btn btn-ghost" type="button" id="embedCloseBtn">✕</button>
+    </div>
+  </div>
+
+  <form method="post" action="{% url 'accounts:jobbertype_edit' obj.id %}?embed=1"
+        style="display:flex;gap:10px;align-items:end;margin-bottom:12px;">
+    {% csrf_token %}
+    <div class="f" style="flex:1;">
+      <label>Type Name</label>
+      {{ form.name }}
+    </div>
+    <button class="btn btn-add-type" type="submit">Update</button>
+  </form>
+</div>
+
+<script>
+(function(){
+  const btn = document.getElementById("embedCloseBtn");
+  if(!btn) return;
+
+  btn.addEventListener("click", function(){
+    const container =
+      document.getElementById("embedPanel") ||
+      document.getElementById("embedContainer") ||
+      document.querySelector(".embed-panel") ||
+      document.querySelector("[data-embed-panel]");
+
+    if (container) {
+      container.classList.remove("show");
+      container.style.display = "none";
+      return;
+    }
+    window.history.back();
+  });
+})();
+</script>

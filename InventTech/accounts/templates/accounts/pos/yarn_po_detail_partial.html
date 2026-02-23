@@ -1,0 +1,54 @@
+<div class="po-detail">
+  <div class="po-detail-top">
+    <div>
+      <div class="po-detail-title">Details of {{ po.po_no }}</div>
+      <div class="po-mini">Internal PO: {{ po.internal_po_no|default:"—" }}</div>
+      <div class="po-mini">Date: {{ po.po_date|date:"d-m-Y" }}</div>
+      <div class="po-mini">Vendor: {{ po.vendor.party_name }}</div>
+    </div>
+
+    <div class="po-status-box">
+      {% if po.status == 'approved' %}
+        <span class="po-status ok">Approved</span>
+      {% elif po.status == 'rejected' %}
+        <span class="po-status bad">Rejected</span>
+      {% else %}
+        <span class="po-status warn">Pending</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="po-detail-table">
+    <div class="po-dt-head">
+      <div>Material</div>
+      <div>Qty</div>
+      <div>UOM</div>
+      <div>Rate</div>
+      <div>Final</div>
+    </div>
+
+    {% for it in po.items.all %}
+      <div class="po-dt-row">
+        <div>{{ it.material.name }}</div>
+        <div>{{ it.quantity|floatformat:2 }}</div>
+        <div>{{ it.unit }}</div>
+        <div>₹{{ it.rate|floatformat:2 }}</div>
+        <div>₹{{ it.final_amount|floatformat:2 }}</div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="po-detail-total">
+    <div class="po-totals">
+      <div class="row"><span>Sub Total</span><span>{{ po.sub_total|floatformat:2 }}</span></div>
+      <div class="row"><span>Discount %</span><span>{{ po.discount_percent|floatformat:2 }}</span></div>
+      <div class="row"><span>After Discount</span><span>{{ po.after_discount_value|floatformat:2 }}</span></div>
+      <div class="row"><span>Others</span><span>{{ po.others|floatformat:2 }}</span></div>
+      <div class="row"><span>GST %</span><span>{{ po.gst_percent|floatformat:2 }}</span></div>
+      <div class="row"><span>CGST ({{ cgst_percent|floatformat:2 }}%)</span><span>{{ cgst_amount|floatformat:2 }}</span></div>
+      <div class="row"><span>SGST ({{ sgst_percent|floatformat:2 }}%)</span><span>{{ sgst_amount|floatformat:2 }}</span></div>
+      <div class="row"><span>TCS %</span><span>{{ po.tcs_percent|floatformat:2 }}</span></div>
+      <div class="row big"><span>Total</span><span>{{ po.final_amount|floatformat:2 }}</span></div>
+    </div>
+  </div>
+</div>

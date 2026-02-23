@@ -1,0 +1,5 @@
+/* InventTech - auth.css (entry point)
+   Shared auth styles.
+   Page-specific auth CSS is loaded per-template from css/pages/*.css
+*/
+@import url("auth/core.css");

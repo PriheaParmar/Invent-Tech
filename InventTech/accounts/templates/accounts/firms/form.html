@@ -1,0 +1,12 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Firm - InventTech{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/pages/firms.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+  {% include "accounts/firms/form_embed.html" %}
+{% endblock %}

@@ -1,0 +1,23 @@
+<div class="card soft">
+  <div class="card-head" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+    <div>
+      <div class="card-title">
+        {% if mode == "edit" %}Edit Firm{% else %}Create Firm{% endif %}
+      </div>
+      <div class="card-sub">Enter firm details</div>
+    </div>
+
+    <button type="button" class="btn" data-embed-close>×</button>
+  </div>
+
+  <form method="post"
+        action="{% if mode == 'edit' %}{% url 'accounts:firm_edit' firm.id %}{% else %}{% url 'accounts:firm_add' %}{% endif %}?embed=1"
+        style="margin-top:12px;">
+    {% csrf_token %}
+    <input type="hidden" name="embed" value="1">
+
+    {{ form.as_p }}
+
+    <button type="submit" class="btn primary">Save</button>
+  </form>
+</div>

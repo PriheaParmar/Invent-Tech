@@ -1,0 +1,22 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Jobber - InventTech{% endblock %}
+{% block page_title %}{% if mode == "edit" %}Edit Jobber{% else %}Add Jobber{% endif %}{% endblock %}
+{% block page_subtitle %}Jobber details{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/pages/jobbers.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="grid">
+      <div class="card c8">
+        {% include "accounts/jobbers/embed_form.html" %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

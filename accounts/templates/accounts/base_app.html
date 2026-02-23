@@ -84,6 +84,19 @@
 
         <div class="sb-label">Masters</div>
 
+        <div class="sb-label">POs</div>
+
+        <a class="sb-link" href="#" data-section="pos">
+          <span class="sb-ico">
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M7 2h10a2 2 0 0 1 2 2v18l-7-3-7 3V4a2 2 0 0 1 2-2z" />
+              <path d="M9 7h6M9 11h6" />
+            </svg>
+          </span>
+          <span class="sb-text">Yarn POs</span>
+        </a>
+
+
         <a class="sb-link" href="#">
           <span class="sb-ico">
             <svg class="ico" viewBox="0 0 24 24">
@@ -216,9 +229,9 @@
         <div class="modal-grid">
           <div class="f">
             <label>Firm Name (Auto-filled)</label>
-            <input id="profileFirmName" name="firm_name_display" value="{% if current_firm %}{{ current_firm.firm_name }}{% endif %}"
-
-              placeholder="Create firm first" readonly>
+            <input id="profileFirmName" name="firm_name_display"
+              value="{% if current_firm %}{{ current_firm.firm_name }}{% endif %}" placeholder="Create firm first"
+              readonly>
           </div>
           <div class="f">
             <label>Username</label>
@@ -249,7 +262,7 @@
             <select name="role" id="profileRole">
               <option value="">Select</option>
               {% for val,label in ROLE_CHOICES %}
-              <option value="{{ val }}" {% if CURRENT_ROLE == val %}selected{% endif %}>{{ label }}</option>
+              <option value="{{ val }}" {% if CURRENT_ROLE==val %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
           </div>
@@ -272,114 +285,105 @@
   </div>
 
   <!-- ================================================================ -->
-<!-- ===================== FIRM MODAL ===================== -->
-<div id="firmModal" class="modal-backdrop" aria-hidden="true">
-  <div class="modal-card">
-    <div class="modal-head">
-      <div>
-        <div class="modal-title">Firm Details</div>
-        <div class="modal-sub">Create or update your firm information</div>
-      </div>
-      <button id="firmClose" class="iconbtn" type="button" title="Close">✕</button>
-    </div>
-
-    <form id="firmForm" method="post" action="{% url 'accounts:firm_save' %}">
-      {% csrf_token %}
-
-      <div class="modal-grid">
-
-        <div class="f full">
-          <label>Firm Name *</label>
-          <input name="firm_name"
-                 required
-                 placeholder="Enter firm name"
-                 value="{% if current_firm %}{{ current_firm.firm_name|default_if_none:'' }}{% endif %}">
+  <!-- ===================== FIRM MODAL ===================== -->
+  <div id="firmModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Firm Details</div>
+          <div class="modal-sub">Create or update your firm information</div>
         </div>
+        <button id="firmClose" class="iconbtn" type="button" title="Close">✕</button>
+      </div>
 
-        <div class="f">
-          <label>Firm Type *</label>
-          <select name="firm_type" required>
-            <option value="">Select</option>
-            {% for val,label in FIRM_TYPE_CHOICES %}
-              <option value="{{ val }}"
-                {% if current_firm and current_firm.firm_type == val %}selected{% endif %}>
+      <form id="firmForm" method="post" action="{% url 'accounts:firm_save' %}">
+        {% csrf_token %}
+
+        <div class="modal-grid">
+
+          <div class="f full">
+            <label>Firm Name *</label>
+            <input name="firm_name" required placeholder="Enter firm name"
+              value="{% if current_firm %}{{ current_firm.firm_name|default_if_none:'' }}{% endif %}">
+          </div>
+
+          <div class="f">
+            <label>Firm Type *</label>
+            <select name="firm_type" required>
+              <option value="">Select</option>
+              {% for val,label in FIRM_TYPE_CHOICES %}
+              <option value="{{ val }}" {% if current_firm and current_firm.firm_type==val %}selected{% endif %}>
                 {{ label }}
               </option>
-            {% endfor %}
-          </select>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="f">
+            <label>Firm Registration Number</label>
+            <input name="registration_number" placeholder="Optional"
+              value="{% if current_firm %}{{ current_firm.cin_number|default_if_none:'' }}{% endif %}">
+          </div>
+
+          <div class="f">
+            <label>GST Number (optional)</label>
+            <input name="gst_number" placeholder="Optional"
+              value="{% if current_firm %}{{ current_firm.gst_number|default_if_none:'' }}{% endif %}">
+          </div>
+
+          <div class="f">
+            <label>Firm Email</label>
+            <input name="email" placeholder="name@firm.com"
+              value="{% if current_firm %}{{ current_firm.email|default_if_none:'' }}{% endif %}">
+          </div>
+
+          <div class="f">
+            <label>Firm Phone Number</label>
+            <input name="phone" placeholder="98XXXXXXXX"
+              value="{% if current_firm %}{{ current_firm.phone|default_if_none:'' }}{% endif %}">
+          </div>
+
+          <div class="f full">
+            <label>Firm Address</label>
+            <textarea name="address" rows="3"
+              placeholder="Address">{% if current_firm %}{{ current_firm.address_line|default_if_none:'' }}{% endif %}</textarea>
+          </div>
+
+          <div class="f">
+            <label>City</label>
+            <input name="city" placeholder="City"
+              value="{% if current_firm %}{{ current_firm.city|default_if_none:'' }}{% endif %}">
+          </div>
+
+          <div class="f">
+            <label>State</label>
+            <input name="state" placeholder="State"
+              value="{% if current_firm %}{{ current_firm.state|default_if_none:'' }}{% endif %}">
+          </div>
+
+          <div class="f">
+            <label>Country</label>
+            <!-- only prefill if you actually added country to model -->
+            <input name="country" placeholder="Country" value="">
+          </div>
+
+          <div class="f full">
+            <label>Created Date (auto)</label>
+            <input id="firmCreatedAt" readonly
+              value="{% if current_firm and current_firm.created_at %}{{ current_firm.created_at|date:'d M Y, H:i' }}{% endif %}">
+          </div>
+
         </div>
 
-        <div class="f">
-          <label>Firm Registration Number</label>
-          <input name="registration_number"
-                 placeholder="Optional"
-                 value="{% if current_firm %}{{ current_firm.cin_number|default_if_none:'' }}{% endif %}">
+        <div class="modal-actions">
+          <button class="btn btn-ghost" type="button" id="firmCancel">Cancel</button>
+          <button class="btn btn-save" type="submit">Save</button>
         </div>
+      </form>
 
-        <div class="f">
-          <label>GST Number (optional)</label>
-          <input name="gst_number"
-                 placeholder="Optional"
-                 value="{% if current_firm %}{{ current_firm.gst_number|default_if_none:'' }}{% endif %}">
-        </div>
-
-        <div class="f">
-          <label>Firm Email</label>
-          <input name="email"
-                 placeholder="name@firm.com"
-                 value="{% if current_firm %}{{ current_firm.email|default_if_none:'' }}{% endif %}">
-        </div>
-
-        <div class="f">
-          <label>Firm Phone Number</label>
-          <input name="phone"
-                 placeholder="98XXXXXXXX"
-                 value="{% if current_firm %}{{ current_firm.phone|default_if_none:'' }}{% endif %}">
-        </div>
-
-        <div class="f full">
-          <label>Firm Address</label>
-          <textarea name="address" rows="3" placeholder="Address">{% if current_firm %}{{ current_firm.address_line|default_if_none:'' }}{% endif %}</textarea>
-        </div>
-
-        <div class="f">
-          <label>City</label>
-          <input name="city"
-                 placeholder="City"
-                 value="{% if current_firm %}{{ current_firm.city|default_if_none:'' }}{% endif %}">
-        </div>
-
-        <div class="f">
-          <label>State</label>
-          <input name="state"
-                 placeholder="State"
-                 value="{% if current_firm %}{{ current_firm.state|default_if_none:'' }}{% endif %}">
-        </div>
-
-        <div class="f">
-          <label>Country</label>
-          <!-- only prefill if you actually added country to model -->
-          <input name="country" placeholder="Country" value="">
-        </div>
-
-        <div class="f full">
-          <label>Created Date (auto)</label>
-          <input id="firmCreatedAt"
-                 readonly
-                 value="{% if current_firm and current_firm.created_at %}{{ current_firm.created_at|date:'d M Y, H:i' }}{% endif %}">
-        </div>
-
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn btn-ghost" type="button" id="firmCancel">Cancel</button>
-        <button class="btn btn-save" type="submit">Save</button>
-      </div>
-    </form>
-
-    <div id="firmToast" class="toast"></div>
+      <div id="firmToast" class="toast"></div>
+    </div>
   </div>
-</div>
 
 
   <!-- ==================[Profile POP up JS]======================== -->
@@ -445,6 +449,8 @@
         // update hash so refresh keeps section
         if (sectionName === "utilities") location.hash = "utilities";
         if (sectionName === "dashboard") location.hash = "";
+        else if (sectionName === "pos") location.hash = "pos";
+        else location.hash = "";
       }
 
       document.addEventListener("click", function (e) {
@@ -457,63 +463,64 @@
       // initial load: if hash is #utilities, open that
       const start = (location.hash || "").replace("#", "").trim();
       if (start === "utilities") show("utilities");
+      else if (start === "pos") show("pos");
       else show("dashboard");
     })();
 
     // ------------------------------------------------------------
 
-    
 
-(function(){
-  const btn = document.getElementById("btnFirm");
-  const modal = document.getElementById("firmModal");
-  const closeBtn = document.getElementById("firmClose");
-  const cancelBtn = document.getElementById("firmCancel");
-  const form = document.getElementById("firmForm");
-  const toast = document.getElementById("firmToast");
 
-  if(!btn || !modal || !form) return;
+    (function () {
+      const btn = document.getElementById("btnFirm");
+      const modal = document.getElementById("firmModal");
+      const closeBtn = document.getElementById("firmClose");
+      const cancelBtn = document.getElementById("firmCancel");
+      const form = document.getElementById("firmForm");
+      const toast = document.getElementById("firmToast");
 
-  function open(){ modal.classList.add("show"); }
-  function close(){ modal.classList.remove("show"); toast.textContent = ""; }
+      if (!btn || !modal || !form) return;
 
-  btn.addEventListener("click", open);
-  closeBtn?.addEventListener("click", close);
-  cancelBtn?.addEventListener("click", close);
-  modal.addEventListener("click", (e)=>{ if(e.target === modal) close(); });
+      function open() { modal.classList.add("show"); }
+      function close() { modal.classList.remove("show"); toast.textContent = ""; }
 
-  form.addEventListener("submit", async (e)=>{
-    e.preventDefault();
-    toast.textContent = "Saving...";
+      btn.addEventListener("click", open);
+      closeBtn?.addEventListener("click", close);
+      cancelBtn?.addEventListener("click", close);
+      modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
 
-    const formData = new FormData(form);
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        toast.textContent = "Saving...";
 
-    const res = await fetch(form.action, {
-      method: "POST",
-      body: formData,
-      headers: { "X-Requested-With": "XMLHttpRequest" }
-    });
+        const formData = new FormData(form);
 
-    const data = await res.json();
+        const res = await fetch(form.action, {
+          method: "POST",
+          body: formData,
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
 
-    if(!data.ok){
-      toast.textContent = data.message || "Error saving ❌";
-      return;
-    }
+        const data = await res.json();
 
-    toast.textContent = data.message || "Firm saved ✅";
+        if (!data.ok) {
+          toast.textContent = data.message || "Error saving ❌";
+          return;
+        }
 
-    // Auto-fill firm name in Profile modal (read-only input)
-    const firmNameInput = document.getElementById("profileFirmName");
-    if (firmNameInput && data.firm_name) firmNameInput.value = data.firm_name;
+        toast.textContent = data.message || "Firm saved ✅";
 
-    // Update created date display
-    const createdAt = document.getElementById("firmCreatedAt");
-    if (createdAt && data.created_at_display) createdAt.value = data.created_at_display;
+        // Auto-fill firm name in Profile modal (read-only input)
+        const firmNameInput = document.getElementById("profileFirmName");
+        if (firmNameInput && data.firm_name) firmNameInput.value = data.firm_name;
 
-    setTimeout(close, 800);
-  });
-})();
+        // Update created date display
+        const createdAt = document.getElementById("firmCreatedAt");
+        if (createdAt && data.created_at_display) createdAt.value = data.created_at_display;
+
+        setTimeout(close, 800);
+      });
+    })();
 
 
 

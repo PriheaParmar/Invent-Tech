@@ -64,7 +64,7 @@ body.app{
 .icon-jobber{
   width: 18px;
   height: 18px;
-  fill: rgba(238, 61, 133, 1);
+  fill: #ee3d85;
   stroke: none;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -2263,4 +2263,148 @@ body.sb-collapsed .sb-toggle-ico{
   .party-form-embed .pf-btn{
     flex: 1;
   }
+}
+/* ===============================
+   PARTY FORM - COMPACT OVERRIDES
+   (append at END of app.css)
+================================ */
+.party-form-embed.compact{
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.party-form-embed.compact .pf-grid{
+  gap: 10px;                 /* tighter */
+}
+
+.party-form-embed.compact .pf-field label{
+  margin-bottom: 5px;
+}
+
+.party-form-embed.compact input,
+.party-form-embed.compact select{
+  height: 38px;              /* slightly shorter */
+}
+
+.party-form-embed.compact textarea{
+  min-height: 70px;          /* much smaller than 96px */
+}
+
+.party-form-embed.compact .pf-footer{
+  margin-top: 10px;          /* tighter bottom */
+}
+/* =========================
+   MATERIAL FORM EMBED
+========================= */
+
+.material-form-embed{
+  padding: 10px 6px;
+}
+
+/* Header */
+.material-form-embed .mat-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 12px;
+}
+
+.material-form-embed .mat-title{
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.material-form-embed .mat-sub{
+  font-size: 12px;
+  opacity: .7;
+  margin-top: 4px;
+}
+
+.material-form-embed .mat-head-actions{
+  display:flex;
+  gap:10px;
+}
+
+/* Back / Close */
+.material-form-embed .mat-back,
+.material-form-embed .mat-close{
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  cursor:pointer;
+  font-weight: 900;
+}
+
+.material-form-embed .mat-back:hover{
+  color: var(--orange);
+}
+
+.material-form-embed .mat-close:hover{
+  color: red;
+}
+
+/* Form layout */
+.material-form-embed .mat-form{
+  margin-top: 8px;
+}
+
+.material-form-embed .mat-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 12px;
+}
+
+.material-form-embed .mat-full{
+  grid-column: 1 / -1;
+}
+
+/* Fields */
+.material-form-embed .mat-field label{
+  display:block;
+  font-size: 12px;
+  font-weight: 900;
+  opacity: .75;
+  margin-bottom: 6px;
+}
+
+.material-form-embed input,
+.material-form-embed textarea,
+.material-form-embed select{
+  width:100%;
+  height:40px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(15,23,42,.12);
+  background: rgba(255,255,255,.92);
+  outline:none;
+}
+
+.material-form-embed textarea{
+  min-height:96px;
+  resize:vertical;
+}
+
+/* Footer */
+.material-form-embed .mat-footer{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:14px;
+}
+
+.material-form-embed .mat-save{
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 900;
+  background: var(--orange);
+  color: #fff;
+  cursor:pointer;
+}
+
+.material-form-embed .mat-save:hover{
+  background: #0b0b12;
 }

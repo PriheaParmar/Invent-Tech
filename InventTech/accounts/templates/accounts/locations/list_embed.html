@@ -1,0 +1,74 @@
+{# Uses existing Party embed CSS classes (pt- / parties-embed) #}
+
+<div class="parties-embed">
+    <div class="pt-head">
+        <div>
+            <div class="pt-title">Locations</div>
+            <div class="pt-sub">Manage locations</div>
+        </div>
+
+        <div class="pt-head-actions">
+            <a class="pt-add" href="{% url 'accounts:location_add' %}?embed=1">
+                <svg class="pt-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14M5 12h14"></path>
+                </svg>
+                Create
+            </a>
+
+            <button type="button" class="pt-close" data-embed-close title="Close">
+                <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18 6L6 18"></path>
+                    <path d="M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="pt-tools">
+        <form class="pt-search" method="get" action="{% url 'accounts:location_list' %}">
+            <input type="hidden" name="embed" value="1">
+            <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search location (name, city, state)…">
+            <button class="pt-search-btn" type="submit">Search</button>
+        </form>
+    </div>
+
+    <div class="pt-tablewrap">
+        <table class="pt-table">
+            <thead>
+                <tr>
+                    <th style="width:40%;">Name</th>
+                    <th style="width:20%;">City</th>
+                    <th style="width:20%;">State</th>
+                    <th class="pt-actions" style="width:20%;">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for l in locations %}
+                <tr>
+                    <td>{{ l.name }}</td>
+                    <td>{{ l.city|default:"—" }}</td>
+                    <td>{{ l.state|default:"—" }}</td>
+
+                    <td class="pt-actions">
+                        <a class="pt-link" href="{% url 'accounts:location_edit' l.id %}">Edit</a>
+                        <span class="pt-dot">•</span>
+
+                        <form method="post" action="{% url 'accounts:location_delete' l.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="pt-link danger" type="submit"
+                                onclick="return confirm('Delete this location?')">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="pt-empty">No locations found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

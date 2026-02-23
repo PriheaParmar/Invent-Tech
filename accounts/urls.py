@@ -63,5 +63,18 @@ urlpatterns = [
     path("master/material-types/<int:pk>/edit/", views.materialtype_update, name="materialtype_edit"),
     path("master/material-types/<int:pk>/delete/", views.materialtype_delete, name="materialtype_delete"),
 
-]
+    path("master/jobber-types/<int:pk>/edit/", views.jobbertype_edit, name="jobbertype_edit"),
+    path("master/jobber-types/<int:pk>/delete/", views.jobbertype_delete, name="jobbertype_delete"),
+    path("master/jobber-types/<int:pk>/edit/", views.jobbertype_edit, name="jobbertype_edit"),
+    path("master/jobber-types/<int:pk>/delete/", views.jobbertype_delete, name="jobbertype_delete"),
+    # =====================
+# POs
+# =====================
+    path("pos/yarn/partial/", views.yarn_po_list_partial, name="yarn_po_list_partial"),
+    path("pos/yarn/create/", views.yarn_po_create, name="yarn_po_create"),
+    path("pos/yarn/<int:pk>/detail/", views.yarn_po_detail_partial, name="yarn_po_detail_partial"),
+    path("pos/yarn/<int:pk>/approve/", views.yarn_po_approve, name="yarn_po_approve"),
+    path("pos/yarn/<int:pk>/reject/", views.yarn_po_reject, name="yarn_po_reject"),
+
+]   
 
