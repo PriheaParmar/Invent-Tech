@@ -1,10 +1,20 @@
 <div class="jobbers-embed">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;">
-    <div style="font-weight:800;font-size:16px; width: 300px;border: 2px solid white;">Jobber Types</div>
-    <a class="btn btntypeback btn-ghost " href="{% url 'accounts:jobbertype_list' %}?embed=1">←</a>
+    <div style="font-weight:800;font-size:16px; width: 300px;border: 2px solid white;">
+      Jobber Types
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center;">
+      <!-- back -->
+      <a class="btn btntypeback btn-ghost" href="{% url 'accounts:jobbertype_list' %}?embed=1">←</a>
+
+      <!-- ✅ close -->
+      <button class="btn btn-ghost" type="button" id="embedCloseBtn">✕</button>
+    </div>
   </div>
 
-  <form method="post" action="{% url 'accounts:jobbertype_list' %}?embed=1" style="display:flex;gap:10px;align-items:end;margin-bottom:12px;">
+  <form method="post" action="{% url 'accounts:jobbertype_list' %}?embed=1"
+        style="display:flex;gap:10px;align-items:end;margin-bottom:12px;">
     {% csrf_token %}
     <input type="hidden" name="embed" value="1" />
     <div class="f" style="flex:1;">
@@ -16,14 +26,70 @@
 
   <div style="overflow:auto;">
     <table class="table">
-      <thead><tr><th>Name</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th style="width:140px;">Action</th>
+        </tr>
+      </thead>
+
       <tbody>
         {% for t in types %}
-          <tr><td>{{ t.name }}</td></tr>
+          <tr>
+            <td>{{ t.name }}</td>
+
+            <td>
+              <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
+
+                <!-- ✅ Edit -->
+                <a class="btn btn-ghost btn-sm"
+                   href="{% url 'accounts:jobbertype_edit' t.id %}?embed=1"
+                   title="Edit">✏️</a>
+
+                <!-- ✅ Delete -->
+                <form method="post"
+                      action="{% url 'accounts:jobbertype_delete' t.id %}?embed=1"
+                      style="margin:0;"
+                      onsubmit="return confirm('Delete this jobber type?');">
+                  {% csrf_token %}
+                  <button class="btn btn-ghost btn-sm" type="submit" title="Delete">🗑️</button>
+                </form>
+
+              </div>
+            </td>
+          </tr>
         {% empty %}
-          <tr><td style="opacity:.7;">No types yet.</td></tr>
+          <tr>
+            <td style="opacity:.7;">No types yet.</td>
+            <td></td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
+<script>
+(function(){
+  const btn = document.getElementById("embedCloseBtn");
+  if(!btn) return;
+
+  btn.addEventListener("click", function(){
+    // Try common embed containers first
+    const container =
+      document.getElementById("embedPanel") ||
+      document.getElementById("embedContainer") ||
+      document.querySelector(".embed-panel") ||
+      document.querySelector("[data-embed-panel]");
+
+    if (container) {
+      container.classList.remove("show");
+      container.style.display = "none";
+      return;
+    }
+
+    // Fallback: go back
+    window.history.back();
+  });
+})();
+</script>

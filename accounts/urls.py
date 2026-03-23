@@ -63,5 +63,10 @@ urlpatterns = [
     path("master/material-types/<int:pk>/edit/", views.materialtype_update, name="materialtype_edit"),
     path("master/material-types/<int:pk>/delete/", views.materialtype_delete, name="materialtype_delete"),
 
+    path("master/jobber-types/<int:pk>/edit/", views.jobbertype_edit, name="jobbertype_edit"),
+    path("master/jobber-types/<int:pk>/delete/", views.jobbertype_delete, name="jobbertype_delete"),
+    path("master/jobber-types/<int:pk>/edit/", views.jobbertype_edit, name="jobbertype_edit"),
+    path("master/jobber-types/<int:pk>/delete/", views.jobbertype_delete, name="jobbertype_delete"),
+
 ]
 

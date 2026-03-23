@@ -33,6 +33,7 @@
         <tr>
           <th>Name</th>
           <th>Code</th>
+          <th>Kind</th>
           <th class="pt-actions">Actions</th>
         </tr>
       </thead>
@@ -41,19 +42,48 @@
           <tr>
             <td>{{ s.name }}</td>
             <td>{{ s.code|default:"—" }}</td>
+            <td>
+              {% if s.material_kind %}
+                {{ s.get_material_kind_display }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
             <td class="pt-actions">
               <a class="pt-link" href="{% url 'accounts:materialshade_edit' s.id %}?embed=1">Edit</a>
               <span class="pt-dot">•</span>
-              <form method="post" action="{% url 'accounts:shade_delete' s.id %}?embed=1" style="display:inline;">
+              <form method="post" action="{% url 'accounts:materialshade_delete' s.id %}?embed=1" style="display:inline;">
                 {% csrf_token %}
                 <button class="pt-link danger" type="submit" onclick="return confirm('Delete this shade?')">Delete</button>
               </form>
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="3" class="pt-empty">No shades found.</td></tr>
+          <tr><td colspan="4" class="pt-empty">No shades found.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
+<script>
+(function(){
+  document.addEventListener("click", function(e){
+    const btn = e.target.closest("[data-embed-close]");
+    if(!btn) return;
+
+    const container =
+      document.getElementById("embedPanel") ||
+      document.getElementById("embedContainer") ||
+      document.querySelector(".embed-panel") ||
+      document.querySelector("[data-embed-panel]");
+
+    if (container) {
+      container.classList.remove("show");
+      container.style.display = "none";
+      return;
+    }
+    window.history.back();
+  });
+})();
+</script>

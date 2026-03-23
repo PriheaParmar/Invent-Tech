@@ -54,7 +54,6 @@ class CustomUserCreationForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # add placeholders + CSS class so it matches your design
         self.fields["username"].widget.attrs.update({
             "class": "input",
             "placeholder": "Enter your username",
@@ -65,16 +64,42 @@ class CustomUserCreationForm(UserCreationForm):
             "placeholder": "Enter your email",
             "autocomplete": "email",
         })
-        self.fields["password1"].widget.attrs.update({
-            "class": "input",
-            "placeholder": "Create a password",
-            "autocomplete": "new-password",
-        })
-        self.fields["password2"].widget.attrs.update({
-            "class": "input",
-            "placeholder": "Confirm password",
-            "autocomplete": "new-password",
-        })
+
+        self.fields["password1"].widget = forms.PasswordInput(
+            render_value=True,
+            attrs={
+                "class": "input",
+                "placeholder": "Create a password",
+                "autocomplete": "new-password",
+            },
+        )
+        self.fields["password2"].widget = forms.PasswordInput(
+            render_value=True,
+            attrs={
+                "class": "input",
+                "placeholder": "Confirm password",
+                "autocomplete": "new-password",
+            },
+        )
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Email already registered.")
+
+        return email
+
+    def clean_password1(self):
+        password = self.cleaned_data.get("password1", "")
+
+        if not re.search(r"\d", password):
+            raise forms.ValidationError("Password must contain at least 1 number.")
+
+        if not re.search(r"[^A-Za-z0-9]", password):
+            raise forms.ValidationError("Password must contain at least 1 special character.")
+
+        return password
 
     def save(self, commit=True):
         user = super().save(commit=False)

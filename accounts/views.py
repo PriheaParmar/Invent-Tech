@@ -1,3 +1,12 @@
+import re
+
+from django.contrib.auth import login
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods
 from datetime import timedelta
 
 from django.contrib.auth import authenticate, login, logout
@@ -11,9 +20,10 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST, require_http_methods
 
-from .forms import JobberForm, JobberTypeForm, LocationForm, MaterialForm, PartyForm
+from .forms import CustomUserCreationForm, JobberForm, JobberTypeForm, LocationForm, MaterialForm, PartyForm
 from .models import Jobber, JobberType, Location, Material, Party, UserExtra
-
+from .models import JobberType
+from .forms import JobberTypeForm
 from .models import Firm, MaterialShade, MaterialType, Material
 from .forms import FirmForm, MaterialShadeForm, MaterialTypeForm
 
@@ -34,26 +44,70 @@ def signup_view(request):
 
     error = None
 
+    form_data = {
+        "username": "",
+        "email": "",
+        "password": "",
+        "password2": "",
+    }
+
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
 
-        if not username or not email or not password:
-            error = "Username, email and password are required."
+        form_data["username"] = username
+        form_data["email"] = email
+        form_data["password"] = password
+        form_data["password2"] = password2
+
+        if not username or not email or not password or not password2:
+            error = "Username, email, password and confirm password are required."
+
         elif password != password2:
             error = "Passwords do not match."
-        elif User.objects.filter(username=username).exists():
-            error = "Username already taken."
-        elif User.objects.filter(email=email).exists():
-            error = "Email already registered."
-        else:
-            user = User.objects.create_user(username=username, email=email, password=password)
-            login(request, user)
-            return redirect("accounts:dashboard")
 
-    return render(request, "accounts/signup.html", {"error": error})
+        else:
+            try:
+                validate_email(email)
+            except ValidationError:
+                error = "Enter a valid email address."
+
+            if not error and User.objects.filter(username=username).exists():
+                error = "Username already taken."
+
+            if not error and User.objects.filter(email__iexact=email).exists():
+                error = "Email already registered."
+
+            if not error:
+                if not re.search(r"\d", password):
+                    error = "Password must contain at least 1 number."
+                elif not re.search(r"[^A-Za-z0-9]", password):
+                    error = "Password must contain at least 1 special character."
+                else:
+                    try:
+                        validate_password(password)
+                    except ValidationError as e:
+                        error = " ".join(e.messages)
+
+            if not error:
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password
+                )
+                login(request, user)
+                return redirect("accounts:dashboard")
+
+    return render(
+        request,
+        "accounts/signup.html",
+        {
+            "error": error,
+            "form_data": form_data,
+        },
+    )
 
 
 @require_http_methods(["GET", "POST"])
@@ -100,9 +154,31 @@ def logout_view(request):
     return redirect("accounts:login")
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.utils import timezone
+
+
 @login_required
 def dashboard_view(request):
-    return render(request, "accounts/dashboard.html")
+    hour = timezone.localtime().hour
+
+    if 5 <= hour < 12:
+        greeting = "Good morning"
+    elif 12 <= hour < 17:
+        greeting = "Good afternoon"
+    elif 17 <= hour < 21:
+        greeting = "Good evening"
+    else:
+        greeting = "Good night"
+
+    return render(
+        request,
+        "accounts/dashboard.html",
+        {
+            "greeting": greeting,
+        },
+    )
 
 
 @login_required
@@ -161,17 +237,44 @@ def developer_stats_view(request):
 def profile_save(request):
     u = request.user
 
-    u.first_name = request.POST.get("first_name", "").strip()
-    u.last_name = request.POST.get("last_name", "").strip()
-    u.email = request.POST.get("email", "").strip()
+    first_name = request.POST.get("first_name", "").strip()
+    last_name = request.POST.get("last_name", "").strip()
+    email = request.POST.get("email", "").strip()
+    phone = request.POST.get("phone", "").strip()
+    address = request.POST.get("address", "").strip()
+
+    if phone and not phone.isdigit():
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": "Mobile number must contain digits only.",
+            },
+            status=400,
+        )
+
+    u.first_name = first_name
+    u.last_name = last_name
+    u.email = email
     u.save()
 
     extra, _ = UserExtra.objects.get_or_create(user=u)
-    extra.phone = request.POST.get("phone", "").strip()
-    extra.address = request.POST.get("address", "").strip()
+    extra.phone = phone
+    extra.address = address
     extra.save()
 
-    return JsonResponse({"ok": True, "message": "Profile saved ✅"})
+    return JsonResponse(
+        {
+            "ok": True,
+            "message": "Profile saved ✅",
+            "profile": {
+                "first_name": u.first_name,
+                "last_name": u.last_name,
+                "email": u.email,
+                "phone": extra.phone or "",
+                "address": extra.address or "",
+            },
+        }
+    )
 
 
 # ==========================
@@ -575,7 +678,6 @@ def firm_view(request):
 
     template = "accounts/firm/form_embed.html" if _is_embed(request) else "accounts/firm/form.html"
     return render(request, template, {"form": form})
-
 # ==========================
 # MATERIAL SHADES (Utilities)
 # ==========================
@@ -596,6 +698,13 @@ def materialshade_list(request):
     return render(request, tpl, ctx)
 
 
+def _shade_list_url(request):
+    url = reverse("accounts:materialshade_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def materialshade_create(request):
@@ -603,12 +712,16 @@ def materialshade_create(request):
 
     if request.method == "POST" and form.is_valid():
         obj = form.save(commit=False)
-        obj.owner = request.user  # ✅ REQUIRED (owner is mandatory)
+        obj.owner = request.user  # ✅ REQUIRED
         obj.save()
 
-        url = reverse("accounts:materialshade_list")
-        if _is_embed(request):
+        url = _shade_list_url(request)
+
+        # ✅ If it was an AJAX submit, return JSON (optional)
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JsonResponse({"ok": True, "url": url})
+
+        # ✅ Normal form submit (most embed pages): redirect
         return redirect(url)
 
     tpl = "accounts/material_shades/form_embed.html" if _is_embed(request) else "accounts/material_shades/form.html"
@@ -622,10 +735,15 @@ def materialshade_update(request, pk: int):
     form = MaterialShadeForm(request.POST or None, instance=shade)
 
     if request.method == "POST" and form.is_valid():
-        form.save()
-        url = reverse("accounts:materialshade_list")
-        if _is_embed(request):
+        obj = form.save(commit=False)
+        obj.owner = request.user  # ✅ keep owner safe
+        obj.save()
+
+        url = _shade_list_url(request)
+
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JsonResponse({"ok": True, "url": url})
+
         return redirect(url)
 
     tpl = "accounts/material_shades/form_embed.html" if _is_embed(request) else "accounts/material_shades/form.html"
@@ -638,11 +756,12 @@ def materialshade_delete(request, pk: int):
     shade = get_object_or_404(MaterialShade, pk=pk, owner=request.user)
     shade.delete()
 
-    url = reverse("accounts:materialshade_list")
-    if _is_embed(request):
-        return JsonResponse({"ok": True, "url": url})
-    return redirect(url)
+    url = _shade_list_url(request)
 
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": True, "url": url})
+
+    return redirect(url)
 
 # ==========================
 # MATERIAL TYPES (Utilities)
@@ -775,3 +894,44 @@ def firm_save(request):
         "firm_name": firm.firm_name,
         "created_at_display": created_at_display,
     })
+    
+    
+    # =================================================================
+    
+def _jobbertype_qs_for_user(request):
+    qs = JobberType.objects.all()
+    # If your JobberType has owner field, enforce owner-based access automatically
+    if hasattr(JobberType, "owner") and request.user.is_authenticated:
+        qs = qs.filter(owner=request.user)
+    return qs
+
+
+@login_required
+def jobbertype_edit(request, pk):
+    jt = get_object_or_404(_jobbertype_qs_for_user(request), pk=pk)
+
+    if request.method == "POST":
+        form = JobberTypeForm(request.POST, instance=jt)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            # If model has owner, keep it tied to current user
+            if hasattr(obj, "owner_id") and not obj.owner_id:
+                obj.owner = request.user
+            obj.save()
+            return redirect(f"{redirect('accounts:jobbertype_list').url}?embed=1")
+    else:
+        form = JobberTypeForm(instance=jt)
+
+    return render(request, "accounts/jobbers/jobbertype_edit_embed.html", {
+        "form": form,
+        "obj": jt,
+        "embed": request.GET.get("embed") == "1",
+    })
+
+
+@login_required
+@require_POST
+def jobbertype_delete(request, pk):
+    jt = get_object_or_404(_jobbertype_qs_for_user(request), pk=pk)
+    jt.delete()
+    return redirect(f"{redirect('accounts:jobbertype_list').url}?embed=1")

@@ -1,30 +1,46 @@
-<div class="parties-embed">
+<div class="material-form-embed">
+
   {% include "accounts/_messages_embed.html" %}
 
-  <div class="pt-head">
+  <!-- Header -->
+  <div class="mat-head">
     <div>
-      <div class="pt-title">{% if mode == "edit" %}Edit Material Type{% else %}Create Material Type{% endif %}</div>
-      <div class="pt-sub">Used in Material module dropdown</div>
+      <div class="mat-title">
+        {% if mode == "edit" %}Edit Material Type{% else %}Create Material Type{% endif %}
+      </div>
+      <div class="mat-sub">Used in Material module dropdown</div>
     </div>
 
-    <div class="pt-head-actions">
-      <a class="pt-link" href="{% url 'accounts:materialtype_list' %}?embed=1">Back</a>
-      <button type="button" class="pt-close" data-embed-close title="Close">
-        <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M18 6L6 18"></path>
-          <path d="M6 6l12 12"></path>
-        </svg>
-      </button>
+    <div class="mat-head-actions">
+      <a class="mat-back" href="{% url 'accounts:materialtype_list' %}?embed=1" title="Back">
+        ←
+      </a>
+      <button type="button" class="mat-close" data-embed-close title="Close">✕</button>
     </div>
   </div>
 
-  <form method="post" enctype="multipart/form-data" action="{% url 'accounts:materialtype_add' %}">
+  <!-- Form -->
+  <form method="post" enctype="multipart/form-data"
+        action="{% url 'accounts:materialtype_add' %}" class="mat-form">
     {% csrf_token %}
     <input type="hidden" name="embed" value="1">
-    {{ form.as_p }}
 
-    <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-      <button class="pt-add" type="submit">Save</button>
+    <div class="mat-grid">
+      <div class="mat-field mat-full">
+        <label>Material Type Name</label>
+        {{ form.name }}
+      </div>
+
+      <div class="mat-field mat-full">
+        <label>Description</label>
+        {{ form.description }}
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mat-footer">
+      <button type="submit" class="mat-save">Save</button>
     </div>
   </form>
+
 </div>

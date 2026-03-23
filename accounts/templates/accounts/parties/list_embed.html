@@ -12,7 +12,7 @@
         <svg class="pt-add-ico" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 5v14M5 12h14"></path>
         </svg>
-        
+
       </a>
 
       <button type="button" class="pt-close" data-embed-close title="Close">
@@ -45,60 +45,25 @@
 
       <tbody>
         {% for p in parties %}
-          <tr>
-<td>{{ p.party_name|default:"—" }}</td>
-<td>{{ p.phone_number|default:"—" }}</td>
-<td>{{ p.gst_number|default:"—" }}</td>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-+
-
-  <td class="pt-actions">
-    <a class="pt-link" href="{% url 'accounts:party_edit' p.id %}">Edit</a>
-    <span class="pt-dot">•</span>
-    <form method="post" action="{% url 'accounts:party_delete' p.id %}" style="display:inline;">
-      {% csrf_token %}
-      <button class="pt-link danger" type="submit" onclick="return confirm('Delete this party?')">Delete</button>
-    </form>
-  </td>
-</tr>
+        <tr>
+          <td>{{ p.party_name|default:"—" }}</td>
+          <td>{{ p.phone_number|default:"—" }}</td>
+          <td>{{ p.gst_number|default:"—" }}</td>
+          <td class="pt-actions">
+            <a class="pt-link" href="{% url 'accounts:party_edit' p.id %}">Edit</a>
+            <span class="pt-dot">•</span>
+            <form method="post" action="{% url 'accounts:party_delete' p.id %}" style="display:inline;">
+              {% csrf_token %}
+              <button class="pt-link danger" type="submit"
+                onclick="return confirm('Delete this party?')">Delete</button>
+            </form>
+          </td>
+        </tr>
 
         {% empty %}
-          <tr>
-            <td colspan="4" class="pt-empty">No parties found.</td>
-          </tr>
+        <tr>
+          <td colspan="4" class="pt-empty">No parties found.</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>

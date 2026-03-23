@@ -43,18 +43,40 @@
 
         <div class="field">
           <label>Username</label>
-          <input class="input" name="username" type="text" placeholder="Enter your username" required>
+          <input
+            class="input"
+            name="username"
+            type="text"
+            placeholder="Enter your username"
+            value="{{ form_data.username|default:'' }}"
+            required
+          >
         </div>
 
         <div class="field">
           <label>Email</label>
-          <input class="input" name="email" type="email" placeholder="Enter your email" required>
+          <input
+            class="input"
+            name="email"
+            type="email"
+            placeholder="Enter your email"
+            value="{{ form_data.email|default:'' }}"
+            required
+          >
         </div>
 
         <div class="field">
           <label>Password</label>
           <div class="pw-wrap">
-            <input id="pw1" class="input" name="password" type="password" placeholder="Create a password" required>
+            <input
+              id="pw1"
+              class="input"
+              name="password"
+              type="password"
+              placeholder="Create a password"
+              value="{{ form_data.password|default:'' }}"
+              required
+            >
             <button class="pw-btn" type="button" onclick="togglePw('pw1', this)">Show</button>
           </div>
         </div>
@@ -62,7 +84,15 @@
         <div class="field">
           <label>Confirm Password</label>
           <div class="pw-wrap">
-            <input id="pw2" class="input" name="password2" type="password" placeholder="Confirm password" required>
+            <input
+              id="pw2"
+              class="input"
+              name="password2"
+              type="password"
+              placeholder="Confirm password"
+              value="{{ form_data.password2|default:'' }}"
+              required
+            >
             <button class="pw-btn" type="button" onclick="togglePw('pw2', this)">Show</button>
           </div>
         </div>

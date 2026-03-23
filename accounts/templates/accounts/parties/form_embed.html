@@ -1,6 +1,6 @@
 {# accounts/parties/form_embed.html #}
 
-<div class="party-form-embed">
+<div class="party-form-embed compact">
   <div class="pf-head">
     <div>
       <div class="pf-title">{% if mode == "edit" %}Edit Party{% else %}Create Party{% endif %}</div>
@@ -8,7 +8,7 @@
     </div>
 
     <div class="pf-head-actions">
-      <a class="pf-back" href="{% url 'accounts:party_list' %}" title="Back">
+      <a class="pf-back" href="{% url 'accounts:party_list' %}?embed=1" title="Back">
         <svg class="pf-back-ico" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M15 18l-6-6 6-6"></path>
         </svg>
@@ -25,18 +25,30 @@
 
   <form class="pf-form"
         method="post"
-        action="{% if mode == 'edit' %}{% url 'accounts:party_edit' party.id %}{% else %}{% url 'accounts:party_add' %}{% endif %}">
+        action="{% if mode == 'edit' %}{% url 'accounts:party_edit' party.id %}{% else %}{% url 'accounts:party_add' %}{% endif %}?embed=1">
     {% csrf_token %}
+    <input type="hidden" name="embed" value="1" />
 
     <div class="pf-grid">
       {% for field in form %}
-        <div class="pf-field pf-full">
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}
-            <div class="pf-err">{{ field.errors|striptags }}</div>
-          {% endif %}
-        </div>
+        {# Only big fields full width #}
+        {% if field.name == "address" or field.name == "notes" or field.name == "remarks" %}
+          <div class="pf-field pf-full">
+        {% else %}
+          <div class="pf-field">
+        {% endif %}
+
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+
+            {% if field.help_text %}
+              <div class="pf-help">{{ field.help_text }}</div>
+            {% endif %}
+
+            {% if field.errors %}
+              <div class="pf-err">{{ field.errors|striptags }}</div>
+            {% endif %}
+          </div>
       {% endfor %}
     </div>
 
