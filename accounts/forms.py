@@ -116,12 +116,28 @@ class CustomUserCreationForm(UserCreationForm):
 # MATERIAL FORM (Step-1 Kind → Step-2 Type master → Step-3 Shade master)
 # ============================================================
 class MaterialForm(forms.Form):
-    material_kind = forms.ChoiceField(choices=Material.MATERIAL_KIND_CHOICES, label="Material Kind")
-    material_type = forms.ModelChoiceField(queryset=MaterialType.objects.none(), required=False, empty_label="Select")
-    material_shade = forms.ModelChoiceField(queryset=MaterialShade.objects.none(), required=False, empty_label="Select")
+    material_kind = forms.ChoiceField(
+        choices=Material.MATERIAL_KIND_CHOICES,
+        label="Material Kind",
+        error_messages={"required": "Please select Material Kind."},
+    )
+    material_type = forms.ModelChoiceField(
+        queryset=MaterialType.objects.none(),
+        required=False,
+        empty_label="Select"
+    )
+    material_shade = forms.ModelChoiceField(
+        queryset=MaterialShade.objects.none(),
+        required=False,
+        empty_label="Select"
+    )
 
     # common
-    name = forms.CharField(max_length=150, label="Material Name")
+    name = forms.CharField(
+        max_length=150,
+        label="Material Name",
+        error_messages={"required": "Please enter Material Name."},
+    )
     remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}))
     image = forms.ImageField(required=False)
 
@@ -154,12 +170,10 @@ class MaterialForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.instance = instance
 
-        # Determine selected kind (POST -> instance fallback)
         kind = (self.data.get("material_kind") or "").strip()
         if not kind and instance:
             kind = (getattr(instance, "material_kind", "") or "").strip()
 
-        # Material Type queryset (owner-based + filtered by kind)
         type_qs = MaterialType.objects.all()
         if user is not None:
             type_qs = type_qs.filter(owner=user)
@@ -167,7 +181,6 @@ class MaterialForm(forms.Form):
             type_qs = type_qs.filter(material_kind=kind)
         type_qs = type_qs.order_by("name")
 
-        # Material Shade queryset (owner-based; also filter by kind to match selection flow)
         shade_qs = MaterialShade.objects.all()
         if user is not None:
             shade_qs = shade_qs.filter(owner=user)
@@ -178,21 +191,79 @@ class MaterialForm(forms.Form):
         self.fields["material_type"].queryset = type_qs
         self.fields["material_shade"].queryset = shade_qs
 
-        # Optional: show labels like "Yarn — Cotton"
         self.fields["material_type"].label_from_instance = lambda o: f"{o.get_material_kind_display()} — {o.name}"
         self.fields["material_shade"].label_from_instance = lambda o: f"{o.get_material_kind_display()} — {o.name}"
+
+        # ✅ Prefill edit form values
+        if instance and not self.is_bound:
+            self.initial.update({
+                "material_kind": instance.material_kind,
+                "material_type": instance.material_type,
+                "material_shade": instance.material_shade,
+                "name": instance.name,
+                "remarks": instance.remarks,
+            })
+
+            if instance.material_kind == "yarn" and hasattr(instance, "yarn"):
+                self.initial.update({
+                    "yarn_type": instance.yarn.yarn_type,
+                    "yarn_subtype": instance.yarn.yarn_subtype,
+                    "count_denier": instance.yarn.count_denier,
+                    "yarn_color": instance.yarn.color,
+                })
+
+            elif instance.material_kind == "greige" and hasattr(instance, "greige"):
+                self.initial.update({
+                    "fabric_type": instance.greige.fabric_type,
+                    "gsm": instance.greige.gsm,
+                    "width": instance.greige.width,
+                    "construction": instance.greige.construction,
+                })
+
+            elif instance.material_kind == "finished" and hasattr(instance, "finished"):
+                self.initial.update({
+                    "base_fabric_type": instance.finished.base_fabric_type,
+                    "finish_type": instance.finished.finish_type,
+                    "finished_gsm": instance.finished.gsm,
+                    "finished_width": instance.finished.width,
+                    "end_use": instance.finished.end_use,
+                })
+
+            elif instance.material_kind == "trim" and hasattr(instance, "trim"):
+                self.initial.update({
+                    "trim_type": instance.trim.trim_type,
+                    "trim_size": instance.trim.size,
+                    "trim_color": instance.trim.color,
+                    "brand": instance.trim.brand,
+                })
 
     def clean(self):
         cd = super().clean()
         k = (cd.get("material_kind") or "").strip()
 
         mt = cd.get("material_type")
-        if k and mt and mt.material_kind != k:
+        if k and not mt:
+            self.add_error("material_type", "Please select Material Type.")
+        elif k and mt and mt.material_kind != k:
             self.add_error("material_type", "Selected Material Type does not belong to selected Kind.")
 
         ms = cd.get("material_shade")
-        if k and ms and ms.material_kind != k:
+        if k and not ms:
+            self.add_error("material_shade", "Please select Material Shade.")
+        elif k and ms and ms.material_kind != k:
             self.add_error("material_shade", "Selected Material Shade does not belong to selected Kind.")
+
+        if k == "yarn" and not (cd.get("yarn_type") or "").strip():
+            self.add_error("yarn_type", "Please enter Yarn Type.")
+
+        elif k == "greige" and not (cd.get("fabric_type") or "").strip():
+            self.add_error("fabric_type", "Please enter Fabric Type.")
+
+        elif k == "finished" and not (cd.get("base_fabric_type") or "").strip():
+            self.add_error("base_fabric_type", "Please enter Base Fabric Type.")
+
+        elif k == "trim" and not (cd.get("trim_type") or "").strip():
+            self.add_error("trim_type", "Please select Trim Type.")
 
         return cd
 
@@ -205,8 +276,8 @@ class MaterialForm(forms.Form):
 
         material = self.instance or Material()
         material.material_kind = k
-        material.material_type = cd.get("material_type")   # FK object
-        material.material_shade = cd.get("material_shade") # FK object
+        material.material_type = cd.get("material_type")
+        material.material_shade = cd.get("material_shade")
         material.name = cd["name"]
         material.remarks = cd.get("remarks", "")
 
@@ -216,7 +287,6 @@ class MaterialForm(forms.Form):
 
         material.save()
 
-        # Keep your old behavior: clear and recreate details
         YarnDetail.objects.filter(material=material).delete()
         GreigeDetail.objects.filter(material=material).delete()
         FinishedDetail.objects.filter(material=material).delete()
@@ -260,7 +330,6 @@ class MaterialForm(forms.Form):
             )
 
         return material
-
 
 # ============================================================
 # PARTY
