@@ -1,0 +1,68 @@
+<div class="parties-embed">
+  <div class="pt-head">
+    <div>
+      <div class="pt-title">Vendors</div>
+      <div class="pt-sub">Manage yarn and fabric vendors</div>
+    </div>
+
+    <div class="pt-head-actions">
+      <a class="pt-add" href="{% url 'accounts:vendor_add' %}?embed=1">
+        <svg class="pt-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"></path>
+        </svg>
+        Create
+      </a>
+
+      <button type="button" class="pt-close" data-embed-close title="Close">
+        <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="pt-tools">
+    <form class="pt-search" method="get" action="{% url 'accounts:vendor_list' %}">
+      <input type="hidden" name="embed" value="1">
+      <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search vendor (name, contact, phone, gst)…">
+      <button class="pt-search-btn" type="submit">Search</button>
+    </form>
+  </div>
+
+  <div class="pt-tablewrap">
+    <table class="pt-table">
+      <thead>
+        <tr>
+          <th style="width:28%;">Vendor</th>
+          <th style="width:18%;">Contact</th>
+          <th style="width:18%;">Phone</th>
+          <th style="width:18%;">GST</th>
+          <th class="pt-actions" style="width:18%;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vendor in vendors %}
+        <tr>
+          <td>{{ vendor.name }}</td>
+          <td>{{ vendor.contact_person|default:"—" }}</td>
+          <td>{{ vendor.phone|default:"—" }}</td>
+          <td>{{ vendor.gst_number|default:"—" }}</td>
+          <td class="pt-actions">
+            <a class="pt-link" href="{% url 'accounts:vendor_edit' vendor.id %}?embed=1">Edit</a>
+            <span class="pt-dot">•</span>
+            <form method="post" action="{% url 'accounts:vendor_delete' vendor.id %}?embed=1" style="display:inline;">
+              {% csrf_token %}
+              <button class="pt-link danger" type="submit" onclick="return confirm('Delete this vendor?')">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="pt-empty">No vendors found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

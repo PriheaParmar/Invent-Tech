@@ -1,0 +1,723 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}{% if mode == 'edit' %}Edit Yarn PO{% else %}Generate Yarn PO{% endif %} - InventTech{% endblock %}
+{% block page_title %}{% if mode == 'edit' %}Edit Yarn PO{% else %}Generate Yarn PO{% endif %}{% endblock %}
+{% block page_subtitle %}Create purchase order for yarn vendors{% endblock %}
+
+{% block content %}
+<style>
+  .canvas{
+    grid-template-columns: 1fr !important;
+  }
+
+  .po-form-shell{
+    background: var(--card, #ffffff);
+    border: 1px solid var(--line, rgba(15,23,42,.08));
+    border-radius: 22px;
+    box-shadow: var(--shadow, 0 18px 55px rgba(15,23,42,.08));
+    padding: 18px;
+  }
+
+  .po-form-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom: 14px;
+  }
+
+  .po-main-title{
+    font-size: 21px;
+    font-weight: 950;
+    letter-spacing: -.02em;
+    line-height: 1.08;
+    color: var(--text, #0f172a);
+  }
+
+  .po-main-sub{
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--muted, #667085);
+  }
+
+  .po-btn,
+  .po-add-btn{
+    border:none;
+    outline:none;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    height:38px;
+    padding:0 14px;
+    border-radius:12px;
+    font-weight:800;
+    transition:.18s ease;
+  }
+
+  .po-btn{
+    background: rgba(255,255,255,.95);
+    color:#000;
+    border: 1px solid rgba(0,0,0,.10);
+  }
+
+  .po-btn:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .po-btn.primary{
+    background: var(--orange, rgba(250,189,100,1));
+    color:#fff;
+    border:none;
+  }
+
+  .po-btn.primary:hover{
+    background:#0b0b12;
+    color:#fff;
+  }
+
+  .po-add-btn{
+    background: var(--orange, rgba(250,189,100,1));
+    color:#fff;
+  }
+
+  .po-add-btn:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .po-ico{
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .po-errors{
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(238,61,133,.10);
+    border: 1px solid rgba(238,61,133,.22);
+    font-weight: 800;
+    color: #7a163f;
+    margin-bottom: 14px;
+  }
+
+  .po-grid{
+    display:grid;
+    gap:12px;
+  }
+
+  .po-header-grid{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 14px;
+  }
+
+  .po-field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+  }
+
+  .po-field label{
+    display:block;
+    font-size: 12px;
+    font-weight: 900;
+    color: rgba(15,23,42,.75);
+    letter-spacing: .01em;
+  }
+
+  .po-field input,
+  .po-field select,
+  .po-field textarea{
+    width:100%;
+    box-sizing:border-box;
+    min-height:40px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(0,0,0,.10);
+    background: rgba(255,255,255,.92);
+    outline:none;
+    color: var(--text, #0f172a);
+    font: inherit;
+    appearance:none;
+  }
+
+  .po-field textarea{
+    min-height:84px;
+    resize:vertical;
+  }
+
+  .po-field select{
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgba(0,0,0,.45) 50%),
+      linear-gradient(135deg, rgba(0,0,0,.45) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 17px, calc(100% - 12px) 17px;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 34px;
+  }
+
+  .po-field input:focus,
+  .po-field select:focus,
+  .po-field textarea:focus{
+    border-color: rgba(0,0,0,.22);
+  }
+
+  .po-readonly input,
+  .po-summary input[readonly]{
+    background: rgba(15,23,42,.04);
+    color:#111827;
+    font-weight:800;
+  }
+
+  .po-span-2{
+    grid-column: span 2;
+  }
+
+  .po-lines-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    margin: 8px 0 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,.06);
+  }
+
+  .po-lines-title{
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text, #0f172a);
+  }
+
+  .po-rows{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-bottom: 16px;
+  }
+
+  .po-row{
+    border:1px solid rgba(0,0,0,.06);
+    border-radius:16px;
+    background: rgba(255,255,255,.68);
+    padding: 12px;
+  }
+
+  .po-line-grid{
+    display:grid;
+    grid-template-columns:
+      2.2fr
+      .9fr
+      .95fr
+      .8fr
+      .7fr
+      .7fr
+      .72fr
+      .72fr
+      .72fr
+      .72fr
+      1fr
+      1.4fr
+      .85fr
+      1fr
+      52px;
+    gap:10px;
+    align-items:end;
+  }
+
+  .po-wide{
+    min-width: 0;
+  }
+
+  .po-delete-field{
+    align-items:center;
+    justify-content:flex-end;
+  }
+
+  .po-remove{
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    border: none;
+    background: var(--orange, rgba(250,189,100,1));
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+    cursor:pointer;
+    display:grid;
+    place-items:center;
+  }
+
+  .po-remove:hover{
+    background: rgba(238,61,133,1);
+  }
+
+  .po-err{
+    color: rgba(238,61,133,1);
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .po-footer-grid{
+    display:grid;
+    grid-template-columns: 1.2fr .82fr;
+    gap:18px;
+    align-items:start;
+  }
+
+  .po-summary{
+    border:1px solid rgba(0,0,0,.06);
+    border-radius:16px;
+    background: rgba(255,255,255,.72);
+    padding: 14px;
+  }
+
+  .po-summary-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+  }
+
+  .po-summary-title{
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted, #667085);
+  }
+
+  .po-total-weight{
+    font-size: 20px;
+    font-weight: 950;
+    color: var(--text, #0f172a);
+  }
+
+  .po-summary-grid{
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+
+  .po-actionsbar{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 1420px){
+    .po-line-grid{
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .po-delete-field{
+      align-items:flex-start;
+    }
+  }
+
+  @media (max-width: 980px){
+    .po-header-grid,
+    .po-footer-grid,
+    .po-summary-grid{
+      grid-template-columns: 1fr;
+    }
+
+    .po-span-2{
+      grid-column: span 1;
+    }
+  }
+
+  @media (max-width: 720px){
+    .po-form-top,
+    .po-lines-head,
+    .po-actionsbar{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .po-line-grid{
+      grid-template-columns: 1fr;
+    }
+
+    .po-btn,
+    .po-add-btn{
+      width:100%;
+    }
+  }
+</style>
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <form method="post" class="po-form-shell">
+      {% csrf_token %}
+      {{ formset.management_form }}
+
+      <div class="po-form-top">
+        <div>
+          <div class="po-main-title">Purchase Order For Yarn</div>
+          <div class="po-main-sub">Vendor master reflects from Utilities → Vendor.</div>
+        </div>
+        <a class="po-btn" href="{% url 'accounts:yarnpo_list' %}">Back to List</a>
+      </div>
+
+      {% if form.non_field_errors or formset.non_form_errors %}
+      <div class="po-errors">
+        {{ form.non_field_errors }}
+        {{ formset.non_form_errors }}
+      </div>
+      {% endif %}
+
+      <div class="po-grid po-header-grid">
+        <div class="po-field po-readonly">
+          <label>System Number</label>
+          <input type="text" value="{{ system_number_preview }}" readonly>
+        </div>
+
+        <div class="po-field">
+          <label for="{{ form.po_number.id_for_label }}">PO Number</label>
+          {{ form.po_number }}
+          {% for err in form.po_number.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="po-field">
+          <label for="{{ form.po_date.id_for_label }}">Date</label>
+          {{ form.po_date }}
+          {% for err in form.po_date.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="po-field">
+          <label for="{{ form.cancel_date.id_for_label }}">Cancel Date</label>
+          {{ form.cancel_date }}
+          {% for err in form.cancel_date.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="po-field">
+          <label for="{{ form.vendor.id_for_label }}">Vendor</label>
+          {{ form.vendor }}
+          {% for err in form.vendor.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="po-field po-readonly">
+  <label>Firm</label>
+  <input
+    type="text"
+    value="{% if auto_firm_name %}{{ auto_firm_name }}{% else %}No firm found{% endif %}"
+    readonly
+  >
+  {{ form.firm.as_hidden }}
+  {% for err in form.firm.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+</div>
+
+        <div class="po-field po-span-2">
+          <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+          {{ form.remarks }}
+          {% for err in form.remarks.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="po-field">
+          <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
+          {{ form.shipping_address }}
+          {% for err in form.shipping_address.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+        </div>
+      </div>
+
+      <div class="po-lines-head">
+        <div class="po-lines-title">Yarn Details</div>
+        <button type="button" class="po-add-btn" id="addYarnRow">
+          <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Add Row
+        </button>
+      </div>
+
+      <div id="poRows" class="po-rows">
+        {% for item_form in formset.forms %}
+        <div class="po-row" data-row>
+          {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+          <div class="po-line-grid">
+            <div class="po-field po-wide">
+              <label>Yarn Name</label>
+              {{ item_form.material }}
+              {% for err in item_form.material.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+            </div>
+
+            <div class="po-field">
+              <label>Unit</label>
+              {{ item_form.unit }}
+            </div>
+
+            <div class="po-field">
+              <label>MTR / Qty</label>
+              {{ item_form.quantity }}
+            </div>
+
+            <div class="po-field">
+              <label>Value</label>
+              {{ item_form.value }}
+            </div>
+
+            <div class="po-field">
+              <label>Dia</label>
+              {{ item_form.dia }}
+            </div>
+
+            <div class="po-field">
+              <label>Gauge</label>
+              {{ item_form.gauge }}
+            </div>
+
+            <div class="po-field">
+              <label>Rolls</label>
+              {{ item_form.rolls }}
+            </div>
+
+            <div class="po-field">
+              <label>Count</label>
+              {{ item_form.count }}
+            </div>
+
+            <div class="po-field">
+              <label>GSM</label>
+              {{ item_form.gsm }}
+            </div>
+
+            <div class="po-field">
+              <label>S/L</label>
+              {{ item_form.sl }}
+            </div>
+
+            <div class="po-field">
+              <label>HSN Code</label>
+              {{ item_form.hsn_code }}
+            </div>
+
+            <div class="po-field po-wide">
+              <label>Remark</label>
+              {{ item_form.remark }}
+            </div>
+
+            <div class="po-field">
+              <label>Rate</label>
+              {{ item_form.rate }}
+            </div>
+
+            <div class="po-field">
+              <label>Final Amount</label>
+              {{ item_form.final_amount }}
+            </div>
+
+            <div class="po-field po-delete-field">
+              <label>&nbsp;</label>
+              <button type="button" class="po-remove po-row-remove" title="Remove row">×</button>
+              <div style="display:none;">{{ item_form.DELETE }}</div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <template id="emptyYarnRowTemplate">
+        <div class="po-row" data-row>
+          {% with item_form=formset.empty_form %}
+          {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+          <div class="po-line-grid">
+            <div class="po-field po-wide"><label>Yarn Name</label>{{ item_form.material }}</div>
+            <div class="po-field"><label>Unit</label>{{ item_form.unit }}</div>
+            <div class="po-field"><label>MTR / Qty</label>{{ item_form.quantity }}</div>
+            <div class="po-field"><label>Value</label>{{ item_form.value }}</div>
+            <div class="po-field"><label>Dia</label>{{ item_form.dia }}</div>
+            <div class="po-field"><label>Gauge</label>{{ item_form.gauge }}</div>
+            <div class="po-field"><label>Rolls</label>{{ item_form.rolls }}</div>
+            <div class="po-field"><label>Count</label>{{ item_form.count }}</div>
+            <div class="po-field"><label>GSM</label>{{ item_form.gsm }}</div>
+            <div class="po-field"><label>S/L</label>{{ item_form.sl }}</div>
+            <div class="po-field"><label>HSN Code</label>{{ item_form.hsn_code }}</div>
+            <div class="po-field po-wide"><label>Remark</label>{{ item_form.remark }}</div>
+            <div class="po-field"><label>Rate</label>{{ item_form.rate }}</div>
+            <div class="po-field"><label>Final Amount</label>{{ item_form.final_amount }}</div>
+            <div class="po-field po-delete-field">
+              <label>&nbsp;</label>
+              <button type="button" class="po-remove po-row-remove" title="Remove row">×</button>
+              <div style="display:none;">{{ item_form.DELETE }}</div>
+            </div>
+          </div>
+          {% endwith %}
+        </div>
+      </template>
+
+      <div class="po-footer-grid">
+        <div class="po-field">
+          <label for="{{ form.terms_conditions.id_for_label }}">Terms & Conditions</label>
+          {{ form.terms_conditions }}
+          {% for err in form.terms_conditions.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="po-summary">
+          <div class="po-summary-top">
+            <div class="po-summary-title">Summary</div>
+            <div class="po-total-weight">Total Weight: <strong id="totalWeightText">{{ po_obj.total_weight|default:"0.00" }}</strong></div>
+          </div>
+
+          <div class="po-summary-grid">
+            <div class="po-field">
+              <label>Sub Total</label>
+              <input type="text" id="subtotalPreview" value="{{ po_obj.subtotal|default:'0.00' }}" readonly>
+            </div>
+
+            <div class="po-field">
+              <label for="{{ form.discount_percent.id_for_label }}">Discount (%)</label>
+              {{ form.discount_percent }}
+            </div>
+
+            <div class="po-field">
+              <label>After Discount Value</label>
+              <input type="text" id="afterDiscountPreview" value="{{ po_obj.after_discount_value|default:'0.00' }}" readonly>
+            </div>
+
+            <div class="po-field">
+              <label for="{{ form.others.id_for_label }}">Others</label>
+              {{ form.others }}
+            </div>
+
+            <div class="po-field">
+              <label for="{{ form.cgst_percent.id_for_label }}">CGST %</label>
+              {{ form.cgst_percent }}
+            </div>
+
+            <div class="po-field">
+              <label for="{{ form.sgst_percent.id_for_label }}">SGST %</label>
+              {{ form.sgst_percent }}
+            </div>
+
+            <div class="po-field po-span-2">
+              <label>Grand Total</label>
+              <input type="text" id="grandTotalPreview" value="{{ po_obj.grand_total|default:'0.00' }}" readonly>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="po-actionsbar">
+        <button type="submit" class="po-btn primary">Save Yarn PO</button>
+        <a class="po-btn" href="{% url 'accounts:yarnpo_list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const totalForms = document.getElementById("id_items-TOTAL_FORMS");
+    const rowsWrap = document.getElementById("poRows");
+    const addBtn = document.getElementById("addYarnRow");
+    const template = document.getElementById("emptyYarnRowTemplate");
+    const vendorSelect = document.getElementById("{{ form.vendor.id_for_label }}");
+    const firmSelect = document.getElementById("{{ form.firm.id_for_label }}");
+    const shippingAddress = document.getElementById("{{ form.shipping_address.id_for_label }}");
+
+    function num(v) {
+      const n = parseFloat(v || 0);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function refreshTotals() {
+      let subtotal = 0;
+      let totalWeight = 0;
+
+      rowsWrap.querySelectorAll("[data-row]").forEach((row) => {
+        if (row.style.display === "none") return;
+
+        const qty = row.querySelector('input[name$="-quantity"]');
+        const rate = row.querySelector('input[name$="-rate"]');
+        const finalAmount = row.querySelector('input[name$="-final_amount"]');
+
+        const qtyVal = num(qty && qty.value);
+        const rateVal = num(rate && rate.value);
+
+        if (finalAmount && (!finalAmount.value || document.activeElement !== finalAmount)) {
+          finalAmount.value = (qtyVal * rateVal).toFixed(2);
+        }
+
+        subtotal += num(finalAmount && finalAmount.value);
+        totalWeight += qtyVal;
+      });
+
+      const discount = num(document.getElementById("{{ form.discount_percent.id_for_label }}").value);
+      const others = num(document.getElementById("{{ form.others.id_for_label }}").value);
+      const cgst = num(document.getElementById("{{ form.cgst_percent.id_for_label }}").value);
+      const sgst = num(document.getElementById("{{ form.sgst_percent.id_for_label }}").value);
+
+      const afterDiscount = subtotal - (subtotal * discount / 100);
+      const grandTotal = afterDiscount + others + (afterDiscount * (cgst + sgst) / 100);
+
+      document.getElementById("subtotalPreview").value = subtotal.toFixed(2);
+      document.getElementById("afterDiscountPreview").value = afterDiscount.toFixed(2);
+      document.getElementById("grandTotalPreview").value = grandTotal.toFixed(2);
+      document.getElementById("totalWeightText").textContent = totalWeight.toFixed(2);
+    }
+
+    function bindRow(row) {
+      row.querySelectorAll('input, select, textarea').forEach((field) => {
+        field.addEventListener('input', refreshTotals);
+        field.addEventListener('change', refreshTotals);
+      });
+
+      const removeBtn = row.querySelector('.po-row-remove');
+      const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+
+      removeBtn?.addEventListener('click', () => {
+        if (deleteInput) deleteInput.checked = true;
+        row.style.display = 'none';
+        refreshTotals();
+      });
+    }
+
+    rowsWrap.querySelectorAll('[data-row]').forEach(bindRow);
+
+    addBtn?.addEventListener('click', () => {
+      const idx = parseInt(totalForms.value, 10);
+      const html = template.innerHTML.replaceAll('__prefix__', idx);
+      const temp = document.createElement('div');
+      temp.innerHTML = html.trim();
+      const row = temp.firstElementChild;
+      rowsWrap.appendChild(row);
+      totalForms.value = idx + 1;
+      bindRow(row);
+      refreshTotals();
+    });
+
+    ["{{ form.discount_percent.id_for_label }}", "{{ form.others.id_for_label }}", "{{ form.cgst_percent.id_for_label }}", "{{ form.sgst_percent.id_for_label }}"].forEach((id) => {
+  document.getElementById(id)?.addEventListener('input', refreshTotals);
+});
+
+const firmAddresses = {{ firm_addresses_json|safe }};
+
+firmSelect?.addEventListener('change', () => {
+  const value = firmSelect.value;
+  if (value && shippingAddress && !shippingAddress.value.trim()) {
+    shippingAddress.value = firmAddresses[value] || '';
+  }
+}); 
+
+refreshTotals();
+  })();
+</script>
+{% endblock %}

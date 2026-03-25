@@ -1,0 +1,170 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}PO - InventTech{% endblock %}
+{% block page_title %}Purchase Orders{% endblock %}
+{% block page_subtitle %}Create and manage purchase orders across yarn, greige, dyed and ready fabric{% endblock %}
+
+{% block content %}
+<style>
+  .po-note{
+    margin-top: 10px;
+    color: rgba(15,23,42,.55);
+    font-size: 12px;
+  }
+
+  .po-soon{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    margin-top: 8px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    background: rgba(250,189,100,.16);
+    border: 1px solid rgba(250,189,100,.28);
+    color: rgba(15,23,42,.75);
+  }
+
+  .po-page-shell{
+    grid-column: 1 / -1;
+  }
+
+  #poSearch{
+    width: 320px;
+  }
+
+  @media (max-width: 900px){
+    #poSearch{ width: 100%; }
+  }
+</style>
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <section class="grid util-grid-section po-page-shell">
+      <div class="card soft big c8">
+
+        <div class="card-head util-head">
+          <div>
+            <div class="card-title">PO</div>
+            <div class="card-sub">Choose the purchase order type you want to generate.</div>
+          </div>
+
+          <div class="util-search">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 21l-4.3-4.3"></path>
+              <path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"></path>
+            </svg>
+            <input id="poSearch" type="text" placeholder="Search PO type…">
+          </div>
+        </div>
+
+        <div class="util-layout">
+          <div class="util-row util-row-1">
+            <div class="util-group" data-tag="po" style="grid-column: span 8; --cols:8;">
+              <div class="util-group-head">
+                <div class="util-group-title">PURCHASE ORDERS</div>
+                <div class="util-group-line"></div>
+                <div class="util-group-count">4</div>
+              </div>
+
+              <div class="util-group-grid" id="poTiles">
+
+                <a class="util-tile" href="{% url 'accounts:yarnpo_list' %}" data-title="Yarn PO">
+                  <span class="util-ico">
+                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 7h10v10H7z"></path>
+                      <path d="M9 3v4"></path>
+                      <path d="M15 3v4"></path>
+                      <path d="M3 9h4"></path>
+                      <path d="M17 9h4"></path>
+                    </svg>
+                  </span>
+                  <div class="util-meta">
+                    <div class="util-title">Yarn PO</div>
+                    <div class="po-note">Create and manage yarn purchase orders.</div>
+                  </div>
+                </a>
+
+                <a class="util-tile" href="#" data-title="Greige PO" data-soon="1">
+                  <span class="util-ico">
+                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 7h16"></path>
+                      <path d="M6 7l1 11h10l1-11"></path>
+                      <path d="M9 11h6"></path>
+                    </svg>
+                  </span>
+                  <div class="util-meta">
+                    <div class="util-title">Greige PO</div>
+                    <div class="po-note">For greige fabric procurement.</div>
+                    <div class="po-soon">Coming next</div>
+                  </div>
+                </a>
+
+                <a class="util-tile" href="#" data-title="Dyed PO" data-soon="1">
+                  <span class="util-ico">
+                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 3c3 4 5 6.6 5 9a5 5 0 1 1-10 0c0-2.4 2-5 5-9z"></path>
+                    </svg>
+                  </span>
+                  <div class="util-meta">
+                    <div class="util-title">Dyed PO</div>
+                    <div class="po-note">For dyed fabric purchase orders.</div>
+                    <div class="po-soon">Coming next</div>
+                  </div>
+                </a>
+
+                <a class="util-tile" href="#" data-title="Ready Fabric PO" data-soon="1">
+                  <span class="util-ico">
+                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M5 6h14v12H5z"></path>
+                      <path d="M9 10h6"></path>
+                      <path d="M9 14h4"></path>
+                    </svg>
+                  </span>
+                  <div class="util-meta">
+                    <div class="util-title">Ready Fabric PO</div>
+                    <div class="po-note">For ready/finished fabric procurement.</div>
+                    <div class="po-soon">Coming next</div>
+                  </div>
+                </a>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tiny-note" style="margin-top:10px;">
+          Yarn PO is live now. The other PO modules can be connected one by one in the same structure.
+        </div>
+
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const input = document.getElementById("poSearch");
+    const tiles = Array.from(document.querySelectorAll("#poTiles .util-tile"));
+
+    input?.addEventListener("input", () => {
+      const q = (input.value || "").toLowerCase().trim();
+
+      tiles.forEach((tile) => {
+        const title = (tile.dataset.title || "").toLowerCase();
+        tile.style.display = (!q || title.includes(q)) ? "" : "none";
+      });
+    });
+
+    document.querySelectorAll('#poTiles .util-tile[data-soon="1"]').forEach((tile) => {
+      tile.addEventListener("click", (e) => {
+        e.preventDefault();
+      });
+    });
+  })();
+</script>
+{% endblock %}

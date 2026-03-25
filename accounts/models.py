@@ -352,3 +352,79 @@ class Firm(models.Model):
     
     
 
+
+
+# ============================================================
+# VENDOR
+# ============================================================
+
+class Vendor(OwnedModel):
+    name = models.CharField(max_length=180)
+    contact_person = models.CharField(max_length=120, blank=True, default="")
+    phone = models.CharField(max_length=20, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+    gst_number = models.CharField(max_length=15, blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("owner", "name")]
+
+    def __str__(self):
+        return self.name
+
+
+# ============================================================
+# YARN PURCHASE ORDER
+# ============================================================
+
+class YarnPurchaseOrder(OwnedModel):
+    system_number = models.CharField(max_length=30, unique=True, blank=True)
+    po_number = models.CharField(max_length=30, blank=True, default="")
+    po_date = models.DateField()
+    cancel_date = models.DateField(null=True, blank=True)
+    vendor = models.ForeignKey("Vendor", on_delete=models.PROTECT, related_name="yarn_purchase_orders")
+    firm = models.ForeignKey("Firm", on_delete=models.SET_NULL, null=True, blank=True, related_name="yarn_purchase_orders")
+    shipping_address = models.TextField(blank=True, default="")
+    remarks = models.TextField(blank=True, default="")
+    terms_conditions = models.TextField(blank=True, default="")
+
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    discount_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    after_discount_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    others = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    cgst_percent = models.DecimalField(max_digits=6, decimal_places=2, default=2.5)
+    sgst_percent = models.DecimalField(max_digits=6, decimal_places=2, default=2.5)
+    total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    grand_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ["-id"]
+
+    def __str__(self):
+        return self.system_number or f"Yarn PO {self.pk or 'Draft'}"
+
+
+class YarnPurchaseOrderItem(models.Model):
+    po = models.ForeignKey("YarnPurchaseOrder", on_delete=models.CASCADE, related_name="items")
+    material = models.ForeignKey("Material", on_delete=models.PROTECT, related_name="yarn_po_items")
+    unit = models.CharField(max_length=20, blank=True, default="")
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    dia = models.CharField(max_length=30, blank=True, default="")
+    gauge = models.CharField(max_length=30, blank=True, default="")
+    rolls = models.CharField(max_length=30, blank=True, default="")
+    count = models.CharField(max_length=30, blank=True, default="")
+    gsm = models.CharField(max_length=30, blank=True, default="")
+    sl = models.CharField(max_length=30, blank=True, default="")
+    hsn_code = models.CharField(max_length=30, blank=True, default="")
+    remark = models.CharField(max_length=255, blank=True, default="")
+    rate = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.po} - {self.material}"

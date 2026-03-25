@@ -55,6 +55,21 @@
           <span class="sb-text">Utilities</span>
         </a>
 
+
+
+        <a class="sb-link" href="{% url 'accounts:po_home' %}">
+  <span class="sb-ico">
+    <svg class="ico" viewBox="0 0 24 24">
+      <path d="M6 3h9l3 3v15H6z"></path>
+      <path d="M15 3v3h3"></path>
+      <path d="M9 10h6"></path>
+      <path d="M9 14h6"></path>
+      <path d="M9 18h4"></path>
+    </svg>
+  </span>
+  <span class="sb-text">PO</span>
+</a>
+
         <a class="sb-link" href="#">
           <span class="sb-ico">
             <svg class="ico" viewBox="0 0 24 24">
@@ -241,17 +256,9 @@
           </div>
 
           <div class="f">
-          <label>Mobile</label>
-          <input
-          name="phone"
-          type="text"
-          inputmode="numeric"
-          maxlength="10"
-          value="{{ request.user.userextra.phone|default_if_none:'' }}"
-          placeholder="98XXXXXXXX"
-          oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
-        >
-        </div>
+            <label>Mobile</label>
+            <input name="phone" placeholder="98XXXXXXXX">
+          </div>
           <div class="f">
             <label>Role</label>
             <select name="role" id="profileRole">
@@ -265,7 +272,7 @@
 
           <div class="f full">
             <label>Address</label>
-            <textarea name="address" rows="3" placeholder="Optional">{{ request.user.userextra.address|default_if_none:'' }}</textarea>
+            <textarea name="address" rows="3" placeholder="Optional"></textarea>
           </div>
         </div>
 
@@ -392,52 +399,43 @@
 
   <!-- ==================[Profile POP up JS]======================== -->
   <script>
-  (function () {
-    const btn = document.querySelector('[title="Profile"]');
-    const modal = document.getElementById("profileModal");
-    const closeBtn = document.getElementById("profileClose");
-    const cancelBtn = document.getElementById("profileCancel");
-    const form = document.getElementById("profileForm");
-    const toast = document.getElementById("toast");
+    (function () {
+      const btn = document.querySelector('[title="Profile"]'); // your header profile iconbtn
+      const modal = document.getElementById("profileModal");
+      const closeBtn = document.getElementById("profileClose");
+      const cancelBtn = document.getElementById("profileCancel");
+      const form = document.getElementById("profileForm");
+      const toast = document.getElementById("toast");
 
-    if (!btn || !modal || !form) return;
+      if (!btn || !modal || !form) return;
 
-    function open() { modal.classList.add("show"); }
-    function close() { modal.classList.remove("show"); }
+      function open() { modal.classList.add("show"); }
+      function close() { modal.classList.remove("show"); }
 
-    btn.addEventListener("click", open);
-    closeBtn?.addEventListener("click", close);
-    cancelBtn?.addEventListener("click", close);
-    modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+      btn.addEventListener("click", open);
+      closeBtn?.addEventListener("click", close);
+      cancelBtn?.addEventListener("click", close);
+      modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      toast.textContent = "Saving...";
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        toast.textContent = "Saving...";
 
-      const formData = new FormData(form);
+        const formData = new FormData(form);
 
-      const res = await fetch(form.action, {
-        method: "POST",
-        body: formData,
-        headers: { "X-Requested-With": "XMLHttpRequest" }
+        const res = await fetch(form.action, {
+          method: "POST",
+          body: formData,
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+
+        const data = await res.json();
+        toast.textContent = data.ok ? data.message : "Error saving ❌";
+        if (data.ok) setTimeout(close, 800);
       });
+    })();
 
-      const data = await res.json();
-
-      toast.textContent = data.ok ? data.message : (data.message || "Error saving ❌");
-
-      if (data.ok && data.profile) {
-        form.querySelector('[name="email"]').value = data.profile.email || "";
-        form.querySelector('[name="first_name"]').value = data.profile.first_name || "";
-        form.querySelector('[name="last_name"]').value = data.profile.last_name || "";
-        form.querySelector('[name="phone"]').value = data.profile.phone || "";
-        form.querySelector('[name="address"]').value = data.profile.address || "";
-      }
-
-      if (data.ok) setTimeout(close, 800);
-    });
-  })();
-</script>
+  </script>
 
   <!-- =========================================================== -->
 
@@ -446,41 +444,48 @@
 
   <!-- ✅ SECTION SWITCHER (dashboard ⇄ utilities) -->
   <script>
-    (function () {
-      function show(sectionName) {
-        document.querySelectorAll(".page-section").forEach(sec => {
-          sec.classList.remove("is-active");
-        });
+  (function () {
+    const dashboardSection = document.getElementById("section-dashboard");
+    const utilitiesSection = document.getElementById("section-utilities");
+    const hasDashboardSwitcher = !!(dashboardSection || utilitiesSection);
 
-        const active = document.getElementById("section-" + sectionName);
-        if (active) active.classList.add("is-active");
-
-        document.querySelectorAll(".sb-link[data-section]").forEach(a => {
-          a.classList.toggle("active", a.dataset.section === sectionName);
-        });
-
-        // update hash so refresh keeps section
-        if (sectionName === "utilities") location.hash = "utilities";
-        if (sectionName === "dashboard") location.hash = "";
-      }
-
-      document.addEventListener("click", function (e) {
-        const link = e.target.closest(".sb-link[data-section]");
-        if (!link) return;
-        e.preventDefault();
-        show(link.dataset.section);
+    function show(sectionName) {
+      document.querySelectorAll(".page-section").forEach(sec => {
+        sec.classList.remove("is-active");
       });
 
-      // initial load: if hash is #utilities, open that
+      const active = document.getElementById("section-" + sectionName);
+      if (active) active.classList.add("is-active");
+
+      document.querySelectorAll(".sb-link[data-section]").forEach(a => {
+        a.classList.toggle("active", a.dataset.section === sectionName);
+      });
+
+      if (sectionName === "utilities") location.hash = "utilities";
+      if (sectionName === "dashboard") location.hash = "";
+    }
+
+    document.addEventListener("click", function (e) {
+      const link = e.target.closest(".sb-link[data-section]");
+      if (!link) return;
+
+      const target = document.getElementById("section-" + link.dataset.section);
+
+      if (!target) return;
+
+      e.preventDefault();
+      show(link.dataset.section);
+    });
+
+    if (hasDashboardSwitcher) {
       const start = (location.hash || "").replace("#", "").trim();
-      if (start === "utilities") show("utilities");
-      else show("dashboard");
-    })();
-
-    // ------------------------------------------------------------
-
+      if (start === "utilities" && utilitiesSection) show("utilities");
+      else if (dashboardSection) show("dashboard");
+    }
+  })();
+</script>
     
-
+<script>
 (function(){
   const btn = document.getElementById("btnFirm");
   const modal = document.getElementById("firmModal");

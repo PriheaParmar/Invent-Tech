@@ -63,10 +63,23 @@ urlpatterns = [
     path("master/material-types/<int:pk>/edit/", views.materialtype_update, name="materialtype_edit"),
     path("master/material-types/<int:pk>/delete/", views.materialtype_delete, name="materialtype_delete"),
 
+    # Vendor master
+    path("master/vendors/", views.vendor_list, name="vendor_list"),
+    path("master/vendors/add/", views.vendor_create, name="vendor_add"),
+    path("master/vendors/<int:pk>/edit/", views.vendor_update, name="vendor_edit"),
+    path("master/vendors/<int:pk>/delete/", views.vendor_delete, name="vendor_delete"),
+
+    # Yarn Purchase Orders
+    path("po/yarn/", views.yarnpo_list, name="yarnpo_list"),
+    path("po/yarn/add/", views.yarnpo_create, name="yarnpo_add"),
+    path("po/yarn/<int:pk>/edit/", views.yarnpo_update, name="yarnpo_edit"),
+    path("po/yarn/<int:pk>/delete/", views.yarnpo_delete, name="yarnpo_delete"),
+
     path("master/jobber-types/<int:pk>/edit/", views.jobbertype_edit, name="jobbertype_edit"),
     path("master/jobber-types/<int:pk>/delete/", views.jobbertype_delete, name="jobbertype_delete"),
     path("master/jobber-types/<int:pk>/edit/", views.jobbertype_edit, name="jobbertype_edit"),
     path("master/jobber-types/<int:pk>/delete/", views.jobbertype_delete, name="jobbertype_delete"),
 
+    path("po/", views.po_home, name="po_home"), 
 ]
 

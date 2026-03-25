@@ -1,13 +1,6 @@
-import re
-
-from django.contrib.auth import login
-from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
-from django.shortcuts import redirect, render
-from django.views.decorators.http import require_http_methods
+import json
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -15,19 +8,39 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.forms import modelformset_factory
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST, require_http_methods
 
-from .forms import CustomUserCreationForm, JobberForm, JobberTypeForm, LocationForm, MaterialForm, PartyForm
-from .models import Jobber, JobberType, Location, Material, Party, UserExtra
-from .models import JobberType
-from .forms import JobberTypeForm
-from .models import Firm, MaterialShade, MaterialType, Material
-from .forms import FirmForm, MaterialShadeForm, MaterialTypeForm
-
-from .models import Firm
+from .forms import (
+    FirmForm,
+    JobberForm,
+    JobberTypeForm,
+    LocationForm,
+    MaterialForm,
+    MaterialShadeForm,
+    MaterialTypeForm,
+    PartyForm,
+    VendorForm,
+    YarnPurchaseOrderForm,
+    YarnPurchaseOrderItemFormSet,
+)
+from .models import (
+    Firm,
+    Jobber,
+    JobberType,
+    Location,
+    Material,
+    MaterialShade,
+    MaterialType,
+    Party,
+    UserExtra,
+    Vendor,
+    YarnPurchaseOrder,
+    YarnPurchaseOrderItem,
+)
 
 def _is_embed(request) -> bool:
     return (
@@ -37,6 +50,50 @@ def _is_embed(request) -> bool:
     )
 
 
+def _next_yarn_po_number() -> str:
+    last = YarnPurchaseOrder.objects.order_by("-id").first()
+    next_id = (last.id + 1) if last else 1
+    return f"YPO-{next_id:04d}"
+
+
+def _firm_address(firm):
+    if not firm:
+        return ""
+    parts = [firm.address_line, firm.city, firm.state, firm.pincode]
+    return ", ".join([p for p in parts if p])
+
+
+def _recalculate_yarn_po(po: YarnPurchaseOrder):
+    subtotal = Decimal("0")
+    total_weight = Decimal("0")
+
+    for item in po.items.all():
+        qty = item.quantity or Decimal("0")
+        rate = item.rate or Decimal("0")
+        if not item.final_amount:
+            item.final_amount = qty * rate
+            item.save(update_fields=["final_amount"])
+        subtotal += item.final_amount or Decimal("0")
+        total_weight += qty
+
+    discount_percent = po.discount_percent or Decimal("0")
+    others = po.others or Decimal("0")
+    cgst_percent = po.cgst_percent or Decimal("0")
+    sgst_percent = po.sgst_percent or Decimal("0")
+
+    after_discount_value = subtotal - (subtotal * discount_percent / Decimal("100"))
+    tax_value = after_discount_value * (cgst_percent + sgst_percent) / Decimal("100")
+    grand_total = after_discount_value + others + tax_value
+
+    po.total_weight = total_weight
+    po.subtotal = subtotal
+    po.after_discount_value = after_discount_value
+    po.grand_total = grand_total
+    if not po.system_number:
+        po.system_number = _next_yarn_po_number()
+    po.save(update_fields=["system_number", "total_weight", "subtotal", "after_discount_value", "grand_total", "updated_at"])
+
+
 @require_http_methods(["GET", "POST"])
 def signup_view(request):
     if request.user.is_authenticated:
@@ -44,70 +101,26 @@ def signup_view(request):
 
     error = None
 
-    form_data = {
-        "username": "",
-        "email": "",
-        "password": "",
-        "password2": "",
-    }
-
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
 
-        form_data["username"] = username
-        form_data["email"] = email
-        form_data["password"] = password
-        form_data["password2"] = password2
-
-        if not username or not email or not password or not password2:
-            error = "Username, email, password and confirm password are required."
-
+        if not username or not email or not password:
+            error = "Username, email and password are required."
         elif password != password2:
             error = "Passwords do not match."
-
+        elif User.objects.filter(username=username).exists():
+            error = "Username already taken."
+        elif User.objects.filter(email=email).exists():
+            error = "Email already registered."
         else:
-            try:
-                validate_email(email)
-            except ValidationError:
-                error = "Enter a valid email address."
+            user = User.objects.create_user(username=username, email=email, password=password)
+            login(request, user)
+            return redirect("accounts:dashboard")
 
-            if not error and User.objects.filter(username=username).exists():
-                error = "Username already taken."
-
-            if not error and User.objects.filter(email__iexact=email).exists():
-                error = "Email already registered."
-
-            if not error:
-                if not re.search(r"\d", password):
-                    error = "Password must contain at least 1 number."
-                elif not re.search(r"[^A-Za-z0-9]", password):
-                    error = "Password must contain at least 1 special character."
-                else:
-                    try:
-                        validate_password(password)
-                    except ValidationError as e:
-                        error = " ".join(e.messages)
-
-            if not error:
-                user = User.objects.create_user(
-                    username=username,
-                    email=email,
-                    password=password
-                )
-                login(request, user)
-                return redirect("accounts:dashboard")
-
-    return render(
-        request,
-        "accounts/signup.html",
-        {
-            "error": error,
-            "form_data": form_data,
-        },
-    )
+    return render(request, "accounts/signup.html", {"error": error})
 
 
 @require_http_methods(["GET", "POST"])
@@ -154,31 +167,9 @@ def logout_view(request):
     return redirect("accounts:login")
 
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.utils import timezone
-
-
 @login_required
 def dashboard_view(request):
-    hour = timezone.localtime().hour
-
-    if 5 <= hour < 12:
-        greeting = "Good morning"
-    elif 12 <= hour < 17:
-        greeting = "Good afternoon"
-    elif 17 <= hour < 21:
-        greeting = "Good evening"
-    else:
-        greeting = "Good night"
-
-    return render(
-        request,
-        "accounts/dashboard.html",
-        {
-            "greeting": greeting,
-        },
-    )
+    return render(request, "accounts/dashboard.html")
 
 
 @login_required
@@ -237,44 +228,17 @@ def developer_stats_view(request):
 def profile_save(request):
     u = request.user
 
-    first_name = request.POST.get("first_name", "").strip()
-    last_name = request.POST.get("last_name", "").strip()
-    email = request.POST.get("email", "").strip()
-    phone = request.POST.get("phone", "").strip()
-    address = request.POST.get("address", "").strip()
-
-    if phone and not phone.isdigit():
-        return JsonResponse(
-            {
-                "ok": False,
-                "message": "Mobile number must contain digits only.",
-            },
-            status=400,
-        )
-
-    u.first_name = first_name
-    u.last_name = last_name
-    u.email = email
+    u.first_name = request.POST.get("first_name", "").strip()
+    u.last_name = request.POST.get("last_name", "").strip()
+    u.email = request.POST.get("email", "").strip()
     u.save()
 
     extra, _ = UserExtra.objects.get_or_create(user=u)
-    extra.phone = phone
-    extra.address = address
+    extra.phone = request.POST.get("phone", "").strip()
+    extra.address = request.POST.get("address", "").strip()
     extra.save()
 
-    return JsonResponse(
-        {
-            "ok": True,
-            "message": "Profile saved ✅",
-            "profile": {
-                "first_name": u.first_name,
-                "last_name": u.last_name,
-                "email": u.email,
-                "phone": extra.phone or "",
-                "address": extra.address or "",
-            },
-        }
-    )
+    return JsonResponse({"ok": True, "message": "Profile saved ✅"})
 
 
 # ==========================
@@ -836,6 +800,255 @@ def materialtype_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
+# ==========================
+# VENDORS (embed supported)
+# ==========================
+@login_required
+def vendor_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = Vendor.objects.filter(owner=request.user)
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q)
+            | Q(contact_person__icontains=q)
+            | Q(phone__icontains=q)
+            | Q(email__icontains=q)
+            | Q(gst_number__icontains=q)
+        )
+
+    ctx = {"vendors": qs.order_by("name"), "q": q}
+    tpl = "accounts/vendors/list_embed.html" if _is_embed(request) else "accounts/vendors/list.html"
+    return render(request, tpl, ctx)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def vendor_create(request):
+    default_firm = Firm.objects.filter(owner=request.user).first()
+
+    form = VendorForm(request.POST or None)
+
+    if "firm" in form.fields:
+        form.fields["firm"].queryset = Firm.objects.filter(owner=request.user).order_by("firm_name")
+        if request.method == "GET" and default_firm:
+            form.fields["firm"].initial = default_firm.pk
+
+    if request.method == "POST":
+        form.instance.owner = request.user
+
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+
+            if hasattr(obj, "firm_id") and not obj.firm_id and default_firm:
+                obj.firm = default_firm
+
+            obj.save()
+            url = reverse("accounts:vendor_list")
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+
+    tpl = "accounts/vendors/form_embed.html" if _is_embed(request) else "accounts/vendors/form.html"
+    return render(request, tpl, {"form": form, "mode": "add"})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def vendor_update(request, pk: int):
+    vendor = get_object_or_404(Vendor, pk=pk, owner=request.user)
+    default_firm = Firm.objects.filter(owner=request.user).first()
+
+    form = VendorForm(request.POST or None, instance=vendor)
+
+    if "firm" in form.fields:
+        form.fields["firm"].queryset = Firm.objects.filter(owner=request.user).order_by("firm_name")
+        if request.method == "GET" and not getattr(vendor, "firm_id", None) and default_firm:
+            form.fields["firm"].initial = default_firm.pk
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+
+        if hasattr(obj, "firm_id") and not obj.firm_id and default_firm:
+            obj.firm = default_firm
+
+        obj.save()
+        url = reverse("accounts:vendor_list")
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    tpl = "accounts/vendors/form_embed.html" if _is_embed(request) else "accounts/vendors/form.html"
+    return render(request, tpl, {"form": form, "mode": "edit", "vendor": vendor})
+
+@login_required
+@require_POST
+def vendor_delete(request, pk: int):
+    vendor = get_object_or_404(Vendor, pk=pk, owner=request.user)
+    vendor.delete()
+
+    url = reverse("accounts:vendor_list")
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+
+# ==========================
+# YARN PURCHASE ORDERS
+# ==========================
+@login_required
+def yarnpo_list(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = YarnPurchaseOrder.objects.filter(owner=request.user).select_related("vendor", "firm")
+
+    if q:
+        qs = qs.filter(
+            Q(system_number__icontains=q)
+            | Q(po_number__icontains=q)
+            | Q(vendor__name__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        )
+
+    return render(request, "accounts/yarn_po/list.html", {"orders": qs.order_by("-id"), "q": q})
+
+
+def _bind_yarnpo_item_formset(request, instance=None):
+    if request.method == "POST":
+        formset = YarnPurchaseOrderItemFormSet(request.POST, instance=instance, prefix="items")
+    else:
+        formset = YarnPurchaseOrderItemFormSet(instance=instance, prefix="items")
+
+    for form in formset.forms:
+        if "material" in form.fields:
+            form.fields["material"].queryset = Material.objects.filter(material_kind="yarn").order_by("name")
+    if hasattr(formset, "empty_form") and "material" in formset.empty_form.fields:
+        formset.empty_form.fields["material"].queryset = Material.objects.filter(material_kind="yarn").order_by("name")
+    return formset
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def yarnpo_create(request):
+    default_firm = Firm.objects.filter(owner=request.user).first()
+
+    po = YarnPurchaseOrder(owner=request.user)
+
+    if request.method == "GET" and default_firm:
+        po.firm = default_firm
+        po.shipping_address = _firm_address(default_firm)
+
+    form = YarnPurchaseOrderForm(request.POST or None, user=request.user, instance=po)
+    formset = _bind_yarnpo_item_formset(request, instance=po)
+
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        po = form.save(commit=False)
+        po.owner = request.user
+
+        if default_firm:
+            po.firm = default_firm
+
+        if not po.system_number:
+            po.system_number = _next_yarn_po_number()
+
+        if po.firm and not po.shipping_address:
+            po.shipping_address = _firm_address(po.firm)
+
+        po.save()
+        formset.instance = po
+        formset.save()
+        _recalculate_yarn_po(po)
+        return redirect("accounts:yarnpo_list")
+
+    firm_addresses = {}
+    for firm in form.fields["firm"].queryset:
+        parts = [
+            firm.address_line or "",
+            firm.city or "",
+            firm.state or "",
+            firm.pincode or "",
+        ]
+        firm_addresses[str(firm.pk)] = ", ".join([p for p in parts if p])
+
+    context = {
+        "form": form,
+        "formset": formset,
+        "mode": "add",
+        "po_obj": po,
+        "system_number_preview": po.system_number or _next_yarn_po_number(),
+        "firm_addresses_json": json.dumps(firm_addresses),
+        "auto_firm_name": default_firm.firm_name if default_firm else "",
+    }
+
+    return render(request, "accounts/yarn_po/form.html", context)
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def yarnpo_update(request, pk: int):
+    po = get_object_or_404(
+        YarnPurchaseOrder.objects.select_related("vendor", "firm"),
+        pk=pk,
+        owner=request.user
+    )
+
+    default_firm = Firm.objects.filter(owner=request.user).first()
+    display_firm = po.firm or default_firm
+
+    if request.method == "GET" and display_firm and not po.firm:
+        po.firm = display_firm
+        if not po.shipping_address:
+            po.shipping_address = _firm_address(display_firm)
+
+    form = YarnPurchaseOrderForm(request.POST or None, user=request.user, instance=po)
+    formset = _bind_yarnpo_item_formset(request, instance=po)
+
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        po = form.save(commit=False)
+        po.owner = request.user
+
+        if default_firm:
+            po.firm = default_firm
+
+        if po.firm and not po.shipping_address:
+            po.shipping_address = _firm_address(po.firm)
+
+        po.save()
+        formset.instance = po
+        formset.save()
+        _recalculate_yarn_po(po)
+        return redirect("accounts:yarnpo_list")
+
+    firm_addresses = {}
+    for firm in form.fields["firm"].queryset:
+        parts = [
+            firm.address_line or "",
+            firm.city or "",
+            firm.state or "",
+            firm.pincode or "",
+        ]
+        firm_addresses[str(firm.pk)] = ", ".join([p for p in parts if p])
+
+    context = {
+        "form": form,
+        "formset": formset,
+        "mode": "edit",
+        "po_obj": po,
+        "system_number_preview": po.system_number,
+        "firm_addresses_json": json.dumps(firm_addresses),
+        "auto_firm_name": display_firm.firm_name if display_firm else "",
+    }
+
+    return render(request, "accounts/yarn_po/form.html", context)
+
+
+@login_required
+@require_POST
+def yarnpo_delete(request, pk: int):
+    po = get_object_or_404(YarnPurchaseOrder, pk=pk, owner=request.user)
+    po.delete()
+    return redirect("accounts:yarnpo_list")
+
+
 # ============================================
 
 @login_required
@@ -935,3 +1148,7 @@ def jobbertype_delete(request, pk):
     jt = get_object_or_404(_jobbertype_qs_for_user(request), pk=pk)
     jt.delete()
     return redirect(f"{redirect('accounts:jobbertype_list').url}?embed=1")
+
+@login_required
+def po_home(request):
+    return render(request, "accounts/po/index.html")

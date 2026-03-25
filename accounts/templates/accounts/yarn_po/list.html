@@ -1,0 +1,319 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Yarn PO - InventTech{% endblock %}
+{% block page_title %}PO / Yarn{% endblock %}
+{% block page_subtitle %}Create and manage Yarn purchase orders{% endblock %}
+
+{% block content %}
+<style>
+  .canvas{
+    grid-template-columns: 1fr !important;
+  }
+
+  .po-shell{
+    background: var(--card, #ffffff);
+    border: 1px solid var(--line, rgba(15,23,42,.08));
+    border-radius: 22px;
+    box-shadow: var(--shadow, 0 18px 55px rgba(15,23,42,.08));
+    padding: 18px;
+    overflow: hidden;
+  }
+
+  .po-topbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:14px;
+  }
+
+  .po-title{
+    font-size: 22px;
+    font-weight: 950;
+    letter-spacing: -.02em;
+    color: var(--text, #0f172a);
+    line-height: 1.05;
+  }
+
+  .po-sub{
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--muted, #667085);
+  }
+
+  .po-create-btn,
+  .po-search-btn{
+    border: none;
+    outline: none;
+    cursor: pointer;
+    text-decoration: none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    transition: .18s ease;
+  }
+
+  .po-create-btn{
+    background: var(--orange, rgba(250,189,100,1));
+    color: #fff;
+  }
+
+  .po-create-btn:hover{
+    background: #0b0b12;
+    color: #fff;
+  }
+
+  .po-searchbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .po-search-input{
+    flex: 1;
+    min-width: 260px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,.10);
+    background: rgba(255,255,255,.92);
+    padding: 0 14px;
+    outline: none;
+    color: var(--text, #0f172a);
+  }
+
+  .po-search-input:focus{
+    border-color: rgba(0,0,0,.22);
+  }
+
+  .po-search-btn{
+    background: rgba(255,255,255,.95);
+    color: #000;
+    border: 1px solid rgba(0,0,0,.10);
+  }
+
+  .po-search-btn:hover{
+    background: #000;
+    color: #fff;
+  }
+
+  .po-tablewrap{
+    overflow:auto;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,.06);
+    background: rgba(255,255,255,.68);
+  }
+
+  .po-table{
+    width:100%;
+    border-collapse: collapse;
+    min-width: 980px;
+  }
+
+  .po-table th,
+  .po-table td{
+    padding: 12px 12px;
+    text-align:left;
+    font-size: 12px;
+    vertical-align: middle;
+  }
+
+  .po-table thead th{
+    font-size: 11px;
+    letter-spacing: .10em;
+    text-transform: uppercase;
+    color: var(--muted, #667085);
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    background: rgba(255,255,255,.94);
+    white-space: nowrap;
+  }
+
+  .po-table tbody tr + tr td{
+    border-top: 1px solid rgba(0,0,0,.06);
+  }
+
+  .po-table tbody tr:hover td{
+    background: rgba(15,23,42,.015);
+  }
+
+  .po-system-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(15,23,42,.04);
+    border: 1px solid rgba(15,23,42,.08);
+    font-weight: 900;
+    color: #111827;
+    min-width: 86px;
+  }
+
+  .po-money{
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .po-vendor{
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .po-actions{
+    white-space: nowrap;
+    text-align:right;
+  }
+
+  .po-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    text-decoration:none;
+    background:none;
+    border:none;
+    padding:0;
+    font-weight:800;
+    font-size:12px;
+    cursor:pointer;
+  }
+
+  .po-link.edit{
+    color: var(--orange, rgba(250,189,100,1));
+  }
+
+  .po-link.edit:hover{
+    text-decoration: underline;
+  }
+
+  .po-link.delete{
+    color: rgba(238,61,133,1);
+  }
+
+  .po-link.delete:hover{
+    text-decoration: underline;
+  }
+
+  .po-dot{
+    margin: 0 7px;
+    opacity: .45;
+  }
+
+  .po-empty{
+    text-align:center;
+    padding: 26px 12px !important;
+    color: var(--muted, #667085);
+    font-weight: 700;
+  }
+
+  .po-ico{
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @media (max-width: 880px){
+    .po-topbar{
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .po-create-btn,
+    .po-search-btn{
+      width: 100%;
+    }
+
+    .po-searchbar{
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .po-search-input{
+      width: 100%;
+    }
+  }
+</style>
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="po-shell">
+      <div class="po-topbar">
+        <div>
+          <div class="po-title">Yarn Purchase Orders</div>
+          <div class="po-sub">All generated Yarn purchase orders will appear here.</div>
+        </div>
+
+        <a class="po-create-btn" href="{% url 'accounts:yarnpo_add' %}">
+          <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Generate Yarn PO
+        </a>
+      </div>
+
+      <form class="po-searchbar" method="get">
+        <input
+          class="po-search-input"
+          type="text"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search by system no, PO no, vendor, firm…"
+        >
+        <button class="po-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="po-tablewrap">
+        <table class="po-table">
+          <thead>
+            <tr>
+              <th>System No</th>
+              <th>PO Number</th>
+              <th>Date</th>
+              <th>Vendor</th>
+              <th>Firm</th>
+              <th>Total Weight</th>
+              <th>Grand Total</th>
+              <th class="po-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for po in orders %}
+            <tr>
+              <td><span class="po-system-pill">{{ po.system_number }}</span></td>
+              <td>{{ po.po_number|default:"—" }}</td>
+              <td>{{ po.po_date|date:"d-m-Y" }}</td>
+              <td class="po-vendor">{{ po.vendor.name }}</td>
+              <td>{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</td>
+              <td>{{ po.total_weight }}</td>
+              <td class="po-money">{{ po.grand_total }}</td>
+              <td class="po-actions">
+                <a class="po-link edit" href="{% url 'accounts:yarnpo_edit' po.id %}">Edit</a>
+                <span class="po-dot">•</span>
+                <form method="post" action="{% url 'accounts:yarnpo_delete' po.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button class="po-link delete" type="submit" onclick="return confirm('Delete this Yarn PO?')">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" class="po-empty">No Yarn POs found yet. Generate your first Yarn PO.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
