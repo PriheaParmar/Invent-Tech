@@ -412,15 +412,15 @@
         </div>
 
         <div class="po-field po-readonly">
-  <label>Firm</label>
-  <input
-    type="text"
-    value="{% if auto_firm_name %}{{ auto_firm_name }}{% else %}No firm found{% endif %}"
-    readonly
-  >
-  {{ form.firm.as_hidden }}
-  {% for err in form.firm.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-</div>
+          <label>Firm</label>
+          <input
+            type="text"
+            value="{% if auto_firm_name %}{{ auto_firm_name }}{% else %}No firm found{% endif %}"
+            readonly
+          >
+          {{ form.firm.as_hidden }}
+          {% for err in form.firm.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+        </div>
 
         <div class="po-field po-span-2">
           <label for="{{ form.remarks.id_for_label }}">Remarks</label>
@@ -629,9 +629,6 @@
     const rowsWrap = document.getElementById("poRows");
     const addBtn = document.getElementById("addYarnRow");
     const template = document.getElementById("emptyYarnRowTemplate");
-    const vendorSelect = document.getElementById("{{ form.vendor.id_for_label }}");
-    const firmSelect = document.getElementById("{{ form.firm.id_for_label }}");
-    const shippingAddress = document.getElementById("{{ form.shipping_address.id_for_label }}");
 
     function num(v) {
       const n = parseFloat(v || 0);
@@ -660,10 +657,15 @@
         totalWeight += qtyVal;
       });
 
-      const discount = num(document.getElementById("{{ form.discount_percent.id_for_label }}").value);
-      const others = num(document.getElementById("{{ form.others.id_for_label }}").value);
-      const cgst = num(document.getElementById("{{ form.cgst_percent.id_for_label }}").value);
-      const sgst = num(document.getElementById("{{ form.sgst_percent.id_for_label }}").value);
+      const discountEl = document.getElementById("{{ form.discount_percent.id_for_label }}");
+      const othersEl = document.getElementById("{{ form.others.id_for_label }}");
+      const cgstEl = document.getElementById("{{ form.cgst_percent.id_for_label }}");
+      const sgstEl = document.getElementById("{{ form.sgst_percent.id_for_label }}");
+
+      const discount = num(discountEl && discountEl.value);
+      const others = num(othersEl && othersEl.value);
+      const cgst = num(cgstEl && cgstEl.value);
+      const sgst = num(sgstEl && sgstEl.value);
 
       const afterDiscount = subtotal - (subtotal * discount / 100);
       const grandTotal = afterDiscount + others + (afterDiscount * (cgst + sgst) / 100);
@@ -675,27 +677,27 @@
     }
 
     function bindRow(row) {
-      row.querySelectorAll('input, select, textarea').forEach((field) => {
-        field.addEventListener('input', refreshTotals);
-        field.addEventListener('change', refreshTotals);
+      row.querySelectorAll("input, select, textarea").forEach((field) => {
+        field.addEventListener("input", refreshTotals);
+        field.addEventListener("change", refreshTotals);
       });
 
-      const removeBtn = row.querySelector('.po-row-remove');
+      const removeBtn = row.querySelector(".po-row-remove");
       const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
 
-      removeBtn?.addEventListener('click', () => {
+      removeBtn?.addEventListener("click", () => {
         if (deleteInput) deleteInput.checked = true;
-        row.style.display = 'none';
+        row.style.display = "none";
         refreshTotals();
       });
     }
 
-    rowsWrap.querySelectorAll('[data-row]').forEach(bindRow);
+    rowsWrap.querySelectorAll("[data-row]").forEach(bindRow);
 
-    addBtn?.addEventListener('click', () => {
+    addBtn?.addEventListener("click", () => {
       const idx = parseInt(totalForms.value, 10);
-      const html = template.innerHTML.replaceAll('__prefix__', idx);
-      const temp = document.createElement('div');
+      const html = template.innerHTML.replaceAll("__prefix__", idx);
+      const temp = document.createElement("div");
       temp.innerHTML = html.trim();
       const row = temp.firstElementChild;
       rowsWrap.appendChild(row);
@@ -704,20 +706,16 @@
       refreshTotals();
     });
 
-    ["{{ form.discount_percent.id_for_label }}", "{{ form.others.id_for_label }}", "{{ form.cgst_percent.id_for_label }}", "{{ form.sgst_percent.id_for_label }}"].forEach((id) => {
-  document.getElementById(id)?.addEventListener('input', refreshTotals);
-});
+    [
+      "{{ form.discount_percent.id_for_label }}",
+      "{{ form.others.id_for_label }}",
+      "{{ form.cgst_percent.id_for_label }}",
+      "{{ form.sgst_percent.id_for_label }}"
+    ].forEach((id) => {
+      document.getElementById(id)?.addEventListener("input", refreshTotals);
+    });
 
-const firmAddresses = {{ firm_addresses_json|safe }};
-
-firmSelect?.addEventListener('change', () => {
-  const value = firmSelect.value;
-  if (value && shippingAddress && !shippingAddress.value.trim()) {
-    shippingAddress.value = firmAddresses[value] || '';
-  }
-}); 
-
-refreshTotals();
+    refreshTotals();
   })();
 </script>
 {% endblock %}

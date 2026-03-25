@@ -960,27 +960,15 @@ def yarnpo_create(request):
         _recalculate_yarn_po(po)
         return redirect("accounts:yarnpo_list")
 
-    firm_addresses = {}
-    for firm in form.fields["firm"].queryset:
-        parts = [
-            firm.address_line or "",
-            firm.city or "",
-            firm.state or "",
-            firm.pincode or "",
-        ]
-        firm_addresses[str(firm.pk)] = ", ".join([p for p in parts if p])
-
-    context = {
+    return render(request, "accounts/yarn_po/form.html", {
         "form": form,
         "formset": formset,
         "mode": "add",
         "po_obj": po,
         "system_number_preview": po.system_number or _next_yarn_po_number(),
-        "firm_addresses_json": json.dumps(firm_addresses),
         "auto_firm_name": default_firm.firm_name if default_firm else "",
-    }
+    })
 
-    return render(request, "accounts/yarn_po/form.html", context)
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -1018,27 +1006,16 @@ def yarnpo_update(request, pk: int):
         _recalculate_yarn_po(po)
         return redirect("accounts:yarnpo_list")
 
-    firm_addresses = {}
-    for firm in form.fields["firm"].queryset:
-        parts = [
-            firm.address_line or "",
-            firm.city or "",
-            firm.state or "",
-            firm.pincode or "",
-        ]
-        firm_addresses[str(firm.pk)] = ", ".join([p for p in parts if p])
-
-    context = {
+    return render(request, "accounts/yarn_po/form.html", {
         "form": form,
         "formset": formset,
         "mode": "edit",
         "po_obj": po,
         "system_number_preview": po.system_number,
-        "firm_addresses_json": json.dumps(firm_addresses),
         "auto_firm_name": display_firm.firm_name if display_firm else "",
-    }
+    })
 
-    return render(request, "accounts/yarn_po/form.html", context)
+
 
 
 @login_required
