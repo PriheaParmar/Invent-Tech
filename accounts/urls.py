@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views 
+from . import views
 
 app_name = "accounts"
 
@@ -24,31 +24,38 @@ urlpatterns = [
 
     # Jobber Types
     path("master/jobber-types/", views.jobbertype_list_create, name="jobbertype_list"),
+    path("master/jobber-types/<int:pk>/edit/", views.jobbertype_edit, name="jobbertype_edit"),
+    path("master/jobber-types/<int:pk>/delete/", views.jobbertype_delete, name="jobbertype_delete"),
 
-    # Optional alias URL (if you want Jobbers also under utilities)
+    # Optional alias URL
     path("utilities/jobbers/", views.jobber_list, name="utilities_jobber_list"),
-    
+
+    # Materials
     path("master/materials/", views.material_list, name="material_list"),
+    path("master/materials/select-kind/", views.material_kind_picker, name="material_kind_picker"),
     path("master/materials/add/", views.material_create, name="material_create"),
     path("master/materials/<int:pk>/edit/", views.material_edit, name="material_edit"),
     path("master/materials/<int:pk>/delete/", views.material_delete, name="material_delete"),
-    
+
+    # Parties
     path("master/parties/", views.party_list, name="party_list"),
     path("master/parties/add/", views.party_create, name="party_add"),
     path("master/parties/<int:pk>/edit/", views.party_update, name="party_edit"),
     path("master/parties/<int:pk>/delete/", views.party_delete, name="party_delete"),
-    
+
+    # Locations
     path("master/locations/", views.location_list, name="location_list"),
     path("master/locations/add/", views.location_create, name="location_add"),
     path("master/locations/<int:pk>/edit/", views.location_update, name="location_edit"),
     path("master/locations/<int:pk>/delete/", views.location_delete, name="location_delete"),
-    
+
+    # Firms
     path("master/firms/", views.firm_list, name="firm_list"),
     path("master/firms/add/", views.firm_create, name="firm_add"),
     path("master/firms/<int:pk>/edit/", views.firm_update, name="firm_edit"),
     path("master/firms/<int:pk>/delete/", views.firm_delete, name="firm_delete"),
 
-    # optional legacy alias (if you already linked to /master/firm/)
+    # Optional legacy alias
     path("master/firm/", views.firm_list, name="firm"),
 
     # Material Shades
@@ -69,17 +76,13 @@ urlpatterns = [
     path("master/vendors/<int:pk>/edit/", views.vendor_update, name="vendor_edit"),
     path("master/vendors/<int:pk>/delete/", views.vendor_delete, name="vendor_delete"),
 
+    # Purchase Orders
+    path("po/", views.po_home, name="po_home"),
+
     # Yarn Purchase Orders
     path("po/yarn/", views.yarnpo_list, name="yarnpo_list"),
     path("po/yarn/add/", views.yarnpo_create, name="yarnpo_add"),
     path("po/yarn/<int:pk>/edit/", views.yarnpo_update, name="yarnpo_edit"),
     path("po/yarn/<int:pk>/delete/", views.yarnpo_delete, name="yarnpo_delete"),
-
-    path("master/jobber-types/<int:pk>/edit/", views.jobbertype_edit, name="jobbertype_edit"),
-    path("master/jobber-types/<int:pk>/delete/", views.jobbertype_delete, name="jobbertype_delete"),
-    path("master/jobber-types/<int:pk>/edit/", views.jobbertype_edit, name="jobbertype_edit"),
-    path("master/jobber-types/<int:pk>/delete/", views.jobbertype_delete, name="jobbertype_delete"),
-
-    path("po/", views.po_home, name="po_home"), 
+    path("po/yarn/<int:pk>/review/", views.yarnpo_review, name="yarnpo_review"),
 ]
-

@@ -1,0 +1,162 @@
+.kind-radio-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:14px;
+  margin-top:10px;
+}
+
+.kind-radio-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.kind-radio-card{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:14px 16px;
+  border:1px solid rgba(15,23,42,.10);
+  border-radius:16px;
+  background:#fff;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.kind-radio-card:hover{
+  border-color:rgba(28,109,216,.35);
+  box-shadow:0 10px 24px rgba(15,23,42,.06);
+}
+
+.kind-radio-card.small{
+  padding:10px 12px;
+  border-radius:12px;
+}
+
+.kind-radio-card input[type="radio"]{
+  margin-top:2px;
+}
+
+.kind-radio-content{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.kind-radio-content strong{
+  font-size:14px;
+  font-weight:700;
+  color:#111827;
+}
+
+.kind-radio-content div{
+  font-size:12px;
+  color:#6b7280;
+}
+
+.mf-kind-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:16px;
+  padding:12px 14px;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:14px;
+  background:rgba(28,109,216,.03);
+}
+
+.kind-filter-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.kind-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 12px;
+  border-radius:999px;
+  text-decoration:none;
+  color:#111827;
+  border:1px solid rgba(15,23,42,.08);
+  background:#fff;
+  font-size:13px;
+  font-weight:700;
+  transition:.18s ease;
+}
+
+.kind-chip:hover{
+  border-color:rgba(28,109,216,.35);
+  box-shadow:0 8px 20px rgba(15,23,42,.05);
+}
+
+.kind-chip.active{
+  color:#fff;
+  border-color:transparent;
+  background:linear-gradient(135deg, #2563eb, #ec4899);
+}
+
+.mat-errors{
+  padding:12px 14px;
+  border-radius:12px;
+  background:#fef2f2;
+  border:1px solid #fecaca;
+  color:#991b1b;
+  font-size:13px;
+}
+
+.mf-main{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.mf-section{
+  padding:14px;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:16px;
+  background:#fff;
+}
+
+.mf-help{
+  font-size:12px;
+  color:#6b7280;
+}
+
+.mf-preview-wrap{
+  display:flex;
+  justify-content:flex-start;
+}
+
+.mf-preview{
+  width:110px;
+  height:110px;
+  border-radius:18px;
+  border:1px dashed rgba(15,23,42,.15);
+  background:rgba(15,23,42,.03);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.mf-preview-ico{
+  width:28px;
+  height:28px;
+  stroke:#94a3b8;
+  stroke-width:1.8;
+  fill:none;
+}
+
+@media (max-width: 640px){
+  .kind-radio-grid{
+    grid-template-columns:1fr;
+  }
+
+  .mf-kind-summary{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}

@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
 
@@ -398,6 +399,27 @@ class YarnPurchaseOrder(OwnedModel):
     sgst_percent = models.DecimalField(max_digits=6, decimal_places=2, default=2.5)
     total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     grand_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    class ApprovalStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    approval_status = models.CharField(
+        max_length=20,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+    )
+
+    reviewed_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="reviewed_yarn_pos",
+    )
+
+    reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-id"]

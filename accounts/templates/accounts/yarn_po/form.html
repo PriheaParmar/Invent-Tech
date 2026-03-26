@@ -9,32 +9,53 @@
     grid-template-columns: 1fr !important;
   }
 
+  .po-form-stage{
+    position: relative;
+  }
+
   .po-form-shell{
-    background: var(--card, #ffffff);
-    border: 1px solid var(--line, rgba(15,23,42,.08));
-    border-radius: 22px;
-    box-shadow: var(--shadow, 0 18px 55px rgba(15,23,42,.08));
-    padding: 18px;
+    position: relative;
+    background:
+      radial-gradient(circle at top right, rgba(250,189,100,.18), transparent 24%),
+      radial-gradient(circle at bottom left, rgba(238,61,133,.10), transparent 22%),
+      var(--card, #ffffff);
+    border: 1px solid rgba(15,23,42,.08);
+    border-radius: 26px;
+    box-shadow: 0 22px 60px rgba(15,23,42,.08);
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  .po-form-shell::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:
+      linear-gradient(120deg, rgba(255,255,255,.32), transparent 22%, transparent 78%, rgba(255,255,255,.18));
+    opacity:.75;
   }
 
   .po-form-top{
+    position: relative;
+    z-index: 1;
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:14px;
-    margin-bottom: 14px;
+    gap:16px;
+    margin-bottom: 16px;
   }
 
   .po-main-title{
-    font-size: 21px;
+    font-size: 22px;
     font-weight: 950;
-    letter-spacing: -.02em;
-    line-height: 1.08;
+    letter-spacing: -.03em;
+    line-height: 1.05;
     color: var(--text, #0f172a);
   }
 
   .po-main-sub{
-    margin-top: 4px;
+    margin-top: 6px;
     font-size: 12px;
     color: var(--muted, #667085);
   }
@@ -49,11 +70,12 @@
     align-items:center;
     justify-content:center;
     gap:8px;
-    height:38px;
-    padding:0 14px;
+    height:40px;
+    padding:0 16px;
     border-radius:12px;
-    font-weight:800;
+    font-weight:900;
     transition:.18s ease;
+    font-size:12px;
   }
 
   .po-btn{
@@ -71,6 +93,7 @@
     background: var(--orange, rgba(250,189,100,1));
     color:#fff;
     border:none;
+    box-shadow: 0 12px 24px rgba(250,189,100,.22);
   }
 
   .po-btn.primary:hover{
@@ -79,8 +102,9 @@
   }
 
   .po-add-btn{
-    background: var(--orange, rgba(250,189,100,1));
+    background: linear-gradient(180deg, rgba(250,189,100,1), rgba(239,157,47,1));
     color:#fff;
+    box-shadow: 0 12px 22px rgba(239,157,47,.18);
   }
 
   .po-add-btn:hover{
@@ -99,38 +123,85 @@
   }
 
   .po-errors{
-    padding: 10px 12px;
+    position: relative;
+    z-index: 1;
+    padding: 11px 13px;
     border-radius: 14px;
     background: rgba(238,61,133,.10);
     border: 1px solid rgba(238,61,133,.22);
     font-weight: 800;
     color: #7a163f;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+  }
+
+  .po-hero-strip{
+    position: relative;
+    z-index: 1;
+    display:grid;
+    grid-template-columns: 1.1fr .9fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .po-hero-box{
+    border: 1px solid rgba(15,23,42,.07);
+    border-radius: 18px;
+    background: rgba(255,255,255,.72);
+    backdrop-filter: blur(10px);
+    padding: 14px 16px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
+  }
+
+  .po-hero-label{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--muted, #667085);
+    font-weight: 900;
+    margin-bottom: 8px;
+  }
+
+  .po-hero-value{
+    font-size: 20px;
+    font-weight: 950;
+    letter-spacing: -.03em;
+    color: #111827;
+  }
+
+  .po-hero-sub{
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--muted, #667085);
+    font-weight: 700;
   }
 
   .po-grid{
+    position: relative;
+    z-index: 1;
     display:grid;
-    gap:12px;
+    gap:14px;
   }
 
   .po-header-grid{
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-bottom: 14px;
+    margin-bottom: 16px;
   }
 
   .po-field{
     display:flex;
     flex-direction:column;
-    gap:6px;
+    gap:7px;
     min-width:0;
   }
 
   .po-field label{
-    display:block;
+    display:flex;
+    align-items:center;
+    gap:6px;
     font-size: 12px;
     font-weight: 900;
-    color: rgba(15,23,42,.75);
-    letter-spacing: .01em;
+    color: rgba(15,23,42,.76);
+    letter-spacing: .02em;
   }
 
   .po-field input,
@@ -138,19 +209,21 @@
   .po-field textarea{
     width:100%;
     box-sizing:border-box;
-    min-height:40px;
-    padding:10px 12px;
-    border-radius:12px;
-    border:1px solid rgba(0,0,0,.10);
+    min-height:42px;
+    padding:10px 13px;
+    border-radius:14px;
+    border:1px solid rgba(15,23,42,.10);
     background: rgba(255,255,255,.92);
     outline:none;
     color: var(--text, #0f172a);
     font: inherit;
     appearance:none;
+    transition: .18s ease;
+    box-shadow: inset 0 1px 2px rgba(15,23,42,.03);
   }
 
   .po-field textarea{
-    min-height:84px;
+    min-height:92px;
     resize:vertical;
   }
 
@@ -158,22 +231,23 @@
     background-image:
       linear-gradient(45deg, transparent 50%, rgba(0,0,0,.45) 50%),
       linear-gradient(135deg, rgba(0,0,0,.45) 50%, transparent 50%);
-    background-position: calc(100% - 18px) 17px, calc(100% - 12px) 17px;
+    background-position: calc(100% - 18px) 18px, calc(100% - 12px) 18px;
     background-size: 6px 6px, 6px 6px;
     background-repeat: no-repeat;
-    padding-right: 34px;
+    padding-right: 36px;
   }
 
   .po-field input:focus,
   .po-field select:focus,
   .po-field textarea:focus{
-    border-color: rgba(0,0,0,.22);
+    border-color: rgba(250,189,100,.68);
+    box-shadow: 0 0 0 4px rgba(250,189,100,.14);
   }
 
   .po-readonly input,
   .po-summary input[readonly]{
-    background: rgba(15,23,42,.04);
-    color:#111827;
+    background: linear-gradient(180deg, rgba(248,250,252,1), rgba(238,242,247,1));
+    color:#334155;
     font-weight:800;
   }
 
@@ -181,34 +255,52 @@
     grid-column: span 2;
   }
 
+  .po-lines-wrap{
+    position: relative;
+    z-index: 1;
+    margin-top: 4px;
+    border: 1px solid rgba(15,23,42,.08);
+    border-radius: 20px;
+    background: rgba(255,255,255,.64);
+    padding: 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
+  }
+
   .po-lines-head{
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:14px;
-    margin: 8px 0 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(0,0,0,.06);
+    margin-bottom: 12px;
   }
 
   .po-lines-title{
     font-size: 18px;
     font-weight: 900;
     color: var(--text, #0f172a);
+    letter-spacing: -.02em;
+  }
+
+  .po-lines-sub{
+    font-size: 12px;
+    color: var(--muted, #667085);
+    margin-top: 3px;
   }
 
   .po-rows{
     display:flex;
     flex-direction:column;
     gap:12px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   .po-row{
     border:1px solid rgba(0,0,0,.06);
-    border-radius:16px;
-    background: rgba(255,255,255,.68);
-    padding: 12px;
+    border-radius:18px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.95), rgba(250,251,253,.82));
+    padding: 14px;
+    box-shadow: 0 8px 20px rgba(15,23,42,.04);
   }
 
   .po-line-grid{
@@ -225,7 +317,7 @@
       .72fr
       .72fr
       1fr
-      1.4fr
+      1.35fr
       .85fr
       1fr
       52px;
@@ -235,6 +327,23 @@
 
   .po-wide{
     min-width: 0;
+  }
+
+  .po-yarn-select{
+    position: relative;
+  }
+
+  .po-yarn-select::after{
+    content:"";
+    position:absolute;
+    right:12px;
+    top:50%;
+    width:8px;
+    height:8px;
+    border-right:2px solid rgba(0,0,0,.45);
+    border-bottom:2px solid rgba(0,0,0,.45);
+    transform: translateY(-65%) rotate(45deg);
+    pointer-events:none;
   }
 
   .po-delete-field{
@@ -247,13 +356,14 @@
     height: 38px;
     border-radius: 999px;
     border: none;
-    background: var(--orange, rgba(250,189,100,1));
+    background: linear-gradient(180deg, rgba(250,189,100,1), rgba(239,157,47,1));
     color: #fff;
     font-size: 20px;
     line-height: 1;
     cursor:pointer;
     display:grid;
     place-items:center;
+    box-shadow: 0 10px 18px rgba(239,157,47,.18);
   }
 
   .po-remove:hover{
@@ -264,21 +374,26 @@
     color: rgba(238,61,133,1);
     font-size: 12px;
     font-weight: 700;
-    margin-top: 4px;
+    margin-top: 3px;
   }
 
   .po-footer-grid{
+    position: relative;
+    z-index: 1;
     display:grid;
-    grid-template-columns: 1.2fr .82fr;
+    grid-template-columns: 1.15fr .85fr;
     gap:18px;
     align-items:start;
+    margin-top: 16px;
   }
 
+  .po-terms-card,
   .po-summary{
     border:1px solid rgba(0,0,0,.06);
-    border-radius:16px;
+    border-radius:18px;
     background: rgba(255,255,255,.72);
     padding: 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
   }
 
   .po-summary-top{
@@ -291,7 +406,8 @@
     border-bottom: 1px solid rgba(0,0,0,.06);
   }
 
-  .po-summary-title{
+  .po-summary-title,
+  .po-terms-title{
     font-size: 12px;
     font-weight: 900;
     letter-spacing: .12em;
@@ -312,6 +428,8 @@
   }
 
   .po-actionsbar{
+    position: relative;
+    z-index: 1;
     display:flex;
     justify-content:flex-end;
     gap:10px;
@@ -329,7 +447,8 @@
     }
   }
 
-  @media (max-width: 980px){
+  @media (max-width: 1080px){
+    .po-hero-strip,
     .po-header-grid,
     .po-footer-grid,
     .po-summary-grid{
@@ -361,7 +480,7 @@
 </style>
 
 <section class="page-section is-active">
-  <div class="canvas">
+  <div class="canvas po-form-stage">
     <form method="post" class="po-form-shell">
       {% csrf_token %}
       {{ formset.management_form }}
@@ -369,7 +488,7 @@
       <div class="po-form-top">
         <div>
           <div class="po-main-title">Purchase Order For Yarn</div>
-          <div class="po-main-sub">Vendor master reflects from Utilities → Vendor.</div>
+          <div class="po-main-sub">Premium purchase sheet for yarn vendors with live totals and line-wise controls.</div>
         </div>
         <a class="po-btn" href="{% url 'accounts:yarnpo_list' %}">Back to List</a>
       </div>
@@ -381,12 +500,22 @@
       </div>
       {% endif %}
 
-      <div class="po-grid po-header-grid">
-        <div class="po-field po-readonly">
-          <label>System Number</label>
-          <input type="text" value="{{ system_number_preview }}" readonly>
+      <div class="po-hero-strip">
+        <div class="po-hero-box">
+          <div class="po-hero-label">System Number</div>
+          <div class="po-hero-value">{{ system_number_preview }}</div>
+          <div class="po-hero-sub">This number is generated automatically.</div>
         </div>
 
+        <div class="po-hero-box">
+          <div class="po-hero-label">Firm</div>
+          <div class="po-hero-value">{% if auto_firm_name %}{{ auto_firm_name }}{% else %}No firm found{% endif %}</div>
+          <div class="po-hero-sub">Firm is auto-linked from your saved profile/firm details.</div>
+          {{ form.firm.as_hidden }}
+        </div>
+      </div>
+
+      <div class="po-grid po-header-grid">
         <div class="po-field">
           <label for="{{ form.po_number.id_for_label }}">PO Number</label>
           {{ form.po_number }}
@@ -411,15 +540,10 @@
           {% for err in form.vendor.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
         </div>
 
-        <div class="po-field po-readonly">
-          <label>Firm</label>
-          <input
-            type="text"
-            value="{% if auto_firm_name %}{{ auto_firm_name }}{% else %}No firm found{% endif %}"
-            readonly
-          >
-          {{ form.firm.as_hidden }}
-          {% for err in form.firm.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+        <div class="po-field po-span-2">
+          <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
+          {{ form.shipping_address }}
+          {% for err in form.shipping_address.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
         </div>
 
         <div class="po-field po-span-2">
@@ -427,145 +551,147 @@
           {{ form.remarks }}
           {% for err in form.remarks.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
         </div>
+      </div>
 
-        <div class="po-field">
-          <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
-          {{ form.shipping_address }}
-          {% for err in form.shipping_address.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+      <div class="po-lines-wrap">
+        <div class="po-lines-head">
+          <div>
+            <div class="po-lines-title">Yarn Details</div>
+            <div class="po-lines-sub">Add one or more yarn lines. Totals update automatically.</div>
+          </div>
+
+          <button type="button" class="po-add-btn" id="addYarnRow">
+            <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+            Add Row
+          </button>
         </div>
-      </div>
 
-      <div class="po-lines-head">
-        <div class="po-lines-title">Yarn Details</div>
-        <button type="button" class="po-add-btn" id="addYarnRow">
-          <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 5v14"></path>
-            <path d="M5 12h14"></path>
-          </svg>
-          Add Row
-        </button>
-      </div>
+        <div id="poRows" class="po-rows">
+          {% for item_form in formset.forms %}
+          <div class="po-row" data-row>
+            {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+            <div class="po-line-grid">
+              <div class="po-field po-wide po-yarn-select">
+                <label>Yarn Name</label>
+                {{ item_form.material }}
+                {% for err in item_form.material.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+              </div>
 
-      <div id="poRows" class="po-rows">
-        {% for item_form in formset.forms %}
-        <div class="po-row" data-row>
-          {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
-          <div class="po-line-grid">
-            <div class="po-field po-wide">
-              <label>Yarn Name</label>
-              {{ item_form.material }}
-              {% for err in item_form.material.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-            </div>
+              <div class="po-field">
+                <label>Unit</label>
+                {{ item_form.unit }}
+              </div>
 
-            <div class="po-field">
-              <label>Unit</label>
-              {{ item_form.unit }}
-            </div>
+              <div class="po-field">
+                <label>MTR / Qty</label>
+                {{ item_form.quantity }}
+              </div>
 
-            <div class="po-field">
-              <label>MTR / Qty</label>
-              {{ item_form.quantity }}
-            </div>
+              <div class="po-field">
+                <label>Value</label>
+                {{ item_form.value }}
+              </div>
 
-            <div class="po-field">
-              <label>Value</label>
-              {{ item_form.value }}
-            </div>
+              <div class="po-field">
+                <label>Dia</label>
+                {{ item_form.dia }}
+              </div>
 
-            <div class="po-field">
-              <label>Dia</label>
-              {{ item_form.dia }}
-            </div>
+              <div class="po-field">
+                <label>Gauge</label>
+                {{ item_form.gauge }}
+              </div>
 
-            <div class="po-field">
-              <label>Gauge</label>
-              {{ item_form.gauge }}
-            </div>
+              <div class="po-field">
+                <label>Rolls</label>
+                {{ item_form.rolls }}
+              </div>
 
-            <div class="po-field">
-              <label>Rolls</label>
-              {{ item_form.rolls }}
-            </div>
+              <div class="po-field">
+                <label>Count</label>
+                {{ item_form.count }}
+              </div>
 
-            <div class="po-field">
-              <label>Count</label>
-              {{ item_form.count }}
-            </div>
+              <div class="po-field">
+                <label>GSM</label>
+                {{ item_form.gsm }}
+              </div>
 
-            <div class="po-field">
-              <label>GSM</label>
-              {{ item_form.gsm }}
-            </div>
+              <div class="po-field">
+                <label>S/L</label>
+                {{ item_form.sl }}
+              </div>
 
-            <div class="po-field">
-              <label>S/L</label>
-              {{ item_form.sl }}
-            </div>
+              <div class="po-field">
+                <label>HSN Code</label>
+                {{ item_form.hsn_code }}
+              </div>
 
-            <div class="po-field">
-              <label>HSN Code</label>
-              {{ item_form.hsn_code }}
-            </div>
+              <div class="po-field po-wide">
+                <label>Remark</label>
+                {{ item_form.remark }}
+              </div>
 
-            <div class="po-field po-wide">
-              <label>Remark</label>
-              {{ item_form.remark }}
-            </div>
+              <div class="po-field">
+                <label>Rate</label>
+                {{ item_form.rate }}
+              </div>
 
-            <div class="po-field">
-              <label>Rate</label>
-              {{ item_form.rate }}
-            </div>
+              <div class="po-field">
+                <label>Final Amount</label>
+                {{ item_form.final_amount }}
+              </div>
 
-            <div class="po-field">
-              <label>Final Amount</label>
-              {{ item_form.final_amount }}
-            </div>
-
-            <div class="po-field po-delete-field">
-              <label>&nbsp;</label>
-              <button type="button" class="po-remove po-row-remove" title="Remove row">×</button>
-              <div style="display:none;">{{ item_form.DELETE }}</div>
+              <div class="po-field po-delete-field">
+                <label>&nbsp;</label>
+                <button type="button" class="po-remove po-row-remove" title="Remove row">×</button>
+                <div style="display:none;">{{ item_form.DELETE }}</div>
+              </div>
             </div>
           </div>
+          {% endfor %}
         </div>
-        {% endfor %}
-      </div>
 
-      <template id="emptyYarnRowTemplate">
-        <div class="po-row" data-row>
-          {% with item_form=formset.empty_form %}
-          {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
-          <div class="po-line-grid">
-            <div class="po-field po-wide"><label>Yarn Name</label>{{ item_form.material }}</div>
-            <div class="po-field"><label>Unit</label>{{ item_form.unit }}</div>
-            <div class="po-field"><label>MTR / Qty</label>{{ item_form.quantity }}</div>
-            <div class="po-field"><label>Value</label>{{ item_form.value }}</div>
-            <div class="po-field"><label>Dia</label>{{ item_form.dia }}</div>
-            <div class="po-field"><label>Gauge</label>{{ item_form.gauge }}</div>
-            <div class="po-field"><label>Rolls</label>{{ item_form.rolls }}</div>
-            <div class="po-field"><label>Count</label>{{ item_form.count }}</div>
-            <div class="po-field"><label>GSM</label>{{ item_form.gsm }}</div>
-            <div class="po-field"><label>S/L</label>{{ item_form.sl }}</div>
-            <div class="po-field"><label>HSN Code</label>{{ item_form.hsn_code }}</div>
-            <div class="po-field po-wide"><label>Remark</label>{{ item_form.remark }}</div>
-            <div class="po-field"><label>Rate</label>{{ item_form.rate }}</div>
-            <div class="po-field"><label>Final Amount</label>{{ item_form.final_amount }}</div>
-            <div class="po-field po-delete-field">
-              <label>&nbsp;</label>
-              <button type="button" class="po-remove po-row-remove" title="Remove row">×</button>
-              <div style="display:none;">{{ item_form.DELETE }}</div>
+        <template id="emptyYarnRowTemplate">
+          <div class="po-row" data-row>
+            {% with item_form=formset.empty_form %}
+            {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+            <div class="po-line-grid">
+              <div class="po-field po-wide po-yarn-select"><label>Yarn Name</label>{{ item_form.material }}</div>
+              <div class="po-field"><label>Unit</label>{{ item_form.unit }}</div>
+              <div class="po-field"><label>MTR / Qty</label>{{ item_form.quantity }}</div>
+              <div class="po-field"><label>Value</label>{{ item_form.value }}</div>
+              <div class="po-field"><label>Dia</label>{{ item_form.dia }}</div>
+              <div class="po-field"><label>Gauge</label>{{ item_form.gauge }}</div>
+              <div class="po-field"><label>Rolls</label>{{ item_form.rolls }}</div>
+              <div class="po-field"><label>Count</label>{{ item_form.count }}</div>
+              <div class="po-field"><label>GSM</label>{{ item_form.gsm }}</div>
+              <div class="po-field"><label>S/L</label>{{ item_form.sl }}</div>
+              <div class="po-field"><label>HSN Code</label>{{ item_form.hsn_code }}</div>
+              <div class="po-field po-wide"><label>Remark</label>{{ item_form.remark }}</div>
+              <div class="po-field"><label>Rate</label>{{ item_form.rate }}</div>
+              <div class="po-field"><label>Final Amount</label>{{ item_form.final_amount }}</div>
+              <div class="po-field po-delete-field">
+                <label>&nbsp;</label>
+                <button type="button" class="po-remove po-row-remove" title="Remove row">×</button>
+                <div style="display:none;">{{ item_form.DELETE }}</div>
+              </div>
             </div>
+            {% endwith %}
           </div>
-          {% endwith %}
-        </div>
-      </template>
+        </template>
+      </div>
 
       <div class="po-footer-grid">
-        <div class="po-field">
-          <label for="{{ form.terms_conditions.id_for_label }}">Terms & Conditions</label>
-          {{ form.terms_conditions }}
-          {% for err in form.terms_conditions.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+        <div class="po-terms-card">
+          <div class="po-terms-title">Terms & Conditions</div>
+          <div class="po-field" style="margin-top:10px;">
+            {{ form.terms_conditions }}
+            {% for err in form.terms_conditions.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+          </div>
         </div>
 
         <div class="po-summary">

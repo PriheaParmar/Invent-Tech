@@ -1,14 +1,15 @@
+{% load static %}
 {% extends "accounts/base.html" %}
-{% block content %}
 
-<h2>{% if mode == "add" %}Add Jobber{% else %}Edit Jobber{% endif %}</h2>
+{% block title %}{% if mode == "add" %}Add Jobber{% else %}Edit Jobber{% endif %}{% endblock %}
 
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-
-  <button type="submit">Save</button>
-  <a href="{% url 'accounts:jobber_list' %}" style="margin-left:10px;">Cancel</a>
-</form>
-
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/jobbers/common.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=1">
 {% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/jobbers/embed_form.html" with full_page=1 %}
+</div>
+{% endblock %}  

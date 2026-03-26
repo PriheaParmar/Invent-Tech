@@ -46,20 +46,7 @@ body.app{
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-#btnProfile:hover, #btnNoti:hover {
-  background: var(--blue);
-}
 
-#btnProfile:hover .ico {
-  stroke: white;
-}
-#btnProfile:hover{
-  border: 4px solid black;
-}
-#btnProfile:hover .ico path {
-  stroke: white;
-  border: 2px solid black;
-}
 
 .icon-jobber{
   width: 18px;
@@ -351,18 +338,64 @@ body.sb-collapsed .sb-toggle-ico{
   gap: 8px;
 }
 .iconbtn{
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: rgba(255,255,255,.78);
-  cursor:pointer;
-  display:grid;
-  place-items:center;
+  background: rgba(255,255,255,.82);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    transform .18s ease,
+    box-shadow .18s ease;
 }
-.iconbtn:hover{ background: rgba(255,255,255,.95); }
-.iconbtn .ico{ width: 18px; height: 18px; color: rgba(15,23,42,.75); }
 
+.iconbtn .ico{
+  width: 18px;
+  height: 18px;
+  color: rgba(15,23,42,.75);
+  transition: color .18s ease, stroke .18s ease;
+}
+
+.btnFirm:hover,
+.btnProfile:hover,
+.btnNoti:hover,
+.btnSettings:hover,
+.btnFirm:focus-visible,
+.btnProfile:focus-visible,
+.btnNoti:focus-visible,
+.btnSettings:focus-visible{
+  background: var(--blue);
+  border: 3px solid #0b0b12;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 10px 22px rgba(28,109,216,.22);
+  outline: none;
+}
+
+.btnFirm:hover .ico,
+.btnProfile:hover .ico,
+.btnNoti:hover .ico,
+.btnSettings:hover .ico,
+.btnFirm:focus-visible .ico,
+.btnProfile:focus-visible .ico,
+.btnNoti:focus-visible .ico,
+.btnSettings:focus-visible .ico{
+  color: #fff;
+}
+
+.btnFirm:hover .ico path,
+.btnProfile:hover .ico path,
+.btnNoti:hover .ico path,
+.btnSettings:hover .ico path,
+.btnFirm:focus-visible .ico path,
+.btnProfile:focus-visible .ico path,
+.btnNoti:focus-visible .ico path,
+.btnSettings:focus-visible .ico path{
+  stroke: #fff;
+}
 /* =======================
    CONTENT GRID
 ======================= */
@@ -2437,3 +2470,4 @@ body.sb-collapsed .sb-toggle-ico{
 .readonly-field input{ background:#f1f5f9; }
 @media (max-width: 1280px){ .po-line-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); } .po-delete-field{ align-items:flex-start; } }
 @media (max-width: 980px){ .po-header-grid, .po-footer-grid, .po-summary-grid{ grid-template-columns: 1fr; } .po-span-2{ grid-column: span 1; } .po-list-head, .po-form-top, .po-lines-head, .po-search{ flex-direction:column; align-items:stretch; } }
+

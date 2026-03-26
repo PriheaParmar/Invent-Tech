@@ -1,17 +1,43 @@
 <div class="jobbers-embed">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;">
-    <div style="font-weight:800;font-size:16px;">Delete Jobber</div>
-    <a class="btn btn-ghost" href="{% url 'accounts:jobber_list' %}?embed=1">← Back</a>
-  </div>
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Delete Jobber</div>
+        <div class="jb-sub">This action cannot be undone</div>
+      </div>
 
-  <p>Are you sure you want to delete <b>{{ jobber.name }}</b>?</p>
+      <div class="jf-head-actions">
+        <a class="jb-iconbtn jb-back" href="{% url 'accounts:jobber_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+          <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
 
-  <form method="post" action="{% url 'accounts:jobber_delete' jobber.id %}?embed=1">
-    {% csrf_token %}
-    <input type="hidden" name="embed" value="1" />
-    <div style="display:flex;gap:10px;margin-top:12px;">
-      <button class="btn" type="submit">Yes, Delete</button>
-      <a class="btn btn-ghost" href="{% url 'accounts:jobber_list' %}?embed=1">Cancel</a>
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
     </div>
-  </form>
+
+    <p class="jb-confirm-copy">
+      Are you sure you want to delete <strong>{{ jobber.name }}</strong>?
+    </p>
+
+    <form method="post" action="{% url 'accounts:jobber_delete' jobber.id %}{% if not full_page %}?embed=1{% endif %}">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="jb-confirm-actions">
+        <a class="jb-secondary" href="{% url 'accounts:jobber_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button class="jb-danger-btn" type="submit">Yes, delete</button>
+      </div>
+    </form>
+  </section>
 </div>

@@ -1,6 +1,5 @@
 from django import forms
 from django.forms import inlineformset_factory
-from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
@@ -34,14 +33,39 @@ class JobberForm(forms.ModelForm):
         model = Jobber
         fields = ["name", "phone", "email", "role", "jobber_type", "address", "is_active"]
         widgets = {
-            "address": forms.Textarea(attrs={"rows": 3}),
+            "name": forms.TextInput(attrs={
+                "placeholder": "Enter full name",
+            }),
+            "phone": forms.TextInput(attrs={
+                "placeholder": "Enter phone number",
+            }),
+            "email": forms.EmailInput(attrs={
+                "placeholder": "Enter email address",
+            }),
+            "role": forms.Select(),
+            "jobber_type": forms.Select(),
+            "address": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Enter address",
+            }),
+            "is_active": forms.CheckboxInput(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["jobber_type"].required = False
+        self.fields["jobber_type"].empty_label = "Select jobber type"
 
 
 class JobberTypeForm(forms.ModelForm):
     class Meta:
         model = JobberType
         fields = ["name"]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "placeholder": "Enter type name",
+            }),
+        }
 
 
 # ============================================================
@@ -58,7 +82,6 @@ class CustomUserCreationForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # add placeholders + CSS class so it matches your design
         self.fields["username"].widget.attrs.update({
             "class": "input",
             "placeholder": "Enter your username",
@@ -89,15 +112,26 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 # ============================================================
-# MATERIALS (UPDATED for MaterialType FK)
+# MATERIALS
 # ============================================================
-# ============================================================
-# MATERIAL FORM (Step-1 Kind → Step-2 Type master → Step-3 Shade master)
-# ============================================================
+
 class MaterialForm(forms.Form):
-    material_kind = forms.ChoiceField(choices=Material.MATERIAL_KIND_CHOICES, label="Material Kind")
-    material_type = forms.ModelChoiceField(queryset=MaterialType.objects.none(), required=False, empty_label="Select")
-    material_shade = forms.ModelChoiceField(queryset=MaterialShade.objects.none(), required=False, empty_label="Select")
+    material_kind = forms.ChoiceField(
+        choices=Material.MATERIAL_KIND_CHOICES,
+        label="Material Kind",
+        widget=forms.HiddenInput(),
+    )
+
+    material_type = forms.ModelChoiceField(
+        queryset=MaterialType.objects.none(),
+        required=False,
+        empty_label="Select Material Type",
+    )
+    material_shade = forms.ModelChoiceField(
+        queryset=MaterialShade.objects.none(),
+        required=False,
+        empty_label="Select Material Shade",
+    )
 
     # common
     name = forms.CharField(max_length=150, label="Material Name")
@@ -129,16 +163,21 @@ class MaterialForm(forms.Form):
     trim_color = forms.CharField(required=False, max_length=60, label="Color")
     brand = forms.CharField(required=False, max_length=80, label="Brand (optional)")
 
-    def __init__(self, *args, instance=None, user=None, **kwargs):
+    def __init__(self, *args, instance=None, user=None, initial_kind=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.instance = instance
 
-        # Determine selected kind (POST -> instance fallback)
-        kind = (self.data.get("material_kind") or "").strip()
-        if not kind and instance:
-            kind = (getattr(instance, "material_kind", "") or "").strip()
+        kind = (
+            (self.data.get("material_kind") or "").strip()
+            or (initial_kind or "").strip()
+            or (self.initial.get("material_kind") or "").strip()
+            or ((getattr(instance, "material_kind", "") if instance else "") or "").strip()
+        )
 
-        # Material Type queryset (owner-based + filtered by kind)
+        if kind:
+            self.initial["material_kind"] = kind
+            self.fields["material_kind"].initial = kind
+
         type_qs = MaterialType.objects.all()
         if user is not None:
             type_qs = type_qs.filter(owner=user)
@@ -146,7 +185,6 @@ class MaterialForm(forms.Form):
             type_qs = type_qs.filter(material_kind=kind)
         type_qs = type_qs.order_by("name")
 
-        # Material Shade queryset (owner-based; also filter by kind to match selection flow)
         shade_qs = MaterialShade.objects.all()
         if user is not None:
             shade_qs = shade_qs.filter(owner=user)
@@ -157,9 +195,58 @@ class MaterialForm(forms.Form):
         self.fields["material_type"].queryset = type_qs
         self.fields["material_shade"].queryset = shade_qs
 
-        # Optional: show labels like "Yarn — Cotton"
         self.fields["material_type"].label_from_instance = lambda o: f"{o.get_material_kind_display()} — {o.name}"
         self.fields["material_shade"].label_from_instance = lambda o: f"{o.get_material_kind_display()} — {o.name}"
+
+        if instance and not self.is_bound:
+            self.initial.update({
+                "material_kind": instance.material_kind,
+                "material_type": instance.material_type_id,
+                "material_shade": instance.material_shade_id,
+                "name": instance.name,
+                "remarks": instance.remarks,
+            })
+
+            if instance.material_kind == "yarn":
+                detail = YarnDetail.objects.filter(material=instance).first()
+                if detail:
+                    self.initial.update({
+                        "yarn_type": detail.yarn_type,
+                        "yarn_subtype": detail.yarn_subtype,
+                        "count_denier": detail.count_denier,
+                        "yarn_color": detail.color,
+                    })
+
+            elif instance.material_kind == "greige":
+                detail = GreigeDetail.objects.filter(material=instance).first()
+                if detail:
+                    self.initial.update({
+                        "fabric_type": detail.fabric_type,
+                        "gsm": detail.gsm,
+                        "width": detail.width,
+                        "construction": detail.construction,
+                    })
+
+            elif instance.material_kind == "finished":
+                detail = FinishedDetail.objects.filter(material=instance).first()
+                if detail:
+                    self.initial.update({
+                        "base_fabric_type": detail.base_fabric_type,
+                        "finish_type": detail.finish_type,
+                        "finished_gsm": detail.gsm,
+                        "finished_width": detail.width,
+                        "end_use": detail.end_use,
+                    })
+
+            elif instance.material_kind == "trim":
+                detail = TrimDetail.objects.filter(material=instance).first()
+                if detail:
+                    self.initial.update({
+                        "trim_type": detail.trim_type,
+                        "trim_size": detail.size,
+                        "trim_color": detail.color,
+                        "brand": detail.brand,
+                    })
 
     def clean(self):
         cd = super().clean()
@@ -184,8 +271,8 @@ class MaterialForm(forms.Form):
 
         material = self.instance or Material()
         material.material_kind = k
-        material.material_type = cd.get("material_type")   # FK object
-        material.material_shade = cd.get("material_shade") # FK object
+        material.material_type = cd.get("material_type")
+        material.material_shade = cd.get("material_shade")
         material.name = cd["name"]
         material.remarks = cd.get("remarks", "")
 
@@ -195,7 +282,6 @@ class MaterialForm(forms.Form):
 
         material.save()
 
-        # Keep your old behavior: clear and recreate details
         YarnDetail.objects.filter(material=material).delete()
         GreigeDetail.objects.filter(material=material).delete()
         FinishedDetail.objects.filter(material=material).delete()
@@ -204,7 +290,7 @@ class MaterialForm(forms.Form):
         if k == "yarn":
             YarnDetail.objects.create(
                 material=material,
-                yarn_type=cd["yarn_type"],
+                yarn_type=cd.get("yarn_type", ""),
                 yarn_subtype=cd.get("yarn_subtype", ""),
                 count_denier=cd.get("count_denier", ""),
                 color=cd.get("yarn_color", ""),
@@ -213,7 +299,7 @@ class MaterialForm(forms.Form):
         elif k == "greige":
             GreigeDetail.objects.create(
                 material=material,
-                fabric_type=cd["fabric_type"],
+                fabric_type=cd.get("fabric_type", ""),
                 gsm=cd.get("gsm"),
                 width=cd.get("width"),
                 construction=cd.get("construction", ""),
@@ -222,8 +308,8 @@ class MaterialForm(forms.Form):
         elif k == "finished":
             FinishedDetail.objects.create(
                 material=material,
-                base_fabric_type=cd["base_fabric_type"],
-                finish_type=cd["finish_type"],
+                base_fabric_type=cd.get("base_fabric_type", ""),
+                finish_type=cd.get("finish_type", ""),
                 gsm=cd.get("finished_gsm"),
                 width=cd.get("finished_width"),
                 end_use=cd.get("end_use", ""),
@@ -232,7 +318,7 @@ class MaterialForm(forms.Form):
         elif k == "trim":
             TrimDetail.objects.create(
                 material=material,
-                trim_type=cd["trim_type"],
+                trim_type=cd.get("trim_type", ""),
                 size=cd.get("trim_size", ""),
                 color=cd.get("trim_color", ""),
                 brand=cd.get("brand", ""),
@@ -337,12 +423,20 @@ class MaterialShadeForm(forms.ModelForm):
     class Meta:
         model = MaterialShade
         fields = ["material_kind", "name", "code", "notes"]
+        widgets = {
+            "material_kind": forms.RadioSelect(choices=Material.MATERIAL_KIND_CHOICES),
+            "notes": forms.Textarea(attrs={"rows": 3}),
+        }
 
 
 class MaterialTypeForm(forms.ModelForm):
     class Meta:
         model = MaterialType
         fields = ["material_kind", "name", "description"]
+        widgets = {
+            "material_kind": forms.RadioSelect(choices=Material.MATERIAL_KIND_CHOICES),
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
 
 
 # ============================================================

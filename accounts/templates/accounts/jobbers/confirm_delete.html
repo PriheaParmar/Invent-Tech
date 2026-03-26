@@ -1,13 +1,14 @@
+{% load static %}
 {% extends "accounts/base.html" %}
+
+{% block title %}Delete Jobber{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/jobbers/common.css' %}?v=1">
+{% endblock %}
+
 {% block content %}
-
-<h2>Delete Jobber</h2>
-<p>Are you sure you want to delete <b>{{ jobber.name }}</b>?</p>
-
-<form method="post">
-  {% csrf_token %}
-  <button type="submit">Yes, delete</button>
-  <a href="{% url 'accounts:jobber_list' %}" style="margin-left:10px;">Cancel</a>
-</form>
-
+<div class="jb-page">
+  {% include "accounts/jobbers/embed_confirm_delete.html" with full_page=1 %}
+</div>
 {% endblock %}

@@ -1,42 +1,41 @@
-<div class="jobbers-embed">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;">
-    <div style="font-weight:800;font-size:16px;width:300px;">Edit Jobber Type</div>
+<div class="jobbers-embed jb-types-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Edit Jobber Type</div>
+        <div class="jb-sub">Update the selected type</div>
+      </div>
 
-    <div style="display:flex;gap:10px;align-items:center;">
-      <a class="btn btntypeback btn-ghost" href="{% url 'accounts:jobbertype_list' %}?embed=1">←</a>
-      <button class="btn btn-ghost" type="button" id="embedCloseBtn">✕</button>
-    </div>
-  </div>
+      <div class="jb-head-actions">
+        <a class="jb-iconbtn jb-back" href="{% url 'accounts:jobbertype_list' %}?embed=1" aria-label="Back">
+          <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
 
-  <form method="post" action="{% url 'accounts:jobbertype_edit' obj.id %}?embed=1"
-        style="display:flex;gap:10px;align-items:end;margin-bottom:12px;">
-    {% csrf_token %}
-    <div class="f" style="flex:1;">
-      <label>Type Name</label>
-      {{ form.name }}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
     </div>
-    <button class="btn btn-add-type" type="submit">Update</button>
-  </form>
+
+    <form method="post" action="{% url 'accounts:jobbertype_edit' obj.id %}?embed=1" class="jb-inline-form">
+      {% csrf_token %}
+
+      <div class="jb-inline-field">
+        <label for="{{ form.name.id_for_label }}">Type Name</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+        <div class="jb-field-errors">
+          {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <button class="jb-add" type="submit">Update</button>
+    </form>
+  </section>
 </div>
-
-<script>
-(function(){
-  const btn = document.getElementById("embedCloseBtn");
-  if(!btn) return;
-
-  btn.addEventListener("click", function(){
-    const container =
-      document.getElementById("embedPanel") ||
-      document.getElementById("embedContainer") ||
-      document.querySelector(".embed-panel") ||
-      document.querySelector("[data-embed-panel]");
-
-    if (container) {
-      container.classList.remove("show");
-      container.style.display = "none";
-      return;
-    }
-    window.history.back();
-  });
-})();
-</script>

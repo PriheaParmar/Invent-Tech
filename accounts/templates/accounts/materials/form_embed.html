@@ -1,10 +1,14 @@
-{# accounts/templates/accounts/materials/form_embed.html #}
-
 <div class="material-form-embed" data-material-form>
   <div class="mf-head">
     <div>
       <div class="mf-title">{% if mode == "edit" %}Edit Material{% else %}Add Material{% endif %}</div>
-      <div class="mf-sub">Step 1: Select Material Kind • Step 2: Select Type/Shade • Fill details • Save</div>
+      <div class="mf-sub">
+        {% if selected_kind %}
+          Create {{ selected_kind|title }} material details
+        {% else %}
+          Add material details
+        {% endif %}
+      </div>
     </div>
 
     <button type="button" class="mf-iconbtn" data-embed-close aria-label="Close">
@@ -17,6 +21,8 @@
 
   <form method="post" action="{{ request.path }}" enctype="multipart/form-data" class="mf-form">
     {% csrf_token %}
+    <input type="hidden" name="embed" value="1">
+    {{ form.material_kind }}
 
     {% if form.errors %}
       <div class="mat-errors" style="margin-bottom:12px;">
@@ -31,16 +37,14 @@
       </div>
     {% endif %}
 
-    <!-- STEP 1 ONLY (Material Kind) -->
-    <div class="mf-kind" data-step1>
-      {{ form.material_kind }}
-      {% if form.material_kind.errors %}
-        <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.material_kind.errors.0 }}</div>
+    <div class="mf-kind-summary">
+      <span class="mat-badge">{{ selected_kind|title }}</span>
+      {% if mode == "create" %}
+        <a class="mat-link" href="{% url 'accounts:material_kind_picker' %}?embed=1">Change</a>
       {% endif %}
     </div>
 
-    <!-- STEP 2 (hidden until selection) -->
-    <div data-step2 style="display:none;">
+    <div class="mf-main">
 
       {% if form.material_type %}
       <div class="mf-row">
@@ -113,80 +117,224 @@
         </div>
       </div>
 
-      <!-- YARN -->
-      <div class="mf-section" data-type="yarn" style="display:none; margin-top:14px;">
-        <div class="mat-type-title">Yarn Fields</div>
-        <div class="mf-row">
-          <div class="mf-label">{{ form.yarn_type.label }}</div>
-          <div class="mf-control">
-            {{ form.yarn_type }}
-            {% if form.yarn_type.errors %}
-              <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.yarn_type.errors.0 }}</div>
-            {% endif %}
-          </div>
-        </div>
-        <div class="mf-row"><div class="mf-label">{{ form.yarn_subtype.label }}</div><div class="mf-control">{{ form.yarn_subtype }}</div></div>
-        <div class="mf-row"><div class="mf-label">{{ form.count_denier.label }}</div><div class="mf-control">{{ form.count_denier }}</div></div>
-        <div class="mf-row"><div class="mf-label">{{ form.yarn_color.label }}</div><div class="mf-control">{{ form.yarn_color }}</div></div>
-      </div>
+      {% if selected_kind == "yarn" %}
+        <div class="mf-section" style="margin-top:14px;">
+          <div class="mat-type-title">Yarn Fields</div>
 
-      <!-- GREIGE -->
-      <div class="mf-section" data-type="greige" style="display:none; margin-top:14px;">
-        <div class="mat-type-title">Greige Fields</div>
-        <div class="mf-row">
-          <div class="mf-label">{{ form.fabric_type.label }}</div>
-          <div class="mf-control">
-            {{ form.fabric_type }}
-            {% if form.fabric_type.errors %}
-              <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.fabric_type.errors.0 }}</div>
-            {% endif %}
+          <div class="mf-row">
+            <div class="mf-label">{{ form.yarn_type.label }}</div>
+            <div class="mf-control">
+              {{ form.yarn_type }}
+              {% if form.yarn_type.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.yarn_type.errors.0 }}</div>
+              {% endif %}
+            </div>
           </div>
-        </div>
-        <div class="mf-row"><div class="mf-label">{{ form.gsm.label }}</div><div class="mf-control">{{ form.gsm }}</div></div>
-        <div class="mf-row"><div class="mf-label">{{ form.width.label }}</div><div class="mf-control">{{ form.width }}</div></div>
-        <div class="mf-row"><div class="mf-label">{{ form.construction.label }}</div><div class="mf-control">{{ form.construction }}</div></div>
-      </div>
 
-      <!-- FINISHED -->
-      <div class="mf-section" data-type="finished" style="display:none; margin-top:14px;">
-        <div class="mat-type-title">Finished Material Fields</div>
-        <div class="mf-row">
-          <div class="mf-label">{{ form.base_fabric_type.label }}</div>
-          <div class="mf-control">
-            {{ form.base_fabric_type }}
-            {% if form.base_fabric_type.errors %}
-              <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.base_fabric_type.errors.0 }}</div>
-            {% endif %}
+          <div class="mf-row">
+            <div class="mf-label">{{ form.yarn_subtype.label }}</div>
+            <div class="mf-control">
+              {{ form.yarn_subtype }}
+              {% if form.yarn_subtype.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.yarn_subtype.errors.0 }}</div>
+              {% endif %}
+            </div>
           </div>
-        </div>
-        <div class="mf-row"><div class="mf-label">{{ form.finish_type.label }}</div><div class="mf-control">{{ form.finish_type }}</div></div>
-        <div class="mf-row"><div class="mf-label">{{ form.finished_gsm.label }}</div><div class="mf-control">{{ form.finished_gsm }}</div></div>
-        <div class="mf-row"><div class="mf-label">{{ form.finished_width.label }}</div><div class="mf-control">{{ form.finished_width }}</div></div>
-        <div class="mf-row"><div class="mf-label">{{ form.end_use.label }}</div><div class="mf-control">{{ form.end_use }}</div></div>
-      </div>
 
-      <!-- TRIM -->
-      <div class="mf-section" data-type="trim" style="display:none; margin-top:14px;">
-        <div class="mat-type-title">Trim Fields</div>
-        <div class="mf-row">
-          <div class="mf-label">{{ form.trim_type.label }}</div>
-          <div class="mf-control">
-            {{ form.trim_type }}
-            {% if form.trim_type.errors %}
-              <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.trim_type.errors.0 }}</div>
-            {% endif %}
+          <div class="mf-row">
+            <div class="mf-label">{{ form.count_denier.label }}</div>
+            <div class="mf-control">
+              {{ form.count_denier }}
+              {% if form.count_denier.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.count_denier.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.yarn_color.label }}</div>
+            <div class="mf-control">
+              {{ form.yarn_color }}
+              {% if form.yarn_color.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.yarn_color.errors.0 }}</div>
+              {% endif %}
+            </div>
           </div>
         </div>
-        <div class="mf-row"><div class="mf-label">{{ form.trim_size.label }}</div><div class="mf-control">{{ form.trim_size }}</div></div>
-        <div class="mf-row"><div class="mf-label">{{ form.trim_color.label }}</div><div class="mf-control">{{ form.trim_color }}</div></div>
-        <div class="mf-row"><div class="mf-label">{{ form.brand.label }}</div><div class="mf-control">{{ form.brand }}</div></div>
-      </div>
+
+      {% elif selected_kind == "greige" %}
+        <div class="mf-section" style="margin-top:14px;">
+          <div class="mat-type-title">Greige Fields</div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.fabric_type.label }}</div>
+            <div class="mf-control">
+              {{ form.fabric_type }}
+              {% if form.fabric_type.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.fabric_type.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.gsm.label }}</div>
+            <div class="mf-control">
+              {{ form.gsm }}
+              {% if form.gsm.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.gsm.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.width.label }}</div>
+            <div class="mf-control">
+              {{ form.width }}
+              {% if form.width.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.width.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.construction.label }}</div>
+            <div class="mf-control">
+              {{ form.construction }}
+              {% if form.construction.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.construction.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+      {% elif selected_kind == "finished" %}
+        <div class="mf-section" style="margin-top:14px;">
+          <div class="mat-type-title">Finished Material Fields</div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.base_fabric_type.label }}</div>
+            <div class="mf-control">
+              {{ form.base_fabric_type }}
+              {% if form.base_fabric_type.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.base_fabric_type.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.finish_type.label }}</div>
+            <div class="mf-control">
+              {{ form.finish_type }}
+              {% if form.finish_type.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.finish_type.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.finished_gsm.label }}</div>
+            <div class="mf-control">
+              {{ form.finished_gsm }}
+              {% if form.finished_gsm.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.finished_gsm.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.finished_width.label }}</div>
+            <div class="mf-control">
+              {{ form.finished_width }}
+              {% if form.finished_width.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.finished_width.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.end_use.label }}</div>
+            <div class="mf-control">
+              {{ form.end_use }}
+              {% if form.end_use.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.end_use.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+      {% elif selected_kind == "trim" %}
+        <div class="mf-section" style="margin-top:14px;">
+          <div class="mat-type-title">Trim Fields</div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.trim_type.label }}</div>
+            <div class="mf-control">
+              {{ form.trim_type }}
+              {% if form.trim_type.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.trim_type.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.trim_size.label }}</div>
+            <div class="mf-control">
+              {{ form.trim_size }}
+              {% if form.trim_size.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.trim_size.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.trim_color.label }}</div>
+            <div class="mf-control">
+              {{ form.trim_color }}
+              {% if form.trim_color.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.trim_color.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mf-row">
+            <div class="mf-label">{{ form.brand.label }}</div>
+            <div class="mf-control">
+              {{ form.brand }}
+              {% if form.brand.errors %}
+                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.brand.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
 
       <div class="mf-actions">
         <button type="submit" class="mf-btn mf-btn-save">Save</button>
         <button type="button" class="mf-btn mf-btn-close" data-embed-close>Close</button>
       </div>
-
     </div>
   </form>
 </div>
+
+<script>
+(function () {
+  const wrap = document.currentScript.closest(".material-form-embed");
+  if (!wrap) return;
+
+  const fileInput = wrap.querySelector('input[type="file"]');
+  const preview = wrap.querySelector("#matPreview");
+
+  if (!fileInput || !preview) return;
+
+  fileInput.addEventListener("change", function () {
+    const file = this.files && this.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      preview.innerHTML = '<img src="' + e.target.result + '" alt="preview" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+    };
+    reader.readAsDataURL(file);
+  });
+})();
+</script> 

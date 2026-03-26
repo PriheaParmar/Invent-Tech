@@ -24,12 +24,27 @@
       <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search type (name, description)…">
       <button class="pt-search-btn" type="submit">Search</button>
     </form>
+
+    <div class="kind-filter-row" style="margin-top:12px;">
+      <a href="{% url 'accounts:materialtype_list' %}?embed=1" class="kind-chip {% if not selected_kind %}active{% endif %}">
+        All
+      </a>
+      {% for value, label in kind_choices %}
+        <a
+          href="{% url 'accounts:materialtype_list' %}?embed=1&kind={{ value }}"
+          class="kind-chip {% if selected_kind == value %}active{% endif %}"
+        >
+          {{ label }}
+        </a>
+      {% endfor %}
+    </div>
   </div>
 
   <div class="pt-tablewrap">
     <table class="pt-table">
       <thead>
         <tr>
+          <th>Kind</th>
           <th>Name</th>
           <th>Description</th>
           <th class="pt-actions">Actions</th>
@@ -38,19 +53,21 @@
       <tbody>
         {% for t in types %}
           <tr>
+            <td>{{ t.get_material_kind_display|default:"—" }}</td>
             <td>{{ t.name }}</td>
             <td>{{ t.description|default:"—" }}</td>
             <td class="pt-actions">
               <a class="pt-link" href="{% url 'accounts:materialtype_edit' t.id %}?embed=1">Edit</a>
               <span class="pt-dot">•</span>
-              <form method="post" action="{% url 'accounts:materialtype_delete' t.id %}?embed=1" style="display:inline;">
+              <form method="post" action="{% url 'accounts:materialtype_delete' t.id %}" style="display:inline;">
                 {% csrf_token %}
+                <input type="hidden" name="embed" value="1">
                 <button class="pt-link danger" type="submit" onclick="return confirm('Delete this type?')">Delete</button>
               </form>
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="3" class="pt-empty">No types found.</td></tr>
+          <tr><td colspan="4" class="pt-empty">No types found.</td></tr>
         {% endfor %}
       </tbody>
     </table>

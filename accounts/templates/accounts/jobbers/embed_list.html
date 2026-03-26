@@ -1,71 +1,84 @@
 <div class="jobbers-embed">
-
-    <!-- Title row -->
+  <section class="jb-panel">
     <div class="jb-head">
-        <div>
-            <div class="jb-title">Jobbers</div>
-            <div class="jb-sub">People working in the company</div>
-        </div>
+      <div>
+        <div class="jb-title">Jobbers</div>
+        <div class="jb-sub">People working in the company</div>
+      </div>
 
-        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
-            <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true" fill="rgba(238, 61, 133, 1)">
-                <path d="M18 6L6 18"></path>
-                <path d="M6 6l12 12"></path>
-            </svg>
-        </button>
-
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
     </div>
 
-    <!-- Search + Add -->
     <div class="jb-tools">
-        <form class="jb-search" method="get" action="{% url 'accounts:jobber_list' %}">
-            <input type="hidden" name="embed" value="1" />
-            <input type="text" name="q" value="{{ q }}" placeholder="Search jobber..." />
-            <button class="jb-search-btn" type="submit">Search</button>
-        </form>
+      <form class="jb-search" method="get" action="{% url 'accounts:jobber_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+        <input
+          type="search"
+          name="q"
+          value="{{ q }}"
+          placeholder="Search name, email, phone, role or type"
+          autocomplete="off"
+          aria-label="Search jobbers"
+        >
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
 
-        <a class="jb-add" href="{% url 'accounts:jobber_add' %}?embed=1" >
-            <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 5v14"></path>
-                <path d="M5 12h14"></path>
-            </svg>
+      <div class="jb-tool-actions">
+        <a class="jb-secondary" href="{% url 'accounts:jobbertype_list' %}{% if not full_page %}?embed=1{% endif %}">
+          Manage Types
         </a>
+        <a class="jb-add" href="{% url 'accounts:jobber_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          <span>Add Jobber</span>
+        </a>
+      </div>
     </div>
 
-    <!-- Table -->
     <div class="jb-tablewrap">
-        <table class="jb-table">
-            <thead>
-                <tr>
-                    <th>NAME</th>
-                    <th>ROLE</th>
-                    <th>TYPE</th>
-                    <th>PHONE</th>
-                    <th>EMAIL</th>
-                    <th style="width:140px;">ACTIONS</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for j in jobbers %}
-                <tr>
-                    <td>{{ j.name }}</td>
-                    <td>{{ j.role }}</td>
-                    <td>{{ j.jobber_type.name|default:"—" }}</td>
-                    <td>{{ j.phone|default:"—" }}</td>
-                    <td>{{ j.email|default:"—" }}</td>
-                    <td class="jb-actions">
-                        <a class="jb-link" href="{% url 'accounts:jobber_edit' j.id %}?embed=1">Edit</a>
-                        <span class="jb-dot">•</span>
-                        <a class="jb-link" href="{% url 'accounts:jobber_delete' j.id %}?embed=1">Delete</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="jb-empty">No jobbers found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Type</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for j in jobbers %}
+          <tr>
+            <td>{{ j.name }}</td>
+            <td>{{ j.role }}</td>
+            <td>{{ j.jobber_type.name|default:"—" }}</td>
+            <td>{{ j.phone|default:"—" }}</td>
+            <td>{{ j.email|default:"—" }}</td>
+            <td class="jb-actions">
+              <a class="jb-link" href="{% url 'accounts:jobber_edit' j.id %}{% if not full_page %}?embed=1{% endif %}">Edit</a>
+              <span class="jb-dot">•</span>
+              <a class="jb-link jb-link-danger" href="{% url 'accounts:jobber_delete' j.id %}{% if not full_page %}?embed=1{% endif %}">Delete</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="jb-empty">No jobbers found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-
+  </section>
 </div>

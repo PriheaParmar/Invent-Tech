@@ -1,0 +1,107 @@
+.jobber-form-embed .jf-head-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.jobber-form-embed .jf-form {
+  margin-top: 8px;
+}
+
+.jobber-form-embed .jf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.jobber-form-embed .jf-full {
+  grid-column: 1 / -1;
+}
+
+.jobber-form-embed .jf-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+  margin: 0 0 6px;
+}
+
+.jobber-form-embed input,
+.jobber-form-embed select,
+.jobber-form-embed textarea {
+  width: 100% !important;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  outline: none;
+  appearance: none;
+}
+
+.jobber-form-embed input:focus,
+.jobber-form-embed select:focus,
+.jobber-form-embed textarea:focus {
+  border-color: rgba(238, 61, 133, 0.35);
+  box-shadow: 0 0 0 4px rgba(238, 61, 133, 0.1);
+}
+
+.jobber-form-embed textarea {
+  height: auto;
+  min-height: 96px;
+  resize: vertical;
+  padding: 10px 12px;
+}
+
+.jobber-form-embed select {
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(0, 0, 0, 0.45) 50%),
+    linear-gradient(135deg, rgba(0, 0, 0, 0.45) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 17px, calc(100% - 12px) 17px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+.jobber-form-embed .jf-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jobber-form-embed .jf-check input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  padding: 0 !important;
+  border-radius: 6px;
+  appearance: auto;
+}
+
+.jobber-form-embed .jf-muted {
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+.jobber-form-embed .jf-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .jobber-form-embed .jf-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .jobber-form-embed .jf-footer {
+    justify-content: stretch;
+  }
+
+  .jobber-form-embed .jf-footer > * {
+    flex: 1;
+  }
+}

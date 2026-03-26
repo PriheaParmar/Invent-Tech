@@ -1,0 +1,342 @@
+.icon-jobber {
+  width: 18px;
+  height: 18px;
+  fill: var(--pink);
+  stroke: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 26.112000000000002;
+}
+
+.util-tile:hover .icon-jobber,
+.util-tile:hover .icon-jobber path {
+  fill: #fff !important;
+  stroke: none !important;
+}
+
+.btn-jobbers {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.jobbers-embed {
+  padding: 10px 6px;
+}
+
+.jb-page {
+  width: min(1120px, 100%);
+  margin: 28px auto;
+}
+
+.jb-page .jobbers-embed {
+  padding: 0;
+}
+
+.jb-panel {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+  padding: 18px;
+}
+
+.jobbers-embed .jb-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.jobbers-embed .jb-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jobbers-embed .jb-title {
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.jobbers-embed .jb-sub {
+  font-size: 12px;
+  opacity: 0.72;
+  margin-top: 4px;
+}
+
+.jobbers-embed .jb-iconbtn,
+.jobbers-embed .jb-search-btn,
+.jobbers-embed .jb-add,
+.jobbers-embed .jb-secondary,
+.jobbers-embed .jb-danger-btn {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.jobbers-embed .jb-iconbtn {
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jobbers-embed .jb-ico {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.jobbers-embed .jb-back-ico {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  stroke: none;
+}
+
+.jobbers-embed .jb-close:hover {
+  color: red;
+}
+
+.jobbers-embed .jb-back:hover {
+  color: var(--orange);
+}
+
+.jobbers-embed .jb-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.jobbers-embed .jb-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 320px;
+}
+
+.jobbers-embed .jb-search input[type="search"],
+.jobbers-embed .jb-inline-field input {
+  appearance: none;
+  width: 100%;
+  min-width: 220px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  color: inherit;
+  outline: none;
+}
+
+.jobbers-embed .jb-search input[type="search"]:focus,
+.jobbers-embed .jb-inline-field input:focus {
+  border-color: rgba(238, 61, 133, 0.35);
+  box-shadow: 0 0 0 4px rgba(238, 61, 133, 0.1);
+}
+
+.jobbers-embed .jb-search-btn,
+.jobbers-embed .jb-secondary,
+.jobbers-embed .jb-add,
+.jobbers-embed .jb-danger-btn {
+  height: 38px;
+  padding: 0 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.jobbers-embed .jb-search-btn {
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+}
+
+.jobbers-embed .jb-search-btn:hover,
+.jobbers-embed .jb-secondary:hover {
+  background: #000;
+  color: #fff;
+}
+
+.jobbers-embed .jb-add {
+  background: var(--orange);
+  color: #000;
+}
+
+.jobbers-embed .jb-add:hover {
+  background: #000;
+  color: #fff;
+}
+
+.jobbers-embed .jb-add .jb-add-ico {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+}
+
+.jobbers-embed .jb-secondary {
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+}
+
+.jobbers-embed .jb-danger-btn {
+  background: #d92d20;
+  color: #fff;
+  border-color: #d92d20;
+}
+
+.jobbers-embed .jb-danger-btn:hover {
+  background: #b42318;
+  border-color: #b42318;
+}
+
+.jobbers-embed .jb-tool-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.jobbers-embed .jb-tablewrap {
+  overflow: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.jobbers-embed .jb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.jobbers-embed .jb-table th,
+.jobbers-embed .jb-table td {
+  padding: 11px 10px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.jobbers-embed .jb-table thead th {
+  border-top: none;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.jobbers-embed .jb-actions {
+  white-space: nowrap;
+}
+
+.jobbers-embed .jb-link {
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--orange);
+}
+
+.jobbers-embed .jb-link:hover {
+  text-decoration: underline;
+}
+
+.jobbers-embed .jb-link-danger {
+  color: #d92d20;
+}
+
+.jobbers-embed .jb-link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.jobbers-embed .jb-inline-delete {
+  display: inline;
+  margin: 0;
+}
+
+.jobbers-embed .jb-dot {
+  margin: 0 6px;
+  opacity: 0.45;
+}
+
+.jobbers-embed .jb-empty {
+  padding: 14px 12px;
+  opacity: 0.7;
+  text-align: center;
+}
+
+.jobbers-embed .jb-errors,
+.jobbers-embed .jb-field-errors {
+  margin-top: 6px;
+}
+
+.jobbers-embed .jb-errors {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(217, 45, 32, 0.08);
+  border: 1px solid rgba(217, 45, 32, 0.16);
+  color: #b42318;
+  font-size: 12px;
+}
+
+.jobbers-embed .jb-field-errors p {
+  margin: 0;
+  font-size: 12px;
+  color: #b42318;
+}
+
+.jobbers-embed .jb-confirm-copy {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.jobbers-embed .jb-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .jobbers-embed .jb-tools {
+    align-items: stretch;
+  }
+
+  .jobbers-embed .jb-search {
+    min-width: 100%;
+  }
+
+  .jobbers-embed .jb-tool-actions,
+  .jobbers-embed .jb-confirm-actions {
+    width: 100%;
+  }
+
+  .jobbers-embed .jb-tool-actions > *,
+  .jobbers-embed .jb-confirm-actions > * {
+    flex: 1;
+  }
+}
