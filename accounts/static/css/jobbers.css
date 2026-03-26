@@ -1,0 +1,545 @@
+/* =========================================================
+   JOBBERS
+   Separate styling file for Jobber section
+   Matches InventTech theme from app.css
+========================================================= */
+
+:root{
+  --jb-card-bg: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.94));
+  --jb-soft-bg: rgba(255,255,255,.72);
+  --jb-soft-2: rgba(248,250,252,.9);
+  --jb-line: rgba(15,23,42,.08);
+  --jb-line-strong: rgba(15,23,42,.14);
+  --jb-shadow: 0 18px 48px rgba(15,23,42,.08);
+  --jb-shadow-soft: 0 10px 28px rgba(15,23,42,.06);
+  --jb-radius: 22px;
+  --jb-radius-md: 16px;
+  --jb-radius-sm: 12px;
+}
+
+/* =========================
+   MAIN SHELL
+========================= */
+.jobbers-embed{
+  position: relative;
+  padding: 14px;
+  border: 1px solid var(--jb-line);
+  border-radius: var(--jb-radius);
+  background:
+    radial-gradient(circle at top right, rgba(250,189,100,.14), transparent 22%),
+    radial-gradient(circle at bottom left, rgba(238,61,133,.08), transparent 26%),
+    var(--jb-card-bg);
+  box-shadow: var(--jb-shadow);
+  overflow: hidden;
+}
+
+.jobbers-embed::before{
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--blue), var(--pink), var(--orange));
+}
+
+/* =========================
+   HEADER
+========================= */
+.jobbers-embed .jb-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--jb-line);
+}
+
+.jobbers-embed .jb-title{
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  color: var(--text);
+}
+
+.jobbers-embed .jb-sub{
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.jobber-form-embed .jf-head-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* =========================
+   CONTROLS
+========================= */
+.jobbers-embed .jb-close,
+.jobbers-embed .jb-add,
+.jobbers-embed .jb-back,
+.jobbers-embed .jb-search-btn,
+.jobbers-embed .btn-add-type,
+.jobbers-embed .btntypeback,
+.jobbers-embed #embedCloseBtn{
+  appearance: none;
+  border: 1px solid var(--jb-line);
+  background: rgba(255,255,255,.9);
+  color: var(--text);
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height: 40px;
+  min-width: 40px;
+  padding: 0 14px;
+  border-radius: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    background .18s ease,
+    border-color .18s ease,
+    color .18s ease;
+  box-shadow: var(--jb-shadow-soft);
+}
+
+.jobbers-embed .jb-close:hover,
+.jobbers-embed .jb-add:hover,
+.jobbers-embed .jb-back:hover,
+.jobbers-embed .jb-search-btn:hover,
+.jobbers-embed .btn-add-type:hover,
+.jobbers-embed .btntypeback:hover,
+.jobbers-embed #embedCloseBtn:hover{
+  transform: translateY(-1px);
+}
+
+.jobbers-embed .jb-close{
+  padding: 0;
+  width: 40px;
+  background: rgba(255,255,255,.82);
+}
+
+.jobbers-embed .jb-close .jb-ico{
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: rgba(15,23,42,.7);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke .18s ease;
+}
+
+.jobbers-embed .jb-close:hover{
+  background: rgba(238,61,133,.08);
+  border-color: rgba(238,61,133,.18);
+}
+
+.jobbers-embed .jb-close:hover .jb-ico{
+  stroke: var(--pink);
+}
+
+.jobbers-embed .jb-back,
+.jobbers-embed .btntypeback{
+  padding: 0;
+  width: 40px;
+  color: rgba(15,23,42,.76);
+}
+
+.jobbers-embed .jb-back .jb-back-ico{
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  stroke: none;
+}
+
+.jobbers-embed .jb-back:hover,
+.jobbers-embed .btntypeback:hover{
+  background: rgba(250,189,100,.14);
+  border-color: rgba(250,189,100,.28);
+  color: #7a4a00;
+}
+
+.jobbers-embed .jb-add,
+.jobbers-embed .btn-add-type,
+.jobbers-embed .jb-search-btn{
+  background: linear-gradient(135deg, var(--orange), #ff9b4b);
+  border-color: transparent;
+  color: #fff;
+}
+
+.jobbers-embed .jb-add:hover,
+.jobbers-embed .btn-add-type:hover,
+.jobbers-embed .jb-search-btn:hover{
+  box-shadow: 0 14px 30px rgba(250,189,100,.24);
+}
+
+.jobbers-embed .jb-add .jb-ico,
+.jobbers-embed .jb-add .jb-add-ico{
+  width: 18px;
+  height: 18px;
+  stroke: #fff !important;
+  fill: none !important;
+  stroke-width: 2.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.jobbers-embed .jb-add .jb-add-ico path{
+  stroke: #fff !important;
+  fill: none !important;
+}
+
+.jobbers-embed #embedCloseBtn{
+  width: 40px;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+/* =========================
+   TOOLS / SEARCH
+========================= */
+.jobbers-embed .jb-tools{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom: 16px;
+}
+
+.jobbers-embed .jb-search{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex: 1 1 420px;
+  min-width: 280px;
+}
+
+.jobbers-embed .jb-search input[type="text"],
+.jobbers-embed .f input[type="text"],
+.jobbers-embed .f input[type="email"],
+.jobbers-embed .f input[type="number"],
+.jobbers-embed .f input[type="tel"],
+.jobbers-embed .f select,
+.jobbers-embed .f textarea,
+.jobber-form-embed input,
+.jobber-form-embed select,
+.jobber-form-embed textarea{
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--jb-line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.94);
+  color: var(--text);
+  outline: none;
+  transition:
+    border-color .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease,
+    background .18s ease;
+}
+
+.jobbers-embed .jb-search input[type="text"]{
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,250,252,.94));
+}
+
+.jobbers-embed .jb-search input[type="text"]:focus,
+.jobbers-embed .f input:focus,
+.jobbers-embed .f select:focus,
+.jobbers-embed .f textarea:focus,
+.jobber-form-embed input:focus,
+.jobber-form-embed select:focus,
+.jobber-form-embed textarea:focus{
+  border-color: rgba(28,109,216,.26);
+  box-shadow: 0 0 0 4px rgba(28,109,216,.08);
+  transform: translateY(-1px);
+  background: #fff;
+}
+
+/* =========================
+   TABLE
+========================= */
+.jobbers-embed .jb-tablewrap{
+  overflow: auto;
+  border-radius: 18px;
+  border: 1px solid var(--jb-line);
+  background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(248,250,252,.78));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+}
+
+.jobbers-embed .jb-table,
+.jobbers-embed .table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.jobbers-embed .jb-table th,
+.jobbers-embed .jb-table td,
+.jobbers-embed .table th,
+.jobbers-embed .table td{
+  padding: 13px 14px;
+  text-align: left;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.jobbers-embed .jb-table thead th,
+.jobbers-embed .table thead th{
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(15,23,42,.03);
+  color: rgba(15,23,42,.66);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--jb-line);
+}
+
+.jobbers-embed .jb-table tbody tr,
+.jobbers-embed .table tbody tr{
+  transition: background .18s ease, transform .18s ease;
+}
+
+.jobbers-embed .jb-table tbody tr:nth-child(even),
+.jobbers-embed .table tbody tr:nth-child(even){
+  background: rgba(255,255,255,.45);
+}
+
+.jobbers-embed .jb-table tbody tr:hover,
+.jobbers-embed .table tbody tr:hover{
+  background: linear-gradient(90deg, rgba(28,109,216,.04), rgba(238,61,133,.03), rgba(250,189,100,.06));
+}
+
+.jobbers-embed .jb-table tbody tr + tr td,
+.jobbers-embed .table tbody tr + tr td{
+  border-top: 1px solid rgba(15,23,42,.05);
+}
+
+.jobbers-embed .jb-actions{
+  white-space: nowrap;
+}
+
+.jobbers-embed .jb-link{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--blue);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.jobbers-embed .jb-link:hover{
+  color: var(--pink);
+}
+
+.jobbers-embed .jb-dot{
+  margin: 0 6px;
+  color: rgba(15,23,42,.24);
+}
+
+.jobbers-embed .jb-empty{
+  padding: 18px 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* =========================
+   FORM
+========================= */
+.jobber-form-embed .jf-form{
+  margin-top: 8px;
+}
+
+.jobber-form-embed .jf-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.jobber-form-embed .jf-full{
+  grid-column: 1 / -1;
+}
+
+.jobber-form-embed .jf-field label,
+.jobbers-embed .f label{
+  display:block;
+  margin: 0 0 7px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(15,23,42,.58);
+}
+
+.jobber-form-embed input,
+.jobber-form-embed select,
+.jobber-form-embed textarea,
+.jobbers-embed .f input,
+.jobbers-embed .f select,
+.jobbers-embed .f textarea{
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
+.jobber-form-embed textarea,
+.jobbers-embed .f textarea{
+  min-height: 100px;
+  resize: vertical;
+}
+
+.jobber-form-embed select,
+.jobbers-embed .f select{
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(15,23,42,.42) 50%),
+    linear-gradient(135deg, rgba(15,23,42,.42) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 18px, calc(100% - 12px) 18px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+.jobber-form-embed .jf-check{
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(15,23,42,.06);
+  background: rgba(15,23,42,.025);
+}
+
+.jobber-form-embed .jf-check-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.jobber-form-embed .jf-check input[type="checkbox"]{
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  margin: 0;
+  padding: 0 !important;
+  border-radius: 6px;
+  appearance: auto;
+  box-shadow: none;
+  transform: none;
+}
+
+.jobber-form-embed .jf-muted{
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.jobber-form-embed .jf-footer{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--jb-line);
+}
+
+/* =========================
+   ERRORS
+========================= */
+.jobber-form-embed .errorlist,
+.jobbers-embed .errorlist{
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #b42318;
+}
+
+.jobber-form-embed .errorlist li,
+.jobbers-embed .errorlist li{
+  margin: 0;
+}
+
+/* =========================
+   TYPE SCREENS / DELETE SCREEN
+========================= */
+.jobbers-embed p{
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.jobbers-embed b{
+  color: var(--text);
+}
+
+.jobbers-embed form[style*="align-items:end"]{
+  padding: 14px;
+  border: 1px solid var(--jb-line);
+  border-radius: 18px;
+  background: rgba(255,255,255,.68);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+}
+
+.jobbers-embed .btn-sm{
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 12px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 900px){
+  .jobber-form-embed .jf-grid{
+    grid-template-columns: 1fr;
+  }
+
+  .jobber-form-embed .jf-full{
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 720px){
+  .jobbers-embed{
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .jobbers-embed .jb-head,
+  .jobbers-embed .jb-tools,
+  .jobber-form-embed .jf-footer{
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .jobbers-embed .jb-search{
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .jobbers-embed .jb-search-btn,
+  .jobbers-embed .jb-add{
+    width: 100%;
+  }
+
+  .jobbers-embed .jb-table th,
+  .jobbers-embed .jb-table td,
+  .jobbers-embed .table th,
+  .jobbers-embed .table td{
+    padding: 11px 10px;
+    font-size: 12px;
+  }
+}
