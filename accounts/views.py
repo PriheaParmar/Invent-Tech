@@ -337,7 +337,20 @@ def jobber_list(request):
         "stats": stats,
     })
 
+@login_required
+@require_http_methods(["GET", "POST"])
+def jobber_delete(request, pk):
+    jobber = get_object_or_404(Jobber, pk=pk, owner=request.user)
 
+    if request.method == "POST":
+        jobber.delete()
+        url = reverse("accounts:jobber_list")
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = "accounts/jobbers/confirm_delete.html"
+    return render(request, template, {"jobber": jobber})
 @login_required
 @require_http_methods(["GET", "POST"])
 def jobber_create(request):
