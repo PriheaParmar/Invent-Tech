@@ -118,7 +118,7 @@
 }
 
 .jobbers-embed .jb-close:hover{
-  color:#d92d20;
+  color:var(--orange);
 }
 
 .jobbers-embed .jb-back:hover{
@@ -594,4 +594,40 @@
 
 .jb-danger-btn{
     font-weight: 700;
+}
+.jb-confirm-modal .jb-secondary,
+.jb-confirm-modal .jb-danger-btn{
+  appearance: none;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid rgba(0,0,0,.10);
+}
+
+.jb-confirm-modal .jb-secondary{
+  background: rgba(255,255,255,.92);
+  color: #000;
+}
+
+.jb-confirm-modal .jb-secondary:hover{
+  background: #000;
+  color: #fff;
+}
+
+.jb-confirm-modal .jb-danger-btn{
+  background: #d92d20;
+  color: #fff;
+  border-color: #d92d20;
+}
+
+.jb-confirm-modal .jb-danger-btn:hover{
+  background: #b42318;
+  border-color: #b42318;
 }

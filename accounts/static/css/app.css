@@ -2471,3 +2471,12 @@ body.sb-collapsed .sb-toggle-ico{
 @media (max-width: 1280px){ .po-line-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); } .po-delete-field{ align-items:flex-start; } }
 @media (max-width: 980px){ .po-header-grid, .po-footer-grid, .po-summary-grid{ grid-template-columns: 1fr; } .po-span-2{ grid-column: span 1; } .po-list-head, .po-form-top, .po-lines-head, .po-search{ flex-direction:column; align-items:stretch; } }
 
+#mastersEmbedMount{
+  transition: opacity .16s ease, transform .16s ease;
+}
+
+#mastersEmbedMount.is-loading{
+  opacity: .58;
+  pointer-events: none;
+  transform: translateY(4px);
+}

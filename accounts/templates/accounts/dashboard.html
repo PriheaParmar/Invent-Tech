@@ -547,8 +547,9 @@
     `;
     }
 
-    let LAST_MASTERS_URL = null; // remembers currently opened embed page
-
+ // remembers currently opened embed page
+    let LAST_MASTERS_URL = null;
+    let MASTERS_REQUEST_SEQ = 0;
     // resolve embed URL against LAST_MASTERS_URL so ?page=2 / relative links work
     function withEmbed(url) {
       const base = LAST_MASTERS_URL || window.location.origin;
@@ -830,28 +831,41 @@
       }
 
       // open embed + init materials logic after load
-      function openMastersPanel(title, url) {
-        const panel = container.querySelector("#mastersEmbedPanel");
-        const mount = container.querySelector("#mastersEmbedMount");
-        if (!panel || !mount) return;
+      async function openMastersPanel(title, url) {
+  const panel = container.querySelector("#mastersEmbedPanel");
+  const mount = container.querySelector("#mastersEmbedMount");
+  if (!panel || !mount) return;
 
-        panel.style.display = "block";
-        mount.innerHTML = `<div class="tiny-note">Loading…</div>`;
+  panel.style.display = "block";
+  mount.classList.add("is-loading");
 
-        const base = LAST_MASTERS_URL || window.location.origin;
-        const absUrl = new URL(url, base).toString();
-        LAST_MASTERS_URL = absUrl;
+  const reqId = ++MASTERS_REQUEST_SEQ;
+  const base = LAST_MASTERS_URL || window.location.origin;
+  const absUrl = new URL(url, base).toString();
+  LAST_MASTERS_URL = absUrl;
 
-        fetch(withEmbed(absUrl), {
-          headers: { "X-Requested-With": "XMLHttpRequest" },
-          credentials: "same-origin",
-        })
-          .then((r) => r.text())
-          .then((html) => {
-            mount.innerHTML = html;
-            initEmbedMount(mount, absUrl); // Materials-only init (no-op for others)
-          });
-      }
+  try {
+    const res = await fetch(withEmbed(absUrl), {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+      credentials: "same-origin",
+    });
+
+    const html = await res.text();
+
+    if (reqId !== MASTERS_REQUEST_SEQ) return;
+
+    mount.innerHTML = html;
+    initEmbedMount(mount, absUrl);
+    mount.scrollTop = 0;
+  } catch (err) {
+    if (reqId !== MASTERS_REQUEST_SEQ) return;
+    mount.innerHTML = `<div class="tiny-note">Unable to load this section.</div>`;
+  } finally {
+    if (reqId === MASTERS_REQUEST_SEQ) {
+      mount.classList.remove("is-loading");
+    }
+  }
+}
 
       // delegate clicks inside embed (pagination, links)
       container.addEventListener("click", (e) => {
