@@ -1,340 +1,216 @@
-<div class="material-form-embed" data-material-form>
-  <div class="mf-head">
-    <div>
-      <div class="mf-title">{% if mode == "edit" %}Edit Material{% else %}Add Material{% endif %}</div>
-      <div class="mf-sub">
-        {% if selected_kind %}
-          Create {{ selected_kind|title }} material details
-        {% else %}
-          Add material details
-        {% endif %}
+<div class="jobbers-embed material-form-embed">
+  <div class="jb-panel">
+
+    <!-- HEADER -->
+    <div class="jb-head mf-head">
+      <div>
+        <div class="jb-title mf-title">
+          {% if mode == "edit" %}Edit Material{% else %}Create Material{% endif %}
+        </div>
+        <div class="jb-sub mf-sub">
+          {{ selected_kind|title }} Material
+        </div>
       </div>
+
+      <button type="button" class="jb-iconbtn" data-embed-close>
+        ✕
+      </button>
     </div>
 
-    <button type="button" class="mf-iconbtn" data-embed-close aria-label="Close">
-      <svg class="mf-ico" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M18 6L6 18"></path>
-        <path d="M6 6l12 12"></path>
-      </svg>
-    </button>
-  </div>
+    <!-- FORM -->
+    <form method="post" enctype="multipart/form-data" class="jb-form">
+      {% csrf_token %}
+      <input type="hidden" name="embed" value="1">
+      {{ form.material_kind }}
 
-  <form method="post" action="{{ request.path }}" enctype="multipart/form-data" class="mf-form">
-    {% csrf_token %}
-    <input type="hidden" name="embed" value="1">
-    {{ form.material_kind }}
-
-    {% if form.errors %}
-      <div class="mat-errors" style="margin-bottom:12px;">
-        {% for field in form %}
-          {% for error in field.errors %}
-            <div><strong>{{ field.label }}:</strong> {{ error }}</div>
-          {% endfor %}
-        {% endfor %}
-        {% for error in form.non_field_errors %}
-          <div>{{ error }}</div>
-        {% endfor %}
+      {% if form.errors %}
+      <div class="jb-error">
+        Please fix the errors below.
       </div>
-    {% endif %}
-
-    <div class="mf-kind-summary">
-      <span class="mat-badge">{{ selected_kind|title }}</span>
-      {% if mode == "create" %}
-        <a class="mat-link" href="{% url 'accounts:material_kind_picker' %}?embed=1">Change</a>
       {% endif %}
-    </div>
 
-    <div class="mf-main">
+      <!-- BASIC INFO -->
+      <div class="jb-grid">
 
-      {% if form.material_type %}
-      <div class="mf-row">
-        <div class="mf-label">{{ form.material_type.label }}</div>
-        <div class="mf-control">
+        <div class="jb-field">
+          <label>Material Type</label>
           {{ form.material_type }}
-          {% if form.material_type.errors %}
-            <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.material_type.errors.0 }}</div>
-          {% endif %}
         </div>
-      </div>
-      {% endif %}
 
-      {% if form.material_shade %}
-      <div class="mf-row">
-        <div class="mf-label">{{ form.material_shade.label }}</div>
-        <div class="mf-control">
+        <div class="jb-field">
+          <label>Material Shade</label>
           {{ form.material_shade }}
-          {% if form.material_shade.errors %}
-            <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.material_shade.errors.0 }}</div>
-          {% endif %}
         </div>
-      </div>
-      {% endif %}
 
-      <div class="mf-row">
-        <div class="mf-label">{{ form.name.label }}</div>
-        <div class="mf-control">
+        <div class="jb-field jb-full">
+          <label>Material Name</label>
           {{ form.name }}
-          {% if form.name.errors %}
-            <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.name.errors.0 }}</div>
-          {% endif %}
         </div>
-      </div>
 
-      <div class="mf-row mf-row-top">
-        <div class="mf-label">{{ form.remarks.label }}</div>
-        <div class="mf-control">
+        <div class="jb-field jb-full">
+          <label>Remarks</label>
           {{ form.remarks }}
-          {% if form.remarks.errors %}
-            <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.remarks.errors.0 }}</div>
-          {% endif %}
         </div>
-      </div>
 
-      <div class="mf-row">
-        <div class="mf-label">{{ form.image.label }}</div>
-        <div class="mf-control">
+        <div class="jb-field">
+          <label>Image</label>
           {{ form.image }}
-          <div class="mf-help">Preview will show below.</div>
-          {% if form.image.errors %}
-            <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.image.errors.0 }}</div>
-          {% endif %}
-          {% if material and material.image %}
-            <div class="mf-help" style="margin-top:6px;">Current image will be retained unless you choose a new one.</div>
-          {% endif %}
         </div>
+
+        <div class="jb-field">
+          <label>Preview</label>
+          <div class="jb-preview" id="matPreview">
+            {% if material and material.image %}
+              <img src="{{ material.image.url }}">
+            {% else %}
+              <span>No image</span>
+            {% endif %}
+          </div>
+        </div>
+
       </div>
 
-      <div class="mf-preview-wrap">
-        <div class="mf-preview" id="matPreview">
-          {% if material and material.image %}
-            <img src="{{ material.image.url }}" alt="{{ material.name }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">
-          {% else %}
-            <svg class="mf-preview-ico" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14"></path>
-              <path d="M3 17l6-6 4 4 3-3 5 5"></path>
-            </svg>
-          {% endif %}
-        </div>
-      </div>
-
+      <!-- DYNAMIC SECTION -->
       {% if selected_kind == "yarn" %}
-        <div class="mf-section" style="margin-top:14px;">
-          <div class="mat-type-title">Yarn Fields</div>
+      <div class="jb-section">
+        <div class="jb-section-title">Yarn Details</div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.yarn_type.label }}</div>
-            <div class="mf-control">
-              {{ form.yarn_type }}
-              {% if form.yarn_type.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.yarn_type.errors.0 }}</div>
-              {% endif %}
-            </div>
+        <div class="jb-grid">
+          <div class="jb-field">
+            <label>Type</label>
+            {{ form.yarn_type }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.yarn_subtype.label }}</div>
-            <div class="mf-control">
-              {{ form.yarn_subtype }}
-              {% if form.yarn_subtype.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.yarn_subtype.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>Subtype</label>
+            {{ form.yarn_subtype }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.count_denier.label }}</div>
-            <div class="mf-control">
-              {{ form.count_denier }}
-              {% if form.count_denier.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.count_denier.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>Count / Denier</label>
+            {{ form.count_denier }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.yarn_color.label }}</div>
-            <div class="mf-control">
-              {{ form.yarn_color }}
-              {% if form.yarn_color.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.yarn_color.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>Color</label>
+            {{ form.yarn_color }}
           </div>
         </div>
+      </div>
 
       {% elif selected_kind == "greige" %}
-        <div class="mf-section" style="margin-top:14px;">
-          <div class="mat-type-title">Greige Fields</div>
+      <div class="jb-section">
+        <div class="jb-section-title">Greige Details</div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.fabric_type.label }}</div>
-            <div class="mf-control">
-              {{ form.fabric_type }}
-              {% if form.fabric_type.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.fabric_type.errors.0 }}</div>
-              {% endif %}
-            </div>
+        <div class="jb-grid">
+          <div class="jb-field">
+            <label>Fabric Type</label>
+            {{ form.fabric_type }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.gsm.label }}</div>
-            <div class="mf-control">
-              {{ form.gsm }}
-              {% if form.gsm.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.gsm.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>GSM</label>
+            {{ form.gsm }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.width.label }}</div>
-            <div class="mf-control">
-              {{ form.width }}
-              {% if form.width.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.width.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>Width</label>
+            {{ form.width }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.construction.label }}</div>
-            <div class="mf-control">
-              {{ form.construction }}
-              {% if form.construction.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.construction.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>Construction</label>
+            {{ form.construction }}
           </div>
         </div>
+      </div>
 
       {% elif selected_kind == "finished" %}
-        <div class="mf-section" style="margin-top:14px;">
-          <div class="mat-type-title">Finished Material Fields</div>
+      <div class="jb-section">
+        <div class="jb-section-title">Finished Details</div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.base_fabric_type.label }}</div>
-            <div class="mf-control">
-              {{ form.base_fabric_type }}
-              {% if form.base_fabric_type.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.base_fabric_type.errors.0 }}</div>
-              {% endif %}
-            </div>
+        <div class="jb-grid">
+          <div class="jb-field">
+            <label>Base Fabric</label>
+            {{ form.base_fabric_type }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.finish_type.label }}</div>
-            <div class="mf-control">
-              {{ form.finish_type }}
-              {% if form.finish_type.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.finish_type.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>Finish Type</label>
+            {{ form.finish_type }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.finished_gsm.label }}</div>
-            <div class="mf-control">
-              {{ form.finished_gsm }}
-              {% if form.finished_gsm.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.finished_gsm.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>GSM</label>
+            {{ form.finished_gsm }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.finished_width.label }}</div>
-            <div class="mf-control">
-              {{ form.finished_width }}
-              {% if form.finished_width.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.finished_width.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>Width</label>
+            {{ form.finished_width }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.end_use.label }}</div>
-            <div class="mf-control">
-              {{ form.end_use }}
-              {% if form.end_use.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.end_use.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field jb-full">
+            <label>End Use</label>
+            {{ form.end_use }}
           </div>
         </div>
+      </div>
 
       {% elif selected_kind == "trim" %}
-        <div class="mf-section" style="margin-top:14px;">
-          <div class="mat-type-title">Trim Fields</div>
+      <div class="jb-section">
+        <div class="jb-section-title">Trim Details</div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.trim_type.label }}</div>
-            <div class="mf-control">
-              {{ form.trim_type }}
-              {% if form.trim_type.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.trim_type.errors.0 }}</div>
-              {% endif %}
-            </div>
+        <div class="jb-grid">
+          <div class="jb-field">
+            <label>Type</label>
+            {{ form.trim_type }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.trim_size.label }}</div>
-            <div class="mf-control">
-              {{ form.trim_size }}
-              {% if form.trim_size.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.trim_size.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>Size</label>
+            {{ form.trim_size }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.trim_color.label }}</div>
-            <div class="mf-control">
-              {{ form.trim_color }}
-              {% if form.trim_color.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.trim_color.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>Color</label>
+            {{ form.trim_color }}
           </div>
 
-          <div class="mf-row">
-            <div class="mf-label">{{ form.brand.label }}</div>
-            <div class="mf-control">
-              {{ form.brand }}
-              {% if form.brand.errors %}
-                <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.brand.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <div class="jb-field">
+            <label>Brand</label>
+            {{ form.brand }}
           </div>
         </div>
+      </div>
       {% endif %}
 
-      <div class="mf-actions">
-        <button type="submit" class="mf-btn mf-btn-save">Save</button>
-        <button type="button" class="mf-btn mf-btn-close" data-embed-close>Close</button>
+      <!-- ACTIONS -->
+      <div class="jb-actions">
+        <button type="submit" class="jb-btn primary">Save</button>
+        <button type="button" class="jb-btn" data-embed-close>Cancel</button>
       </div>
-    </div>
-  </form>
+
+    </form>
+  </div>
 </div>
 
 <script>
 (function () {
-  const wrap = document.currentScript.closest(".material-form-embed");
-  if (!wrap) return;
-
-  const fileInput = wrap.querySelector('input[type="file"]');
-  const preview = wrap.querySelector("#matPreview");
+  const fileInput = document.querySelector('input[type="file"]');
+  const preview = document.getElementById("matPreview");
 
   if (!fileInput || !preview) return;
 
   fileInput.addEventListener("change", function () {
-    const file = this.files && this.files[0];
+    const file = this.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = function (e) {
-      preview.innerHTML = '<img src="' + e.target.result + '" alt="preview" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+      preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">';
     };
     reader.readAsDataURL(file);
   });
 })();
-</script> 
+</script>

@@ -1,63 +1,76 @@
-<div class="material-form-embed">
+<div class="jobbers-embed material-form-embed">
+  <div class="jb-panel">
+    {% include "accounts/_messages_embed.html" %}
 
-  {% include "accounts/_messages_embed.html" %}
-
-  <div class="mat-head">
-    <div>
-      <div class="mat-title">
-        {% if mode == "edit" %}Edit Material Type{% else %}Create Material Type{% endif %}
+    <div class="jb-head mat-head">
+      <div>
+        <div class="jb-title mat-title">
+          {% if mode == "edit" %}Edit Material Type{% else %}Create Material Type{% endif %}
+        </div>
+        <div class="jb-sub mat-sub">Used in Material module dropdown</div>
       </div>
-      <div class="mat-sub">Used in Material module dropdown</div>
+
+      <div class="jb-head-actions mat-head-actions">
+        <a class="jb-iconbtn jb-back mat-back" href="{% url 'accounts:materialtype_list' %}?embed=1" title="Back">
+          <svg class="jb-back-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6"></path>
+          </svg>
+        </a>
+
+        <button type="button" class="jb-iconbtn jb-close mat-close" data-embed-close title="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <div class="mat-head-actions">
-      <a class="mat-back" href="{% url 'accounts:materialtype_list' %}?embed=1" title="Back">
-        ←
-      </a>
-      <button type="button" class="mat-close" data-embed-close title="Close">✕</button>
-    </div>
-  </div>
+    <form method="post"
+          enctype="multipart/form-data"
+          action="{% if mode == 'edit' %}{% url 'accounts:materialtype_edit' material_type.id %}{% else %}{% url 'accounts:materialtype_add' %}{% endif %}?embed=1"
+          class="jf-form mat-form">
+      {% csrf_token %}
+      <input type="hidden" name="embed" value="1">
 
-  <form method="post"
-        enctype="multipart/form-data"
-        action="{% if mode == 'edit' %}{% url 'accounts:materialtype_edit' material_type.id %}{% else %}{% url 'accounts:materialtype_add' %}{% endif %}?embed=1"
-        class="mat-form">
-    {% csrf_token %}
-    <input type="hidden" name="embed" value="1">
+      <div class="jf-grid mat-grid">
+        <div class="jf-field jf-full mat-field mat-full">
+          <label>Material Kind</label>
+          <div class="kind-radio-row">
+            {% for radio in form.material_kind %}
+              <label class="kind-radio-card small">
+                {{ radio.tag }}
+                <span>{{ radio.choice_label }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
 
-    <div class="mat-grid">
-      <div class="mat-field mat-full">
-        <label>Material Kind</label>
-        <div class="kind-radio-row">
-          {% for radio in form.material_kind %}
-            <label class="kind-radio-card small">
-              {{ radio.tag }}
-              <span>{{ radio.choice_label }}</span>
-            </label>
-          {% endfor %}
+        <div class="jf-field jf-full mat-field mat-full">
+          <label>Material Type Name</label>
+          {{ form.name }}
+          {% if form.name.errors %}
+            <div class="jb-field-errors">
+              <p>{{ form.name.errors.0 }}</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field jf-full mat-field mat-full">
+          <label>Description</label>
+          {{ form.description }}
+          {% if form.description.errors %}
+            <div class="jb-field-errors">
+              <p>{{ form.description.errors.0 }}</p>
+            </div>
+          {% endif %}
         </div>
       </div>
 
-      <div class="mat-field mat-full">
-        <label>Material Type Name</label>
-        {{ form.name }}
-        {% if form.name.errors %}
-          <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.name.errors.0 }}</div>
-        {% endif %}
+      <div class="jf-footer mat-footer">
+        <button type="submit" class="jb-add mat-save">Save</button>
+        <button type="button" class="jb-secondary" data-embed-close>Cancel</button>
       </div>
-
-      <div class="mat-field mat-full">
-        <label>Description</label>
-        {{ form.description }}
-        {% if form.description.errors %}
-          <div style="margin-top:6px;color:#d93025;font-size:12px;">{{ form.description.errors.0 }}</div>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="mat-footer">
-      <button type="submit" class="mat-save">Save</button>
-    </div>
-  </form>
-
+    </form>
+  </div>
 </div>
