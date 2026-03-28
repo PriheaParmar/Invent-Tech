@@ -547,7 +547,7 @@
     `;
     }
 
- // remembers currently opened embed page
+    // remembers currently opened embed page
     let LAST_MASTERS_URL = null;
     let MASTERS_REQUEST_SEQ = 0;
     // resolve embed URL against LAST_MASTERS_URL so ?page=2 / relative links work
@@ -609,40 +609,24 @@
       if (!container || !input) return;
 
       // Close handler from embedded pages
+      // Close handler from embedded pages
       container.addEventListener("click", (e) => {
+        const closeBtn = e.target.closest("[data-embed-close]");
+        if (!closeBtn) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
         const panel = container.querySelector("#mastersEmbedPanel");
         const mount = container.querySelector("#mastersEmbedMount");
-        if (!panel || !mount || panel.style.display === "none") return;
+        if (!panel || !mount) return;
 
-        // jobber delete modal close
-        if (e.target.closest("[data-jb-close]")) {
-          e.preventDefault();
-          closeJobberDeleteModal(container);
-          return;
-        }
+        MASTERS_REQUEST_SEQ += 1;
+        LAST_MASTERS_URL = null;
 
-        // jobber delete modal confirm
-        if (e.target.closest("#jbConfirmDeleteBtn")) {
-          e.preventDefault();
-          const modal = getJobberDeleteModal(container);
-          const form = modal && modal._pendingForm ? modal._pendingForm : null;
-
-          if (form) {
-            closeJobberDeleteModal(container);
-            form.dataset.confirmed = "1";
-            form.requestSubmit();
-          }
-          return;
-        }
-
-        const a = e.target.closest("a");
-        if (!a) return;
-
-        const href = a.getAttribute("href") || "";
-        if (isMastersUrl(href)) {
-          e.preventDefault();
-          openMastersPanel("Masters", href);
-        }
+        panel.style.display = "none";
+        mount.classList.remove("is-loading");
+        mount.innerHTML = "";
       });
 
       // ==========================
@@ -832,46 +816,66 @@
 
       // open embed + init materials logic after load
       async function openMastersPanel(title, url) {
-  const panel = container.querySelector("#mastersEmbedPanel");
-  const mount = container.querySelector("#mastersEmbedMount");
-  if (!panel || !mount) return;
+        const panel = container.querySelector("#mastersEmbedPanel");
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!panel || !mount) return;
 
-  panel.style.display = "block";
-  mount.classList.add("is-loading");
+        panel.style.display = "block";
+        mount.classList.add("is-loading");
 
-  const reqId = ++MASTERS_REQUEST_SEQ;
-  const base = LAST_MASTERS_URL || window.location.origin;
-  const absUrl = new URL(url, base).toString();
-  LAST_MASTERS_URL = absUrl;
+        const reqId = ++MASTERS_REQUEST_SEQ;
+        const base = LAST_MASTERS_URL || window.location.origin;
+        const absUrl = new URL(url, base).toString();
+        LAST_MASTERS_URL = absUrl;
 
-  try {
-    const res = await fetch(withEmbed(absUrl), {
-      headers: { "X-Requested-With": "XMLHttpRequest" },
-      credentials: "same-origin",
-    });
+        try {
+          const res = await fetch(withEmbed(absUrl), {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+            credentials: "same-origin",
+          });
 
-    const html = await res.text();
+          const html = await res.text();
 
-    if (reqId !== MASTERS_REQUEST_SEQ) return;
+          if (reqId !== MASTERS_REQUEST_SEQ) return;
 
-    mount.innerHTML = html;
-    initEmbedMount(mount, absUrl);
-    mount.scrollTop = 0;
-  } catch (err) {
-    if (reqId !== MASTERS_REQUEST_SEQ) return;
-    mount.innerHTML = `<div class="tiny-note">Unable to load this section.</div>`;
-  } finally {
-    if (reqId === MASTERS_REQUEST_SEQ) {
-      mount.classList.remove("is-loading");
-    }
-  }
-}
+          mount.innerHTML = html;
+          initEmbedMount(mount, absUrl);
+          mount.scrollTop = 0;
+        } catch (err) {
+          if (reqId !== MASTERS_REQUEST_SEQ) return;
+          mount.innerHTML = `<div class="tiny-note">Unable to load this section.</div>`;
+        } finally {
+          if (reqId === MASTERS_REQUEST_SEQ) {
+            mount.classList.remove("is-loading");
+          }
+        }
+      }
 
       // delegate clicks inside embed (pagination, links)
       container.addEventListener("click", (e) => {
         const panel = container.querySelector("#mastersEmbedPanel");
         const mount = container.querySelector("#mastersEmbedMount");
         if (!panel || !mount || panel.style.display === "none") return;
+
+        if (e.target.closest("[data-jb-close]")) {
+          e.preventDefault();
+          closeJobberDeleteModal(container);
+          return;
+        }
+
+        if (e.target.closest("#jbConfirmDeleteBtn")) {
+          e.preventDefault();
+
+          const modal = getJobberDeleteModal(container);
+          const form = modal && modal._pendingForm ? modal._pendingForm : null;
+
+          if (form) {
+            closeJobberDeleteModal(container);
+            form.dataset.confirmed = "1";
+            form.requestSubmit();
+          }
+          return;
+        }
 
         const a = e.target.closest("a");
         if (!a) return;
@@ -883,101 +887,101 @@
         }
       });
 
-      container.addEventListener("submit", async (e) => {
-        const form = e.target.closest("form");
-        if (!form) return;
+     container.addEventListener("submit", async (e) => {
+  const form = e.target.closest("form");
+  if (!form) return;
 
-        // jobber delete confirmation
-        if (form.matches(".js-jb-delete-form")) {
-          if (form.dataset.confirmed === "1") {
-            delete form.dataset.confirmed;
-          } else {
-            e.preventDefault();
-            openJobberDeleteModal(container, form);
-            return;
-          }
-        }
+  // Jobber delete confirmation
+  if (form.matches(".js-jb-delete-form")) {
+    if (form.dataset.confirmed === "1") {
+      delete form.dataset.confirmed;
+    } else {
+      e.preventDefault();
+      openJobberDeleteModal(container, form);
+      return;
+    }
+  }
 
-        // Materials-only: allow empty action by resolving to LAST_MASTERS_URL
-        const isMaterialsForm =
-          !!form.closest(".material-form-embed") ||
-          !!form.closest(".materials-embed") ||
-          !!form.querySelector("[data-material-form]") ||
-          !!form.closest("[data-material-form]");
+  // Materials-only: allow empty action by resolving to LAST_MASTERS_URL
+  const isMaterialsForm =
+    !!form.closest(".material-form-embed") ||
+    !!form.closest(".materials-embed") ||
+    !!form.querySelector("[data-material-form]") ||
+    !!form.closest("[data-material-form]");
 
-        const actionAttr = (form.getAttribute("action") || "").trim();
-        const resolvedAction = (isMaterialsForm && !actionAttr)
-          ? (LAST_MASTERS_URL || window.location.href)
-          : (actionAttr || "");
+  const actionAttr = (form.getAttribute("action") || "").trim();
+  const resolvedAction = (isMaterialsForm && !actionAttr)
+    ? (LAST_MASTERS_URL || window.location.href)
+    : (actionAttr || "");
 
-        if (!isMastersUrl(resolvedAction)) return;
+  if (!isMastersUrl(resolvedAction)) return;
 
-        e.preventDefault();
+  e.preventDefault();
 
-        const mount = container.querySelector("#mastersEmbedMount");
-        if (!mount) return;
+  const mount = container.querySelector("#mastersEmbedMount");
+  if (!mount) return;
 
-        const method = (form.getAttribute("method") || "GET").toUpperCase();
+  const method = (form.getAttribute("method") || "GET").toUpperCase();
 
-        if (method === "GET") {
-          const params = new URLSearchParams(new FormData(form));
-          const baseUrl = resolvedAction.split("?")[0];
-          openMastersPanel("Masters", baseUrl + "?" + params.toString());
-          return;
-        }
+  if (method === "GET") {
+    const params = new URLSearchParams(new FormData(form));
+    const baseUrl = resolvedAction.split("?")[0];
+    openMastersPanel("Masters", baseUrl + "?" + params.toString());
+    return;
+  }
 
-        const fd = new FormData(form);
-        const res = await fetch(withEmbed(resolvedAction), {
-          method,
-          body: fd,
-          headers: { "X-Requested-With": "XMLHttpRequest" },
-          credentials: "same-origin",
-        });
+  const fd = new FormData(form);
+  const res = await fetch(withEmbed(resolvedAction), {
+    method,
+    body: fd,
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+    credentials: "same-origin",
+  });
 
-        const ct = (res.headers.get("content-type") || "").toLowerCase();
+  const ct = (res.headers.get("content-type") || "").toLowerCase();
 
-        if (ct.includes("application/json")) {
-          const data = await res.json();
-          if (data.ok && data.url) {
-            openMastersPanel("Masters", data.url);
-            return;
-          }
-        }
+  if (ct.includes("application/json")) {
+    const data = await res.json();
+    if (data.ok && data.url) {
+      openMastersPanel("Masters", data.url);
+      return;
+    }
+  }
 
-        mount.innerHTML = await res.text();
-        initEmbedMount(mount, resolvedAction); // Materials-only init (no-op for others)
+  mount.innerHTML = await res.text();
+  initEmbedMount(mount, resolvedAction);
+});
+
+    function render(query) {
+      const q = (query || "").toLowerCase().trim();
+
+      const filtered = UTILITIES.filter((u) => {
+        if (!q) return true;
+        const hay = `${u.title} ${u.tag} ${u.key}`.toLowerCase();
+        return hay.includes(q);
       });
 
-      function render(query) {
-        const q = (query || "").toLowerCase().trim();
+      // Group
+      const groups = {};
+      for (const u of filtered) (groups[u.tag] ||= []).push(u);
 
-        const filtered = UTILITIES.filter((u) => {
-          if (!q) return true;
-          const hay = `${u.title} ${u.tag} ${u.key}`.toLowerCase();
-          return hay.includes(q);
+      // Sort inside group
+      Object.keys(groups).forEach((tag) => {
+        groups[tag].sort((a, b) => {
+          const pa = getPriority(tag, a.title);
+          const pb = getPriority(tag, b.title);
+          if (pa !== pb) return pa - pb;
+          return a.title.localeCompare(b.title);
         });
+      });
 
-        // Group
-        const groups = {};
-        for (const u of filtered) (groups[u.tag] ||= []).push(u);
+      // Build rows STRICTLY (keep structure even if empty => NO CRAM)
+      const buildRow = (rowSpec, rowClass) => {
+        const html = rowSpec.map(({ tag, span }) => groupHtml(tag, groups[tag] || [], span)).join("");
+        return `<div class="util-row ${rowClass}">${html}</div>`;
+      };
 
-        // Sort inside group
-        Object.keys(groups).forEach((tag) => {
-          groups[tag].sort((a, b) => {
-            const pa = getPriority(tag, a.title);
-            const pb = getPriority(tag, b.title);
-            if (pa !== pb) return pa - pb;
-            return a.title.localeCompare(b.title);
-          });
-        });
-
-        // Build rows STRICTLY (keep structure even if empty => NO CRAM)
-        const buildRow = (rowSpec, rowClass) => {
-          const html = rowSpec.map(({ tag, span }) => groupHtml(tag, groups[tag] || [], span)).join("");
-          return `<div class="util-row ${rowClass}">${html}</div>`;
-        };
-
-        container.innerHTML = `
+      container.innerHTML = `
         <div class="util-layout">
           ${buildRow(ROW_LAYOUT.row1, "util-row-1")}
           ${buildRow(ROW_LAYOUT.row2, "util-row-2")}
@@ -986,44 +990,44 @@
         </div>
       `;
 
-        // Tile clicks
-        container.querySelectorAll(".util-tile").forEach((tile) => {
-          tile.addEventListener("click", (e) => {
-            const title = tile.dataset.title || "";
-            const href = tile.getAttribute("href") || "#";
+      // Tile clicks
+      container.querySelectorAll(".util-tile").forEach((tile) => {
+        tile.addEventListener("click", (e) => {
+          const title = tile.dataset.title || "";
+          const href = tile.getAttribute("href") || "#";
 
-            // Only these open embed for now
-            if (
-              title === "Jobber" ||
-              title === "Jobber Type" ||
-              title === "Material / Trim" ||
-              title === "Party" ||
-              title === "Location" ||
-              title === "Vendor" ||
-              title === "Material Shades" ||
-              title === "Material Type"
-            ) {
-              e.preventDefault();
-              openMastersPanel(title, href);
-              return;
-            }
-
-            // keep no navigation for others (your requirement)
+          // Only these open embed for now
+          if (
+            title === "Jobber" ||
+            title === "Jobber Type" ||
+            title === "Material / Trim" ||
+            title === "Party" ||
+            title === "Location" ||
+            title === "Vendor" ||
+            title === "Material Shades" ||
+            title === "Material Type"
+          ) {
             e.preventDefault();
-          });
-        });
-      }
+            openMastersPanel(title, href);
+            return;
+          }
 
-      render("");
-      input.addEventListener("input", () => render(input.value));
+          // keep no navigation for others (your requirement)
+          e.preventDefault();
+        });
+      });
     }
+
+    render("");
+    input.addEventListener("input", () => render(input.value));
+  }
 
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", bootUtilities);
-    } else {
-      bootUtilities();
-    }
-  })();
+    document.addEventListener("DOMContentLoaded", bootUtilities);
+  } else {
+    bootUtilities();
+  }
+  }) ();
 
   function getJobberDeleteModal(container) {
     const mount = container.querySelector("#mastersEmbedMount");

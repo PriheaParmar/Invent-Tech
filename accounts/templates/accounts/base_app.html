@@ -214,29 +214,43 @@
     </main>
 
   </div>
-  <!-- ===================== PROFILE MODAL (UI only) ===================== -->
-  <!-- PROFILE MODAL -->
-  <div id="profileModal" class="modal-backdrop" aria-hidden="true">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div>
-          <div class="modal-title">Profile</div>
-          <div class="modal-sub">Update your basic details</div>
-        </div>
-        <button id="profileClose" class="iconbtn" type="button" title="Close">✕</button>
+<!-- ===================== PROFILE MODAL (compact) ===================== -->
+<div id="profileModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Profile</div>
+        <div class="modal-sub">Update your basic account and contact details.</div>
       </div>
 
-      <form id="profileForm" method="post" action="{% url 'accounts:profile_save' %}">
+      <button id="profileClose" class="modal-close" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
 
-        {% csrf_token %}
+    <form id="profileForm" method="post" action="{% url 'accounts:profile_save' %}" class="modal-form">
+      {% csrf_token %}
+
+      <section class="modal-section">
+        <div class="modal-section-head">
+          <div class="modal-section-title">Account</div>
+          <div class="modal-section-sub">Linked login and firm information.</div>
+        </div>
 
         <div class="modal-grid">
           <div class="f">
-            <label>Firm Name (Auto-filled)</label>
-            <input id="profileFirmName" name="firm_name_display" value="{% if current_firm %}{{ current_firm.firm_name }}{% endif %}"
-
-              placeholder="Create firm first" readonly>
+            <label>Firm Name</label>
+            <input
+              id="profileFirmName"
+              name="firm_name_display"
+              value="{% if current_firm %}{{ current_firm.firm_name }}{% endif %}"
+              placeholder="Create firm first"
+              readonly>
           </div>
+
           <div class="f">
             <label>Username</label>
             <input value="{{ request.user.username }}" readonly>
@@ -244,23 +258,13 @@
 
           <div class="f">
             <label>Email</label>
-            <input name="email" value="{{ request.user.email }}" placeholder="admin@inventtech.com">
+            <input
+              type="email"
+              name="email"
+              value="{{ request.user.email }}"
+              placeholder="admin@inventtech.com">
           </div>
 
-          <div class="f">
-            <label>First name</label>
-            <input name="first_name" value="{{ request.user.first_name }}" placeholder="Your name">
-          </div>
-
-          <div class="f">
-            <label>Last name</label>
-            <input name="last_name" value="{{ request.user.last_name }}" placeholder="Surname">
-          </div>
-
-          <div class="f">
-            <label>Mobile</label>
-            <input name="phone" placeholder="98XXXXXXXX">
-          </div>
           <div class="f">
             <label>Role</label>
             <select name="role" id="profileRole">
@@ -270,123 +274,173 @@
               {% endfor %}
             </select>
           </div>
+        </div>
+      </section>
 
+      <section class="modal-section">
+        <div class="modal-section-head">
+          <div class="modal-section-title">Personal</div>
+          <div class="modal-section-sub">Your own contact details.</div>
+        </div>
+
+        <div class="modal-grid">
+          <div class="f">
+            <label>First Name</label>
+            <input name="first_name" value="{{ request.user.first_name }}" placeholder="Your name">
+          </div>
+
+          <div class="f">
+            <label>Last Name</label>
+            <input name="last_name" value="{{ request.user.last_name }}" placeholder="Surname">
+          </div>
+
+          <div class="f">
+            <label>Mobile</label>
+            <input name="phone" placeholder="98XXXXXXXX">
+          </div>
 
           <div class="f full">
             <label>Address</label>
             <textarea name="address" rows="3" placeholder="Optional"></textarea>
           </div>
         </div>
+      </section>
 
-        <div class="modal-actions">
-          <button class="btn btn-ghost" type="button" id="profileCancel">Cancel</button>
-          <button class="btn btn-save" type="submit">Save</button>
-        </div>
-      </form>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" type="button" id="profileCancel">Cancel</button>
+        <button class="btn btn-save" type="submit">Save</button>
+      </div>
+    </form>
 
-      <div id="toast" class="toast"></div>
-    </div>
+    <div id="toast" class="toast"></div>
   </div>
+</div>
 
-  <!-- ================================================================ -->
-<!-- ===================== FIRM MODAL ===================== -->
+ <!-- ===================== FIRM MODAL (compact) ===================== -->
 <div id="firmModal" class="modal-backdrop" aria-hidden="true">
   <div class="modal-card">
     <div class="modal-head">
       <div>
         <div class="modal-title">Firm Details</div>
-        <div class="modal-sub">Create or update your firm information</div>
+        <div class="modal-sub">Create or update your firm information.</div>
       </div>
-      <button id="firmClose" class="iconbtn" type="button" title="Close">✕</button>
+
+      <button id="firmClose" class="modal-close" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
     </div>
 
-    <form id="firmForm" method="post" action="{% url 'accounts:firm_save' %}">
+    <form id="firmForm" method="post" action="{% url 'accounts:firm_save' %}" class="modal-form">
       {% csrf_token %}
 
-      <div class="modal-grid">
-
-        <div class="f full">
-          <label>Firm Name *</label>
-          <input name="firm_name"
-                 required
-                 placeholder="Enter firm name"
-                 value="{% if current_firm %}{{ current_firm.firm_name|default_if_none:'' }}{% endif %}">
+      <section class="modal-section">
+        <div class="modal-section-head">
+          <div class="modal-section-title">Firm Identity</div>
+          <div class="modal-section-sub">Core business details.</div>
         </div>
 
-        <div class="f">
-          <label>Firm Type *</label>
-          <select name="firm_type" required>
-            <option value="">Select</option>
-            {% for val,label in FIRM_TYPE_CHOICES %}
-              <option value="{{ val }}"
-                {% if current_firm and current_firm.firm_type == val %}selected{% endif %}>
+        <div class="modal-grid">
+          <div class="f full">
+            <label>Firm Name *</label>
+            <input
+              name="firm_name"
+              required
+              placeholder="Enter firm name"
+              value="{% if current_firm %}{{ current_firm.firm_name|default_if_none:'' }}{% endif %}">
+          </div>
+
+          <div class="f">
+            <label>Firm Type *</label>
+            <select name="firm_type" required>
+              <option value="">Select</option>
+              {% for val,label in FIRM_TYPE_CHOICES %}
+              <option value="{{ val }}" {% if current_firm and current_firm.firm_type == val %}selected{% endif %}>
                 {{ label }}
               </option>
-            {% endfor %}
-          </select>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="f">
+            <label>Registration Number</label>
+            <input
+              name="registration_number"
+              placeholder="Optional"
+              value="{% if current_firm %}{{ current_firm.cin_number|default_if_none:'' }}{% endif %}">
+          </div>
+
+          <div class="f">
+            <label>GST Number</label>
+            <input
+              name="gst_number"
+              placeholder="Optional"
+              value="{% if current_firm %}{{ current_firm.gst_number|default_if_none:'' }}{% endif %}">
+          </div>
+
+          <div class="f">
+            <label>Created Date</label>
+            <input
+              id="firmCreatedAt"
+              readonly
+              value="{% if current_firm and current_firm.created_at %}{{ current_firm.created_at|date:'d M Y, H:i' }}{% endif %}">
+          </div>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <div class="modal-section-head">
+          <div class="modal-section-title">Contact</div>
+          <div class="modal-section-sub">Primary communication details.</div>
         </div>
 
-        <div class="f">
-          <label>Firm Registration Number</label>
-          <input name="registration_number"
-                 placeholder="Optional"
-                 value="{% if current_firm %}{{ current_firm.cin_number|default_if_none:'' }}{% endif %}">
-        </div>
+        <div class="modal-grid">
+          <div class="f">
+            <label>Firm Email</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="name@firm.com"
+              value="{% if current_firm %}{{ current_firm.email|default_if_none:'' }}{% endif %}">
+          </div>
 
-        <div class="f">
-          <label>GST Number (optional)</label>
-          <input name="gst_number"
-                 placeholder="Optional"
-                 value="{% if current_firm %}{{ current_firm.gst_number|default_if_none:'' }}{% endif %}">
-        </div>
+          <div class="f">
+            <label>Firm Phone Number</label>
+            <input
+              name="phone"
+              placeholder="98XXXXXXXX"
+              value="{% if current_firm %}{{ current_firm.phone|default_if_none:'' }}{% endif %}">
+          </div>
 
-        <div class="f">
-          <label>Firm Email</label>
-          <input name="email"
-                 placeholder="name@firm.com"
-                 value="{% if current_firm %}{{ current_firm.email|default_if_none:'' }}{% endif %}">
-        </div>
+          <div class="f full">
+            <label>Firm Address</label>
+            <textarea name="address" rows="3" placeholder="Address">{% if current_firm %}{{ current_firm.address_line|default_if_none:'' }}{% endif %}</textarea>
+          </div>
 
-        <div class="f">
-          <label>Firm Phone Number</label>
-          <input name="phone"
-                 placeholder="98XXXXXXXX"
-                 value="{% if current_firm %}{{ current_firm.phone|default_if_none:'' }}{% endif %}">
-        </div>
+          <div class="f">
+            <label>City</label>
+            <input
+              name="city"
+              placeholder="City"
+              value="{% if current_firm %}{{ current_firm.city|default_if_none:'' }}{% endif %}">
+          </div>
 
-        <div class="f full">
-          <label>Firm Address</label>
-          <textarea name="address" rows="3" placeholder="Address">{% if current_firm %}{{ current_firm.address_line|default_if_none:'' }}{% endif %}</textarea>
-        </div>
+          <div class="f">
+            <label>State</label>
+            <input
+              name="state"
+              placeholder="State"
+              value="{% if current_firm %}{{ current_firm.state|default_if_none:'' }}{% endif %}">
+          </div>
 
-        <div class="f">
-          <label>City</label>
-          <input name="city"
-                 placeholder="City"
-                 value="{% if current_firm %}{{ current_firm.city|default_if_none:'' }}{% endif %}">
+          <div class="f">
+            <label>Country</label>
+            <input name="country" placeholder="Country" value="">
+          </div>
         </div>
-
-        <div class="f">
-          <label>State</label>
-          <input name="state"
-                 placeholder="State"
-                 value="{% if current_firm %}{{ current_firm.state|default_if_none:'' }}{% endif %}">
-        </div>
-
-        <div class="f">
-          <label>Country</label>
-          <!-- only prefill if you actually added country to model -->
-          <input name="country" placeholder="Country" value="">
-        </div>
-
-        <div class="f full">
-          <label>Created Date (auto)</label>
-          <input id="firmCreatedAt"
-                 readonly
-                 value="{% if current_firm and current_firm.created_at %}{{ current_firm.created_at|date:'d M Y, H:i' }}{% endif %}">
-        </div>
-
-      </div>
+      </section>
 
       <div class="modal-actions">
         <button class="btn btn-ghost" type="button" id="firmCancel">Cancel</button>
@@ -399,45 +453,7 @@
 </div>
 
 
-  <!-- ==================[Profile POP up JS]======================== -->
-  <script>
-    (function () {
-      const btn = document.querySelector('[title="Profile"]'); // your header profile iconbtn
-      const modal = document.getElementById("profileModal");
-      const closeBtn = document.getElementById("profileClose");
-      const cancelBtn = document.getElementById("profileCancel");
-      const form = document.getElementById("profileForm");
-      const toast = document.getElementById("toast");
-
-      if (!btn || !modal || !form) return;
-
-      function open() { modal.classList.add("show"); }
-      function close() { modal.classList.remove("show"); }
-
-      btn.addEventListener("click", open);
-      closeBtn?.addEventListener("click", close);
-      cancelBtn?.addEventListener("click", close);
-      modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        toast.textContent = "Saving...";
-
-        const formData = new FormData(form);
-
-        const res = await fetch(form.action, {
-          method: "POST",
-          body: formData,
-          headers: { "X-Requested-With": "XMLHttpRequest" }
-        });
-
-        const data = await res.json();
-        toast.textContent = data.ok ? data.message : "Error saving ❌";
-        if (data.ok) setTimeout(close, 800);
-      });
-    })();
-
-  </script>
+  
 
   <!-- =========================================================== -->
 
@@ -445,6 +461,112 @@
   <script src="{% static 'js/dashboard.js' %}?v=6001"></script>
 
   <!-- ✅ SECTION SWITCHER (dashboard ⇄ utilities) -->
+
+  <script>
+(function () {
+  function bindAjaxModal(config) {
+    const btn = document.getElementById(config.openBtnId);
+    const modal = document.getElementById(config.modalId);
+    const closeBtn = document.getElementById(config.closeBtnId);
+    const cancelBtn = document.getElementById(config.cancelBtnId);
+    const form = document.getElementById(config.formId);
+    const toast = document.getElementById(config.toastId);
+
+    if (!btn || !modal || !form) return;
+
+    function setToast(message, state) {
+      if (!toast) return;
+      toast.textContent = message || "";
+      toast.classList.remove("is-success", "is-error");
+      if (state) toast.classList.add(state);
+    }
+
+    function open() {
+      modal.classList.add("show");
+      document.body.classList.add("modal-open");
+    }
+
+    function close() {
+      modal.classList.remove("show");
+      document.body.classList.remove("modal-open");
+      setToast("");
+    }
+
+    btn.addEventListener("click", open);
+    closeBtn?.addEventListener("click", close);
+    cancelBtn?.addEventListener("click", close);
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) close();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("show")) {
+        close();
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setToast("Saving...");
+
+      try {
+        const res = await fetch(form.action, {
+          method: "POST",
+          body: new FormData(form),
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          setToast(data.message || "Error saving ❌", "is-error");
+          return;
+        }
+
+        setToast(data.message || "Saved ✅", "is-success");
+
+        if (typeof config.onSuccess === "function") {
+          config.onSuccess(data);
+        }
+
+        setTimeout(close, 800);
+      } catch (err) {
+        setToast("Something went wrong ❌", "is-error");
+      }
+    });
+  }
+
+  bindAjaxModal({
+    openBtnId: "btnProfile",
+    modalId: "profileModal",
+    closeBtnId: "profileClose",
+    cancelBtnId: "profileCancel",
+    formId: "profileForm",
+    toastId: "toast"
+  });
+
+  bindAjaxModal({
+    openBtnId: "btnFirm",
+    modalId: "firmModal",
+    closeBtnId: "firmClose",
+    cancelBtnId: "firmCancel",
+    formId: "firmForm",
+    toastId: "firmToast",
+    onSuccess(data) {
+      const firmNameInput = document.getElementById("profileFirmName");
+      if (firmNameInput && data.firm_name) {
+        firmNameInput.value = data.firm_name;
+      }
+
+      const createdAt = document.getElementById("firmCreatedAt");
+      if (createdAt && data.created_at_display) {
+        createdAt.value = data.created_at_display;
+      }
+    }
+  });
+})();
+</script>
   <script>
   (function () {
     const dashboardSection = document.getElementById("section-dashboard");
