@@ -8,6 +8,7 @@
   <title>{% block title %}InventTech{% endblock %}</title><link rel="stylesheet" href="{% static 'css/app.css' %}?v=6009">
 <link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/jobbers.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/vendors.css' %}?v=1">
 
   {% block extra_head %}{% endblock %}
 </head>
@@ -36,7 +37,7 @@
         <div class="sb-label">Workspace</div>
 
         <!-- ✅ SAME PAGE SECTION SWITCH -->
-        <a class="sb-link active" href="#" data-section="dashboard">
+        <a class="sb-link active" href="{% url 'accounts:dashboard' %}" data-section="dashboard">
           <span class="sb-ico">
             <svg class="ico" viewBox="0 0 24 24">
               <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10.5z" />
@@ -184,29 +185,132 @@
         </div>
 
         <div class="h-right">
-  <button class="iconbtn btnFirm" id="btnFirm" type="button" title="Firm">
-    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 21V3h12v18H3zm14 0v-8h4v8h-4zM6 7h6M6 11h6M6 15h6" />
-    </svg>
-  </button>
+  <button class="iconbtn btnNoti has-indicator" id="btnNotifications" type="button" title="Notifications" aria-expanded="false">
+  <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 22a2.75 2.75 0 0 0 2.67-2h-5.34A2.75 2.75 0 0 0 12 22Z"></path>
+    <path d="M18 16V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z"></path>
+  </svg>
+</button>
 
-  <button class="iconbtn btnProfile" id="btnProfile" type="button" title="Profile">
-    <svg class="ico" viewBox="0 0 24 24">
-      <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-8 9a8 8 0 0 1 16 0" />
-    </svg>
-  </button>
+<button class="iconbtn btnSettings" id="btnSettings" type="button" title="Settings" aria-expanded="false">
+  <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"></path>
+    <path d="M19.43 12.98a7.91 7.91 0 0 0 .05-.98 7.91 7.91 0 0 0-.05-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.28 7.28 0 0 0-1.69-.98l-.38-2.65A.5.5 0 0 0 14 1h-4a.5.5 0 0 0-.49.42l-.38 2.65c-.6.23-1.16.56-1.69.98l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.64L4.57 11c-.03.32-.05.65-.05.98s.02.66.05.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .6.22l2.49-1c.53.42 1.09.75 1.69.98l.38 2.65A.5.5 0 0 0 10 23h4a.5.5 0 0 0 .49-.42l.38-2.65c.6-.23 1.16-.56 1.69-.98l2.49 1a.5.5 0 0 0 .6-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.1-1.65Z"></path>
+  </svg>
+</button>
 
-  <button class="iconbtn btnNoti" id="btnNotifications" type="button" title="Notifications">
-    <svg class="ico" viewBox="0 0 24 24">
-      <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7zM9.5 19a2.5 2.5 0 0 0 5 0" />
-    </svg>
-  </button>
+  <div id="notificationsPanel" class="top-pop top-pop-noti" hidden>
+    <div class="top-pop-head">
+      <div>
+        <div class="top-pop-title">Notifications</div>
+        <div class="top-pop-sub">Recent activity and reminders</div>
+      </div>
+      <button type="button" class="top-pop-textbtn" id="markAllReadBtn">Mark all read</button>
+    </div>
 
-  <button class="iconbtn btnSettings" id="btnSettings" type="button" title="Settings">
-    <svg class="ico" viewBox="0 0 24 24">
-      <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z" />
-    </svg>
-  </button>
+    <div class="top-pop-list">
+      <div class="top-pop-item is-unread">
+        <div class="top-pop-dot"></div>
+        <div class="top-pop-copy">
+          <div class="top-pop-item-title">Profile changes saved</div>
+          <div class="top-pop-item-sub">Your latest account details were updated successfully.</div>
+        </div>
+        <div class="top-pop-time">Now</div>
+      </div>
+
+      <div class="top-pop-item is-unread">
+        <div class="top-pop-dot"></div>
+        <div class="top-pop-copy">
+          <div class="top-pop-item-title">Firm details ready</div>
+          <div class="top-pop-item-sub">Business information can be managed from Settings.</div>
+        </div>
+        <div class="top-pop-time">Today</div>
+      </div>
+
+      <div class="top-pop-item">
+        <div class="top-pop-dot"></div>
+        <div class="top-pop-copy">
+          <div class="top-pop-item-title">Utilities available</div>
+          <div class="top-pop-item-sub">Open Utilities to manage masters and setup data.</div>
+        </div>
+        <div class="top-pop-time">Earlier</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsPanel" class="top-pop top-pop-settings" hidden>
+    <div class="top-pop-head">
+      <div>
+        <div class="top-pop-title">Settings</div>
+        <div class="top-pop-sub">Account and workspace shortcuts</div>
+      </div>
+    </div>
+
+    <div class="top-pop-group">
+      <div class="top-pop-group-title">Account</div>
+
+      <button type="button" class="top-pop-action" data-open-modal="profileModal">
+        <span class="top-pop-action-ico">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-8 9a8 8 0 0 1 16 0" />
+          </svg>
+        </span>
+        <span>
+          <span class="top-pop-action-title">Profile</span>
+          <span class="top-pop-action-sub">Manage personal account details</span>
+        </span>
+      </button>
+
+      <button type="button" class="top-pop-action" data-open-modal="firmModal">
+        <span class="top-pop-action-ico">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 21V3h12v18H3zm14 0v-8h4v8h-4zM6 7h6M6 11h6M6 15h6" />
+          </svg>
+        </span>
+        <span>
+          <span class="top-pop-action-title">Firm Details</span>
+          <span class="top-pop-action-sub">Manage business information</span>
+        </span>
+      </button>
+    </div>
+
+    <div class="top-pop-group top-pop-group-border">
+      <div class="top-pop-group-title">Workspace</div>
+
+      <button type="button" class="top-pop-action" id="openUtilitiesFromSettings">
+        <span class="top-pop-action-ico">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z" />
+          </svg>
+        </span>
+        <span>
+          <span class="top-pop-action-title">Utilities</span>
+          <span class="top-pop-action-sub">Open master and setup sections</span>
+        </span>
+      </button>
+    </div>
+
+    <div class="top-pop-group top-pop-group-border">
+      <div class="top-pop-group-title">Session</div>
+
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="top-pop-action danger">
+          <span class="top-pop-action-ico">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
+          </span>
+          <span>
+            <span class="top-pop-action-title">Logout</span>
+            <span class="top-pop-action-sub">Sign out of this session</span>
+          </span>
+        </button>
+      </form>
+    </div>
+  </div>
 </div>
       </header>
 
@@ -214,13 +318,13 @@
     </main>
 
   </div>
-<!-- ===================== PROFILE MODAL (compact) ===================== -->
+<!-- ===================== PROFILE MODAL ===================== -->
 <div id="profileModal" class="modal-backdrop" aria-hidden="true">
   <div class="modal-card">
     <div class="modal-head">
       <div>
         <div class="modal-title">Profile</div>
-        <div class="modal-sub">Update your basic account and contact details.</div>
+        <div class="modal-sub">Manage personal and account details.</div>
       </div>
 
       <button id="profileClose" class="modal-close" type="button" aria-label="Close">
@@ -237,7 +341,7 @@
       <section class="modal-section">
         <div class="modal-section-head">
           <div class="modal-section-title">Account</div>
-          <div class="modal-section-sub">Linked login and firm information.</div>
+          <div class="modal-section-sub">Linked account information.</div>
         </div>
 
         <div class="modal-grid">
@@ -280,7 +384,7 @@
       <section class="modal-section">
         <div class="modal-section-head">
           <div class="modal-section-title">Personal</div>
-          <div class="modal-section-sub">Your own contact details.</div>
+          <div class="modal-section-sub">Basic user information.</div>
         </div>
 
         <div class="modal-grid">
@@ -307,7 +411,7 @@
       </section>
 
       <div class="modal-actions">
-        <button class="btn btn-ghost" type="button" id="profileCancel">Cancel</button>
+        <button class="btn btn-ghost modal-btn-ghost" type="button" id="profileCancel">Cancel</button>
         <button class="btn btn-save" type="submit">Save</button>
       </div>
     </form>
@@ -316,13 +420,13 @@
   </div>
 </div>
 
- <!-- ===================== FIRM MODAL (compact) ===================== -->
+ <!-- ===================== FIRM MODAL ===================== -->
 <div id="firmModal" class="modal-backdrop" aria-hidden="true">
   <div class="modal-card">
     <div class="modal-head">
       <div>
         <div class="modal-title">Firm Details</div>
-        <div class="modal-sub">Create or update your firm information.</div>
+        <div class="modal-sub">Manage business identity and contact details.</div>
       </div>
 
       <button id="firmClose" class="modal-close" type="button" aria-label="Close">
@@ -338,8 +442,8 @@
 
       <section class="modal-section">
         <div class="modal-section-head">
-          <div class="modal-section-title">Firm Identity</div>
-          <div class="modal-section-sub">Core business details.</div>
+          <div class="modal-section-title">Business</div>
+          <div class="modal-section-sub">Core firm information.</div>
         </div>
 
         <div class="modal-grid">
@@ -357,9 +461,7 @@
             <select name="firm_type" required>
               <option value="">Select</option>
               {% for val,label in FIRM_TYPE_CHOICES %}
-              <option value="{{ val }}" {% if current_firm and current_firm.firm_type == val %}selected{% endif %}>
-                {{ label }}
-              </option>
+              <option value="{{ val }}" {% if current_firm and current_firm.firm_type == val %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
           </div>
@@ -393,7 +495,7 @@
       <section class="modal-section">
         <div class="modal-section-head">
           <div class="modal-section-title">Contact</div>
-          <div class="modal-section-sub">Primary communication details.</div>
+          <div class="modal-section-sub">Communication and address details.</div>
         </div>
 
         <div class="modal-grid">
@@ -443,7 +545,7 @@
       </section>
 
       <div class="modal-actions">
-        <button class="btn btn-ghost" type="button" id="firmCancel">Cancel</button>
+        <button class="btn btn-ghost modal-btn-ghost" type="button" id="firmCancel">Cancel</button>
         <button class="btn btn-save" type="submit">Save</button>
       </div>
     </form>
@@ -461,18 +563,61 @@
   <script src="{% static 'js/dashboard.js' %}?v=6001"></script>
 
   <!-- ✅ SECTION SWITCHER (dashboard ⇄ utilities) -->
+<script>
+(function () {
+  function showSection(sectionName) {
+    const dashboard = document.getElementById("section-dashboard");
+    const utilities = document.getElementById("section-utilities");
 
-  <script>
+    if (!dashboard && !utilities) return;
+
+    document.querySelectorAll(".page-section").forEach((section) => {
+      section.classList.remove("is-active");
+    });
+
+    const target = document.getElementById("section-" + sectionName);
+    if (target) {
+      target.classList.add("is-active");
+    }
+
+    document.querySelectorAll(".sb-link[data-section]").forEach((link) => {
+      link.classList.toggle("active", link.dataset.section === sectionName);
+    });
+  }
+
+  document.addEventListener("click", function (e) {
+    const link = e.target.closest('.sb-link[data-section]');
+    if (!link) return;
+
+    const sectionName = link.dataset.section;
+    if (!sectionName) return;
+
+    const target = document.getElementById("section-" + sectionName);
+    if (!target) return;
+
+    e.preventDefault();
+    showSection(sectionName);
+  });
+
+  const openUtilitiesBtn = document.getElementById("openUtilitiesFromSettings");
+  if (openUtilitiesBtn) {
+    openUtilitiesBtn.addEventListener("click", function () {
+      showSection("utilities");
+    });
+  }
+})();
+</script>
+<script>
 (function () {
   function bindAjaxModal(config) {
-    const btn = document.getElementById(config.openBtnId);
     const modal = document.getElementById(config.modalId);
     const closeBtn = document.getElementById(config.closeBtnId);
     const cancelBtn = document.getElementById(config.cancelBtnId);
     const form = document.getElementById(config.formId);
     const toast = document.getElementById(config.toastId);
+    const triggers = document.querySelectorAll(config.triggerSelector);
 
-    if (!btn || !modal || !form) return;
+    if (!modal || !form || !triggers.length) return;
 
     function setToast(message, state) {
       if (!toast) return;
@@ -492,7 +637,10 @@
       setToast("");
     }
 
-    btn.addEventListener("click", open);
+    triggers.forEach((btn) => {
+      btn.addEventListener("click", open);
+    });
+
     closeBtn?.addEventListener("click", close);
     cancelBtn?.addEventListener("click", close);
 
@@ -538,7 +686,7 @@
   }
 
   bindAjaxModal({
-    openBtnId: "btnProfile",
+    triggerSelector: '[data-open-modal="profileModal"]',
     modalId: "profileModal",
     closeBtnId: "profileClose",
     cancelBtnId: "profileCancel",
@@ -547,7 +695,7 @@
   });
 
   bindAjaxModal({
-    openBtnId: "btnFirm",
+    triggerSelector: '[data-open-modal="firmModal"]',
     modalId: "firmModal",
     closeBtnId: "firmClose",
     cancelBtnId: "firmCancel",
@@ -565,107 +713,81 @@
       }
     }
   });
-})();
-</script>
-  <script>
-  (function () {
-    const dashboardSection = document.getElementById("section-dashboard");
-    const utilitiesSection = document.getElementById("section-utilities");
-    const hasDashboardSwitcher = !!(dashboardSection || utilitiesSection);
 
-    function show(sectionName) {
-      document.querySelectorAll(".page-section").forEach(sec => {
-        sec.classList.remove("is-active");
-      });
+  const notiBtn = document.getElementById("btnNotifications");
+  const settingsBtn = document.getElementById("btnSettings");
+  const notiPanel = document.getElementById("notificationsPanel");
+  const settingsPanel = document.getElementById("settingsPanel");
+  const markAllReadBtn = document.getElementById("markAllReadBtn");
+  const openUtilitiesBtn = document.getElementById("openUtilitiesFromSettings");
 
-      const active = document.getElementById("section-" + sectionName);
-      if (active) active.classList.add("is-active");
+  if (!notiBtn || !settingsBtn || !notiPanel || !settingsPanel) return;
 
-      document.querySelectorAll(".sb-link[data-section]").forEach(a => {
-        a.classList.toggle("active", a.dataset.section === sectionName);
-      });
+  function closePanels() {
+    notiPanel.hidden = true;
+    settingsPanel.hidden = true;
+    notiBtn.setAttribute("aria-expanded", "false");
+    settingsBtn.setAttribute("aria-expanded", "false");
+  }
 
-      if (sectionName === "utilities") location.hash = "utilities";
-      if (sectionName === "dashboard") location.hash = "";
+  function togglePanel(panel, button) {
+    const shouldOpen = panel.hidden;
+    closePanels();
+
+    if (shouldOpen) {
+      panel.hidden = false;
+      button.setAttribute("aria-expanded", "true");
     }
+  }
 
-    document.addEventListener("click", function (e) {
-      const link = e.target.closest(".sb-link[data-section]");
-      if (!link) return;
-
-      const target = document.getElementById("section-" + link.dataset.section);
-
-      if (!target) return;
-
-      e.preventDefault();
-      show(link.dataset.section);
-    });
-
-    if (hasDashboardSwitcher) {
-      const start = (location.hash || "").replace("#", "").trim();
-      if (start === "utilities" && utilitiesSection) show("utilities");
-      else if (dashboardSection) show("dashboard");
-    }
-  })();
-</script>
-    
-<script>
-(function(){
-  const btn = document.getElementById("btnFirm");
-  const modal = document.getElementById("firmModal");
-  const closeBtn = document.getElementById("firmClose");
-  const cancelBtn = document.getElementById("firmCancel");
-  const form = document.getElementById("firmForm");
-  const toast = document.getElementById("firmToast");
-
-  if(!btn || !modal || !form) return;
-
-  function open(){ modal.classList.add("show"); }
-  function close(){ modal.classList.remove("show"); toast.textContent = ""; }
-
-  btn.addEventListener("click", open);
-  closeBtn?.addEventListener("click", close);
-  cancelBtn?.addEventListener("click", close);
-  modal.addEventListener("click", (e)=>{ if(e.target === modal) close(); });
-
-  form.addEventListener("submit", async (e)=>{
+  notiBtn.addEventListener("click", function (e) {
     e.preventDefault();
-    toast.textContent = "Saving...";
+    e.stopPropagation();
+    togglePanel(notiPanel, notiBtn);
+  });
 
-    const formData = new FormData(form);
+  settingsBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePanel(settingsPanel, settingsBtn);
+  });
 
-    const res = await fetch(form.action, {
-      method: "POST",
-      body: formData,
-      headers: { "X-Requested-With": "XMLHttpRequest" }
+  notiPanel.addEventListener("click", function (e) {
+    e.stopPropagation();
+  });
+
+  settingsPanel.addEventListener("click", function (e) {
+    e.stopPropagation();
+  });
+
+  document.addEventListener("click", function () {
+    closePanels();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closePanels();
+  });
+
+  markAllReadBtn?.addEventListener("click", function () {
+    notiPanel.querySelectorAll(".top-pop-item.is-unread").forEach((item) => {
+      item.classList.remove("is-unread");
     });
+    notiBtn.classList.add("is-cleared");
+  });
 
-    const data = await res.json();
+  settingsPanel.querySelectorAll("[data-open-modal]").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      closePanels();
+    });
+  });
 
-    if(!data.ok){
-      toast.textContent = data.message || "Error saving ❌";
-      return;
-    }
-
-    toast.textContent = data.message || "Firm saved ✅";
-
-    // Auto-fill firm name in Profile modal (read-only input)
-    const firmNameInput = document.getElementById("profileFirmName");
-    if (firmNameInput && data.firm_name) firmNameInput.value = data.firm_name;
-
-    // Update created date display
-    const createdAt = document.getElementById("firmCreatedAt");
-    if (createdAt && data.created_at_display) createdAt.value = data.created_at_display;
-
-    setTimeout(close, 800);
+  openUtilitiesBtn?.addEventListener("click", function () {
+    closePanels();
+    const utilLink = document.querySelector('.sb-link[data-section="utilities"]');
+    utilLink?.click();
   });
 })();
-
-
-
-
-  </script>
-
+</script>
   {% block extra_js %}{% endblock %}
 </body>
 

@@ -7,633 +7,438 @@
 <style>
   .canvas{
     grid-template-columns: 1fr !important;
+    width: 100%;
+    min-width: 0;
   }
 
-  .ylist-shell{
-    background: var(--card, #fff);
-    border: 1px solid rgba(15,23,42,.08);
-    border-radius: 22px;
-    box-shadow: var(--shadow, 0 18px 55px rgba(15,23,42,.08));
-    padding: 18px;
+  .jb-page,
+  .jobbers-embed,
+  .jb-panel{
+    width: 100%;
+    min-width: 0;
   }
 
-  .ylist-head{
-    margin-bottom: 14px;
-  }
-
-  .ylist-title{
-    font-size: 22px;
-    font-weight: 950;
-    letter-spacing: -.03em;
-    color: var(--text, #0f172a);
-  }
-
-  .ylist-sub{
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--muted, #667085);
-  }
-
-  .ylist-toolbar{
-    display:grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items:center;
-    gap:14px;
-    margin-bottom: 14px;
-  }
-
-  .ylist-left,
-  .ylist-center,
-  .ylist-right{
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-
-  .ylist-center{
-    justify-content:center;
-  }
-
-  .ylist-right{
-    justify-content:flex-end;
-  }
-
-  .ylist-meta{
-    font-size: 12px;
-    color: var(--muted, #667085);
-    font-weight: 700;
-  }
-
-  .ylist-select,
-  .ylist-search{
-    height: 38px;
-    border-radius: 12px;
-    border: 1px solid rgba(0,0,0,.10);
-    background: rgba(255,255,255,.94);
-    padding: 0 12px;
-    font: inherit;
-    color: var(--text, #0f172a);
-    outline: none;
-  }
-
-  .ylist-search{
-    width: 190px;
-  }
-
-  .ylist-search:focus,
-  .ylist-select:focus{
-    border-color: rgba(0,0,0,.22);
-  }
-
-  .ylist-generate{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    height: 40px;
-    padding: 0 18px;
-    border-radius: 12px;
-    background: var(--orange, #ef9d2f);
-    color:#fff;
-    text-decoration:none;
-    font-size: 12px;
-    font-weight: 900;
-    border:none;
-    transition:.18s ease;
-    box-shadow: 0 10px 18px rgba(239,157,47,.18);
-  }
-
-  .ylist-generate:hover{
-    background:#0b0b12;
-    color:#fff;
-  }
-
-  .ylist-generate-ico{
-    width:16px;
-    height:16px;
-    fill:none;
-    stroke:currentColor;
-    stroke-width:2.2;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-  }
-
-  .ylist-wrap{
-    overflow:auto;
-    border: 1px solid rgba(0,0,0,.06);
-    border-radius: 18px;
-    background: rgba(255,255,255,.68);
-  }
-
-  .ylist-table{
-    width:100%;
-    min-width: 1440px;
-    border-collapse: separate;
-    border-spacing: 0;
-  }
-
-  .ylist-table thead th{
-    padding: 14px 12px;
-    font-size: 11px;
-    letter-spacing: .10em;
-    text-transform: uppercase;
-    color: var(--muted, #667085);
-    background: rgba(255,255,255,.95);
-    border-bottom: 1px solid rgba(0,0,0,.06);
-    text-align:left;
-    vertical-align:top;
-    white-space: nowrap;
-  }
-
-  .ylist-table tbody td{
+  .jobbers-embed{
     padding: 0;
-    border-bottom: 1px solid rgba(0,0,0,.06);
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .jb-panel{
+    border-radius: 24px;
+  }
+
+  .jb-tools{
+    align-items: center;
+  }
+
+  .jb-search{
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .jb-search input{
+    min-width: 0;
+  }
+
+  .jb-tablewrap{
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .jb-table{
+    width: 100%;
+    min-width: 1180px;
+    table-layout: fixed;
+  }
+
+  .jb-table th,
+  .jb-table td{
+    word-break: break-word;
     vertical-align: top;
-    background: rgba(255,255,255,.60);
   }
 
-  .ylist-table tbody tr:hover td{
-    background: rgba(255,255,255,.82);
+  .jb-col-po{ width: 24%; }
+  .jb-col-vendor{ width: 14%; }
+  .jb-col-firm{ width: 12%; }
+  .jb-col-lines{ width: 22%; }
+  .jb-col-weight{ width: 9%; }
+  .jb-col-total{ width: 10%; }
+  .jb-col-status{ width: 11%; }
+  .jb-col-actions{ width: 12%; }
+
+  .jb-system-badge{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(250,189,100,.14);
+    color: var(--orange);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    margin-bottom: 10px;
   }
 
-  .ylist-cell{
-    padding: 16px 12px;
-    min-height: 100%;
-  }
-
-  .ylist-po-meta{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-
-  .ylist-po-no{
-    font-size: 16px;
-    font-weight: 950;
-    color: var(--orange, #ef9d2f);
-    letter-spacing: -.02em;
-  }
-
-  .ylist-po-grid{
-    display:grid;
-    grid-template-columns: 100px 1fr;
-    row-gap: 6px;
-    column-gap: 8px;
+  .jb-po-meta{
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 6px 8px;
     font-size: 12px;
   }
 
-  .ylist-po-grid .k{
-    color: var(--muted, #667085);
+  .jb-po-meta .k{
+    color: rgba(15,23,42,.56);
     font-weight: 700;
   }
 
-  .ylist-po-grid .v{
+  .jb-po-meta .v{
     color: #111827;
     font-weight: 800;
   }
 
-  .ylist-badge-row{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-
-  .ylist-badge{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    width:max-content;
-    padding: 5px 9px;
-    border-radius: 999px;
-    background: rgba(239,157,47,.12);
-    color: #d97706;
-    font-size: 10px;
+  .jb-po-value{
     font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: .06em;
   }
 
-  .ylist-status{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    width:max-content;
-    padding: 5px 10px;
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    white-space: nowrap;
+  .jb-vendor-name,
+  .jb-firm-name{
+    font-weight: 800;
+    color: #111827;
   }
 
-  .ylist-status.pending{
-    background: rgba(250,189,100,.16);
-    color: #b76c00;
+  .jb-vendor-sub,
+  .jb-firm-sub{
+    font-size: 12px;
+    color: rgba(15,23,42,.56);
+    margin-top: 4px;
+    line-height: 1.45;
   }
 
-  .ylist-status.approved{
-    background: rgba(34,197,94,.14);
-    color: #15803d;
+  .jb-lines{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  .ylist-status.rejected{
-    background: rgba(239,68,68,.14);
-    color: #dc2626;
+  .jb-line{
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(15,23,42,.035);
+    border: 1px solid rgba(15,23,42,.05);
   }
 
-  .ylist-stack{
-    display:flex;
-    flex-direction:column;
-  }
-
-  .ylist-item{
-    padding: 12px 0;
-    border-bottom: 1px dashed rgba(0,0,0,.08);
-  }
-
-  .ylist-item:first-child{
-    padding-top: 2px;
-  }
-
-  .ylist-item:last-child{
-    border-bottom:none;
-    padding-bottom: 2px;
-  }
-
-  .ylist-item-title{
+  .jb-line-title{
     font-size: 13px;
     font-weight: 900;
-    color:#111827;
+    color: #111827;
+    line-height: 1.35;
     margin-bottom: 4px;
-    line-height: 1.3;
   }
 
-  .ylist-item-sub{
+  .jb-line-sub{
     font-size: 11px;
-    color: var(--muted, #667085);
+    color: rgba(15,23,42,.56);
     font-weight: 700;
     line-height: 1.5;
   }
 
-  .ylist-total-col{
-    display:flex;
-    flex-direction:column;
-  }
-
-  .ylist-qty{
-    padding: 12px 0;
-    border-bottom: 1px dashed rgba(0,0,0,.08);
-    font-size: 13px;
-    font-weight: 900;
-    color:#111827;
-  }
-
-  .ylist-qty:first-child{
-    padding-top: 2px;
-  }
-
-  .ylist-qty:last-child{
-    border-bottom:none;
-    padding-bottom: 2px;
-  }
-
-  .ylist-col-title{
-    font-size: 11px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: var(--muted, #667085);
-    margin-bottom: 6px;
-  }
-
-  .ylist-inward-box{
-    padding: 12px 0;
-    border-bottom: 1px dashed rgba(0,0,0,.08);
-  }
-
-  .ylist-inward-box:first-child{
-    padding-top: 2px;
-  }
-
-  .ylist-inward-box:last-child{
-    border-bottom:none;
-    padding-bottom: 2px;
-  }
-
-  .ylist-inward-empty{
+  .jb-line-empty{
     font-size: 12px;
-    color: var(--muted, #667085);
+    color: rgba(15,23,42,.56);
     font-weight: 700;
   }
 
-  .ylist-summary-number{
-    font-size: 15px;
+  .jb-total-stack{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .jb-total-card{
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(15,23,42,.035);
+    border: 1px solid rgba(15,23,42,.05);
+  }
+
+  .jb-total-label{
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: rgba(15,23,42,.56);
+    font-weight: 900;
+    margin-bottom: 5px;
+  }
+
+  .jb-total-value{
+    font-size: 14px;
     font-weight: 950;
-    color:#111827;
-    padding-top: 22px;
+    color: #111827;
   }
 
-  .ylist-remaining{
-    color: #ef476f;
-    font-weight: 950;
+  .jb-money{
+    font-weight: 900;
   }
 
-  .ylist-actions{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding-top: 18px;
-    flex-wrap:wrap;
-  }
-
-  .ylist-action-link{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:6px;
-    min-height: 30px;
+  .jb-status-pill{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
     padding: 0 10px;
     border-radius: 999px;
-    text-decoration:none;
     font-size: 11px;
-    font-weight: 900;
-    letter-spacing: .03em;
-    border: 1px solid rgba(0,0,0,.08);
-    background: rgba(255,255,255,.88);
-    color: #111827;
-    transition: .18s ease;
-  }
-
-  .ylist-action-link:hover{
-    background: #0b0b12;
-    color:#fff;
-    border-color:#0b0b12;
-  }
-
-  .ylist-action-link.review{
-    color: #0f172a;
-  }
-
-  .ylist-action-link.edit{
-    color: #d97706;
-  }
-
-  .ylist-action-link.delete{
-    color: #e11d48;
-  }
-
-  .ylist-iconbtn{
-    width: 28px;
-    height: 28px;
-    border-radius: 999px;
-    border:none;
-    background: transparent;
-    display:grid;
-    place-items:center;
-    cursor:pointer;
-    transition:.18s ease;
-    padding:0;
-  }
-
-  .ylist-iconbtn:hover{
-    background: rgba(15,23,42,.06);
-  }
-
-  .ylist-icon{
-    width: 14px;
-    height: 14px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .ylist-edit{ color:#ef9d2f; }
-  .ylist-delete{ color:#e11d48; }
-
-  .ylist-empty{
-    padding: 46px 16px !important;
-    text-align:center;
-    color: var(--muted, #667085);
     font-weight: 800;
-    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    white-space: nowrap;
+  }
+
+  .jb-status-pill.is-pending{
+    background: rgba(250,189,100,.16);
+    color: #b76c00;
+  }
+
+  .jb-status-pill.is-approved{
+    background: rgba(34,197,94,.14);
+    color: #15803d;
+  }
+
+  .jb-status-pill.is-rejected{
+    background: rgba(239,68,68,.14);
+    color: #dc2626;
+  }
+
+  .jb-status-note{
+    font-size: 12px;
+    color: rgba(15,23,42,.56);
+    margin-top: 8px;
+    line-height: 1.45;
+  }
+
+  .jb-actions{
+    white-space: normal;
+  }
+
+  .jb-inline-delete{
+    display: inline;
+  }
+
+  .jb-link-button{
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .jb-empty{
+    text-align: center;
+    color: rgba(15,23,42,.56);
+    font-weight: 700;
   }
 
   @media (max-width: 980px){
-    .ylist-toolbar{
-      grid-template-columns: 1fr;
+    .jb-tools{
+      align-items: stretch;
     }
 
-    .ylist-left,
-    .ylist-center,
-    .ylist-right{
-      justify-content:flex-start;
-    }
-
-    .ylist-search{
+    .jb-tool-actions{
       width: 100%;
+      justify-content: flex-end;
     }
   }
 </style>
 
 <section class="page-section is-active">
   <div class="canvas">
-    <div class="ylist-shell">
-      <div class="ylist-head">
-        <div class="ylist-title">Yarn POs</div>
-        <div class="ylist-sub">Track generated purchase orders, review status and yarn line details.</div>
-      </div>
+    <div class="jb-page">
+      <div class="jobbers-embed">
+        <div class="jb-panel">
 
-      <div class="ylist-toolbar">
-        <div class="ylist-left">
-          <div class="ylist-meta">Show</div>
-          <select class="ylist-select" disabled>
-            <option>10</option>
-          </select>
-          <div class="ylist-meta">entries</div>
-        </div>
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">Yarn Purchase Orders</div>
+              <div class="jb-sub">Manage generated Yarn POs with richer PO details in the same Jobber-style list layout.</div>
+            </div>
+          </div>
 
-        <div class="ylist-center">
-          <a class="ylist-generate" href="{% url 'accounts:yarnpo_add' %}">
-            <svg class="ylist-generate-ico" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 5v14"></path>
-              <path d="M5 12h14"></path>
-            </svg>
-            Generate PO
-          </a>
-        </div>
+          <div class="jb-tools">
+            <form class="jb-search" method="get">
+              <input
+                type="search"
+                name="q"
+                value="{{ q|default:'' }}"
+                placeholder="Search by system no, PO no, vendor, firm..."
+              >
+              <button class="jb-search-btn" type="submit">Search</button>
+            </form>
 
-        <form class="ylist-right" method="get">
-          <div class="ylist-meta">Search:</div>
-          <input class="ylist-search" type="text" name="q" value="{{ q|default:'' }}">
-        </form>
-      </div>
+            <div class="jb-tool-actions">
+              <a class="jb-add" href="{% url 'accounts:yarnpo_add' %}">
+                <svg class="jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14"></path>
+                  <path d="M5 12h14"></path>
+                </svg>
+                Generate PO
+              </a>
+            </div>
+          </div>
 
-      <div class="ylist-wrap">
-        <table class="ylist-table">
-          <thead>
-            <tr>
-              <th style="width: 23%;">PO</th>
-              <th style="width: 24%;">Yarn Details</th>
-              <th style="width: 10%;">Total</th>
-              <th style="width: 15%;">Inward</th>
-              <th style="width: 9%;">Total Inward</th>
-              <th style="width: 10%;">Total Remaining</th>
-              <th style="width: 9%;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for po in orders %}
-            <tr>
-              <td>
-                <div class="ylist-cell">
-                  <div class="ylist-po-meta">
-                    <div class="ylist-po-no">{{ po.system_number }}</div>
+          <div class="jb-tablewrap">
+            <table class="jb-table">
+              <thead>
+                <tr>
+                  <th class="jb-col-po">PO Details</th>
+                  <th class="jb-col-vendor">Vendor</th>
+                  <th class="jb-col-firm">Firm</th>
+                  <th class="jb-col-lines">Yarn Lines</th>
+                  <th class="jb-col-weight">Weight</th>
+                  <th class="jb-col-total">Grand Total</th>
+                  <th class="jb-col-status">Status</th>
+                  <th class="jb-col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for po in orders %}
+                <tr>
+                  <td>
+                    <span class="jb-system-badge">{{ po.system_number }}</span>
 
-                    <div class="ylist-po-grid">
-                      <div class="k">Internal PO No</div>
+                    <div class="jb-po-meta">
+                      <div class="k">PO No</div>
                       <div class="v">: {{ po.po_number|default:"—" }}</div>
 
                       <div class="k">Date</div>
                       <div class="v">: {{ po.po_date|date:"d-m-Y" }}</div>
 
-                      <div class="k">Vendor</div>
-                      <div class="v">: {{ po.vendor.name }}</div>
+                      <div class="k">Cancel</div>
+                      <div class="v">: {{ po.cancel_date|date:"d-m-Y"|default:"—" }}</div>
 
-                      <div class="k">Firm</div>
-                      <div class="v">: {% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
+                      <div class="k">Remarks</div>
+                      <div class="v">: {{ po.remarks|default:"—"|truncatechars:70 }}</div>
 
                       <div class="k">PO Value</div>
-                      <div class="v">: ₹{{ po.grand_total }}</div>
+                      <div class="v jb-po-value">: ₹{{ po.grand_total|default:"0.00" }}</div>
                     </div>
+                  </td>
 
-                    <div class="ylist-badge-row">
-                      <span class="ylist-badge">PO Generated</span>
-
-                      <span class="ylist-status {% if po.approval_status == 'approved' %}approved{% elif po.approval_status == 'rejected' %}rejected{% else %}pending{% endif %}">
-                        {% if po.approval_status == 'approved' %}
-                          Approved
-                        {% elif po.approval_status == 'rejected' %}
-                          Rejected
-                        {% else %}
-                          Pending
-                        {% endif %}
-                      </span>
+                  <td>
+                    <div class="jb-vendor-name">{{ po.vendor.name }}</div>
+                    <div class="jb-vendor-sub">
+                      {% if po.vendor.contact_person %}{{ po.vendor.contact_person }}{% endif %}
+                      {% if po.vendor.phone %}<br>{{ po.vendor.phone }}{% endif %}
                     </div>
-                  </div>
-                </div>
-              </td>
+                  </td>
 
-              <td>
-                <div class="ylist-cell">
-                  <div class="ylist-col-title">Yarn</div>
-                  <div class="ylist-stack">
-                    {% for item in po.items.all %}
-                    <div class="ylist-item">
-                      <div class="ylist-item-title">
-                        {% if item.material %}{{ item.material.name }}{% else %}Yarn item{% endif %}
+                  <td>
+                    <div class="jb-firm-name">
+                      {% if po.firm %}
+                        {{ po.firm.firm_name }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </div>
+                    <div class="jb-firm-sub">
+                      {{ po.shipping_address|default:"No shipping address"|truncatechars:65 }}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="jb-lines">
+                      {% for item in po.items.all %}
+                      <div class="jb-line">
+                        <div class="jb-line-title">
+                          {% if item.material %}{{ item.material.name }}{% else %}Yarn item{% endif %}
+                        </div>
+                        <div class="jb-line-sub">
+                          Qty: {{ item.quantity|default:"0.00" }}
+                          {% if item.unit %} {{ item.unit }}{% endif %}
+                          {% if item.count %} · Count: {{ item.count }}{% endif %}
+                          {% if item.gsm %} · GSM: {{ item.gsm }}{% endif %}
+                          {% if item.rate %} · Rate: ₹{{ item.rate }}{% endif %}
+                        </div>
                       </div>
-                      <div class="ylist-item-sub">
-                        Rolls: {{ item.rolls|default:"0" }}{% if item.rolls %}.00{% endif %}
-                        {% if item.count %} · Count: {{ item.count }}{% endif %}
-                        {% if item.gsm %} · GSM: {{ item.gsm }}{% endif %}
-                        {% if item.rate %} · Rate: {{ item.rate }}{% endif %}
+                      {% empty %}
+                      <div class="jb-line">
+                        <div class="jb-line-empty">No yarn lines added.</div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="jb-total-stack">
+                      <div class="jb-total-card">
+                        <div class="jb-total-label">Total Weight</div>
+                        <div class="jb-total-value">{{ po.total_weight|default:"0.00" }}</div>
                       </div>
                     </div>
-                    {% empty %}
-                    <div class="ylist-item">
-                      <div class="ylist-inward-empty">No yarn lines added.</div>
+                  </td>
+
+                  <td>
+                    <div class="jb-total-stack">
+                      <div class="jb-total-card">
+                        <div class="jb-total-label">Grand Total</div>
+                        <div class="jb-total-value jb-money">₹{{ po.grand_total|default:"0.00" }}</div>
+                      </div>
                     </div>
-                    {% endfor %}
-                  </div>
-                </div>
-              </td>
+                  </td>
 
-              <td>
-                <div class="ylist-cell">
-                  <div class="ylist-col-title">Total</div>
-                  <div class="ylist-total-col">
-                    {% for item in po.items.all %}
-                    <div class="ylist-qty">
-                      {{ item.quantity|default:"0.00" }}
-                      {% if item.unit %} {{ item.unit }}{% endif %}
+                  <td>
+                    <span class="jb-status-pill {% if po.approval_status == 'approved' %}is-approved{% elif po.approval_status == 'rejected' %}is-rejected{% else %}is-pending{% endif %}">
+                      {% if po.approval_status == 'approved' %}
+                        Approved
+                      {% elif po.approval_status == 'rejected' %}
+                        Rejected
+                      {% else %}
+                        Pending
+                      {% endif %}
+                    </span>
+
+                    <div class="jb-status-note">
+                      {% if po.reviewed_by %}
+                        Reviewed by {{ po.reviewed_by.username }}
+                      {% else %}
+                        Waiting for review
+                      {% endif %}
                     </div>
-                    {% empty %}
-                    <div class="ylist-qty">0.00</div>
-                    {% endfor %}
-                  </div>
-                </div>
-              </td>
+                  </td>
 
-              <td>
-                <div class="ylist-cell">
-                  <div class="ylist-col-title">Inward</div>
-                  {% for item in po.items.all %}
-                  <div class="ylist-inward-box">
-                    <div class="ylist-inward-empty">No inward linked yet</div>
-                  </div>
-                  {% empty %}
-                  <div class="ylist-inward-box">
-                    <div class="ylist-inward-empty">No inward linked yet</div>
-                  </div>
-                  {% endfor %}
-                </div>
-              </td>
+                  <td class="jb-actions">
+                    <a class="jb-link" href="{% url 'accounts:yarnpo_edit' po.id %}">Edit</a>
 
-              <td>
-                <div class="ylist-cell">
-                  <div class="ylist-col-title">Total Inward</div>
-                  <div class="ylist-summary-number">0.00</div>
-                </div>
-              </td>
+                    <span class="jb-dot">•</span>
 
-              <td>
-                <div class="ylist-cell">
-                  <div class="ylist-col-title">Total Remaining</div>
-                  <div class="ylist-summary-number ylist-remaining">{{ po.total_weight|default:"0.00" }}</div>
-                </div>
-              </td>
-
-              <td>
-                <div class="ylist-cell">
-                  <div class="ylist-actions">
-                    <a class="ylist-action-link review" href="{% url 'accounts:yarnpo_review' po.id %}">
-                      Review
-                    </a>
-
-                    <a class="ylist-iconbtn ylist-edit" href="{% url 'accounts:yarnpo_edit' po.id %}" title="Edit">
-                      <svg class="ylist-icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
-                      </svg>
-                    </a>
-
-                    <form method="post" action="{% url 'accounts:yarnpo_delete' po.id %}" style="display:inline;">
+                    <form method="post" action="{% url 'accounts:yarnpo_delete' po.id %}" class="jb-inline-delete">
                       {% csrf_token %}
-                      <button class="ylist-iconbtn ylist-delete" type="submit" title="Delete" onclick="return confirm('Delete this Yarn PO?')">
-                        <svg class="ylist-icon" viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M3 6h18"></path>
-                          <path d="M8 6V4h8v2"></path>
-                          <path d="M19 6l-1 14H6L5 6"></path>
-                        </svg>
+                      <button
+                        type="submit"
+                        class="jb-link jb-link-danger jb-link-button"
+                        onclick="return confirm('Delete this Yarn PO?')"
+                      >
+                        Delete
                       </button>
                     </form>
-                  </div>
-                </div>
-              </td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="7" class="ylist-empty">No Yarn POs found yet. Generate your first PO.</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="8" class="jb-empty">
+                    No Yarn POs found yet. Generate your first PO.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
 
+        </div>
+      </div>
     </div>
   </div>
 </section>
