@@ -3,7 +3,11 @@ from datetime import timedelta
 from decimal import Decimal
 from calendar import monthcalendar
 from zoneinfo import ZoneInfo
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
+from .navigation import UTILITIES_GROUPS
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -120,6 +124,10 @@ def signup_view(request):
         return redirect("accounts:dashboard")
 
     error = None
+    form_data = {
+        "username": "",
+        "email": "",
+    }
 
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
@@ -127,20 +135,43 @@ def signup_view(request):
         password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
 
-        if not username or not email or not password:
-            error = "Username, email and password are required."
+        form_data.update({
+            "username": username,
+            "email": email,
+        })
+
+        if not username or not email or not password or not password2:
+            error = "Username, email, password, and confirm password are required."
         elif password != password2:
             error = "Passwords do not match."
-        elif User.objects.filter(username=username).exists():
+        elif User.objects.filter(username__iexact=username).exists():
             error = "Username already taken."
-        elif User.objects.filter(email=email).exists():
+        elif User.objects.filter(email__iexact=email).exists():
             error = "Email already registered."
         else:
-            user = User.objects.create_user(username=username, email=email, password=password)
-            login(request, user)
-            return redirect("accounts:dashboard")
+            try:
+                validate_email(email)
+                temp_user = User(username=username, email=email)
+                validate_password(password, user=temp_user)
+            except ValidationError as exc:
+                error = " ".join(exc.messages)
+            else:
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password
+                )
+                login(request, user)
+                return redirect("accounts:dashboard")
 
-    return render(request, "accounts/signup.html", {"error": error})
+    return render(
+        request,
+        "accounts/signup.html",
+        {
+            "error": error,
+            "form_data": form_data,
+        },
+    )
 
 
 @require_http_methods(["GET", "POST"])
@@ -236,7 +267,13 @@ def dashboard_view(request):
 
 @login_required
 def utilities_view(request):
-    return render(request, "accounts/utilities.html")
+    return render(
+        request,
+        "accounts/utilities.html",
+        {
+            "utility_groups": UTILITIES_GROUPS,
+        },
+    )
 
 
 @login_required
@@ -1113,30 +1150,32 @@ def _bind_yarnpo_item_formset(request, instance=None):
     else:
         formset = YarnPurchaseOrderItemFormSet(instance=instance, prefix="items")
 
-    yarn_qs = (
+    yarn_materials = (
         Material.objects
-        .filter(material_type__material_kind="yarn")
+        .filter(
+            Q(material_kind="yarn") |
+            Q(material_type__material_kind="yarn")
+        )
         .select_related("material_type", "material_shade")
-        .order_by("material_type__name", "name")
+        .order_by("name")
+        .distinct()
     )
 
-    def yarn_label(obj):
-        type_name = obj.material_type.name if getattr(obj, "material_type", None) else "Yarn Type"
-        shade_name = obj.material_shade.name if getattr(obj, "material_shade", None) else ""
-        extra = f" · {shade_name}" if shade_name else ""
-        return f"{type_name} — {obj.name}{extra}"
+    def material_label(obj):
+        return obj.name
 
     for form in formset.forms:
         if "material" in form.fields:
-            form.fields["material"].queryset = yarn_qs
-            form.fields["material"].label_from_instance = yarn_label
+            form.fields["material"].queryset = yarn_materials
+            form.fields["material"].label_from_instance = material_label
+            form.fields["material"].empty_label = "Select Yarn Name"
 
     if hasattr(formset, "empty_form") and "material" in formset.empty_form.fields:
-        formset.empty_form.fields["material"].queryset = yarn_qs
-        formset.empty_form.fields["material"].label_from_instance = yarn_label
+        formset.empty_form.fields["material"].queryset = yarn_materials
+        formset.empty_form.fields["material"].label_from_instance = material_label
+        formset.empty_form.fields["material"].empty_label = "Select Yarn Name"
 
     return formset
-
 
 @login_required
 @require_http_methods(["GET", "POST"])

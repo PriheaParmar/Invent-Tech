@@ -1,0 +1,465 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Utilities - InventTech{% endblock %}
+
+{% block content %}
+<section id="section-utilities" class="page-section is-active">
+  <div class="canvas">
+    <section class="grid util-grid-section">
+      <div class="card soft big c8">
+
+        <div class="card-head util-head">
+          <div>
+            <div class="card-title">Utilities</div>
+            <div class="card-sub">
+              Masters, setup, uploads & configuration — everything in one place.
+            </div>
+          </div>
+
+          <div class="util-search">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 21l-4.3-4.3"></path>
+              <path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"></path>
+            </svg>
+            <input
+              id="utilSearch"
+              type="text"
+              placeholder="Search utilities… (jobber, shade, greige, bom, catalogue)"
+            />
+          </div>
+        </div>
+
+        <div id="utilSections" class="util-sections"></div>
+
+        <div class="tiny-note" style="margin-top:10px;">
+          Click a tile to open the utility module.
+        </div>
+
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  "use strict";
+
+  const TAG_LABEL = {
+    Masters: "MASTERS",
+    Production: "PRODUCTION",
+    Dyeing: "DYEING",
+    Design: "DESIGN",
+    Admin: "ADMIN TOOLS",
+    Inventory: "INVENTORY",
+    Dispatch: "DISPATCH",
+    Accounts: "ACCOUNTS",
+    Uploads: "UPLOADS",
+  };
+
+  const ROW_LAYOUT = {
+    row1: [{ tag: "Masters", span: 8 }],
+    row2: [{ tag: "Production", span: 5 }, { tag: "Dyeing", span: 3 }],
+    row3: [{ tag: "Design", span: 8 }],
+    row4: [
+      { tag: "Admin", span: 2 },
+      { tag: "Inventory", span: 2 },
+      { tag: "Dispatch", span: 2 },
+      { tag: "Accounts", span: 1 },
+      { tag: "Uploads", span: 1 },
+    ],
+  };
+
+  const INTRA_ORDER = {
+    Masters: [
+      "Material / Trim",
+      "Material Type",
+      "Material Shades",
+      "Material Unit",
+      "Brand",
+      "Category",
+      "Main Category",
+      "Sub Category",
+      "Party",
+      "Client",
+      "Location",
+      "Vendor",
+      "Jobber Type",
+      "Jobber",
+      "Material Type Linking",
+    ],
+    Production: ["Techpack", "BOM", "Job Card Details", "Branch SKU"],
+    Dyeing: ["Dyeing Master", "Greige Master", "Dyeing Other Charge Headers"],
+    Design: ["Catalogue", "Pattern Type", "Designer", "Season", "Theme"],
+    Admin: ["Jobber Bulk Changes"],
+    Inventory: ["Inward Type"],
+    Dispatch: ["Terms & Condition"],
+    Accounts: ["Expense"],
+    Uploads: ["Material Bulk Upload"],
+  };
+
+  const ROUTES = {
+    "Jobber": "{% url 'accounts:jobber_list' %}",
+    "Jobber Type": "{% url 'accounts:jobbertype_list' %}",
+    "Material / Trim": "{% url 'accounts:material_list' %}",
+    "Material Type": "{% url 'accounts:materialtype_list' %}",
+    "Material Shades": "{% url 'accounts:materialshade_list' %}",
+    "Party": "{% url 'accounts:party_list' %}",
+    "Vendor": "{% url 'accounts:vendor_list' %}",
+    "Location": "{% url 'accounts:location_list' %}"
+  };
+
+  const UTILITIES = [
+    { name: "Material / Trim", tag: "Masters", icon: "material" },
+    { name: "Material Type", tag: "Masters", icon: "material" },
+    { name: "Material Shades", tag: "Masters", icon: "material" },
+    { name: "Material Unit", tag: "Masters", icon: "folder" },
+    { name: "Brand", tag: "Masters", icon: "folder" },
+    { name: "Category", tag: "Masters", icon: "folder" },
+    { name: "Main Category", tag: "Masters", icon: "folder" },
+    { name: "Sub Category", tag: "Masters", icon: "folder" },
+    { name: "Party", tag: "Masters", icon: "party" },
+    { name: "Client", tag: "Masters", icon: "party" },
+    { name: "Location", tag: "Masters", icon: "location" },
+    { name: "Vendor", tag: "Masters", icon: "party" },
+    { name: "Jobber Type", tag: "Masters", icon: "jobber-type" },
+    { name: "Jobber", tag: "Masters", icon: "jobber" },
+    { name: "Material Type Linking", tag: "Masters", icon: "folder" },
+
+    { name: "Techpack", tag: "Production", icon: "folder" },
+    { name: "BOM", tag: "Production", icon: "folder" },
+    { name: "Job Card Details", tag: "Production", icon: "folder" },
+    { name: "Branch SKU", tag: "Production", icon: "folder" },
+
+    { name: "Dyeing Master", tag: "Dyeing", icon: "folder" },
+    { name: "Greige Master", tag: "Dyeing", icon: "folder" },
+    { name: "Dyeing Other Charge Headers", tag: "Dyeing", icon: "folder" },
+
+    { name: "Catalogue", tag: "Design", icon: "folder" },
+    { name: "Pattern Type", tag: "Design", icon: "folder" },
+    { name: "Designer", tag: "Design", icon: "folder" },
+    { name: "Season", tag: "Design", icon: "folder" },
+    { name: "Theme", tag: "Design", icon: "folder" },
+
+    { name: "Jobber Bulk Changes", tag: "Admin", icon: "folder" },
+    { name: "Inward Type", tag: "Inventory", icon: "folder" },
+    { name: "Terms & Condition", tag: "Dispatch", icon: "folder" },
+    { name: "Expense", tag: "Accounts", icon: "folder" },
+    { name: "Material Bulk Upload", tag: "Uploads", icon: "folder" }
+  ];
+
+  let MASTERS_REQUEST_SEQ = 0;
+  let LAST_MASTERS_URL = null;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function iconMarkup(kind) {
+    if (kind === "jobber") {
+      return `
+        <svg class="icon-jobber" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "jobber-type") {
+      return `
+        <svg class="icon-jobber-type" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="8" cy="8" r="3"></circle>
+          <circle cx="16" cy="8" r="3"></circle>
+          <path d="M4 18c0-2.2 1.8-4 4-4"></path>
+          <path d="M20 18c0-2.2-1.8-4-4-4"></path>
+          <path d="M8 18c0-2.8 1.8-5 4-5s4 2.2 4 5"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "material") {
+      return `
+        <svg class="icon-material" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 4h12v4H6z"></path>
+          <path d="M8 8v8a4 4 0 1 0 8 0V8"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "party") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="10" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "location") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 21s-6-5.33-6-11a6 6 0 1 1 12 0c0 5.67-6 11-6 11z"></path>
+          <circle cx="12" cy="10" r="2.5"></circle>
+        </svg>
+      `;
+    }
+
+    return `
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 6h16v12H4z"></path>
+        <path d="M4 10h16"></path>
+      </svg>
+    `;
+  }
+
+  function normalize(str) {
+    return String(str || "").trim().toLowerCase();
+  }
+
+  function sortByConfiguredOrder(items, tag) {
+    const order = INTRA_ORDER[tag] || [];
+    return [...items].sort((a, b) => {
+      const ai = order.indexOf(a.name);
+      const bi = order.indexOf(b.name);
+
+      if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }
+
+  function withEmbed(url) {
+    const u = new URL(url, window.location.origin);
+    u.searchParams.set("embed", "1");
+    return u.toString();
+  }
+
+  function isMastersTile(name) {
+    return [
+      "Jobber",
+      "Jobber Type",
+      "Material / Trim",
+      "Party",
+      "Vendor",
+      "Location",
+      "Material Shades",
+      "Material Type",
+    ].includes(name);
+  }
+
+  function isMastersUrl(url) {
+    try {
+      const path = new URL(url, window.location.origin).pathname;
+      const routeJobber = ROUTES["Jobber"] ? new URL(ROUTES["Jobber"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeType = ROUTES["Jobber Type"] ? new URL(ROUTES["Jobber Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeMaterial = ROUTES["Material / Trim"] ? new URL(ROUTES["Material / Trim"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeParty = ROUTES["Party"] ? new URL(ROUTES["Party"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeVendor = ROUTES["Vendor"] ? new URL(ROUTES["Vendor"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeLocation = ROUTES["Location"] ? new URL(ROUTES["Location"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeMaterialShade = ROUTES["Material Shades"] ? new URL(ROUTES["Material Shades"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+      const routeMaterialType = ROUTES["Material Type"] ? new URL(ROUTES["Material Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
+
+      const prefixes = [
+        "/master/jobbers/",
+        "/master/jobber-types/",
+        "/master/materials/",
+        "/master/parties/",
+        "/master/vendors/",
+        "/master/locations/",
+        "/master/material-shades/",
+        "/master/material-types/",
+        routeJobber,
+        routeType,
+        routeMaterial,
+        routeParty,
+        routeVendor,
+        routeLocation,
+        routeMaterialShade,
+        routeMaterialType,
+      ].filter(Boolean);
+
+      return prefixes.some((p) => path.startsWith(p));
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function renderUtilities(query) {
+    const container = document.getElementById("utilSections");
+    if (!container) return;
+
+    const q = normalize(query);
+
+    const filtered = UTILITIES.filter((item) => {
+      if (!q) return true;
+      return normalize(item.name).includes(q) || normalize(item.tag).includes(q);
+    });
+
+    const grouped = {};
+    filtered.forEach((item) => {
+      if (!grouped[item.tag]) grouped[item.tag] = [];
+      grouped[item.tag].push(item);
+    });
+
+    let html = `<div class="util-layout">`;
+
+    Object.values(ROW_LAYOUT).forEach((row) => {
+      const rowHtml = row.map(({ tag, span }) => {
+        const items = sortByConfiguredOrder(grouped[tag] || [], tag);
+        if (!items.length) return "";
+
+        const tiles = items.map((item) => {
+          const route = ROUTES[item.name];
+          const isMaster = isMastersTile(item.name);
+          const href = route ? (isMaster ? withEmbed(route) : route) : "javascript:void(0)";
+          const attrs = route
+            ? `href="${escapeHtml(href)}" data-name="${escapeHtml(item.name)}" data-tag="${escapeHtml(item.tag)}"`
+            : `href="javascript:void(0)" class="util-tile is-disabled"`;
+
+          return `
+            <a ${attrs} class="util-tile">
+              <div class="util-ico">${iconMarkup(item.icon)}</div>
+              <div class="util-meta">
+                <div class="util-title">${escapeHtml(item.name)}</div>
+              </div>
+            </a>
+          `;
+        }).join("");
+
+        return `
+          <section class="util-group" style="grid-column: span ${span}; --cols:${span};">
+            <div class="util-group-head">
+              <div class="util-group-title">${escapeHtml(TAG_LABEL[tag] || tag)}</div>
+              <div class="util-group-line"></div>
+              <div class="util-group-count">${items.length}</div>
+            </div>
+
+            <div class="util-group-grid">
+              ${tiles}
+            </div>
+
+            ${tag === "Masters" ? `
+              <div id="mastersEmbedPanel" class="util-inline-panel" style="display:none; margin-top:14px;">
+                <div id="mastersEmbedMount"></div>
+              </div>
+            ` : ""}
+          </section>
+        `;
+      }).filter(Boolean).join("");
+
+      if (rowHtml) {
+        html += `<div class="util-row">${rowHtml}</div>`;
+      }
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+  }
+
+  function bootUtilities() {
+    const container = document.getElementById("utilSections");
+    const input = document.getElementById("utilSearch");
+    if (!container || !input) return;
+
+    renderUtilities("");
+
+    input.addEventListener("input", function () {
+      renderUtilities(this.value);
+    });
+
+    async function openMastersPanel(tag, url) {
+      const panel = container.querySelector("#mastersEmbedPanel");
+      const mount = container.querySelector("#mastersEmbedMount");
+      if (!panel || !mount) return;
+
+      panel.style.display = "block";
+      panel.style.pointerEvents = "auto";
+      mount.style.pointerEvents = "auto";
+      mount.classList.add("is-loading");
+
+      const reqId = ++MASTERS_REQUEST_SEQ;
+      const base = LAST_MASTERS_URL || window.location.origin;
+      const absUrl = new URL(url, base).toString();
+      LAST_MASTERS_URL = absUrl;
+
+      try {
+        const res = await fetch(withEmbed(absUrl), {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        });
+
+        const html = await res.text();
+
+        if (reqId !== MASTERS_REQUEST_SEQ) return;
+
+        mount.innerHTML = html;
+        mount.scrollTop = 0;
+      } catch (err) {
+        if (reqId !== MASTERS_REQUEST_SEQ) return;
+        mount.innerHTML = `<div class="tiny-note">Unable to load this section.</div>`;
+      } finally {
+        if (reqId === MASTERS_REQUEST_SEQ) {
+          mount.classList.remove("is-loading");
+        }
+      }
+    }
+
+    container.addEventListener("click", function (e) {
+      const closeBtn = e.target.closest("[data-embed-close]");
+      if (closeBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const panel = container.querySelector("#mastersEmbedPanel");
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!panel || !mount) return;
+
+        MASTERS_REQUEST_SEQ += 1;
+        LAST_MASTERS_URL = null;
+
+        panel.style.display = "none";
+        panel.style.pointerEvents = "none";
+        mount.classList.remove("is-loading");
+        mount.innerHTML = "";
+        return;
+      }
+
+      const tile = e.target.closest(".util-tile");
+      if (!tile) return;
+
+      const href = tile.getAttribute("href") || "";
+      const name = tile.dataset.name || "";
+
+      if (isMastersTile(name) && href && href !== "javascript:void(0)") {
+        e.preventDefault();
+        openMastersPanel("Masters", href);
+      }
+    });
+
+    container.addEventListener("click", function (e) {
+      const a = e.target.closest("a");
+      if (!a) return;
+
+      const href = a.getAttribute("href") || "";
+      if (!href) return;
+
+      if (isMastersUrl(href)) {
+        e.preventDefault();
+        openMastersPanel("Masters", href);
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", bootUtilities);
+})();
+</script>
+{% endblock %}
