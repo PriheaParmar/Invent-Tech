@@ -2,6 +2,9 @@
 {% load static %}
 
 {% block title %}Utilities - InventTech{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/utilities.css' %}">
+{% endblock %}
 
 {% block content %}
 <section id="section-utilities" class="page-section is-active">
@@ -28,6 +31,10 @@
               placeholder="Search utilities… (jobber, shade, greige, bom, catalogue)"
             />
           </div>
+        </div>
+
+        <div id="mastersEmbedPanel" class="util-inline-panel" style="display:none; margin-bottom:14px;">
+          <div id="mastersEmbedMount"></div>
         </div>
 
         <div id="utilSections" class="util-sections"></div>
@@ -113,115 +120,63 @@
 
   const UTILITIES = [
     { name: "Material / Trim", tag: "Masters", icon: "material" },
-    { name: "Material Type", tag: "Masters", icon: "material" },
-    { name: "Material Shades", tag: "Masters", icon: "material" },
-    { name: "Material Unit", tag: "Masters", icon: "folder" },
-    { name: "Brand", tag: "Masters", icon: "folder" },
+    { name: "Material Type", tag: "Masters", icon: "layers" },
+    { name: "Material Shades", tag: "Masters", icon: "palette" },
+    { name: "Material Unit", tag: "Masters", icon: "scale" },
+    { name: "Brand", tag: "Masters", icon: "badge" },
     { name: "Category", tag: "Masters", icon: "folder" },
-    { name: "Main Category", tag: "Masters", icon: "folder" },
-    { name: "Sub Category", tag: "Masters", icon: "folder" },
+    { name: "Main Category", tag: "Masters", icon: "folder-tree" },
+    { name: "Sub Category", tag: "Masters", icon: "folder-tree" },
     { name: "Party", tag: "Masters", icon: "party" },
-    { name: "Client", tag: "Masters", icon: "party" },
+    { name: "Client", tag: "Masters", icon: "client" },
     { name: "Location", tag: "Masters", icon: "location" },
-    { name: "Vendor", tag: "Masters", icon: "party" },
+    { name: "Vendor", tag: "Masters", icon: "vendor" },
     { name: "Jobber Type", tag: "Masters", icon: "jobber-type" },
     { name: "Jobber", tag: "Masters", icon: "jobber" },
-    { name: "Material Type Linking", tag: "Masters", icon: "folder" },
+    { name: "Material Type Linking", tag: "Masters", icon: "link" },
 
-    { name: "Techpack", tag: "Production", icon: "folder" },
-    { name: "BOM", tag: "Production", icon: "folder" },
-    { name: "Job Card Details", tag: "Production", icon: "folder" },
-    { name: "Branch SKU", tag: "Production", icon: "folder" },
+    { name: "Techpack", tag: "Production", icon: "file" },
+    { name: "BOM", tag: "Production", icon: "bom" },
+    { name: "Job Card Details", tag: "Production", icon: "card" },
+    { name: "Branch SKU", tag: "Production", icon: "tag" },
 
-    { name: "Dyeing Master", tag: "Dyeing", icon: "folder" },
-    { name: "Greige Master", tag: "Dyeing", icon: "folder" },
-    { name: "Dyeing Other Charge Headers", tag: "Dyeing", icon: "folder" },
+    { name: "Dyeing Master", tag: "Dyeing", icon: "droplet" },
+    { name: "Greige Master", tag: "Dyeing", icon: "fabric" },
+    { name: "Dyeing Other Charge Headers", tag: "Dyeing", icon: "receipt" },
 
-    { name: "Catalogue", tag: "Design", icon: "folder" },
-    { name: "Pattern Type", tag: "Design", icon: "folder" },
-    { name: "Designer", tag: "Design", icon: "folder" },
-    { name: "Season", tag: "Design", icon: "folder" },
-    { name: "Theme", tag: "Design", icon: "folder" },
+    { name: "Catalogue", tag: "Design", icon: "book" },
+    { name: "Pattern Type", tag: "Design", icon: "grid" },
+    { name: "Designer", tag: "Design", icon: "pen" },
+    { name: "Season", tag: "Design", icon: "sun" },
+    { name: "Theme", tag: "Design", icon: "spark" },
 
-    { name: "Jobber Bulk Changes", tag: "Admin", icon: "folder" },
-    { name: "Inward Type", tag: "Inventory", icon: "folder" },
-    { name: "Terms & Condition", tag: "Dispatch", icon: "folder" },
-    { name: "Expense", tag: "Accounts", icon: "folder" },
-    { name: "Material Bulk Upload", tag: "Uploads", icon: "folder" }
+    { name: "Jobber Bulk Changes", tag: "Admin", icon: "settings" },
+    { name: "Inward Type", tag: "Inventory", icon: "inward" },
+    { name: "Terms & Condition", tag: "Dispatch", icon: "document" },
+    { name: "Expense", tag: "Accounts", icon: "wallet" },
+    { name: "Material Bulk Upload", tag: "Uploads", icon: "upload" }
   ];
 
   let MASTERS_REQUEST_SEQ = 0;
   let LAST_MASTERS_URL = null;
 
   function escapeHtml(str) {
-    return String(str)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-  }
-
-  function iconMarkup(kind) {
-    if (kind === "jobber") {
-      return `
-        <svg class="icon-jobber" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
-        </svg>
-      `;
-    }
-
-    if (kind === "jobber-type") {
-      return `
-        <svg class="icon-jobber-type" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="8" cy="8" r="3"></circle>
-          <circle cx="16" cy="8" r="3"></circle>
-          <path d="M4 18c0-2.2 1.8-4 4-4"></path>
-          <path d="M20 18c0-2.2-1.8-4-4-4"></path>
-          <path d="M8 18c0-2.8 1.8-5 4-5s4 2.2 4 5"></path>
-        </svg>
-      `;
-    }
-
-    if (kind === "material") {
-      return `
-        <svg class="icon-material" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 4h12v4H6z"></path>
-          <path d="M8 8v8a4 4 0 1 0 8 0V8"></path>
-        </svg>
-      `;
-    }
-
-    if (kind === "party") {
-      return `
-        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="10" cy="7" r="4"></circle>
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-      `;
-    }
-
-    if (kind === "location") {
-      return `
-        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 21s-6-5.33-6-11a6 6 0 1 1 12 0c0 5.67-6 11-6 11z"></path>
-          <circle cx="12" cy="10" r="2.5"></circle>
-        </svg>
-      `;
-    }
-
-    return `
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 6h16v12H4z"></path>
-        <path d="M4 10h16"></path>
-      </svg>
-    `;
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function normalize(str) {
     return String(str || "").trim().toLowerCase();
+  }
+
+  function withEmbed(url) {
+    const u = new URL(url, window.location.origin);
+    u.searchParams.set("embed", "1");
+    return u.toString();
   }
 
   function sortByConfiguredOrder(items, tag) {
@@ -237,60 +192,357 @@
     });
   }
 
-  function withEmbed(url) {
-    const u = new URL(url, window.location.origin);
-    u.searchParams.set("embed", "1");
-    return u.toString();
-  }
-
   function isMastersTile(name) {
     return [
       "Jobber",
       "Jobber Type",
       "Material / Trim",
+      "Material Type",
+      "Material Shades",
       "Party",
       "Vendor",
       "Location",
-      "Material Shades",
-      "Material Type",
     ].includes(name);
   }
 
   function isMastersUrl(url) {
     try {
       const path = new URL(url, window.location.origin).pathname;
-      const routeJobber = ROUTES["Jobber"] ? new URL(ROUTES["Jobber"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeType = ROUTES["Jobber Type"] ? new URL(ROUTES["Jobber Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeMaterial = ROUTES["Material / Trim"] ? new URL(ROUTES["Material / Trim"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeParty = ROUTES["Party"] ? new URL(ROUTES["Party"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeVendor = ROUTES["Vendor"] ? new URL(ROUTES["Vendor"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeLocation = ROUTES["Location"] ? new URL(ROUTES["Location"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeMaterialShade = ROUTES["Material Shades"] ? new URL(ROUTES["Material Shades"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeMaterialType = ROUTES["Material Type"] ? new URL(ROUTES["Material Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-
-      const prefixes = [
+      return [
         "/master/jobbers/",
         "/master/jobber-types/",
         "/master/materials/",
+        "/master/material-types/",
+        "/master/material-shades/",
         "/master/parties/",
         "/master/vendors/",
         "/master/locations/",
-        "/master/material-shades/",
-        "/master/material-types/",
-        routeJobber,
-        routeType,
-        routeMaterial,
-        routeParty,
-        routeVendor,
-        routeLocation,
-        routeMaterialShade,
-        routeMaterialType,
-      ].filter(Boolean);
-
-      return prefixes.some((p) => path.startsWith(p));
+      ].some((prefix) => path.startsWith(prefix));
     } catch (err) {
       return false;
     }
+  }
+
+  function iconMarkup(kind) {
+    if (kind === "jobber") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="3.5"></circle>
+          <path d="M5 19c0-3 3-5 7-5s7 2 7 5"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "jobber-type") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="8" cy="8" r="2.5"></circle>
+          <circle cx="16" cy="8" r="2.5"></circle>
+          <path d="M4.5 18c.6-2.1 2.1-3.5 4.5-3.5"></path>
+          <path d="M19.5 18c-.6-2.1-2.1-3.5-4.5-3.5"></path>
+          <path d="M8 18c.7-2.7 2.3-4.2 4-4.2s3.3 1.5 4 4.2"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "material") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 4h10"></path>
+          <path d="M8 4v5"></path>
+          <path d="M16 4v5"></path>
+          <path d="M8 9v7a4 4 0 0 0 8 0V9"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "layers") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 4l8 4-8 4-8-4 8-4z"></path>
+          <path d="M4 12l8 4 8-4"></path>
+          <path d="M4 16l8 4 8-4"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "palette") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3c-5 0-9 3.6-9 8.2C3 15.4 6.4 19 10.7 19H12c1.1 0 2 .9 2 2"></path>
+          <circle cx="7.5" cy="10" r="1"></circle>
+          <circle cx="10.5" cy="7.5" r="1"></circle>
+          <circle cx="14.5" cy="7.5" r="1"></circle>
+          <circle cx="17" cy="10.5" r="1"></circle>
+        </svg>
+      `;
+    }
+
+    if (kind === "scale") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5v14"></path>
+          <path d="M7 8h10"></path>
+          <path d="M6 8l-2 4h4l-2-4z"></path>
+          <path d="M18 8l-2 4h4l-2-4z"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "badge") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3l2.2 2.3 3.2-.4.9 3.1 2.9 1.4-1.5 2.8.6 3.1-3.1.7L16 19l-4-1.9L8 19l-1.2-2.9-3.1-.7.6-3.1L2.8 9.5 5.7 8l.9-3.1 3.2.4L12 3z"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "folder") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 7h6l2 2h10v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "folder-tree") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="4" width="7" height="5" rx="1"></rect>
+          <rect x="14" y="4" width="7" height="5" rx="1"></rect>
+          <rect x="8.5" y="15" width="7" height="5" rx="1"></rect>
+          <path d="M6.5 9v3h9v3"></path>
+          <path d="M17.5 9v3h-2"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "party") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="9" cy="8" r="3"></circle>
+          <circle cx="16.5" cy="9" r="2.5"></circle>
+          <path d="M4 19c0-2.8 2.6-4.5 5.8-4.5S15.5 16.2 15.5 19"></path>
+          <path d="M15 18c.2-1.9 1.7-3.1 4-3.1 1.3 0 2.4.3 3 .9"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "client") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 18h16"></path>
+          <path d="M7 18v-7l5-3 5 3v7"></path>
+          <path d="M10 18v-4h4v4"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "vendor") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 10l2-4h12l2 4"></path>
+          <path d="M5 10h14v9H5z"></path>
+          <path d="M9 14h6"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "location") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 21s-6-5.2-6-10.6A6 6 0 0 1 18 10.4C18 15.8 12 21 12 21z"></path>
+          <circle cx="12" cy="10" r="2.3"></circle>
+        </svg>
+      `;
+    }
+
+    if (kind === "link") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10 14l4-4"></path>
+          <path d="M7.5 16.5l-2 2a3 3 0 0 1-4.2-4.2l2-2"></path>
+          <path d="M16.5 7.5l2-2a3 3 0 0 1 4.2 4.2l-2 2"></path>
+          <path d="M8 12a3 3 0 0 1 0-4.2l3-3a3 3 0 0 1 4.2 4.2l-1 1"></path>
+          <path d="M16 12a3 3 0 0 1 0 4.2l-3 3a3 3 0 1 1-4.2-4.2l1-1"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "file") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 3h7l5 5v13H7z"></path>
+          <path d="M14 3v5h5"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "bom") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 5h10"></path>
+          <path d="M7 10h10"></path>
+          <path d="M7 15h6"></path>
+          <circle cx="17" cy="15" r="1.5"></circle>
+          <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+        </svg>
+      `;
+    }
+
+    if (kind === "card") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+          <path d="M8 10h8"></path>
+          <path d="M8 14h5"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "tag") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 10l-8 8-8-8V4h6z"></path>
+          <circle cx="9" cy="9" r="1.2"></circle>
+        </svg>
+      `;
+    }
+
+    if (kind === "droplet") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3s5 5.5 5 9a5 5 0 1 1-10 0c0-3.5 5-9 5-9z"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "fabric") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 7c2-2 4 2 6 0s4 2 6 0 4 2 4 2v8s-2-2-4 0-4-2-6 0-4-2-6 0-4-2-4-2V7z"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "receipt") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 3h10v18l-2-1.5L13 21l-2-1.5L9 21 7 19.5 5 21V5a2 2 0 0 1 2-2z"></path>
+          <path d="M9 8h6"></path>
+          <path d="M9 12h6"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "book") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3V4z"></path>
+          <path d="M8 4v16"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "grid") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="4" width="6" height="6"></rect>
+          <rect x="14" y="4" width="6" height="6"></rect>
+          <rect x="4" y="14" width="6" height="6"></rect>
+          <rect x="14" y="14" width="6" height="6"></rect>
+        </svg>
+      `;
+    }
+
+    if (kind === "pen") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 20l4.5-1 9-9-3.5-3.5-9 9L4 20z"></path>
+          <path d="M13.5 6.5l3.5 3.5"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "sun") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v3"></path>
+          <path d="M12 19v3"></path>
+          <path d="M2 12h3"></path>
+          <path d="M19 12h3"></path>
+          <path d="M4.9 4.9l2.1 2.1"></path>
+          <path d="M17 17l2.1 2.1"></path>
+          <path d="M19.1 4.9L17 7"></path>
+          <path d="M7 17l-2.1 2.1"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "spark") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "settings") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1l-.4-2.6h-4l-.4 2.6a7 7 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1z"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "inward") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 4v10"></path>
+          <path d="M8 10l4 4 4-4"></path>
+          <rect x="4" y="17" width="16" height="3" rx="1"></rect>
+        </svg>
+      `;
+    }
+
+    if (kind === "document") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 3h7l5 5v13H7z"></path>
+          <path d="M14 3v5h5"></path>
+          <path d="M9 13h6"></path>
+          <path d="M9 17h5"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "wallet") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 7h14a2 2 0 0 1 2 2v8H6a2 2 0 0 1-2-2V7z"></path>
+          <path d="M4 9V7a2 2 0 0 1 2-2h10"></path>
+          <circle cx="16.5" cy="12" r="1"></circle>
+        </svg>
+      `;
+    }
+
+    if (kind === "upload") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 16V5"></path>
+          <path d="M8 9l4-4 4 4"></path>
+          <path d="M4 19h16"></path>
+        </svg>
+      `;
+    }
+
+    return `
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+      </svg>
+    `;
   }
 
   function renderUtilities(query) {
@@ -321,12 +573,13 @@
           const route = ROUTES[item.name];
           const isMaster = isMastersTile(item.name);
           const href = route ? (isMaster ? withEmbed(route) : route) : "javascript:void(0)";
+          const disabledClass = route ? "" : " is-disabled";
           const attrs = route
             ? `href="${escapeHtml(href)}" data-name="${escapeHtml(item.name)}" data-tag="${escapeHtml(item.tag)}"`
-            : `href="javascript:void(0)" class="util-tile is-disabled"`;
+            : `href="javascript:void(0)" data-name="${escapeHtml(item.name)}" data-tag="${escapeHtml(item.tag)}"`;
 
           return `
-            <a ${attrs} class="util-tile">
+            <a ${attrs} class="util-tile${disabledClass}">
               <div class="util-ico">${iconMarkup(item.icon)}</div>
               <div class="util-meta">
                 <div class="util-title">${escapeHtml(item.name)}</div>
@@ -346,12 +599,6 @@
             <div class="util-group-grid">
               ${tiles}
             </div>
-
-            ${tag === "Masters" ? `
-              <div id="mastersEmbedPanel" class="util-inline-panel" style="display:none; margin-top:14px;">
-                <div id="mastersEmbedMount"></div>
-              </div>
-            ` : ""}
           </section>
         `;
       }).filter(Boolean).join("");
@@ -365,6 +612,86 @@
     container.innerHTML = html;
   }
 
+  async function openMastersPanel(url, options = {}) {
+    const panel = document.getElementById("mastersEmbedPanel");
+    const mount = document.getElementById("mastersEmbedMount");
+    if (!panel || !mount) return;
+
+    panel.style.display = "block";
+    panel.style.pointerEvents = "auto";
+    mount.style.pointerEvents = "auto";
+    mount.classList.add("is-loading");
+
+    const reqId = ++MASTERS_REQUEST_SEQ;
+    const base = LAST_MASTERS_URL || window.location.origin;
+    const absUrl = new URL(url, base).toString();
+    LAST_MASTERS_URL = absUrl;
+
+    try {
+      const method = (options.method || "GET").toUpperCase();
+      let fetchUrl = absUrl;
+      let body = null;
+
+      const headers = {
+        "X-Requested-With": "XMLHttpRequest"
+      };
+
+      if (method === "GET") {
+        fetchUrl = withEmbed(absUrl);
+      } else {
+        body = options.body || null;
+      }
+
+      const res = await fetch(fetchUrl, {
+        method,
+        body,
+        headers,
+        credentials: "same-origin",
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+
+      if (contentType.includes("application/json")) {
+        const data = await res.json();
+        if (reqId !== MASTERS_REQUEST_SEQ) return;
+
+        if (data.url) {
+          await openMastersPanel(data.url);
+          return;
+        }
+
+        mount.innerHTML = `<div class="tiny-note">Saved successfully.</div>`;
+        return;
+      }
+
+      const html = await res.text();
+      if (reqId !== MASTERS_REQUEST_SEQ) return;
+
+      mount.innerHTML = html;
+      mount.scrollTop = 0;
+    } catch (err) {
+      if (reqId !== MASTERS_REQUEST_SEQ) return;
+      mount.innerHTML = `<div class="tiny-note">Unable to load this section.</div>`;
+    } finally {
+      if (reqId === MASTERS_REQUEST_SEQ) {
+        mount.classList.remove("is-loading");
+      }
+    }
+  }
+
+  function closeMastersPanel() {
+    const panel = document.getElementById("mastersEmbedPanel");
+    const mount = document.getElementById("mastersEmbedMount");
+    if (!panel || !mount) return;
+
+    MASTERS_REQUEST_SEQ += 1;
+    LAST_MASTERS_URL = null;
+    panel.style.display = "none";
+    panel.style.pointerEvents = "none";
+    mount.classList.remove("is-loading");
+    mount.innerHTML = "";
+  }
+
   function bootUtilities() {
     const container = document.getElementById("utilSections");
     const input = document.getElementById("utilSearch");
@@ -376,86 +703,72 @@
       renderUtilities(this.value);
     });
 
-    async function openMastersPanel(tag, url) {
-      const panel = container.querySelector("#mastersEmbedPanel");
-      const mount = container.querySelector("#mastersEmbedMount");
-      if (!panel || !mount) return;
-
-      panel.style.display = "block";
-      panel.style.pointerEvents = "auto";
-      mount.style.pointerEvents = "auto";
-      mount.classList.add("is-loading");
-
-      const reqId = ++MASTERS_REQUEST_SEQ;
-      const base = LAST_MASTERS_URL || window.location.origin;
-      const absUrl = new URL(url, base).toString();
-      LAST_MASTERS_URL = absUrl;
-
-      try {
-        const res = await fetch(withEmbed(absUrl), {
-          headers: { "X-Requested-With": "XMLHttpRequest" },
-          credentials: "same-origin",
-        });
-
-        const html = await res.text();
-
-        if (reqId !== MASTERS_REQUEST_SEQ) return;
-
-        mount.innerHTML = html;
-        mount.scrollTop = 0;
-      } catch (err) {
-        if (reqId !== MASTERS_REQUEST_SEQ) return;
-        mount.innerHTML = `<div class="tiny-note">Unable to load this section.</div>`;
-      } finally {
-        if (reqId === MASTERS_REQUEST_SEQ) {
-          mount.classList.remove("is-loading");
-        }
-      }
-    }
-
     container.addEventListener("click", function (e) {
       const closeBtn = e.target.closest("[data-embed-close]");
       if (closeBtn) {
         e.preventDefault();
         e.stopPropagation();
-
-        const panel = container.querySelector("#mastersEmbedPanel");
-        const mount = container.querySelector("#mastersEmbedMount");
-        if (!panel || !mount) return;
-
-        MASTERS_REQUEST_SEQ += 1;
-        LAST_MASTERS_URL = null;
-
-        panel.style.display = "none";
-        panel.style.pointerEvents = "none";
-        mount.classList.remove("is-loading");
-        mount.innerHTML = "";
+        closeMastersPanel();
         return;
       }
 
       const tile = e.target.closest(".util-tile");
-      if (!tile) return;
+      if (tile) {
+        const href = tile.getAttribute("href") || "";
+        const name = tile.dataset.name || "";
 
-      const href = tile.getAttribute("href") || "";
-      const name = tile.dataset.name || "";
-
-      if (isMastersTile(name) && href && href !== "javascript:void(0)") {
-        e.preventDefault();
-        openMastersPanel("Masters", href);
+        if (isMastersTile(name) && href && href !== "javascript:void(0)") {
+          e.preventDefault();
+          openMastersPanel(href);
+          return;
+        }
       }
-    });
 
-    container.addEventListener("click", function (e) {
-      const a = e.target.closest("a");
-      if (!a) return;
+      const link = e.target.closest("a");
+      if (!link) return;
 
-      const href = a.getAttribute("href") || "";
+      const href = link.getAttribute("href") || "";
       if (!href) return;
 
       if (isMastersUrl(href)) {
         e.preventDefault();
-        openMastersPanel("Masters", href);
+        openMastersPanel(href);
       }
+    });
+
+    container.addEventListener("submit", function (e) {
+      const form = e.target.closest("form");
+      if (!form) return;
+
+      const action = form.getAttribute("action") || window.location.href;
+      const isMastersForm = isMastersUrl(action) || form.querySelector('input[name="embed"][value="1"]');
+
+      if (!isMastersForm) return;
+
+      e.preventDefault();
+
+      const method = (form.getAttribute("method") || "GET").toUpperCase();
+
+      if (method === "GET") {
+        const url = new URL(action, window.location.origin);
+        const fd = new FormData(form);
+
+        for (const [key, value] of fd.entries()) {
+          url.searchParams.set(key, value);
+        }
+
+        url.searchParams.set("embed", "1");
+        openMastersPanel(url.toString(), { method: "GET" });
+        return;
+      }
+
+      const fd = new FormData(form);
+      fd.set("embed", "1");
+
+      openMastersPanel(action, {
+        method: "POST",
+        body: fd,
+      });
     });
   }
 

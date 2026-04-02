@@ -1,442 +1,559 @@
 {% extends "accounts/base_app.html" %}
 {% block title %}Yarn PO - InventTech{% endblock %}
 {% block page_title %}PO / Yarn{% endblock %}
-{% block page_subtitle %}Create and manage Yarn purchase orders{% endblock %}
+{% block page_subtitle %}Create and manage purchase orders{% endblock %}
 
 {% block content %}
 <style>
   .canvas{
-    grid-template-columns: 1fr !important;
-    width: 100%;
-    min-width: 0;
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
   }
 
-  .jb-page,
-  .jobbers-embed,
-  .jb-panel{
-    width: 100%;
-    min-width: 0;
+  .yarnpo-list-page{
+    width:100%;
+    min-width:0;
   }
 
-  .jobbers-embed{
-    padding: 0;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+  .yarnpo-shell{
+    background:#fff;
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+    box-shadow:0 18px 55px rgba(15,23,42,.08);
+    padding:18px;
   }
 
-  .jb-panel{
-    border-radius: 24px;
+  .yarnpo-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:16px;
   }
 
-  .jb-tools{
-    align-items: center;
+  .yarnpo-title{
+    font-size:22px;
+    font-weight:950;
+    letter-spacing:-.03em;
+    color:#0f172a;
   }
 
-  .jb-search{
-    flex: 1 1 auto;
-    min-width: 0;
+  .yarnpo-sub{
+    margin-top:4px;
+    font-size:12px;
+    color:#667085;
   }
 
-  .jb-search input{
-    min-width: 0;
+  .yarnpo-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
   }
 
-  .jb-tablewrap{
-    width: 100%;
-    overflow-x: auto;
+  .yarnpo-search{
+    flex:1 1 320px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:260px;
   }
 
-  .jb-table{
-    width: 100%;
-    min-width: 1180px;
-    table-layout: fixed;
+  .yarnpo-search input{
+    flex:1 1 auto;
+    min-width:0;
+    height:42px;
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:14px;
+    padding:0 14px;
+    outline:none;
+    background:#fff;
+    color:#111827;
+    font:inherit;
   }
 
-  .jb-table th,
-  .jb-table td{
-    word-break: break-word;
-    vertical-align: top;
+  .yarnpo-btn{
+    height:42px;
+    padding:0 16px;
+    border-radius:12px;
+    border:1px solid rgba(15,23,42,.10);
+    background:#fff;
+    color:#111827;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+    transition:.18s ease;
   }
 
-  .jb-col-po{ width: 24%; }
-  .jb-col-vendor{ width: 14%; }
-  .jb-col-firm{ width: 12%; }
-  .jb-col-lines{ width: 22%; }
-  .jb-col-weight{ width: 9%; }
-  .jb-col-total{ width: 10%; }
-  .jb-col-status{ width: 11%; }
-  .jb-col-actions{ width: 12%; }
-
-  .jb-system-badge{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 28px;
-    padding: 0 10px;
-    border-radius: 999px;
-    background: rgba(250,189,100,.14);
-    color: var(--orange);
-    font-size: 12px;
-    font-weight: 800;
-    white-space: nowrap;
-    margin-bottom: 10px;
+  .yarnpo-btn:hover{
+    background:#000;
+    color:#fff;
   }
 
-  .jb-po-meta{
-    display: grid;
-    grid-template-columns: 92px 1fr;
-    gap: 6px 8px;
-    font-size: 12px;
+  .yarnpo-btn.primary{
+    background:linear-gradient(180deg, rgba(250,189,100,1), rgba(239,157,47,1));
+    color:#fff;
+    border:none;
+    box-shadow:0 12px 22px rgba(239,157,47,.18);
   }
 
-  .jb-po-meta .k{
-    color: rgba(15,23,42,.56);
-    font-weight: 700;
+  .yarnpo-btn.primary:hover{
+    background:#000;
+    color:#fff;
   }
 
-  .jb-po-meta .v{
-    color: #111827;
-    font-weight: 800;
+  .yarnpo-list{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
   }
 
-  .jb-po-value{
-    font-weight: 900;
+  .yarnpo-card{
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:20px;
+    background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.92));
+    padding:16px;
   }
 
-  .jb-vendor-name,
-  .jb-firm-name{
-    font-weight: 800;
-    color: #111827;
+  .yarnpo-card-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:14px;
   }
 
-  .jb-vendor-sub,
-  .jb-firm-sub{
-    font-size: 12px;
-    color: rgba(15,23,42,.56);
-    margin-top: 4px;
-    line-height: 1.45;
+  .yarnpo-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:30px;
+    padding:0 12px;
+    border-radius:999px;
+    background:rgba(250,189,100,.14);
+    color:#ef6c00;
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:8px;
   }
 
-  .jb-lines{
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  .yarnpo-po-no{
+    font-size:18px;
+    font-weight:950;
+    color:#0f172a;
+    line-height:1.2;
   }
 
-  .jb-line{
-    padding: 10px 12px;
-    border-radius: 14px;
-    background: rgba(15,23,42,.035);
-    border: 1px solid rgba(15,23,42,.05);
+  .yarnpo-po-sub{
+    margin-top:4px;
+    font-size:12px;
+    color:#667085;
+    font-weight:700;
   }
 
-  .jb-line-title{
-    font-size: 13px;
-    font-weight: 900;
-    color: #111827;
-    line-height: 1.35;
-    margin-bottom: 4px;
+  .yarnpo-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:30px;
+    padding:0 12px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    white-space:nowrap;
   }
 
-  .jb-line-sub{
-    font-size: 11px;
-    color: rgba(15,23,42,.56);
-    font-weight: 700;
-    line-height: 1.5;
+  .yarnpo-status.pending{
+    background:rgba(250,189,100,.16);
+    color:#b76c00;
   }
 
-  .jb-line-empty{
-    font-size: 12px;
-    color: rgba(15,23,42,.56);
-    font-weight: 700;
+  .yarnpo-status.approved{
+    background:rgba(34,197,94,.14);
+    color:#15803d;
   }
 
-  .jb-total-stack{
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  .yarnpo-status.rejected{
+    background:rgba(239,68,68,.14);
+    color:#dc2626;
   }
 
-  .jb-total-card{
-    padding: 10px 12px;
-    border-radius: 14px;
-    background: rgba(15,23,42,.035);
-    border: 1px solid rgba(15,23,42,.05);
+  .yarnpo-grid{
+    display:grid;
+    grid-template-columns:1.1fr 1.2fr .9fr .9fr;
+    gap:14px;
+    align-items:start;
   }
 
-  .jb-total-label{
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color: rgba(15,23,42,.56);
-    font-weight: 900;
-    margin-bottom: 5px;
+  .yarnpo-box{
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:16px;
+    background:rgba(255,255,255,.86);
+    padding:12px;
   }
 
-  .jb-total-value{
-    font-size: 14px;
-    font-weight: 950;
-    color: #111827;
+  .yarnpo-box-title{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:8px;
   }
 
-  .jb-money{
-    font-weight: 900;
+  .yarnpo-meta{
+    display:grid;
+    grid-template-columns:84px 1fr;
+    gap:6px 8px;
+    font-size:12px;
   }
 
-  .jb-status-pill{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 28px;
-    padding: 0 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    white-space: nowrap;
+  .yarnpo-meta .k{
+    color:#667085;
+    font-weight:800;
   }
 
-  .jb-status-pill.is-pending{
-    background: rgba(250,189,100,.16);
-    color: #b76c00;
+  .yarnpo-meta .v{
+    color:#111827;
+    font-weight:800;
   }
 
-  .jb-status-pill.is-approved{
-    background: rgba(34,197,94,.14);
-    color: #15803d;
+  .yarnpo-lines{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
   }
 
-  .jb-status-pill.is-rejected{
-    background: rgba(239,68,68,.14);
-    color: #dc2626;
+  .yarnpo-line{
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:12px;
+    background:rgba(15,23,42,.03);
+    padding:10px 11px;
   }
 
-  .jb-status-note{
-    font-size: 12px;
-    color: rgba(15,23,42,.56);
-    margin-top: 8px;
-    line-height: 1.45;
+  .yarnpo-line-title{
+    font-size:13px;
+    font-weight:900;
+    color:#111827;
+    line-height:1.35;
   }
 
-  .jb-actions{
-    white-space: normal;
+  .yarnpo-line-sub{
+    margin-top:4px;
+    font-size:11px;
+    color:#667085;
+    font-weight:700;
+    line-height:1.5;
   }
 
-  .jb-inline-delete{
-    display: inline;
+  .yarnpo-metrics{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
   }
 
-  .jb-link-button{
-    background: none;
-    border: 0;
-    padding: 0;
-    font: inherit;
-    cursor: pointer;
+  .yarnpo-metric{
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:12px;
+    background:rgba(15,23,42,.03);
+    padding:10px 11px;
   }
 
-  .jb-empty{
-    text-align: center;
-    color: rgba(15,23,42,.56);
-    font-weight: 700;
+  .yarnpo-metric-label{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:4px;
   }
 
-  @media (max-width: 980px){
-    .jb-tools{
-      align-items: stretch;
+  .yarnpo-metric-value{
+    font-size:14px;
+    font-weight:950;
+    color:#111827;
+  }
+
+  .yarnpo-review-note{
+    margin-top:10px;
+    font-size:12px;
+    color:#667085;
+    line-height:1.5;
+    font-weight:700;
+  }
+
+  .yarnpo-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:14px;
+  }
+
+  .yarnpo-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:36px;
+    padding:0 12px;
+    border-radius:10px;
+    text-decoration:none;
+    border:1px solid rgba(15,23,42,.10);
+    background:#fff;
+    color:#111827;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .yarnpo-link:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .yarnpo-link.danger{
+    color:#dc2626;
+    border-color:rgba(220,38,38,.18);
+    background:rgba(220,38,38,.04);
+  }
+
+  .yarnpo-inline-delete{
+    display:inline;
+  }
+
+  .yarnpo-link-button{
+    background:none;
+    cursor:pointer;
+    font:inherit;
+  }
+
+  .yarnpo-empty{
+    padding:26px 18px;
+    text-align:center;
+    border:1px dashed rgba(15,23,42,.14);
+    border-radius:18px;
+    color:#667085;
+    font-weight:800;
+  }
+
+  @media (max-width: 1200px){
+    .yarnpo-grid{
+      grid-template-columns:1fr 1fr;
+    }
+  }
+
+  @media (max-width: 760px){
+    .yarnpo-head,
+    .yarnpo-card-top,
+    .yarnpo-toolbar{
+      flex-direction:column;
+      align-items:stretch;
     }
 
-    .jb-tool-actions{
-      width: 100%;
-      justify-content: flex-end;
+    .yarnpo-grid{
+      grid-template-columns:1fr;
+    }
+
+    .yarnpo-search{
+      width:100%;
     }
   }
 </style>
 
 <section class="page-section is-active">
   <div class="canvas">
-    <div class="jb-page">
-      <div class="jobbers-embed">
-        <div class="jb-panel">
+    <div class="yarnpo-list-page">
+      <div class="yarnpo-shell">
+        <div class="yarnpo-head">
+          <div>
+            <div class="yarnpo-title">Yarn Purchase Orders</div>
+            <div class="yarnpo-sub">All generated Yarn POs, their status, metrics, and actions.</div>
+          </div>
+        </div>
 
-          <div class="jb-head">
-            <div>
-              <div class="jb-title">Yarn Purchase Orders</div>
-              <div class="jb-sub">Manage generated Yarn POs with richer PO details in the same Jobber-style list layout.</div>
+        <div class="yarnpo-toolbar">
+          <form class="yarnpo-search" method="get">
+            <input
+              type="search"
+              name="q"
+              value="{{ q|default:'' }}"
+              placeholder="Search by system no, PO no, vendor, firm..."
+            >
+            <button class="yarnpo-btn" type="submit">Search</button>
+          </form>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="yarnpo-btn" href="{% url 'accounts:yarn_inward_tracker' %}">
+              Yarn Inwards
+            </a>
+
+            <a class="yarnpo-btn primary" href="{% url 'accounts:yarnpo_add' %}">
+              Generate PO
+            </a>
+          </div>
+        </div>
+
+        <div class="yarnpo-list">
+          {% for po in orders %}
+          <div class="yarnpo-card">
+            <div class="yarnpo-card-top">
+              <div>
+                <div class="yarnpo-badge">{{ po.system_number }}</div>
+                <div class="yarnpo-po-no">{{ po.po_number|default:"No PO Number" }}</div>
+                <div class="yarnpo-po-sub">
+                  {{ po.po_date|date:"d-m-Y" }}
+                  {% if po.cancel_date %} · Cancel: {{ po.cancel_date|date:"d-m-Y" }}{% endif %}
+                </div>
+              </div>
+
+              <span class="yarnpo-status {% if po.approval_status == 'approved' %}approved{% elif po.approval_status == 'rejected' %}rejected{% else %}pending{% endif %}">
+                {{ po.get_approval_status_display }}
+              </span>
+            </div>
+
+            <div class="yarnpo-grid">
+              <div class="yarnpo-box">
+                <div class="yarnpo-box-title">PO Details</div>
+                <div class="yarnpo-meta">
+                  <div class="k">System</div>
+                  <div class="v">{{ po.system_number }}</div>
+
+                  <div class="k">PO No</div>
+                  <div class="v">{{ po.po_number|default:"—" }}</div>
+
+                  <div class="k">Date</div>
+                  <div class="v">{{ po.po_date|date:"d-m-Y" }}</div>
+
+                  <div class="k">Remarks</div>
+                  <div class="v">{{ po.remarks|default:"—"|truncatechars:80 }}</div>
+                </div>
+              </div>
+
+              <div class="yarnpo-box">
+                <div class="yarnpo-box-title">Yarn Lines</div>
+                <div class="yarnpo-lines">
+                  {% for item in po.items.all %}
+                  <div class="yarnpo-line">
+                    <div class="yarnpo-line-title">
+                      {% if item.material_type %}
+                        {{ item.material_type.name }}
+                      {% elif item.material %}
+                        {{ item.material.name }}
+                      {% else %}
+                        Yarn Item
+                      {% endif %}
+                    </div>
+                    <div class="yarnpo-line-sub">
+                      Qty: {{ item.quantity|default:"0.00" }}
+                      {% if item.unit %} {{ item.unit }}{% endif %}
+                      {% if item.count %} · Count: {{ item.count }}{% endif %}
+                      {% if item.gsm %} · GSM: {{ item.gsm }}{% endif %}
+                      {% if item.rate %} · Rate: ₹{{ item.rate }}{% endif %}
+                      <br>
+                      Received: {{ item.inward_qty_total|default:"0.00" }} · Remaining: {{ item.remaining_qty_total|default:"0.00" }}
+                    </div>
+                  </div>
+                  {% empty %}
+                  <div class="yarnpo-line">
+                    <div class="yarnpo-line-sub">No yarn lines added.</div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="yarnpo-box">
+                <div class="yarnpo-box-title">Vendor / Firm</div>
+                <div class="yarnpo-meta">
+                  <div class="k">Vendor</div>
+                  <div class="v">{{ po.vendor.name }}</div>
+
+                  <div class="k">Contact</div>
+                  <div class="v">
+                    {% if po.vendor.contact_person %}{{ po.vendor.contact_person }}{% else %}—{% endif %}
+                    {% if po.vendor.phone %}<br>{{ po.vendor.phone }}{% endif %}
+                  </div>
+
+                  <div class="k">Firm</div>
+                  <div class="v">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
+
+                  <div class="k">Address</div>
+                  <div class="v">{{ po.shipping_address|default:"No shipping address"|truncatechars:90 }}</div>
+                </div>
+              </div>
+
+              <div class="yarnpo-box">
+                <div class="yarnpo-box-title">Summary</div>
+                <div class="yarnpo-metrics">
+                  <div class="yarnpo-metric">
+                    <div class="yarnpo-metric-label">Total Weight</div>
+                    <div class="yarnpo-metric-value">{{ po.total_weight|default:"0.00" }}</div>
+                  </div>
+
+                  <div class="yarnpo-metric">
+                    <div class="yarnpo-metric-label">Total Inward</div>
+                    <div class="yarnpo-metric-value">{{ po.total_inward_qty|default:"0.00" }}</div>
+                  </div>
+
+                  <div class="yarnpo-metric">
+                    <div class="yarnpo-metric-label">Remaining</div>
+                    <div class="yarnpo-metric-value">{{ po.remaining_qty_total|default:"0.00" }}</div>
+                  </div>
+
+                  <div class="yarnpo-metric">
+                    <div class="yarnpo-metric-label">Grand Total</div>
+                    <div class="yarnpo-metric-value">₹{{ po.grand_total|default:"0.00" }}</div>
+                  </div>
+                </div>
+
+                <div class="yarnpo-review-note">
+                  {% if po.reviewed_by %}
+                    Reviewed by {{ po.reviewed_by.username }}
+                    {% if po.reviewed_at %}<br>{{ po.reviewed_at|date:"d-m-Y H:i" }}{% endif %}
+                  {% else %}
+                    Waiting for admin review
+                  {% endif %}
+
+                  {% if po.approval_status == 'rejected' and po.rejection_reason %}
+                    <br><strong>Reason:</strong> {{ po.rejection_reason|truncatechars:100 }}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="yarnpo-actions">
+              {% if can_review_yarn_po %}
+                <a class="yarnpo-link" href="{% url 'accounts:yarnpo_review' po.id %}">Review</a>
+              {% endif %}
+
+              <a class="yarnpo-link" href="{% url 'accounts:yarnpo_pdf' po.id %}" target="_blank">PDF</a>
+              <a class="yarnpo-link" href="{% url 'accounts:yarnpo_inward' po.id %}">Yarn Inward</a>
+              <a class="yarnpo-link" href="{% url 'accounts:yarnpo_edit' po.id %}">Edit</a>
+
+              <form method="post" action="{% url 'accounts:yarnpo_delete' po.id %}" class="yarnpo-inline-delete">
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="yarnpo-link yarnpo-link-button danger"
+                  onclick="return confirm('Delete this Yarn PO?')"
+                >
+                  Delete
+                </button>
+              </form>
             </div>
           </div>
-
-          <div class="jb-tools">
-            <form class="jb-search" method="get">
-              <input
-                type="search"
-                name="q"
-                value="{{ q|default:'' }}"
-                placeholder="Search by system no, PO no, vendor, firm..."
-              >
-              <button class="jb-search-btn" type="submit">Search</button>
-            </form>
-
-            <div class="jb-tool-actions">
-              <a class="jb-add" href="{% url 'accounts:yarnpo_add' %}">
-                <svg class="jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 5v14"></path>
-                  <path d="M5 12h14"></path>
-                </svg>
-                Generate PO
-              </a>
-            </div>
+          {% empty %}
+          <div class="yarnpo-empty">
+            No Yarn POs found yet. Generate your first PO.
           </div>
-
-          <div class="jb-tablewrap">
-            <table class="jb-table">
-              <thead>
-                <tr>
-                  <th class="jb-col-po">PO Details</th>
-                  <th class="jb-col-vendor">Vendor</th>
-                  <th class="jb-col-firm">Firm</th>
-                  <th class="jb-col-lines">Yarn Lines</th>
-                  <th class="jb-col-weight">Weight</th>
-                  <th class="jb-col-total">Grand Total</th>
-                  <th class="jb-col-status">Status</th>
-                  <th class="jb-col-actions">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for po in orders %}
-                <tr>
-                  <td>
-                    <span class="jb-system-badge">{{ po.system_number }}</span>
-
-                    <div class="jb-po-meta">
-                      <div class="k">PO No</div>
-                      <div class="v">: {{ po.po_number|default:"—" }}</div>
-
-                      <div class="k">Date</div>
-                      <div class="v">: {{ po.po_date|date:"d-m-Y" }}</div>
-
-                      <div class="k">Cancel</div>
-                      <div class="v">: {{ po.cancel_date|date:"d-m-Y"|default:"—" }}</div>
-
-                      <div class="k">Remarks</div>
-                      <div class="v">: {{ po.remarks|default:"—"|truncatechars:70 }}</div>
-
-                      <div class="k">PO Value</div>
-                      <div class="v jb-po-value">: ₹{{ po.grand_total|default:"0.00" }}</div>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div class="jb-vendor-name">{{ po.vendor.name }}</div>
-                    <div class="jb-vendor-sub">
-                      {% if po.vendor.contact_person %}{{ po.vendor.contact_person }}{% endif %}
-                      {% if po.vendor.phone %}<br>{{ po.vendor.phone }}{% endif %}
-                    </div>
-                  </td>
-
-                  <td>
-                    <div class="jb-firm-name">
-                      {% if po.firm %}
-                        {{ po.firm.firm_name }}
-                      {% else %}
-                        —
-                      {% endif %}
-                    </div>
-                    <div class="jb-firm-sub">
-                      {{ po.shipping_address|default:"No shipping address"|truncatechars:65 }}
-                    </div>
-                  </td>
-
-                  <td>
-                    <div class="jb-lines">
-                      {% for item in po.items.all %}
-                      <div class="jb-line">
-                        <div class="jb-line-title">
-                          {% if item.material %}{{ item.material.name }}{% else %}Yarn item{% endif %}
-                        </div>
-                        <div class="jb-line-sub">
-                          Qty: {{ item.quantity|default:"0.00" }}
-                          {% if item.unit %} {{ item.unit }}{% endif %}
-                          {% if item.count %} · Count: {{ item.count }}{% endif %}
-                          {% if item.gsm %} · GSM: {{ item.gsm }}{% endif %}
-                          {% if item.rate %} · Rate: ₹{{ item.rate }}{% endif %}
-                        </div>
-                      </div>
-                      {% empty %}
-                      <div class="jb-line">
-                        <div class="jb-line-empty">No yarn lines added.</div>
-                      </div>
-                      {% endfor %}
-                    </div>
-                  </td>
-
-                  <td>
-                    <div class="jb-total-stack">
-                      <div class="jb-total-card">
-                        <div class="jb-total-label">Total Weight</div>
-                        <div class="jb-total-value">{{ po.total_weight|default:"0.00" }}</div>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div class="jb-total-stack">
-                      <div class="jb-total-card">
-                        <div class="jb-total-label">Grand Total</div>
-                        <div class="jb-total-value jb-money">₹{{ po.grand_total|default:"0.00" }}</div>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>
-                    <span class="jb-status-pill {% if po.approval_status == 'approved' %}is-approved{% elif po.approval_status == 'rejected' %}is-rejected{% else %}is-pending{% endif %}">
-                      {% if po.approval_status == 'approved' %}
-                        Approved
-                      {% elif po.approval_status == 'rejected' %}
-                        Rejected
-                      {% else %}
-                        Pending
-                      {% endif %}
-                    </span>
-
-                    <div class="jb-status-note">
-                      {% if po.reviewed_by %}
-                        Reviewed by {{ po.reviewed_by.username }}
-                      {% else %}
-                        Waiting for review
-                      {% endif %}
-                    </div>
-                  </td>
-
-                  <td class="jb-actions">
-                    <a class="jb-link" href="{% url 'accounts:yarnpo_edit' po.id %}">Edit</a>
-
-                    <span class="jb-dot">•</span>
-
-                    <form method="post" action="{% url 'accounts:yarnpo_delete' po.id %}" class="jb-inline-delete">
-                      {% csrf_token %}
-                      <button
-                        type="submit"
-                        class="jb-link jb-link-danger jb-link-button"
-                        onclick="return confirm('Delete this Yarn PO?')"
-                      >
-                        Delete
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="8" class="jb-empty">
-                    No Yarn POs found yet. Generate your first PO.
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-
+          {% endfor %}
         </div>
       </div>
     </div>

@@ -71,66 +71,79 @@
 
               <div class="util-group-grid" id="poTiles">
 
-                <a class="util-tile" href="{% url 'accounts:yarnpo_list' %}" data-title="Yarn PO">
-                  <span class="util-ico">
-                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M7 7h10v10H7z"></path>
-                      <path d="M9 3v4"></path>
-                      <path d="M15 3v4"></path>
-                      <path d="M3 9h4"></path>
-                      <path d="M17 9h4"></path>
-                    </svg>
-                  </span>
-                  <div class="util-meta">
-                    <div class="util-title">Yarn PO</div>
-                    <div class="po-note">Create and manage yarn purchase orders.</div>
-                  </div>
-                </a>
+  <a class="util-tile" href="{% url 'accounts:yarnpo_list' %}" data-title="Yarn PO">
+    <span class="util-ico">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 7h10v10H7z"></path>
+        <path d="M9 3v4"></path>
+        <path d="M15 3v4"></path>
+        <path d="M3 9h4"></path>
+        <path d="M17 9h4"></path>
+      </svg>
+    </span>
+    <div class="util-meta">
+      <div class="util-title">Yarn PO</div>
+      <div class="po-note">Create and manage yarn purchase orders.</div>
+    </div>
+  </a>
 
-                <a class="util-tile" href="#" data-title="Greige PO" data-soon="1">
-                  <span class="util-ico">
-                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M4 7h16"></path>
-                      <path d="M6 7l1 11h10l1-11"></path>
-                      <path d="M9 11h6"></path>
-                    </svg>
-                  </span>
-                  <div class="util-meta">
-                    <div class="util-title">Greige PO</div>
-                    <div class="po-note">For greige fabric procurement.</div>
-                    <div class="po-soon">Coming next</div>
-                  </div>
-                </a>
+  <a class="util-tile" href="{% url 'accounts:yarn_inward_tracker' %}" data-title="Yarn Inwards">
+    <span class="util-ico">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 7h8"></path>
+        <path d="M6 12h12"></path>
+        <path d="M4 17h16"></path>
+      </svg>
+    </span>
+    <div class="util-meta">
+      <div class="util-title">Yarn Inwards</div>
+      <div class="po-note">Track inwarded Yarn POs and start greige process.</div>
+    </div>
+  </a>
 
-                <a class="util-tile" href="#" data-title="Dyed PO" data-soon="1">
-                  <span class="util-ico">
-                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 3c3 4 5 6.6 5 9a5 5 0 1 1-10 0c0-2.4 2-5 5-9z"></path>
-                    </svg>
-                  </span>
-                  <div class="util-meta">
-                    <div class="util-title">Dyed PO</div>
-                    <div class="po-note">For dyed fabric purchase orders.</div>
-                    <div class="po-soon">Coming next</div>
-                  </div>
-                </a>
+  <a class="util-tile" href="{% url 'accounts:greigepo_list' %}" data-title="Greige PO">
+    <span class="util-ico">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16"></path>
+        <path d="M4 12h16"></path>
+        <path d="M4 17h16"></path>
+      </svg>
+    </span>
+    <div class="util-meta">
+      <div class="util-title">Greige PO</div>
+      <div class="po-note">Generate and track Greige POs from inwarded Yarn POs.</div>
+    </div>
+  </a>
 
-                <a class="util-tile" href="#" data-title="Ready Fabric PO" data-soon="1">
-                  <span class="util-ico">
-                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M5 6h14v12H5z"></path>
-                      <path d="M9 10h6"></path>
-                      <path d="M9 14h4"></path>
-                    </svg>
-                  </span>
-                  <div class="util-meta">
-                    <div class="util-title">Ready Fabric PO</div>
-                    <div class="po-note">For ready/finished fabric procurement.</div>
-                    <div class="po-soon">Coming next</div>
-                  </div>
-                </a>
+  <a class="util-tile" href="#" data-title="Dyed PO" data-soon="1">
+    <span class="util-ico">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3c3 4 5 6.6 5 9a5 5 0 1 1-10 0c0-2.4 2-5 5-9z"></path>
+      </svg>
+    </span>
+    <div class="util-meta">
+      <div class="util-title">Dyed PO</div>
+      <div class="po-note">For dyed fabric purchase orders.</div>
+      <div class="po-soon">Coming next</div>
+    </div>
+  </a>
 
-              </div>
+  <a class="util-tile" href="#" data-title="Ready Fabric PO" data-soon="1">
+    <span class="util-ico">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 6h14v12H5z"></path>
+        <path d="M9 10h6"></path>
+        <path d="M9 14h4"></path>
+      </svg>
+    </span>
+    <div class="util-meta">
+      <div class="util-title">Ready Fabric PO</div>
+      <div class="po-note">For ready/finished fabric procurement.</div>
+      <div class="po-soon">Coming next</div>
+    </div>
+  </a>
+
+</div>
             </div>
           </div>
         </div>

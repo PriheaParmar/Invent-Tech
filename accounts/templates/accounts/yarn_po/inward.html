@@ -1,0 +1,645 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Yarn Inward - InventTech{% endblock %}
+{% block page_title %}Yarn Inward{% endblock %}
+{% block page_subtitle %}Create and manage inward entries against Yarn PO{% endblock %}
+
+{% block content %}
+<style>
+  .canvas{
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
+  }
+
+  .yarnpo-inward-page{
+    width:100%;
+    min-width:0;
+  }
+
+  .yarnpo-inward-shell{
+    width:100%;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+    box-shadow:0 18px 55px rgba(15,23,42,.08);
+    overflow:hidden;
+  }
+
+  .yarnpo-inward-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    padding:18px;
+    border-bottom:1px solid rgba(15,23,42,.06);
+    background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.95));
+  }
+
+  .yarnpo-inward-top-left{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+  }
+
+  .yarnpo-inward-top-ico{
+    width:24px;
+    height:24px;
+    border-radius:8px;
+    background:linear-gradient(180deg, rgba(250,189,100,1), rgba(239,157,47,1));
+    box-shadow:0 8px 18px rgba(239,157,47,.18);
+    flex:0 0 auto;
+    margin-top:2px;
+  }
+
+  .yarnpo-inward-title{
+    font-size:22px;
+    font-weight:950;
+    letter-spacing:-.03em;
+    color:#0f172a;
+    line-height:1.2;
+  }
+
+  .yarnpo-inward-sub{
+    margin-top:4px;
+    font-size:12px;
+    color:#667085;
+  }
+
+  .yarnpo-inward-top-right{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .yarnpo-inward-remaining{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:38px;
+    padding:0 14px;
+    border-radius:999px;
+    background:rgba(250,189,100,.14);
+    color:#ef6c00;
+    font-size:12px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .yarnpo-btn{
+    height:42px;
+    padding:0 16px;
+    border-radius:12px;
+    border:1px solid rgba(15,23,42,.10);
+    background:#fff;
+    color:#111827;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+    transition:.18s ease;
+  }
+
+  .yarnpo-btn:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .yarnpo-btn.primary{
+    background:linear-gradient(180deg, #f97316, #ea580c);
+    color:#fff;
+    border:none;
+    box-shadow:0 10px 20px rgba(234,88,12,.20);
+  }
+
+  .yarnpo-btn.primary:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .yarnpo-btn svg{
+    width:16px;
+    height:16px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .yarnpo-inward-body{
+    padding:18px;
+  }
+
+  .yarnpo-inward-header-grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:14px;
+    margin-bottom:16px;
+  }
+
+  .yarnpo-field{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    min-width:0;
+  }
+
+  .yarnpo-field label{
+    font-size:12px;
+    font-weight:900;
+    color:rgba(15,23,42,.76);
+    letter-spacing:.02em;
+  }
+
+  .yarnpo-field input,
+  .yarnpo-field textarea,
+  .yarnpo-field select{
+    width:100%;
+    min-height:42px;
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:14px;
+    padding:10px 12px;
+    outline:none;
+    box-sizing:border-box;
+    background:#fff;
+    color:#111827;
+    font:inherit;
+  }
+
+  .yarnpo-field textarea{
+    min-height:90px;
+    resize:vertical;
+  }
+
+  .yarnpo-field.readonly input{
+    background:rgba(15,23,42,.04);
+    font-weight:800;
+  }
+
+  .yarnpo-err{
+    color:#dc2626;
+    font-size:12px;
+    font-weight:700;
+    margin-top:2px;
+  }
+
+  .yarnpo-block{
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:20px;
+    background:rgba(255,255,255,.96);
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+
+  .yarnpo-block-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 16px;
+    border-bottom:1px solid rgba(15,23,42,.06);
+    background:rgba(248,250,252,.95);
+  }
+
+  .yarnpo-block-title{
+    font-size:16px;
+    font-weight:950;
+    color:#0f172a;
+    letter-spacing:-.01em;
+  }
+
+  .yarnpo-block-sub{
+    margin-top:3px;
+    font-size:12px;
+    color:#667085;
+  }
+
+  .yarnpo-block-body{
+    padding:16px;
+  }
+
+  .yarnpo-meta-grid{
+    display:grid;
+    grid-template-columns:120px 1fr 120px 1fr;
+    gap:8px 12px;
+    font-size:13px;
+  }
+
+  .yarnpo-meta-grid .k{
+    font-weight:900;
+    color:#111827;
+  }
+
+  .yarnpo-meta-grid .v{
+    color:#374151;
+    font-weight:700;
+  }
+
+  .yarnpo-error-box{
+    margin-bottom:14px;
+    padding:12px;
+    border-radius:14px;
+    background:rgba(239,68,68,.08);
+    border:1px solid rgba(239,68,68,.18);
+  }
+
+  .yarnpo-grid-table{
+    overflow:auto;
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:16px;
+  }
+
+  .yarnpo-table{
+    width:100%;
+    min-width:1080px;
+    border-collapse:collapse;
+  }
+
+  .yarnpo-table th,
+  .yarnpo-table td{
+    padding:11px 12px;
+    border-bottom:1px solid rgba(15,23,42,.06);
+    text-align:left;
+    vertical-align:top;
+    font-size:12px;
+  }
+
+  .yarnpo-table thead th{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    background:rgba(248,250,252,.96);
+    white-space:nowrap;
+  }
+
+  .yarnpo-table tfoot td{
+    background:rgba(248,250,252,.75);
+    font-weight:900;
+  }
+
+  .yarnpo-material{
+    font-weight:900;
+    color:#111827;
+  }
+
+  .yarnpo-small{
+    font-size:11px;
+    color:#667085;
+    font-weight:700;
+    margin-top:4px;
+    line-height:1.45;
+  }
+
+  .yarnpo-inline-input{
+    width:100%;
+    min-height:38px;
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:12px;
+    padding:8px 10px;
+    outline:none;
+    box-sizing:border-box;
+    background:#fff;
+  }
+
+  .yarnpo-inline-input:focus{
+    border-color:rgba(250,189,100,.8);
+    box-shadow:0 0 0 3px rgba(250,189,100,.14);
+  }
+
+  .yarnpo-history-wrap{
+    overflow:auto;
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:16px;
+  }
+
+  .yarnpo-history-table{
+    width:100%;
+    min-width:980px;
+    border-collapse:collapse;
+  }
+
+  .yarnpo-history-table th,
+  .yarnpo-history-table td{
+    padding:11px 12px;
+    border-bottom:1px solid rgba(15,23,42,.06);
+    text-align:left;
+    vertical-align:top;
+    font-size:12px;
+  }
+
+  .yarnpo-history-table thead th{
+    background:#f97316;
+    color:#fff;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .yarnpo-actionsbar{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:18px;
+  }
+
+  @media (max-width: 1100px){
+    .yarnpo-inward-header-grid,
+    .yarnpo-meta-grid{
+      grid-template-columns:1fr 1fr;
+    }
+  }
+
+  @media (max-width: 760px){
+    .yarnpo-inward-top,
+    .yarnpo-actionsbar{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .yarnpo-inward-top-right{
+      width:100%;
+      justify-content:space-between;
+    }
+
+    .yarnpo-inward-header-grid,
+    .yarnpo-meta-grid{
+      grid-template-columns:1fr;
+    }
+
+    .yarnpo-btn{
+      width:100%;
+    }
+  }
+</style>
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="yarnpo-inward-page">
+      <div class="yarnpo-inward-shell">
+        <div class="yarnpo-inward-top">
+          <div class="yarnpo-inward-top-left">
+            <div class="yarnpo-inward-top-ico"></div>
+            <div>
+              <div class="yarnpo-inward-title">Yarn Inward</div>
+              <div class="yarnpo-inward-sub">Record inward quantities against the selected Yarn PO.</div>
+            </div>
+          </div>
+
+          <div class="yarnpo-inward-top-right">
+            <div class="yarnpo-inward-remaining">
+              Remaining Weight: {{ po.remaining_qty_total|default:"0.00" }}
+            </div>
+
+            <button
+  type="button"
+  class="yarnpo-btn"
+  onclick="window.location.href=`{% url 'accounts:yarnpo_list' %}`"
+>
+  Back to Yarn PO List
+</button>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6"></path>
+              </svg>
+              Back to Yarn PO List
+            </button>
+          </div>
+        </div>
+
+        <div class="yarnpo-inward-body">
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="yarnpo-inward-header-grid">
+              <div class="yarnpo-field readonly">
+                <label>PO Number</label>
+                <input type="text" value="{{ po.system_number }}" readonly>
+              </div>
+
+              <div class="yarnpo-field readonly">
+                <label>Yarn Inward No</label>
+                <input type="text" value="{{ next_inward_number_preview }}" readonly>
+              </div>
+
+              <div class="yarnpo-field">
+                <label for="{{ inward_form.inward_date.id_for_label }}">Date</label>
+                {{ inward_form.inward_date }}
+                {% for err in inward_form.inward_date.errors %}
+                  <div class="yarnpo-err">{{ err }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="yarnpo-block">
+              <div class="yarnpo-block-head">
+                <div>
+                  <div class="yarnpo-block-title">PO Details</div>
+                  <div class="yarnpo-block-sub">Reference information for this Yarn PO.</div>
+                </div>
+              </div>
+
+              <div class="yarnpo-block-body">
+                <div class="yarnpo-meta-grid">
+                  <div class="k">Vendor</div>
+                  <div class="v">{{ po.vendor.name }}</div>
+
+                  <div class="k">Firm</div>
+                  <div class="v">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
+
+                  <div class="k">Shipping Address</div>
+                  <div class="v">{{ po.shipping_address|default:"—" }}</div>
+
+                  <div class="k">Total Weight</div>
+                  <div class="v">{{ po.total_weight|default:"0.00" }}</div>
+
+                  <div class="k">Total Inward</div>
+                  <div class="v">{{ po.total_inward_qty|default:"0.00" }}</div>
+
+                  <div class="k">Remaining</div>
+                  <div class="v">{{ po.remaining_qty_total|default:"0.00" }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="yarnpo-block">
+              <div class="yarnpo-block-head">
+                <div>
+                  <div class="yarnpo-block-title">Inward Details</div>
+                  <div class="yarnpo-block-sub">Enter inward quantity for each yarn line.</div>
+                </div>
+              </div>
+
+              <div class="yarnpo-block-body">
+                <div class="yarnpo-field" style="margin-bottom:14px;">
+                  <label for="{{ inward_form.notes.id_for_label }}">Notes / Challan Remarks</label>
+                  {{ inward_form.notes }}
+                  {% for err in inward_form.notes.errors %}
+                    <div class="yarnpo-err">{{ err }}</div>
+                  {% endfor %}
+                  {% for err in inward_form.non_field_errors %}
+                    <div class="yarnpo-err">{{ err }}</div>
+                  {% endfor %}
+                </div>
+
+                {% if item_errors %}
+                  <div class="yarnpo-error-box">
+                    {% for item_id, err in item_errors.items %}
+                      <div class="yarnpo-err">{{ err }}</div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                <div class="yarnpo-grid-table">
+                  <table class="yarnpo-table">
+                    <thead>
+                      <tr>
+                        <th>Yarn Type</th>
+                        <th>UOM</th>
+                        <th>Total</th>
+                        <th>Received</th>
+                        <th>Remaining</th>
+                        <th>Inward Qty</th>
+                        <th>Remark</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for item in po.items.all %}
+                      <tr>
+                        <td>
+                          <div class="yarnpo-material">
+                            {% if item.material_type %}
+                              {{ item.material_type.name }}
+                            {% elif item.material %}
+                              {{ item.material.name }}
+                            {% else %}
+                              —
+                            {% endif %}
+                          </div>
+                          <div class="yarnpo-small">
+                            {% if item.count %}Count: {{ item.count }}{% endif %}
+                            {% if item.gsm %} · GSM: {{ item.gsm }}{% endif %}
+                            {% if item.rate %} · Rate: ₹{{ item.rate }}{% endif %}
+                          </div>
+                        </td>
+                        <td>{{ item.unit|default:"—" }}</td>
+                        <td>{{ item.quantity|default:"0.00" }}</td>
+                        <td>{{ item.inward_qty_total|default:"0.00" }}</td>
+                        <td>{{ item.remaining_qty_total|default:"0.00" }}</td>
+                        <td>
+                          <input
+                            class="yarnpo-inline-input"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            name="qty_{{ item.id }}"
+                            value=""
+                            placeholder="0.00"
+                          >
+                        </td>
+                        <td>
+                          <input
+                            class="yarnpo-inline-input"
+                            type="text"
+                            name="remark_{{ item.id }}"
+                            value=""
+                            placeholder="Optional remark"
+                          >
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="2">Final Qty</td>
+                        <td>{{ po.total_weight|default:"0.00" }}</td>
+                        <td>{{ po.total_inward_qty|default:"0.00" }}</td>
+                        <td colspan="3">Remaining Qty = {{ po.remaining_qty_total|default:"0.00" }}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="yarnpo-block">
+              <div class="yarnpo-block-head">
+                <div>
+                  <div class="yarnpo-block-title">Inward History</div>
+                  <div class="yarnpo-block-sub">Previous inward entries for this Yarn PO.</div>
+                </div>
+              </div>
+
+              <div class="yarnpo-block-body">
+                <div class="yarnpo-history-wrap">
+                  <table class="yarnpo-history-table">
+                    <thead>
+                      <tr>
+                        <th>Yarn Type</th>
+                        <th>Order Qty</th>
+                        <th>Yarn Inward No</th>
+                        <th>Date</th>
+                        <th>Notes</th>
+                        <th>Received Qty</th>
+                        <th>Remark</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for inward in existing_inwards %}
+                        {% for row in inward.items.all %}
+                        <tr>
+                          <td>
+                            {% if row.po_item.material_type %}
+                              {{ row.po_item.material_type.name }}
+                            {% elif row.po_item.material %}
+                              {{ row.po_item.material.name }}
+                            {% else %}
+                              Item
+                            {% endif %}
+                          </td>
+                          <td>{{ row.po_item.quantity|default:"0.00" }}</td>
+                          <td>{{ inward.inward_number }}</td>
+                          <td>{{ inward.inward_date|date:"d-m-Y" }}</td>
+                          <td>{{ inward.notes|default:"—" }}</td>
+                          <td>{{ row.quantity }}</td>
+                          <td>{{ row.remark|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                      {% empty %}
+                      <tr>
+                        <td colspan="7">No inward records yet.</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="yarnpo-actionsbar">
+              <button
+  type="button"
+  class="yarnpo-btn"
+  onclick="window.location.href=`{% url 'accounts:yarnpo_list' %}`"
+>
+                Cancel
+              </button>
+              <button type="submit" class="yarnpo-btn primary">Submit Inward</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

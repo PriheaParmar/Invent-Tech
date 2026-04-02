@@ -1,0 +1,106 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Greige PO - InventTech{% endblock %}
+{% block page_title %}PO / Greige{% endblock %}
+{% block page_subtitle %}Generated Greige purchase orders from Yarn inward flow{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="jb-page">
+      <div class="jobbers-embed">
+        <div class="jb-panel">
+
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">Greige Purchase Orders</div>
+              <div class="jb-sub">View Greige POs generated from Yarn inwarded purchase orders.</div>
+            </div>
+          </div>
+
+          <div class="jb-tools">
+            <form class="jb-search" method="get">
+              <input
+                type="search"
+                name="q"
+                value="{{ q|default:'' }}"
+                placeholder="Search by system no, source yarn PO, vendor..."
+              >
+              <button class="jb-search-btn" type="submit">Search</button>
+            </form>
+
+            <div class="jb-tool-actions">
+              <a class="jb-add" href="{% url 'accounts:yarn_inward_tracker' %}">Yarn Inwards</a>
+            </div>
+          </div>
+
+          <div class="jb-tablewrap">
+            <table class="jb-table" style="min-width: 1200px;">
+              <thead>
+                <tr>
+                  <th>Greige PO</th>
+                  <th>Source Yarn PO</th>
+                  <th>Vendor / Firm</th>
+                  <th>Items</th>
+                  <th>Total Weight</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for po in orders %}
+                <tr>
+                  <td>
+                    <div class="jb-line-title">{{ po.system_number }}</div>
+                    <div class="jb-line-sub">
+                      PO No: {{ po.po_number|default:"—" }}<br>
+                      Date: {{ po.po_date|date:"d-m-Y" }}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="jb-line-title">{{ po.source_yarn_po.system_number }}</div>
+                    <div class="jb-line-sub">
+                      Yarn PO No: {{ po.source_yarn_po.po_number|default:"—" }}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="jb-vendor-name">{{ po.vendor.name }}</div>
+                    <div class="jb-vendor-sub">
+                      {% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="jb-lines">
+                      {% for item in po.items.all %}
+                      <div class="jb-line">
+                        <div class="jb-line-title">{{ item.fabric_name }}</div>
+                        <div class="jb-line-sub">
+                          Qty: {{ item.quantity }}{% if item.unit %} {{ item.unit }}{% endif %}
+                          {% if item.yarn_name %}<br>From Yarn: {{ item.yarn_name }}{% endif %}
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="jb-metric-value">{{ po.total_weight|default:"0.00" }}</div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="5" class="jb-empty">
+                    No Greige POs generated yet.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

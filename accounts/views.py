@@ -1,4 +1,10 @@
 import json
+from io import BytesIO
+from decimal import Decimal, InvalidOperation
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.db.models import Q, Prefetch, Sum
+
 from datetime import timedelta
 from decimal import Decimal
 from calendar import monthcalendar
@@ -30,9 +36,12 @@ from .forms import (
     MaterialTypeForm,
     PartyForm,
     VendorForm,
+    YarnPOInwardForm,
+    YarnPOReviewForm,
     YarnPurchaseOrderForm,
     YarnPurchaseOrderItemFormSet,
 )
+
 from .models import (
     Firm,
     Jobber,
@@ -44,8 +53,12 @@ from .models import (
     Party,
     UserExtra,
     Vendor,
+    YarnPOInward,
+    YarnPOInwardItem,
     YarnPurchaseOrder,
     YarnPurchaseOrderItem,
+    GreigePurchaseOrder,
+GreigePurchaseOrderItem,
 )
 
 
@@ -62,6 +75,10 @@ def _next_yarn_po_number() -> str:
     next_id = (last.id + 1) if last else 1
     return f"YPO-{next_id:04d}"
 
+def _next_greige_po_number() -> str:
+    last = GreigePurchaseOrder.objects.order_by("-id").first()
+    next_id = (last.id + 1) if last else 1
+    return f"GPO-{next_id:04d}"
 
 def _firm_address(firm):
     if not firm:
@@ -1114,15 +1131,148 @@ def vendor_delete(request, pk: int):
 # ==========================
 # YARN PURCHASE ORDERS
 # ==========================
+def _can_access_yarn_po(user, po):
+    return bool(_can_review_yarn_po(user) or po.owner_id == user.id)
+
+
+def _next_yarn_inward_number() -> str:
+    last = YarnPOInward.objects.order_by("-id").first()
+    next_id = (last.id + 1) if last else 1
+    return f"YIN-{next_id:04d}"
+
+
+def _attach_yarn_po_metrics(po):
+    return po
+
+def _build_yarn_po_pdf_response(po):
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib.units import mm
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    except ImportError:
+        return HttpResponse(
+            "ReportLab is required for PDF generation. Install it with: pip install reportlab",
+            status=500,
+        )
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=14 * mm,
+        leftMargin=14 * mm,
+        topMargin=14 * mm,
+        bottomMargin=14 * mm,
+    )
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph(f"Yarn Purchase Order - {po.system_number}", styles["Title"]))
+    story.append(Spacer(1, 8))
+
+    meta_rows = [
+        ["System No", po.system_number],
+        ["PO Number", po.po_number or "-"],
+        ["PO Date", po.po_date.strftime("%d-%m-%Y") if po.po_date else "-"],
+        ["Cancel Date", po.cancel_date.strftime("%d-%m-%Y") if po.cancel_date else "-"],
+        ["Vendor", po.vendor.name if po.vendor else "-"],
+        ["Firm", po.firm.firm_name if po.firm else "-"],
+        ["Shipping Address", po.shipping_address or "-"],
+        ["Status", po.get_approval_status_display()],
+    ]
+
+    meta_table = Table(meta_rows, colWidths=[38 * mm, 130 * mm])
+    meta_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f8fafc")),
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("PADDING", (0, 0), (-1, -1), 6),
+    ]))
+    story.append(meta_table)
+    story.append(Spacer(1, 12))
+
+    item_rows = [["Material", "Quantity", "UOM", "Rate", "Final Amount"]]
+    for item in po.items.all():
+        item_rows.append([
+            item.material.name if item.material else "-",
+            str(item.quantity or "0.00"),
+            item.unit or "-",
+            f"₹{item.rate or '0.00'}",
+            f"₹{item.final_amount or '0.00'}",
+        ])
+
+    items_table = Table(item_rows, colWidths=[70 * mm, 28 * mm, 22 * mm, 28 * mm, 35 * mm])
+    items_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f3f4f6")),
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("PADDING", (0, 0), (-1, -1), 6),
+    ]))
+    story.append(items_table)
+    story.append(Spacer(1, 12))
+
+    summary_rows = [
+        ["Sub Total", f"₹{po.subtotal or '0.00'}"],
+        ["Discount (%)", str(po.discount_percent or '0')],
+        ["After Discount", f"₹{po.after_discount_value or '0.00'}"],
+        ["Others", f"₹{po.others or '0.00'}"],
+        ["CGST (%)", str(po.cgst_percent or '0')],
+        ["SGST (%)", str(po.sgst_percent or '0')],
+        ["Grand Total", f"₹{po.grand_total or '0.00'}"],
+    ]
+    summary_table = Table(summary_rows, colWidths=[48 * mm, 42 * mm], hAlign="RIGHT")
+    summary_table.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("PADDING", (0, 0), (-1, -1), 6),
+    ]))
+    story.append(summary_table)
+
+    if po.remarks:
+        story.append(Spacer(1, 12))
+        story.append(Paragraph("Remarks", styles["Heading4"]))
+        story.append(Paragraph(po.remarks, styles["BodyText"]))
+
+    if po.terms_conditions:
+        story.append(Spacer(1, 12))
+        story.append(Paragraph("Terms & Conditions", styles["Heading4"]))
+        story.append(Paragraph(po.terms_conditions.replace("\n", "<br/>"), styles["BodyText"]))
+
+    doc.build(story)
+    buffer.seek(0)
+
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{po.system_number}.pdf"'
+    return response
+
+
 @login_required
 def yarnpo_list(request):
     q = (request.GET.get("q") or "").strip()
+
     qs = (
         YarnPurchaseOrder.objects
-        .filter(owner=request.user)
-        .select_related("vendor", "firm", "reviewed_by")
-        .prefetch_related("items__material")
+        .select_related("vendor", "firm", "reviewed_by", "owner")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=YarnPurchaseOrderItem.objects.select_related("material").prefetch_related("inward_items"),
+            ),
+            Prefetch(
+                "inwards",
+                queryset=YarnPOInward.objects.prefetch_related("items"),
+            ),
+        )
     )
+
+    if not _can_review_yarn_po(request.user):
+        qs = qs.filter(owner=request.user)
 
     if q:
         qs = qs.filter(
@@ -1133,11 +1283,13 @@ def yarnpo_list(request):
             | Q(items__material__name__icontains=q)
         ).distinct()
 
+    orders = [_attach_yarn_po_metrics(po) for po in qs.order_by("-id")]
+
     return render(
         request,
         "accounts/yarn_po/list.html",
         {
-            "orders": qs.order_by("-id"),
+            "orders": orders,
             "q": q,
             "can_review_yarn_po": _can_review_yarn_po(request.user),
         },
@@ -1150,32 +1302,27 @@ def _bind_yarnpo_item_formset(request, instance=None):
     else:
         formset = YarnPurchaseOrderItemFormSet(instance=instance, prefix="items")
 
-    yarn_materials = (
-        Material.objects
-        .filter(
-            Q(material_kind="yarn") |
-            Q(material_type__material_kind="yarn")
-        )
-        .select_related("material_type", "material_shade")
-        .order_by("name")
-        .distinct()
-    )
+    yarn_type_qs = MaterialType.objects.filter(
+        owner=request.user,
+        material_kind="yarn",
+    ).order_by("name")
 
-    def material_label(obj):
+    def type_label(obj):
         return obj.name
 
     for form in formset.forms:
-        if "material" in form.fields:
-            form.fields["material"].queryset = yarn_materials
-            form.fields["material"].label_from_instance = material_label
-            form.fields["material"].empty_label = "Select Yarn Name"
+        if "material_type" in form.fields:
+            form.fields["material_type"].queryset = yarn_type_qs
+            form.fields["material_type"].label_from_instance = type_label
+            form.fields["material_type"].empty_label = "Select Yarn Type"
 
-    if hasattr(formset, "empty_form") and "material" in formset.empty_form.fields:
-        formset.empty_form.fields["material"].queryset = yarn_materials
-        formset.empty_form.fields["material"].label_from_instance = material_label
-        formset.empty_form.fields["material"].empty_label = "Select Yarn Name"
+    if hasattr(formset, "empty_form") and "material_type" in formset.empty_form.fields:
+        formset.empty_form.fields["material_type"].queryset = yarn_type_qs
+        formset.empty_form.fields["material_type"].label_from_instance = type_label
+        formset.empty_form.fields["material_type"].empty_label = "Select Yarn Type"
 
     return formset
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -1267,53 +1414,438 @@ def yarnpo_update(request, pk: int):
 
 
 @login_required
+def yarnpo_pdf(request, pk: int):
+    po = get_object_or_404(
+        YarnPurchaseOrder.objects
+        .select_related("vendor", "firm", "owner")
+        .prefetch_related(
+            Prefetch("items", queryset=YarnPurchaseOrderItem.objects.select_related("material"))
+        ),
+        pk=pk,
+    )
+
+    if not _can_access_yarn_po(request.user, po):
+        raise PermissionDenied("You do not have access to this PO.")
+
+    return _build_yarn_po_pdf_response(po)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def yarnpo_inward(request, pk: int):
+    po = get_object_or_404(
+        YarnPurchaseOrder.objects
+        .select_related("vendor", "firm", "owner")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=YarnPurchaseOrderItem.objects.select_related("material").prefetch_related("inward_items"),
+            ),
+            Prefetch(
+                "inwards",
+                queryset=YarnPOInward.objects.prefetch_related("items__po_item__material"),
+            ),
+        ),
+        pk=pk,
+    )
+
+    if not _can_access_yarn_po(request.user, po):
+        raise PermissionDenied("You do not have access to this PO.")
+
+    po = _attach_yarn_po_metrics(po)
+    item_errors = {}
+    line_inputs = {}
+    inward_form = YarnPOInwardForm(request.POST or None)
+
+    if request.method == "POST" and inward_form.is_valid():
+        line_payload = []
+
+        for item in po.items.all():
+            raw_qty = (request.POST.get(f"qty_{item.id}") or "").strip()
+            remark = (request.POST.get(f"remark_{item.id}") or "").strip()
+
+            line_inputs[item.id] = {
+                "qty": raw_qty,
+                "remark": remark,
+            }
+
+            if not raw_qty:
+                continue
+
+            try:
+                qty = Decimal(raw_qty)
+            except InvalidOperation:
+                item_errors[item.id] = "Enter a valid quantity."
+                continue
+
+            if qty <= 0:
+                continue
+
+            if qty > item.remaining_qty_total:
+                item_errors[item.id] = "Entered quantity is greater than remaining quantity."
+                continue
+
+            line_payload.append((item, qty, remark))
+
+        if not line_payload:
+            inward_form.add_error(None, "Enter at least one inward quantity.")
+
+        if not inward_form.errors and not item_errors:
+            inward = inward_form.save(commit=False)
+            inward.owner = request.user
+            inward.po = po
+            inward.inward_number = _next_yarn_inward_number()
+            inward.save()
+
+            bulk_rows = []
+            for item, qty, remark in line_payload:
+                bulk_rows.append(
+                    YarnPOInwardItem(
+                        inward=inward,
+                        po_item=item,
+                        quantity=qty,
+                        remark=remark,
+                    )
+                )
+            YarnPOInwardItem.objects.bulk_create(bulk_rows)
+            return redirect("accounts:yarnpo_inward", pk=po.pk)
+
+    existing_inwards = po.inwards.all().order_by("-inward_date", "-id")
+
+    return render(
+        request,
+        "accounts/yarn_po/inward.html",
+        {
+            "po": po,
+            "inward_form": inward_form,
+            "item_errors": item_errors,
+            "line_inputs": line_inputs,
+            "existing_inwards": existing_inwards,
+        },
+    )
+
+@login_required
+def yarn_inward_tracker(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = (
+        YarnPurchaseOrder.objects
+        .select_related("vendor", "firm", "owner")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=YarnPurchaseOrderItem.objects.select_related("material").prefetch_related("inward_items"),
+            ),
+            Prefetch(
+                "inwards",
+                queryset=YarnPOInward.objects.prefetch_related("items__po_item__material"),
+            ),
+            "greige_pos",
+        )
+        .filter(inwards__isnull=False)
+        .distinct()
+        .order_by("-id")
+    )
+
+    if not _can_review_yarn_po(request.user):
+        qs = qs.filter(owner=request.user)
+
+    if q:
+        qs = qs.filter(
+            Q(system_number__icontains=q)
+            | Q(po_number__icontains=q)
+            | Q(vendor__name__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        ).distinct()
+
+    rows = []
+    for po in qs:
+        po = _attach_yarn_po_metrics(po)
+
+        greige_po = po.greige_pos.order_by("-id").first()
+
+        rows.append({
+            "po": po,
+            "greige_po": greige_po,
+            "greige_started": bool(greige_po),
+        })
+
+    return render(
+        request,
+        "accounts/yarn_po/inward_tracker.html",
+        {
+            "rows": rows,
+            "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def generate_greige_po_from_yarn(request, pk: int):
+    yarn_po = get_object_or_404(
+        YarnPurchaseOrder.objects
+        .select_related("vendor", "firm", "owner")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=YarnPurchaseOrderItem.objects.select_related("material").prefetch_related("inward_items")
+            )
+        ),
+        pk=pk,
+    )
+
+    if not _can_access_yarn_po(request.user, yarn_po):
+        raise PermissionDenied("You do not have access to this Yarn PO.")
+
+    if yarn_po.greige_pos.exists():
+        return redirect("accounts:yarn_inward_tracker")
+
+    if yarn_po.total_inward_qty <= 0:
+        return redirect("accounts:yarn_inward_tracker")
+
+    greige_po = GreigePurchaseOrder.objects.create(
+        owner=request.user,
+        system_number=_next_greige_po_number(),
+        po_number=yarn_po.po_number or "",
+        po_date=timezone.localdate(),
+        source_yarn_po=yarn_po,
+        vendor=yarn_po.vendor,
+        firm=yarn_po.firm,
+        remarks=f"Generated from Yarn PO {yarn_po.system_number}",
+        total_weight=Decimal("0"),
+    )
+
+    total_weight = Decimal("0")
+    item_rows = []
+
+    for yarn_item in yarn_po.items.all():
+        inward_qty = yarn_item.inward_qty_total or Decimal("0")
+        if inward_qty <= 0:
+            continue
+
+        yarn_name = yarn_item.material.name if yarn_item.material else "Yarn Item"
+
+        item_rows.append(
+            GreigePurchaseOrderItem(
+                po=greige_po,
+                source_yarn_po_item=yarn_item,
+                fabric_name=yarn_name,
+                yarn_name=yarn_name,
+                unit=yarn_item.unit or "",
+                quantity=inward_qty,
+                remark=f"Generated from inward qty of {yarn_po.system_number}",
+            )
+        )
+        total_weight += inward_qty
+
+    if not item_rows:
+        greige_po.delete()
+        return redirect("accounts:yarn_inward_tracker")
+
+    GreigePurchaseOrderItem.objects.bulk_create(item_rows)
+    greige_po.total_weight = total_weight
+    greige_po.save(update_fields=["total_weight", "updated_at"])
+
+    return redirect("accounts:greigepo_list")
+
+
+@login_required
+def greigepo_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = (
+        GreigePurchaseOrder.objects
+        .select_related("vendor", "firm", "source_yarn_po", "owner")
+        .prefetch_related("items")
+        .order_by("-id")
+    )
+
+    if not _can_review_yarn_po(request.user):
+        qs = qs.filter(owner=request.user)
+
+    if q:
+        qs = qs.filter(
+            Q(system_number__icontains=q)
+            | Q(po_number__icontains=q)
+            | Q(vendor__name__icontains=q)
+            | Q(source_yarn_po__system_number__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        ).distinct()
+
+    return render(
+        request,
+        "accounts/greige_po/list.html",
+        {
+            "orders": qs,
+            "q": q,
+        },
+    )
+@login_required
 @require_POST
 def yarnpo_delete(request, pk: int):
     po = get_object_or_404(YarnPurchaseOrder, pk=pk, owner=request.user)
     po.delete()
     return redirect("accounts:yarnpo_list")
 
+def _build_yarn_po_pdf_response(po):
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib.units import mm
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    except ImportError:
+        return HttpResponse(
+            "ReportLab is required for PDF generation. Install it with: pip install reportlab",
+            status=500,
+        )
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=14 * mm,
+        leftMargin=14 * mm,
+        topMargin=14 * mm,
+        bottomMargin=14 * mm,
+    )
+
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph(f"Yarn Purchase Order - {po.system_number}", styles["Title"]))
+    story.append(Spacer(1, 8))
+
+    meta_rows = [
+        ["System No", po.system_number or "-"],
+        ["PO Number", po.po_number or "-"],
+        ["PO Date", po.po_date.strftime("%d-%m-%Y") if po.po_date else "-"],
+        ["Cancel Date", po.cancel_date.strftime("%d-%m-%Y") if po.cancel_date else "-"],
+        ["Vendor", po.vendor.name if po.vendor else "-"],
+        ["Firm", po.firm.firm_name if po.firm else "-"],
+        ["Shipping Address", po.shipping_address or "-"],
+        ["Status", po.get_approval_status_display() if hasattr(po, "get_approval_status_display") else "-"],
+    ]
+
+    meta_table = Table(meta_rows, colWidths=[40 * mm, 130 * mm])
+    meta_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f8fafc")),
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("PADDING", (0, 0), (-1, -1), 6),
+    ]))
+    story.append(meta_table)
+    story.append(Spacer(1, 12))
+
+    item_rows = [["Material", "Quantity", "UOM", "Rate", "Final Amount"]]
+    for item in po.items.all():
+        item_rows.append([
+            item.material_type.name if item.material_type else (item.material.name if item.material else "-"),
+            str(item.quantity or "0.00"),
+            item.unit or "-",
+            f"₹{item.rate or '0.00'}",
+            f"₹{item.final_amount or '0.00'}",
+        ])
+
+    items_table = Table(item_rows, colWidths=[72 * mm, 28 * mm, 22 * mm, 28 * mm, 35 * mm])
+    items_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f3f4f6")),
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("PADDING", (0, 0), (-1, -1), 6),
+    ]))
+    story.append(items_table)
+    story.append(Spacer(1, 12))
+
+    summary_rows = [
+        ["Sub Total", f"₹{po.subtotal or '0.00'}"],
+        ["Discount (%)", str(po.discount_percent or '0')],
+        ["After Discount", f"₹{po.after_discount_value or '0.00'}"],
+        ["Others", f"₹{po.others or '0.00'}"],
+        ["CGST (%)", str(po.cgst_percent or '0')],
+        ["SGST (%)", str(po.sgst_percent or '0')],
+        ["Grand Total", f"₹{po.grand_total or '0.00'}"],
+    ]
+    summary_table = Table(summary_rows, colWidths=[50 * mm, 42 * mm], hAlign="RIGHT")
+    summary_table.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("PADDING", (0, 0), (-1, -1), 6),
+    ]))
+    story.append(summary_table)
+
+    if po.remarks:
+        story.append(Spacer(1, 12))
+        story.append(Paragraph("Remarks", styles["Heading4"]))
+        story.append(Paragraph(po.remarks, styles["BodyText"]))
+
+    if po.terms_conditions:
+        story.append(Spacer(1, 12))
+        story.append(Paragraph("Terms & Conditions", styles["Heading4"]))
+        story.append(Paragraph(po.terms_conditions.replace("\n", "<br/>"), styles["BodyText"]))
+
+    doc.build(story)
+    buffer.seek(0)
+
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{po.system_number}.pdf"'
+    return response
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def yarnpo_review(request, pk: int):
     po = get_object_or_404(
         YarnPurchaseOrder.objects
-        .select_related("vendor", "firm", "reviewed_by")
-        .prefetch_related("items__material"),
+        .select_related("vendor", "firm", "reviewed_by", "owner")
+        .prefetch_related(
+            Prefetch("items", queryset=YarnPurchaseOrderItem.objects.select_related("material"))
+        ),
         pk=pk,
     )
 
-    can_review = _can_review_yarn_po(request.user)
+    if not _can_access_yarn_po(request.user, po):
+        raise PermissionDenied("You do not have access to this PO.")
+
+    review_form = YarnPOReviewForm(request.POST or None)
 
     if request.method == "POST":
-        if not can_review:
+        if not _can_review_yarn_po(request.user):
             return HttpResponseForbidden("You are not allowed to review this PO.")
 
-        action = (request.POST.get("action") or "").strip().lower()
+        if review_form.is_valid():
+            decision = review_form.cleaned_data["decision"]
 
-        if action == "approve":
-            po.approval_status = YarnPurchaseOrder.ApprovalStatus.APPROVED
-        elif action == "reject":
-            po.approval_status = YarnPurchaseOrder.ApprovalStatus.REJECTED
-        else:
-            return redirect("accounts:yarnpo_review", pk=po.pk)
+            if decision == "approve":
+                po.approval_status = YarnPurchaseOrder.ApprovalStatus.APPROVED
+                po.rejection_reason = ""
+            else:
+                po.approval_status = YarnPurchaseOrder.ApprovalStatus.REJECTED
+                po.rejection_reason = review_form.cleaned_data["rejection_reason"].strip()
 
-        po.reviewed_by = request.user
-        po.reviewed_at = timezone.now()
-        po.save(update_fields=["approval_status", "reviewed_by", "reviewed_at"])
-
-        return redirect("accounts:yarnpo_list")
+            po.reviewed_by = request.user
+            po.reviewed_at = timezone.now()
+            po.save(update_fields=[
+                "approval_status",
+                "rejection_reason",
+                "reviewed_by",
+                "reviewed_at",
+            ])
+            return redirect("accounts:yarnpo_list")
 
     return render(
         request,
         "accounts/yarn_po/review.html",
         {
             "po": po,
-            "can_review_yarn_po": can_review,
+            "review_form": review_form,
+            "can_review_yarn_po": _can_review_yarn_po(request.user),
         },
     )
-
 
 # ============================================
 @login_required

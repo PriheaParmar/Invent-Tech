@@ -3,6 +3,8 @@ from django.forms import inlineformset_factory
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
+from django import forms
+from .models import YarnPOInward
 
 import re
 
@@ -509,28 +511,58 @@ class YarnPurchaseOrderForm(forms.ModelForm):
                     bits = [firm.address_line, firm.city, firm.state, firm.pincode]
                     self.fields["shipping_address"].initial = ", ".join([b for b in bits if b])
 
+class YarnPOReviewForm(forms.Form):
+    decision = forms.ChoiceField(
+        choices=[("approve", "Approve"), ("reject", "Reject")],
+        widget=forms.HiddenInput,
+    )
+    rejection_reason = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Reason for rejection"}),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("decision") == "reject" and not (cleaned.get("rejection_reason") or "").strip():
+            self.add_error("rejection_reason", "Rejection reason is required.")
+        return cleaned
+
+
+class YarnPOInwardForm(forms.ModelForm):
+    class Meta:
+        model = YarnPOInward
+        fields = ["inward_date", "notes"]
+        widgets = {
+            "inward_date": forms.DateInput(attrs={"type": "date"}),
+            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
+        }
 
 class YarnPurchaseOrderItemForm(forms.ModelForm):
     class Meta:
         model = YarnPurchaseOrderItem
         fields = [
-            "material", "unit", "quantity", "value", "dia", "gauge", "rolls",
+            "material_type", "unit", "quantity", "value", "dia", "gauge", "rolls",
             "count", "gsm", "sl", "hsn_code", "remark", "rate", "final_amount",
         ]
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        qs = Material.objects.filter(material_kind="yarn").order_by("name")
-        self.fields["material"].queryset = qs
-        self.fields["material"].empty_label = "Select Yarn Name"
 
+        qs = MaterialType.objects.filter(material_kind="yarn")
+        if user is not None:
+            qs = qs.filter(owner=user)
+        qs = qs.order_by("name")
+
+        self.fields["material_type"].queryset = qs
+        self.fields["material_type"].empty_label = "Select Yarn Type"
+        self.fields["material_type"].label_from_instance = lambda obj: obj.name
 
 YarnPurchaseOrderItemFormSet = inlineformset_factory(
     YarnPurchaseOrder,
     YarnPurchaseOrderItem,
     form=YarnPurchaseOrderItemForm,
     fields=[
-        "material", "unit", "quantity", "value", "dia", "gauge", "rolls",
+        "material_type", "unit", "quantity", "value", "dia", "gauge", "rolls",
         "count", "gsm", "sl", "hsn_code", "remark", "rate", "final_amount",
     ],
     extra=1,

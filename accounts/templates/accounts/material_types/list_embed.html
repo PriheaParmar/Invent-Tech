@@ -5,11 +5,11 @@
     <div class="jb-head pt-head">
       <div>
         <div class="jb-title pt-title">Material Types</div>
-        <div class="jb-sub pt-sub">Single source of truth</div>
+        <div class="jb-sub pt-sub">Manage the type of material</div>
       </div>
 
       <div class="jb-head-actions pt-head-actions">
-        <a class="jb-add pt-add" href="{% url 'accounts:materialtype_add' %}?embed=1">+ Create</a>
+        
         <button type="button" class="jb-iconbtn pt-close" data-embed-close title="Close">
           <svg class="jb-ico pt-ico" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M18 6L6 18"></path>
@@ -25,6 +25,8 @@
 
         <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search material type...">
 
+        
+        <button class="jb-search-btn" type="submit">Search</button>
         <select name="kind" class="jb-search-btn" onchange="this.form.submit()">
           <option value="">All Kinds</option>
           {% for value, label in kind_choices %}
@@ -33,8 +35,10 @@
             </option>
           {% endfor %}
         </select>
-
-        <button class="jb-search-btn" type="submit">Search</button>
+        <a class="jb-add pt-add mat-ico" href="{% url 'accounts:materialtype_add' %}?embed=1"><svg class="jb-add-ico mat-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg> </a>
       </form>
     </div>
 

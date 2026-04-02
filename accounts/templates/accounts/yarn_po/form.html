@@ -575,10 +575,10 @@
             {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
             <div class="po-line-grid">
               <div class="po-field po-wide po-yarn-select">
-                <label>Yarn Name</label>
-                {{ item_form.material }}
-                {% for err in item_form.material.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-              </div>
+  <label>Yarn Type</label>
+  {{ item_form.material_type }}
+  {% for err in item_form.material_type.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
+</div>
 
               <div class="po-field">
                 <label>Unit</label>
@@ -660,7 +660,7 @@
             {% with item_form=formset.empty_form %}
             {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
             <div class="po-line-grid">
-              <div class="po-field po-wide po-yarn-select"><label>Yarn Name</label>{{ item_form.material }}</div>
+              <div class="po-field po-wide po-yarn-select"><label>Yarn Type</label>{{ item_form.material_type }}</div>
               <div class="po-field"><label>Unit</label>{{ item_form.unit }}</div>
               <div class="po-field"><label>MTR / Qty</label>{{ item_form.quantity }}</div>
               <div class="po-field"><label>Value</label>{{ item_form.value }}</div>

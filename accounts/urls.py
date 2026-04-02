@@ -76,7 +76,7 @@ urlpatterns = [
     path("master/vendors/<int:pk>/edit/", views.vendor_update, name="vendor_edit"),
     path("master/vendors/<int:pk>/delete/", views.vendor_delete, name="vendor_delete"),
 
-    # Purchase Orders
+   # Purchase Orders
     path("po/", views.po_home, name="po_home"),
 
     # Yarn Purchase Orders
@@ -85,4 +85,11 @@ urlpatterns = [
     path("po/yarn/<int:pk>/edit/", views.yarnpo_update, name="yarnpo_edit"),
     path("po/yarn/<int:pk>/delete/", views.yarnpo_delete, name="yarnpo_delete"),
     path("po/yarn/<int:pk>/review/", views.yarnpo_review, name="yarnpo_review"),
+    path("po/yarn/<int:pk>/pdf/", views.yarnpo_pdf, name="yarnpo_pdf"),
+    path("po/yarn/<int:pk>/inward/", views.yarnpo_inward, name="yarnpo_inward"),
+    path("po/yarn/inwards/", views.yarn_inward_tracker, name="yarn_inward_tracker"),
+    path("po/yarn/<int:pk>/generate-greige/", views.generate_greige_po_from_yarn, name="generate_greige_po_from_yarn"),
+
+    # Greige Purchase Orders
+    path("po/greige/", views.greigepo_list, name="greigepo_list"),
 ]

@@ -409,6 +409,44 @@ class YarnPurchaseOrder(OwnedModel):
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
 
+
+    approval_status = models.CharField(
+        max_length=20,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+    )
+
+    rejection_reason = models.TextField(blank=True, default="")
+
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="reviewed_yarn_purchase_orders",
+    )
+
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def total_inward_qty(self):
+        total = (
+            self.inwards.aggregate(total=Sum("items__quantity")).get("total")
+            or Decimal("0")
+        )
+        return total
+
+    @property
+    def remaining_qty_total(self):
+        ordered = self.total_weight or Decimal("0")
+        inward = self.total_inward_qty or Decimal("0")
+        return ordered - inward if ordered > inward else Decimal("0")
+
+    class ApprovalStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
     approval_status = models.CharField(
         max_length=20,
         choices=ApprovalStatus.choices,
@@ -434,7 +472,24 @@ class YarnPurchaseOrder(OwnedModel):
 
 class YarnPurchaseOrderItem(models.Model):
     po = models.ForeignKey("YarnPurchaseOrder", on_delete=models.CASCADE, related_name="items")
-    material = models.ForeignKey("Material", on_delete=models.PROTECT, related_name="yarn_po_items")
+
+    material_type = models.ForeignKey(
+        "MaterialType",
+        on_delete=models.PROTECT,
+        related_name="yarn_po_items",
+        null=True,
+        blank=True,
+        limit_choices_to={"material_kind": "yarn"},
+    )
+
+    material = models.ForeignKey(
+        "Material",
+        on_delete=models.PROTECT,
+        related_name="yarn_po_items",
+        null=True,
+        blank=True,
+    )
+
     unit = models.CharField(max_length=20, blank=True, default="")
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -449,8 +504,124 @@ class YarnPurchaseOrderItem(models.Model):
     rate = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
+    @property
+    def inward_qty_total(self):
+        total = self.inward_items.aggregate(total=Sum("quantity")).get("total") or Decimal("0")
+        return total
+
+    @property
+    def remaining_qty_total(self):
+        ordered = self.quantity or Decimal("0")
+        inward = self.inward_qty_total or Decimal("0")
+        return ordered - inward if ordered > inward else Decimal("0")
     class Meta:
         ordering = ["id"]
 
     def __str__(self):
-        return f"{self.po} - {self.material}"
+        label = None
+        if self.material_type:
+            label = self.material_type.name
+        elif self.material:
+            label = str(self.material)
+        else:
+            label = "Yarn Item"
+        return f"{self.po} - {label}"
+
+class YarnPOInward(OwnedModel):
+    po = models.ForeignKey(
+        "YarnPurchaseOrder",
+        on_delete=models.CASCADE,
+        related_name="inwards",
+    )
+    inward_number = models.CharField(max_length=30, unique=True)
+    inward_date = models.DateField(default=timezone.localdate)
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-inward_date", "-id"]
+
+    def __str__(self):
+        return self.inward_number
+
+
+class YarnPOInwardItem(models.Model):
+    inward = models.ForeignKey(
+        YarnPOInward,
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+    po_item = models.ForeignKey(
+        "YarnPurchaseOrderItem",
+        on_delete=models.CASCADE,
+        related_name="inward_items",
+    )
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    remark = models.CharField(max_length=255, blank=True, default="")
+
+    class Meta:
+        unique_together = ("inward", "po_item")
+
+    def __str__(self):
+        return f"{self.inward.inward_number} / {self.po_item_id}"
+    
+class GreigePurchaseOrder(OwnedModel):
+    system_number = models.CharField(max_length=30, unique=True, blank=True)
+    po_number = models.CharField(max_length=30, blank=True, default="")
+    po_date = models.DateField(default=timezone.localdate)
+
+    source_yarn_po = models.ForeignKey(
+        "YarnPurchaseOrder",
+        on_delete=models.CASCADE,
+        related_name="greige_pos",
+    )
+
+    vendor = models.ForeignKey(
+        "Vendor",
+        on_delete=models.PROTECT,
+        related_name="greige_purchase_orders",
+    )
+
+    firm = models.ForeignKey(
+        "Firm",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="greige_purchase_orders",
+    )
+
+    remarks = models.TextField(blank=True, default="")
+    total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ["-id"]
+
+    def __str__(self):
+        return self.system_number or f"Greige PO {self.pk or 'Draft'}"
+
+
+class GreigePurchaseOrderItem(models.Model):
+    po = models.ForeignKey(
+        "GreigePurchaseOrder",
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+
+    source_yarn_po_item = models.ForeignKey(
+        "YarnPurchaseOrderItem",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_greige_items",
+    )
+
+    fabric_name = models.CharField(max_length=150)
+    yarn_name = models.CharField(max_length=150, blank=True, default="")
+    unit = models.CharField(max_length=20, blank=True, default="")
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    remark = models.CharField(max_length=255, blank=True, default="")
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.po} - {self.fabric_name}"

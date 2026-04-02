@@ -7,11 +7,6 @@
       </div>
 
       <div class="jb-head-actions mat-head-actions">
-        <a class="jb-iconbtn btn-refresh" href="{% url 'accounts:material_list' %}?embed=1" title="Refresh">
-          <svg class="jb-ico refresh-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">
-            <path d="M27.1 14.313V5.396L24.158 8.34c-2.33-2.325-5.033-3.503-8.11-3.503C9.902 4.837 4.901 9.847 4.899 16c.001 6.152 5.003 11.158 11.15 11.16 4.276 0 9.369-2.227 10.836-8.478l.028-.122h-3.23l-.022.068c-1.078 3.242-4.138 5.421-7.613 5.421a8 8 0 0 1-5.691-2.359A7.993 7.993 0 0 1 8 16.001c0-4.438 3.611-8.049 8.05-8.049 2.069 0 3.638.58 5.924 2.573l-3.792 3.789H27.1z"/>
-          </svg>
-        </a>
 
         <button type="button" class="jb-iconbtn jb-close mat-iconbtn" data-embed-close aria-label="Close">
           <svg class="jb-ico mat-ico" viewBox="0 0 24 24" aria-hidden="true">
@@ -23,7 +18,8 @@
     </div>
 
     <div class="jb-tools mat-tools">
-      <form method="get" action="{% url 'accounts:material_list' %}" class="jb-search mat-search">
+      <form method="get" action="{% url 'accounts:material_list' %}" class="jb-search mat-search search-material">
+        <div class="search-material">
         <input type="hidden" name="embed" value="1">
 
         <input type="search" name="q" placeholder="Search materials…" value="{{ q|default:'' }}">
@@ -37,6 +33,7 @@
           {% endfor %}
         </select>
 
+
         <button class="jb-search-btn mat-btn primary" type="submit">Search</button>
 
         <a class="jb-add mat-add" href="{% url 'accounts:material_kind_picker' %}?embed=1" title="Add material">
@@ -44,8 +41,8 @@
             <path d="M12 5v14"></path>
             <path d="M5 12h14"></path>
           </svg>
-          <span>Add</span>
         </a>
+        </div>
       </form>
     </div>
 

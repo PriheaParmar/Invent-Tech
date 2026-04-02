@@ -66,7 +66,7 @@
               <form method="post"
                 action="{% url 'accounts:jobber_delete' j.id %}{% if not full_page %}?embed=1{% endif %}"
                 class="jb-inline-delete js-jb-delete-form" data-delete-label="jobber &quot;{{ j.name|escape }}&quot;">
-                {% csrf_token %}
+                {% csrf_token %}  
                 <button class="jb-link jb-link-danger jb-link-button" type="submit">Delete</button>
               </form>
             </td>

@@ -1,0 +1,127 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Yarn Inwards - InventTech{% endblock %}
+{% block page_title %}PO / Yarn Inwards{% endblock %}
+{% block page_subtitle %}Track inwarded Yarn POs and start Greige PO generation{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="jb-page">
+      <div class="jobbers-embed">
+        <div class="jb-panel">
+
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">Yarn Inwards Tracker</div>
+              <div class="jb-sub">Track inwarded Yarn POs and check whether greige process has started.</div>
+            </div>
+          </div>
+
+          <div class="jb-tools">
+            <form class="jb-search" method="get">
+              <input
+                type="search"
+                name="q"
+                value="{{ q|default:'' }}"
+                placeholder="Search by system no, PO no, vendor, firm..."
+              >
+              <button class="jb-search-btn" type="submit">Search</button>
+            </form>
+
+            <div class="jb-tool-actions">
+              <a class="jb-add" href="{% url 'accounts:yarnpo_list' %}">Back to Yarn PO</a>
+            </div>
+          </div>
+
+          <div class="jb-tablewrap">
+            <table class="jb-table" style="min-width: 1280px;">
+              <thead>
+                <tr>
+                  <th>Yarn PO</th>
+                  <th>Vendor / Firm</th>
+                  <th>Inward Summary</th>
+                  <th>Greige Status</th>
+                  <th>Greige PO</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in rows %}
+                <tr>
+                  <td>
+                    <div class="jb-line-title">{{ row.po.system_number }}</div>
+                    <div class="jb-line-sub">
+                      PO No: {{ row.po.po_number|default:"—" }}<br>
+                      PO Date: {{ row.po.po_date|date:"d-m-Y" }}<br>
+                      Total Weight: {{ row.po.total_weight|default:"0.00" }}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="jb-vendor-name">{{ row.po.vendor.name }}</div>
+                    <div class="jb-vendor-sub">
+                      <strong>Firm:</strong>
+                      {% if row.po.firm %}{{ row.po.firm.firm_name }}{% else %}—{% endif %}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="jb-line-sub">
+                      Total Inward: {{ row.po.total_inward_qty|default:"0.00" }}<br>
+                      Remaining: {{ row.po.remaining_qty_total|default:"0.00" }}<br>
+                      Inward Entries: {{ row.po.inwards.count }}
+                    </div>
+                  </td>
+
+                  <td>
+                    {% if row.greige_started %}
+                      <span class="jb-status-pill is-approved">Started</span>
+                      <div class="jb-status-note">Greige PO has been generated.</div>
+                    {% else %}
+                      <span class="jb-status-pill is-pending">Not Started</span>
+                      <div class="jb-status-note">Greige process is not started yet.</div>
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    {% if row.greige_po %}
+                      <div class="jb-line-title">{{ row.greige_po.system_number }}</div>
+                      <div class="jb-line-sub">
+                        Date: {{ row.greige_po.po_date|date:"d-m-Y" }}<br>
+                        Weight: {{ row.greige_po.total_weight|default:"0.00" }}
+                      </div>
+                    {% else %}
+                      <div class="jb-line-sub">No Greige PO generated yet.</div>
+                    {% endif %}
+                  </td>
+
+                  <td class="jb-actions">
+                    {% if row.greige_started %}
+                      <a class="jb-link" href="{% url 'accounts:greigepo_list' %}">View Greige PO</a>
+                    {% else %}
+                      <form method="post" action="{% url 'accounts:generate_greige_po_from_yarn' row.po.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="jb-link jb-link-button">
+                          Generate Greige PO
+                        </button>
+                      </form>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" class="jb-empty">
+                    No inwarded Yarn POs found yet.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

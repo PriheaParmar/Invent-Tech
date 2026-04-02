@@ -489,7 +489,7 @@ body.sb-collapsed .sb-toggle-ico{
   padding: 0;
   font-size: 11px;
   font-weight: 900;
-  color: var(--pink);
+  color: var(--blue);
   cursor:pointer;
 }
 
@@ -3067,18 +3067,4 @@ body.modal-open{
     width: min(92vw, 340px);
   }
 }
-.util-inline-panel {
-  position: relative;
-  z-index: 5;
-}
 
-.util-inline-panel:empty {
-  display: none !important;
-}
-#mastersEmbedPanel {
-  pointer-events: none;
-}
-
-#mastersEmbedMount {
-  pointer-events: auto;
-}
