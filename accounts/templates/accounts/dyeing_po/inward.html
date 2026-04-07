@@ -1,0 +1,79 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Dyeing Inward - InventTech{% endblock %}
+{% block page_title %}Dyeing Inward{% endblock %}
+{% block page_subtitle %}Create and manage inward entries against Dyeing PO{% endblock %}
+
+{% block content %}
+<style>
+  .din-grid{display:grid;gap:14px}.din-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.din-pill{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border-radius:999px;background:rgba(250,189,100,.14);color:#ef6c00;font-size:11px;font-weight:900}.din-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.din-field{display:flex;flex-direction:column;gap:6px}.din-field label{font-size:12px;font-weight:700;color:#344054}.din-field input,.din-field textarea{width:100%;min-height:40px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff}.din-field textarea{min-height:84px}.din-block{border:1px solid rgba(15,23,42,.06);border-radius:14px;background:rgba(255,255,255,.55);padding:14px}.din-table{width:100%;border-collapse:collapse}.din-table th,.din-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:12px;vertical-align:top}.din-table thead th{border-top:none;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#667085}.din-input{width:100%;min-height:36px;border:1px solid rgba(15,23,42,.1);border-radius:10px;padding:0 10px}.din-err{font-size:11px;color:#b42318;font-weight:700;margin-top:4px}.din-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;flex-wrap:wrap}@media (max-width:900px){.din-fields{grid-template-columns:1fr}}
+</style>
+<section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
+  <div class="jb-head"><div><div class="jb-title">Dyeing Inward</div><div class="jb-sub">Record inwarded dyed fabric quantities before moving to finished lot handling.</div></div></div>
+  <div class="din-grid" style="padding:18px;">
+    <div class="din-head">
+      <div>
+        <div class="jb-title" style="font-size:17px;">{{ po.system_number }}</div>
+        <div class="jb-sub">Vendor: {{ po.vendor.name }}{% if po.source_greige_po %} · Source Greige: {{ po.source_greige_po.system_number }}{% endif %}</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <span class="din-pill">Remaining: {{ po.remaining_qty_total|default:"0.00" }}</span>
+        <a class="jb-secondary" href="{% url 'accounts:dyeingpo_list' %}">Back to Dyeing PO</a>
+      </div>
+    </div>
+
+    {% if inward_form.non_field_errors %}<div class="din-err">{{ inward_form.non_field_errors }}</div>{% endif %}
+
+    <form method="post" class="din-grid">
+      {% csrf_token %}
+      <div class="din-fields">
+        <div class="din-field"><label>Dyeing Inward No</label><input type="text" value="Auto Generated" disabled></div>
+        <div class="din-field"><label>Date</label>{{ inward_form.inward_date }}</div>
+        <div class="din-field"><label>Notes</label>{{ inward_form.notes }}</div>
+      </div>
+
+      <div class="din-block">
+        <table class="din-table">
+          <thead><tr><th>Fabric</th><th>Ordered</th><th>Already Inward</th><th>Remaining</th><th>Receive Now</th><th>Remark</th></tr></thead>
+          <tbody>
+            {% for row in line_rows %}
+            {% with item=row.item %}
+            <tr>
+              <td>{{ item.fabric_name }}{% if item.unit %}<br><span class="jb-sub">Unit: {{ item.unit }}</span>{% endif %}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.inward_qty_total|default:"0.00" }}</td>
+              <td>{{ item.remaining_qty_total|default:"0.00" }}</td>
+              <td>
+                <input class="din-input" type="number" step="0.01" min="0" name="qty_{{ item.id }}" value="{{ row.qty_value }}">
+                {% if row.error %}<div class="din-err">{{ row.error }}</div>{% endif %}
+              </td>
+              <td><input class="din-input" type="text" name="remark_{{ item.id }}" value="{{ row.remark_value }}"></td>
+            </tr>
+            {% endwith %}
+            {% empty %}
+            <tr><td colspan="6" class="jb-empty">No dyeing lines available for inward.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="din-actions"><button type="submit" class="jb-add">Save Dyeing Inward</button></div>
+    </form>
+
+    <div class="din-block">
+      <div class="jb-title" style="font-size:15px;margin-bottom:10px;">Previous Inward Entries</div>
+      <table class="din-table">
+        <thead><tr><th>Inward No</th><th>Date</th><th>Fabric</th><th>Qty</th><th>Remark</th></tr></thead>
+        <tbody>
+          {% for inward in existing_inwards %}
+            {% for inward_item in inward.items.all %}
+            <tr><td>{{ inward.inward_number }}</td><td>{{ inward.inward_date|date:"d-m-Y" }}</td><td>{{ inward_item.po_item.fabric_name }}</td><td>{{ inward_item.quantity }}</td><td>{{ inward_item.remark|default:"—" }}</td></tr>
+            {% endfor %}
+          {% empty %}
+          <tr><td colspan="5" class="jb-empty">No inward entries yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div></div></div></div></section>
+{% endblock %}

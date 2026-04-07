@@ -1,7 +1,7 @@
 {% extends "accounts/base_app.html" %}
 {% block title %}Dyeing PO - InventTech{% endblock %}
 {% block page_title %}PO / Dyeing{% endblock %}
-{% block page_subtitle %}Continue the greige inward stage into dyeing purchase orders{% endblock %}
+{% block page_subtitle %}Continue the greige inward stage into dyeing purchase orders and inwards{% endblock %}
 
 {% block content %}
 <style>
@@ -9,14 +9,14 @@
 </style>
 <section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
   <div class="jb-head"><div><div class="jb-title">Dyeing Purchase Orders</div><div class="jb-sub">Downstream PO layer created from inwarded Greige POs.</div></div></div>
-  <div class="dpo-tools"><form class="dpo-search" method="get"><input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search by dyeing PO, source greige PO, vendor..."><button class="jb-add" type="submit">Search</button></form><div style="display:flex;gap:10px;flex-wrap:wrap;"><a class="jb-secondary" href="{% url 'accounts:greige_inward_tracker' %}">Greige Inwards</a><a class="jb-add" href="{% url 'accounts:dyeingpo_add' %}">Create Dyeing PO</a></div></div>
+  <div class="dpo-tools"><form class="dpo-search" method="get"><input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search by dyeing PO, source greige PO, vendor..."><button class="jb-add" type="submit">Search</button></form><div style="display:flex;gap:10px;flex-wrap:wrap;"><a class="jb-secondary" href="{% url 'accounts:greige_inward_tracker' %}">Greige Inwards</a><a class="jb-secondary" href="{% url 'accounts:dyeing_inward_tracker' %}">Dyeing Inwards</a><a class="jb-add" href="{% url 'accounts:dyeingpo_add' %}">Create Dyeing PO</a></div></div>
   {% for po in orders %}
   <div class="dpo-card">
     <div class="dpo-top"><div><div class="dpo-badge">{{ po.system_number }}</div><div class="dpo-title">{{ po.po_number|default:'No PO Number' }}</div><div class="jb-sub">Date: {{ po.po_date|date:'d-m-Y' }} · Source Greige: {{ po.source_greige_po.system_number }}</div></div></div>
     <div class="dpo-grid">
-      <div><div class="jb-sub" style="font-weight:800;color:#111827;margin-bottom:6px;">Details</div><div class="dpo-meta"><div>Vendor</div><div>{{ po.vendor.name }}</div><div>Firm</div><div>{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div><div>Available</div><div>{{ po.available_qty|default:'0.00' }}</div><div>Total</div><div>{{ po.total_weight|default:'0.00' }}</div></div></div>
-      <div><div class="jb-sub" style="font-weight:800;color:#111827;margin-bottom:6px;">Dyeing Lines</div><div class="dpo-lines">{% for item in po.items.all %}<div class="dpo-line"><div class="dpo-title" style="font-size:13px;">{{ item.fabric_name }}</div><div class="jb-sub">Qty: {{ item.quantity }}{% if item.unit %} {{ item.unit }}{% endif %}</div></div>{% empty %}<div class="jb-sub">No dyeing items found.</div>{% endfor %}</div></div>
-      <div style="display:flex;flex-direction:column;gap:8px;"><a class="jb-secondary" href="{% url 'accounts:dyeingpo_detail' po.id %}">View</a></div>
+      <div><div class="jb-sub" style="font-weight:800;color:#111827;margin-bottom:6px;">Details</div><div class="dpo-meta"><div>Vendor</div><div>{{ po.vendor.name }}</div><div>Firm</div><div>{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div><div>Available</div><div>{{ po.available_qty|default:'0.00' }}</div><div>Total</div><div>{{ po.total_weight|default:'0.00' }}</div><div>Inward</div><div>{{ po.total_inward_qty|default:'0.00' }}</div></div></div>
+      <div><div class="jb-sub" style="font-weight:800;color:#111827;margin-bottom:6px;">Dyeing Lines</div><div class="dpo-lines">{% for item in po.items.all %}<div class="dpo-line"><div class="dpo-title" style="font-size:13px;">{{ item.fabric_name }}</div><div class="jb-sub">Qty: {{ item.quantity }}{% if item.unit %} {{ item.unit }}{% endif %} · Remaining: {{ item.remaining_qty_total|default:'0.00' }}</div></div>{% empty %}<div class="jb-sub">No dyeing items found.</div>{% endfor %}</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><a class="jb-secondary" href="{% url 'accounts:dyeingpo_detail' po.id %}">View</a><a class="jb-secondary" href="{% url 'accounts:dyeingpo_edit' po.id %}">Edit</a><a class="jb-add" href="{% url 'accounts:dyeingpo_inward' po.id %}">Inward</a><form method="post" action="{% url 'accounts:dyeingpo_delete' po.id %}" onsubmit="return confirm('Delete this Dyeing PO?');">{% csrf_token %}<button type="submit" class="jb-secondary" style="width:100%;">Delete</button></form></div>
     </div>
   </div>
   {% empty %}

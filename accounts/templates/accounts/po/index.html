@@ -66,7 +66,7 @@
               <div class="util-group-head">
                 <div class="util-group-title">PURCHASE ORDERS</div>
                 <div class="util-group-line"></div>
-                <div class="util-group-count">5</div>
+                <div class="util-group-count">6</div>
               </div>
 
               <div class="util-group-grid" id="poTiles">
@@ -115,6 +115,19 @@
     </div>
   </a>
 
+  <a class="util-tile" href="{% url 'accounts:dyeing_inward_tracker' %}" data-title="Dyeing Inwards">
+    <span class="util-ico">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3c3 4 5 6.6 5 9a5 5 0 1 1-10 0c0-2.4 2-5 5-9z"></path>
+        <path d="M7 17h10"></path>
+      </svg>
+    </span>
+    <div class="util-meta">
+      <div class="util-title">Dyeing Inwards</div>
+      <div class="po-note">Track inwarded Dyeing POs before finished lot handling.</div>
+    </div>
+  </a>
+
   <a class="util-tile" href="{% url 'accounts:dyeingpo_list' %}" data-title="Dyeing PO">
     <span class="util-ico">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
@@ -148,7 +161,7 @@
         </div>
 
         <div class="tiny-note" style="margin-top:10px;">
-          Yarn, Greige, and Dyeing flows are connected now in the same purchase-order structure.
+          Yarn, Greige, Dyeing, and inward tracking now follow the same connected purchase-order structure.
         </div>
 
       </div>

@@ -1,6 +1,6 @@
 {% extends "accounts/base_app.html" %}
-{% block title %}Create Dyeing PO - InventTech{% endblock %}
-{% block page_title %}PO / Dyeing / Create{% endblock %}
+{% block title %}{% if mode == 'edit' %}Edit Dyeing PO{% else %}Create Dyeing PO{% endif %} - InventTech{% endblock %}
+{% block page_title %}PO / Dyeing / {% if mode == 'edit' %}Edit{% else %}Create{% endif %}{% endblock %}
 {% block page_subtitle %}Generate Dyeing PO from Greige inward data{% endblock %}
 
 {% block content %}
@@ -8,11 +8,11 @@
   .dpf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}.dpf-field{display:flex;flex-direction:column;gap:6px}.dpf-field label{font-size:12px;font-weight:700;color:rgba(15,23,42,.72)}.dpf-field input,.dpf-field select,.dpf-field textarea{width:100%;min-height:42px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff;font:inherit}.dpf-field textarea{min-height:84px;resize:vertical}.dpf-span-2{grid-column:span 2}.dpf-span-3{grid-column:span 3}.dpf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}.dpf-block{margin-top:16px;border:1px solid rgba(15,23,42,.08);border-radius:18px;background:rgba(255,255,255,.72);overflow:hidden}.dpf-block summary{cursor:pointer;list-style:none;padding:16px 18px;font-weight:800}.dpf-block-body{padding:0 18px 18px;border-top:1px solid rgba(15,23,42,.08)}.dpf-mini-table{width:100%;border-collapse:collapse}.dpf-mini-table th,.dpf-mini-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:13px;vertical-align:top}.dpf-errors{margin:0 18px 18px;padding:12px 14px;border-radius:12px;background:rgba(239,68,68,.08);color:#991b1b;font-size:13px}@media (max-width:1100px){.dpf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dpf-span-3{grid-column:span 2}}@media (max-width:760px){.dpf-grid{grid-template-columns:1fr}.dpf-span-2,.dpf-span-3{grid-column:span 1}}
 </style>
 <section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
-  <div class="jb-head"><div><div class="jb-title">Purchase Order for Dyeing</div><div class="jb-sub">Generate Dyeing PO from Greige inward data using the same downstream pattern.</div></div></div>
+  <div class="jb-head"><div><div class="jb-title">{% if mode == 'edit' %}Edit Dyeing PO{% else %}Purchase Order for Dyeing{% endif %}</div><div class="jb-sub">Continue the greige inward stage into dyeing and then into dyeing inward.</div></div></div>
   {% if form.non_field_errors %}<div class="dpf-errors">{{ form.non_field_errors }}</div>{% endif %}
-  {% if existing_po %}<div class="dpf-errors">Dyeing PO already exists for this Greige PO. <a href="{% url 'accounts:dyeingpo_detail' existing_po.id %}">Open existing Dyeing PO</a></div>{% endif %}
+  {% if existing_po and mode != 'edit' %}<div class="dpf-errors">Dyeing PO already exists for this Greige PO. <a href="{% url 'accounts:dyeingpo_detail' existing_po.id %}">Open existing Dyeing PO</a></div>{% endif %}
   <form method="post">{% csrf_token %}<div style="padding:18px;"><div class="dpf-grid">
-    <div class="dpf-field"><label>Dyeing PO No</label><input type="text" value="Auto Generated" disabled></div>
+    <div class="dpf-field"><label>Dyeing PO No</label><input type="text" value="{% if po_obj %}{{ po_obj.system_number }}{% else %}Auto Generated{% endif %}" disabled></div>
     <div class="dpf-field"><label>Internal PO Number</label>{{ form.internal_po_number }}</div>
     <div class="dpf-field"><label>Source Greige PO</label>{{ form.source_greige_po }}{{ form.source_greige_po.errors }}</div>
     <div class="dpf-field"><label>PO Number</label>{{ form.po_number }}</div>
@@ -29,7 +29,7 @@
     <div class="dpf-field"><label>Expected Delivery Date</label>{{ form.expected_delivery_date }}</div>
     <div class="dpf-field dpf-span-2"><label>Delivery Schedule</label>{{ form.delivery_schedule }}</div>
     <div class="dpf-field dpf-span-3"><label>Remarks</label>{{ form.remarks }}</div>
-  </div><div class="dpf-actions"><a class="jb-secondary" href="{% url 'accounts:dyeingpo_list' %}">Back to Dyeing PO</a><button type="submit" class="jb-add">Save Dyeing PO</button></div></div></form>
+  </div><div class="dpf-actions"><a class="jb-secondary" href="{% url 'accounts:dyeingpo_list' %}">Back to Dyeing PO</a>{% if po_obj %}<a class="jb-secondary" href="{% url 'accounts:dyeingpo_inward' po_obj.id %}">Dyeing Inward</a>{% endif %}<button type="submit" class="jb-add">{% if mode == 'edit' %}Update{% else %}Save{% endif %} Dyeing PO</button></div></div></form>
 
   <details class="dpf-block" open><summary>Source Greige PO Details</summary><div class="dpf-block-body">{% if source_greige_po %}<table class="dpf-mini-table"><tr><th>Greige PO</th><td>{{ source_greige_po.system_number }}</td><th>Vendor</th><td>{{ source_greige_po.vendor.name }}</td></tr><tr><th>PO No</th><td>{{ source_greige_po.po_number|default:'—' }}</td><th>Firm</th><td>{% if source_greige_po.firm %}{{ source_greige_po.firm.firm_name }}{% else %}—{% endif %}</td></tr><tr><th>Total Ordered</th><td>{{ source_greige_po.total_weight|default:'0.00' }}</td><th>Total Inward</th><td>{{ source_greige_po.total_inward_qty|default:'0.00' }}</td></tr></table>{% else %}<div class="jb-empty">Choose a source Greige PO to see linked inward information.</div>{% endif %}</div></details>
   <details class="dpf-block" open><summary>Source Greige Inwards</summary><div class="dpf-block-body">{% if source_inwards %}<table class="dpf-mini-table"><thead><tr><th>Inward No</th><th>Date</th><th>Item</th><th>Qty</th></tr></thead><tbody>{% for inward in source_inwards %}{% for inward_item in inward.items.all %}<tr><td>{{ inward.inward_number }}</td><td>{{ inward.inward_date|date:'d-m-Y' }}</td><td>{{ inward_item.po_item.fabric_name }}</td><td>{{ inward_item.quantity }}</td></tr>{% endfor %}{% endfor %}</tbody></table>{% else %}<div class="jb-empty">No Greige inward data found yet.</div>{% endif %}</div></details>

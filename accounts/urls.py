@@ -106,4 +106,8 @@ urlpatterns = [
     path("po/dyeing/add/", views.dyeingpo_create, name="dyeingpo_add"),
     path("po/dyeing/add/from-greige/<int:greige_po_id>/", views.dyeingpo_create, name="dyeingpo_add_from_greige"),
     path("po/dyeing/<int:pk>/", views.dyeingpo_detail, name="dyeingpo_detail"),
+    path("po/dyeing/<int:pk>/edit/", views.dyeingpo_update, name="dyeingpo_edit"),
+    path("po/dyeing/<int:pk>/delete/", views.dyeingpo_delete, name="dyeingpo_delete"),
+    path("po/dyeing/<int:pk>/inward/", views.dyeingpo_inward, name="dyeingpo_inward"),
+    path("po/dyeing/inwards/", views.dyeing_inward_tracker, name="dyeing_inward_tracker"),
 ]

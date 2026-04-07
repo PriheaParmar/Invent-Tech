@@ -27,6 +27,7 @@ from .models import (
     YarnPOInward,
     GreigePOInward,
     DyeingPurchaseOrder,
+    DyeingPOInward,
 )
 
 # ============================================================
@@ -603,21 +604,34 @@ class GreigePurchaseOrderForm(forms.ModelForm):
     def __init__(self, *args, user=None, source_yarn_po=None, lock_source=False, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["vendor"].queryset = Vendor.objects.filter(owner=user, is_active=True).order_by("name") if user else Vendor.objects.none()
-        self.fields["firm"].queryset = Firm.objects.filter(owner=user).order_by("firm_name") if user else Firm.objects.none()
+        self.fields["vendor"].queryset = (
+            Vendor.objects.filter(owner=user, is_active=True).order_by("name")
+            if user else Vendor.objects.none()
+        )
+        self.fields["firm"].queryset = (
+            Firm.objects.filter(owner=user).order_by("firm_name")
+            if user else Firm.objects.none()
+        )
 
-        source_qs = YarnPurchaseOrder.objects.filter(items__inward_items__isnull=False).distinct().order_by("-id")
+        source_ids_qs = YarnPurchaseOrder.objects.filter(
+            items__inward_items__isnull=False
+        )
         if user is not None:
-            source_qs = source_qs.filter(owner=user)
+            source_ids_qs = source_ids_qs.filter(owner=user)
+
+        allowed_ids = set(source_ids_qs.values_list("pk", flat=True))
 
         if self.instance.pk and self.instance.source_yarn_po_id:
-            source_qs = (source_qs | YarnPurchaseOrder.objects.filter(pk=self.instance.source_yarn_po_id)).distinct()
+            allowed_ids.add(self.instance.source_yarn_po_id)
 
         if source_yarn_po is not None:
-            source_qs = (source_qs | YarnPurchaseOrder.objects.filter(pk=source_yarn_po.pk)).distinct()
+            allowed_ids.add(source_yarn_po.pk)
             self.fields["source_yarn_po"].initial = source_yarn_po.pk
 
-        self.fields["source_yarn_po"].queryset = source_qs
+        self.fields["source_yarn_po"].queryset = YarnPurchaseOrder.objects.filter(
+            pk__in=allowed_ids
+        ).order_by("-id")
+
         self.fields["source_yarn_po"].empty_label = "Select source yarn PO"
         self.fields["vendor"].empty_label = "Select vendor"
         self.fields["firm"].empty_label = "Select firm"
@@ -674,21 +688,34 @@ class DyeingPurchaseOrderForm(forms.ModelForm):
     def __init__(self, *args, user=None, source_greige_po=None, lock_source=False, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["vendor"].queryset = Vendor.objects.filter(owner=user, is_active=True).order_by("name") if user else Vendor.objects.none()
-        self.fields["firm"].queryset = Firm.objects.filter(owner=user).order_by("firm_name") if user else Firm.objects.none()
+        self.fields["vendor"].queryset = (
+            Vendor.objects.filter(owner=user, is_active=True).order_by("name")
+            if user else Vendor.objects.none()
+        )
+        self.fields["firm"].queryset = (
+            Firm.objects.filter(owner=user).order_by("firm_name")
+            if user else Firm.objects.none()
+        )
 
-        source_qs = GreigePurchaseOrder.objects.filter(items__inward_items__isnull=False).distinct().order_by("-id")
+        source_ids_qs = GreigePurchaseOrder.objects.filter(
+            items__inward_items__isnull=False
+        )
         if user is not None:
-            source_qs = source_qs.filter(owner=user)
+            source_ids_qs = source_ids_qs.filter(owner=user)
+
+        allowed_ids = set(source_ids_qs.values_list("pk", flat=True))
 
         if self.instance.pk and self.instance.source_greige_po_id:
-            source_qs = (source_qs | GreigePurchaseOrder.objects.filter(pk=self.instance.source_greige_po_id)).distinct()
+            allowed_ids.add(self.instance.source_greige_po_id)
 
         if source_greige_po is not None:
-            source_qs = (source_qs | GreigePurchaseOrder.objects.filter(pk=source_greige_po.pk)).distinct()
+            allowed_ids.add(source_greige_po.pk)
             self.fields["source_greige_po"].initial = source_greige_po.pk
 
-        self.fields["source_greige_po"].queryset = source_qs
+        self.fields["source_greige_po"].queryset = GreigePurchaseOrder.objects.filter(
+            pk__in=allowed_ids
+        ).order_by("-id")
+
         self.fields["source_greige_po"].empty_label = "Select source greige PO"
         self.fields["vendor"].empty_label = "Select vendor"
         self.fields["firm"].empty_label = "Select firm"
@@ -699,3 +726,15 @@ class DyeingPurchaseOrderForm(forms.ModelForm):
         if not self.is_bound:
             from django.utils import timezone
             self.fields["po_date"].initial = self.instance.po_date or timezone.localdate()
+            if self.instance.pk and not self.initial.get("available_qty"):
+                self.fields["available_qty"].initial = self.instance.remaining_qty_total
+
+
+class DyeingPOInwardForm(forms.ModelForm):
+    class Meta:
+        model = DyeingPOInward
+        fields = ["inward_date", "notes"]
+        widgets = {
+            "inward_date": forms.DateInput(attrs={"type": "date"}),
+            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
+        }

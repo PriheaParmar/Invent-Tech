@@ -31,6 +31,7 @@ from .forms import (
     GreigePurchaseOrderForm,
     GreigePOInwardForm,
     DyeingPurchaseOrderForm,
+    DyeingPOInwardForm,
     JobberForm,
     JobberTypeForm,
     LocationForm,
@@ -53,6 +54,8 @@ from .models import (
     GreigePOInwardItem,
     DyeingPurchaseOrder,
     DyeingPurchaseOrderItem,
+    DyeingPOInward,
+    DyeingPOInwardItem,
     Jobber,
     JobberType,
     Location,
@@ -1961,7 +1964,14 @@ def _dyeing_po_queryset():
         DyeingPurchaseOrder.objects
         .select_related("vendor", "firm", "source_greige_po", "owner")
         .prefetch_related(
-            Prefetch("items", queryset=DyeingPurchaseOrderItem.objects.select_related("source_greige_po_item"))
+            Prefetch(
+                "items",
+                queryset=DyeingPurchaseOrderItem.objects.select_related("source_greige_po_item").prefetch_related("inward_items"),
+            ),
+            Prefetch(
+                "inwards",
+                queryset=DyeingPOInward.objects.prefetch_related("items__po_item"),
+            ),
         )
         .order_by("-id")
     )
@@ -2466,6 +2476,42 @@ def dyeingpo_create(request, greige_po_id=None):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
+def dyeingpo_update(request, pk: int):
+    po = get_object_or_404(_dyeing_po_queryset(), pk=pk)
+    if not _can_access_dyeing_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Dyeing PO.")
+
+    form = DyeingPurchaseOrderForm(
+        request.POST or None,
+        user=request.user,
+        instance=po,
+        source_greige_po=po.source_greige_po,
+        lock_source=True,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        po = form.save(commit=False)
+        if po.firm and not po.shipping_address:
+            po.shipping_address = _firm_address(po.firm)
+        po.save()
+        return redirect("accounts:dyeingpo_list")
+
+    return render(
+        request,
+        "accounts/dyeing_po/form.html",
+        {
+            "form": form,
+            "mode": "edit",
+            "po_obj": po,
+            "source_greige_po": po.source_greige_po,
+            "source_inwards": list(po.source_greige_po.inwards.all()) if po.source_greige_po else [],
+            "existing_po": None,
+        },
+    )
+
+
+@login_required
 def dyeingpo_detail(request, pk: int):
     po = get_object_or_404(_dyeing_po_queryset(), pk=pk)
     if not _can_access_dyeing_po(request.user, po):
@@ -2478,5 +2524,146 @@ def dyeingpo_detail(request, pk: int):
             "po": po,
             "source_greige_po": po.source_greige_po,
             "source_inwards": list(po.source_greige_po.inwards.all()) if po.source_greige_po else [],
+            "dyeing_inwards": list(po.inwards.all()),
+        },
+    )
+
+
+@login_required
+@require_POST
+def dyeingpo_delete(request, pk: int):
+    po = get_object_or_404(DyeingPurchaseOrder, pk=pk, owner=request.user)
+    po.delete()
+    return redirect("accounts:dyeingpo_list")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def dyeingpo_inward(request, pk: int):
+    po = get_object_or_404(_dyeing_po_queryset(), pk=pk)
+    if not _can_access_dyeing_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Dyeing PO.")
+
+    item_errors = {}
+    line_inputs = {}
+    inward_form = DyeingPOInwardForm(request.POST or None)
+
+    if request.method == "POST" and inward_form.is_valid():
+        line_payload = []
+
+        for item in po.items.all():
+            raw_qty = (request.POST.get(f"qty_{item.id}") or "").strip()
+            remark = (request.POST.get(f"remark_{item.id}") or "").strip()
+
+            line_inputs[item.id] = {"qty": raw_qty, "remark": remark}
+
+            if not raw_qty:
+                continue
+
+            try:
+                qty = Decimal(raw_qty)
+            except InvalidOperation:
+                item_errors[item.id] = "Enter a valid quantity."
+                continue
+
+            if qty <= 0:
+                continue
+
+            if qty > item.remaining_qty_total:
+                item_errors[item.id] = "Entered quantity is greater than remaining quantity."
+                continue
+
+            line_payload.append((item, qty, remark))
+
+        if not line_payload:
+            inward_form.add_error(None, "Enter at least one inward quantity.")
+
+        if not inward_form.errors and not item_errors:
+            inward = inward_form.save(commit=False)
+            inward.owner = po.owner
+            inward.po = po
+            inward.inward_number = _next_dyeing_inward_number()
+            inward.save()
+
+            DyeingPOInwardItem.objects.bulk_create([
+                DyeingPOInwardItem(
+                    inward=inward,
+                    po_item=item,
+                    quantity=qty,
+                    remark=remark,
+                )
+                for item, qty, remark in line_payload
+            ])
+            return redirect("accounts:dyeingpo_inward", pk=po.pk)
+
+    line_rows = [
+        {
+            "item": item,
+            "qty_value": line_inputs.get(item.id, {}).get("qty", ""),
+            "remark_value": line_inputs.get(item.id, {}).get("remark", ""),
+            "error": item_errors.get(item.id, ""),
+        }
+        for item in po.items.all()
+    ]
+
+    return render(
+        request,
+        "accounts/dyeing_po/inward.html",
+        {
+            "po": po,
+            "inward_form": inward_form,
+            "line_rows": line_rows,
+            "existing_inwards": po.inwards.all().order_by("-inward_date", "-id"),
+        },
+    )
+
+
+@login_required
+def dyeing_inward_tracker(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = _dyeing_po_queryset().filter(inwards__isnull=False).distinct()
+    if not _can_review_yarn_po(request.user):
+        qs = qs.filter(owner=request.user)
+
+    if q:
+        qs = qs.filter(
+            Q(system_number__icontains=q)
+            | Q(po_number__icontains=q)
+            | Q(vendor__name__icontains=q)
+            | Q(source_greige_po__system_number__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        ).distinct()
+
+    rows = []
+    for po in qs:
+        inward_entries = []
+        for inward in po.inwards.all():
+            inward_entries.append({
+                "inward": inward,
+                "items": [
+                    {
+                        "inward_item": inward_item,
+                        "po_item": inward_item.po_item,
+                        "fabric_name": inward_item.po_item.fabric_name if inward_item.po_item else "Dyeing Item",
+                        "ordered_qty": inward_item.po_item.quantity if inward_item.po_item else 0,
+                        "inward_qty": inward_item.quantity,
+                        "unit": inward_item.po_item.unit if inward_item.po_item else "",
+                    }
+                    for inward_item in inward.items.all()
+                ],
+            })
+
+        rows.append({
+            "po": po,
+            "inward_entries": inward_entries,
+        })
+
+    return render(
+        request,
+        "accounts/dyeing_po/inward_tracker.html",
+        {
+            "rows": rows,
+            "q": q,
         },
     )

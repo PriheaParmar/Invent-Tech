@@ -739,6 +739,17 @@ class DyeingPurchaseOrder(OwnedModel):
     remarks = models.TextField(blank=True, default="")
     total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
+    @property
+    def total_inward_qty(self):
+        total = self.inwards.aggregate(total=Sum("items__quantity")).get("total") or Decimal("0")
+        return total
+
+    @property
+    def remaining_qty_total(self):
+        ordered = self.total_weight or Decimal("0")
+        inward = self.total_inward_qty or Decimal("0")
+        return ordered - inward if ordered > inward else Decimal("0")
+
     class Meta:
         ordering = ["-id"]
 
@@ -767,8 +778,57 @@ class DyeingPurchaseOrderItem(models.Model):
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     remark = models.CharField(max_length=255, blank=True, default="")
 
+    @property
+    def inward_qty_total(self):
+        total = self.inward_items.aggregate(total=Sum("quantity")).get("total") or Decimal("0")
+        return total
+
+    @property
+    def remaining_qty_total(self):
+        ordered = self.quantity or Decimal("0")
+        inward = self.inward_qty_total or Decimal("0")
+        return ordered - inward if ordered > inward else Decimal("0")
+
     class Meta:
         ordering = ["id"]
 
     def __str__(self):
         return f"{self.po} - {self.fabric_name}"
+
+
+class DyeingPOInward(OwnedModel):
+    po = models.ForeignKey(
+        "DyeingPurchaseOrder",
+        on_delete=models.CASCADE,
+        related_name="inwards",
+    )
+    inward_number = models.CharField(max_length=30, unique=True)
+    inward_date = models.DateField(default=timezone.localdate)
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-inward_date", "-id"]
+
+    def __str__(self):
+        return self.inward_number
+
+
+class DyeingPOInwardItem(models.Model):
+    inward = models.ForeignKey(
+        DyeingPOInward,
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+    po_item = models.ForeignKey(
+        "DyeingPurchaseOrderItem",
+        on_delete=models.CASCADE,
+        related_name="inward_items",
+    )
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    remark = models.CharField(max_length=255, blank=True, default="")
+
+    class Meta:
+        unique_together = ("inward", "po_item")
+
+    def __str__(self):
+        return f"{self.inward.inward_number} / {self.po_item_id}"

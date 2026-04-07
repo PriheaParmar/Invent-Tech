@@ -1,0 +1,46 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Dyeing Inwards - InventTech{% endblock %}
+{% block page_title %}PO / Dyeing Inwards{% endblock %}
+{% block page_subtitle %}Track inwarded Dyeing POs before finished lot handling{% endblock %}
+
+{% block content %}
+<style>
+  .dit-tools{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}.dit-search{display:flex;gap:10px;flex:1 1 320px}.dit-search input{width:100%;height:38px;border:1px solid rgba(0,0,0,.1);border-radius:999px;padding:0 12px;background:#fff}.dit-table{width:100%;border-collapse:collapse}.dit-table th,.dit-table td{padding:14px 12px;border-top:1px solid rgba(15,23,42,.08);text-align:left;vertical-align:top}.dit-table thead th{border-top:none;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#667085}.dit-card{display:grid;gap:8px}.dit-pill{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(16,185,129,.12);color:#047857;font-size:11px;font-weight:900}.dit-mini{display:grid;gap:8px}.dit-mini-card{border:1px solid rgba(15,23,42,.08);border-radius:12px;padding:10px;background:rgba(255,255,255,.72)}.dit-mini-title{font-size:12px;font-weight:800;color:#111827}.dit-mini-sub{font-size:12px;color:#667085;margin-top:3px}.dit-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-start}.dit-empty{text-align:center;padding:24px 12px;color:#667085}@media (max-width:980px){.dit-wrap{overflow:auto;}.dit-table{min-width:980px}}
+</style>
+<section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
+  <div class="jb-head"><div><div class="jb-title">Dyeing Inwards</div><div class="jb-sub">Track inwarded Dyeing POs and keep the finished lot stage ready.</div></div></div>
+  <div class="dit-tools"><form class="dit-search" method="get"><input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search by dyeing PO, vendor, firm..."><button class="jb-add" type="submit">Search</button></form><a class="jb-secondary" href="{% url 'accounts:dyeingpo_list' %}">Back to Dyeing PO</a></div>
+  <div class="dit-wrap"><table class="dit-table"><thead><tr><th>Dyeing Inward Details</th><th>Next Stage</th></tr></thead><tbody>
+    {% for row in rows %}
+    <tr>
+      <td>
+        <div class="dit-card">
+          <div class="dit-pill">{{ row.po.system_number }}</div>
+          <div class="dit-mini-title">{{ row.po.po_number|default:'No PO Number' }}</div>
+          <div class="dit-mini-sub">Vendor: {{ row.po.vendor.name }} · Firm: {% if row.po.firm %}{{ row.po.firm.firm_name }}{% else %}—{% endif %}</div>
+          <div class="dit-mini-sub">Available Dyed Qty: {{ row.po.remaining_qty_total|default:'0.00' }}</div>
+          <div class="dit-mini">
+            {% for inward_entry in row.inward_entries %}
+            <div class="dit-mini-card">
+              <div class="dit-mini-title">{{ inward_entry.inward.inward_number }} · {{ inward_entry.inward.inward_date|date:'d-m-Y' }}</div>
+              {% for item in inward_entry.items %}<div class="dit-mini-sub">{{ item.fabric_name }} — Ordered {{ item.ordered_qty }} / Inward {{ item.inward_qty }}{% if item.unit %} {{ item.unit }}{% endif %}</div>{% endfor %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="dit-card">
+          <div class="dit-pill" style="background:rgba(59,130,246,.12);color:#1d4ed8;">Ready for finished stage</div>
+          <div class="dit-mini-title">Finished material / lot stage is next</div>
+          <div class="dit-mini-sub">This dyeing inward is now ready for the next downstream process shown in your flow chart.</div>
+          <div class="dit-actions"><a class="jb-secondary" href="{% url 'accounts:dyeingpo_detail' row.po.id %}">View Dyeing PO</a><a class="jb-secondary" href="{% url 'accounts:dyeingpo_inward' row.po.id %}">Add More Inward</a></div>
+        </div>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="2" class="dit-empty">No inwarded Dyeing POs found yet.</td></tr>
+    {% endfor %}
+  </tbody></table></div>
+</div></div></div></div></section>
+{% endblock %}
