@@ -1,12 +1,15 @@
 {% extends "accounts/base_app.html" %}
-{% block title %}{% if mode == "edit" %}Edit Vendor{% else %}Create Vendor{% endif %} - InventTech{% endblock %}
-{% block page_title %}{% if mode == "edit" %}Edit Vendor{% else %}Create Vendor{% endif %}{% endblock %}
+{% load static %}
+
+{% block title %}{% if mode == "add" %}Add Vendor{% else %}Edit Vendor{% endif %} - InventTech{% endblock %}
+{% block page_title %}{% if mode == "add" %}Add Vendor{% else %}Edit Vendor{% endif %}{% endblock %}
 {% block page_subtitle %}Manage vendor master records{% endblock %}
+
 {% block content %}
 <section class="page-section is-active">
   <div class="canvas">
-    <div class="card soft big">
-      {% include "accounts/vendors/form_embed.html" %}
+    <div class="jb-page">
+      {% include "accounts/vendors/form_embed.html" with full_page=True %}
     </div>
   </div>
 </section>

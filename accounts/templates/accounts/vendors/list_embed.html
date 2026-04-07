@@ -1,68 +1,95 @@
-<div class="parties-embed">
-  <div class="pt-head">
-    <div>
-      <div class="pt-title">Vendors</div>
-      <div class="pt-sub">Manage yarn and fabric vendors</div>
-    </div>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/vendors.css' %}?v=3">
 
-    <div class="pt-head-actions">
-      <a class="pt-add" href="{% url 'accounts:vendor_add' %}?embed=1">
-        <svg class="pt-add-ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 5v14M5 12h14"></path>
-        </svg>
-        Create
-      </a>
+<div class="jobbers-embed vendor-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Vendors</div>
+        <div class="jb-sub">Manage yarn and fabric vendors</div>
+      </div>
 
-      <button type="button" class="pt-close" data-embed-close title="Close">
-        <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M18 6L6 18"></path>
           <path d="M6 6l12 12"></path>
         </svg>
       </button>
+      {% endif %}
     </div>
-  </div>
 
-  <div class="pt-tools">
-    <form class="pt-search" method="get" action="{% url 'accounts:vendor_list' %}">
-      <input type="hidden" name="embed" value="1">
-      <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search vendor (name, contact, phone, gst)…">
-      <button class="pt-search-btn" type="submit">Search</button>
-    </form>
-  </div>
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:vendor_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search vendor name, contact, phone or GST"
+          autocomplete="off"
+          aria-label="Search vendors"
+        >
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
 
-  <div class="pt-tablewrap">
-    <table class="pt-table">
-      <thead>
-        <tr>
-          <th style="width:28%;">Vendor</th>
-          <th style="width:18%;">Contact</th>
-          <th style="width:18%;">Phone</th>
-          <th style="width:18%;">GST</th>
-          <th class="pt-actions" style="width:18%;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for vendor in vendors %}
-        <tr>
-          <td>{{ vendor.name }}</td>
-          <td>{{ vendor.contact_person|default:"—" }}</td>
-          <td>{{ vendor.phone|default:"—" }}</td>
-          <td>{{ vendor.gst_number|default:"—" }}</td>
-          <td class="pt-actions">
-            <a class="pt-link" href="{% url 'accounts:vendor_edit' vendor.id %}?embed=1">Edit</a>
-            <span class="pt-dot">•</span>
-            <form method="post" action="{% url 'accounts:vendor_delete' vendor.id %}?embed=1" style="display:inline;">
-              {% csrf_token %}
-              <button class="pt-link danger" type="submit" onclick="return confirm('Delete this vendor?')">Delete</button>
-            </form>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="5" class="pt-empty">No vendors found.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:vendor_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Vendor</th>
+            <th>Contact</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>GST</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for vendor in vendors %}
+          <tr>
+            <td>{{ vendor.name }}</td>
+            <td>{{ vendor.contact_person|default:"—" }}</td>
+            <td>{{ vendor.phone|default:"—" }}</td>
+            <td>{{ vendor.email|default:"—" }}</td>
+            <td>{{ vendor.gst_number|default:"—" }}</td>
+            <td class="jb-actions">
+              <a class="jb-link" href="{% url 'accounts:vendor_edit' vendor.id %}{% if not full_page %}?embed=1{% endif %}">
+                Edit
+              </a>
+              <span class="jb-dot">•</span>
+              <form
+                method="post"
+                action="{% url 'accounts:vendor_delete' vendor.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="vendor &quot;{{ vendor.name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                <button class="jb-link jb-link-danger jb-link-button" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="jb-empty">No vendors found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+  </section>
 </div>

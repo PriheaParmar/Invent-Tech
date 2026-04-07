@@ -1,101 +1,147 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/vendors.css' %}?v=3">
 
+<div class="jobbers-embed vendor-embed vendor-form-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">
+          {% if mode == "add" %}Add Vendor{% else %}Edit Vendor{% endif %}
+        </div>
+        <div class="jb-sub">Manage vendor details for purchase and material flows</div>
+      </div>
 
-  <div class="vendor-head">
-    <div>
-      <div class="vendor-title">{% if mode == "edit" %}Edit Vendor{% else %}Create Vendor{% endif %}</div>
-      <div class="vendor-sub">This vendor will be available in Yarn PO dropdowns.</div>
+      <div class="jf-head-actions">
+        <a class="jb-iconbtn jb-back" href="{% url 'accounts:vendor_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+          <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
     </div>
 
-    <div class="vendor-head-actions">
-      <a class="vendor-back" href="{% url 'accounts:vendor_list' %}?embed=1" title="Back">
-        <svg class="vendor-ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6"></path>
-        </svg>
-      </a>
-
-      <button type="button" class="vendor-close" data-embed-close title="Close">
-        <svg class="vendor-ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M18 6L6 18"></path>
-          <path d="M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <form
-    method="post"
-    action="{% if mode == 'edit' %}{% url 'accounts:vendor_edit' vendor.id %}{% else %}{% url 'accounts:vendor_add' %}{% endif %}"
-    class="vendor-form"
-  >
-    {% csrf_token %}
-    <input type="hidden" name="embed" value="1">
-
-    {% if form.non_field_errors %}
-      <div class="vendor-errors">{{ form.non_field_errors }}</div>
+    {% if mode == "add" %}
+      {% url "accounts:vendor_add" as action_url %}
+    {% else %}
+      {% url "accounts:vendor_edit" vendor.id as action_url %}
     {% endif %}
 
-    <div class="vendor-grid">
-      <div class="vendor-field">
-        <label for="{{ form.name.id_for_label }}">Vendor Name</label>
-        {{ form.name }}
-        {% if form.name.help_text %}<div class="vendor-help">{{ form.name.help_text }}</div>{% endif %}
-        {% for err in form.name.errors %}<div class="vendor-err">{{ err }}</div>{% endfor %}
-      </div>
-      {% if form.firm %}
-<div class="vendor-field">
-  <label for="{{ form.firm.id_for_label }}">Firm</label>
-  {{ form.firm }}
-  {% for err in form.firm.errors %}<div class="vendor-err">{{ err }}</div>{% endfor %}
-</div>
-{% endif %}
-      <div class="vendor-field">
-        <label for="{{ form.contact_person.id_for_label }}">Contact Person</label>
-        {{ form.contact_person }}
-        {% for err in form.contact_person.errors %}<div class="vendor-err">{{ err }}</div>{% endfor %}
-      </div>
+    {% if form.non_field_errors %}
+    <div class="jb-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
 
-      <div class="vendor-field">
-        <label for="{{ form.phone.id_for_label }}">Phone</label>
-        {{ form.phone }}
-        {% for err in form.phone.errors %}<div class="vendor-err">{{ err }}</div>{% endfor %}
-      </div>
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="jf-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
 
-      <div class="vendor-field">
-        <label for="{{ form.email.id_for_label }}">Email</label>
-        {{ form.email }}
-        {% for err in form.email.errors %}<div class="vendor-err">{{ err }}</div>{% endfor %}
-      </div>
-
-      <div class="vendor-field">
-        <label for="{{ form.gst_number.id_for_label }}">GST Number</label>
-        {{ form.gst_number }}
-        {% for err in form.gst_number.errors %}<div class="vendor-err">{{ err }}</div>{% endfor %}
-      </div>
-
-      <div class="vendor-field full">
-        <label for="{{ form.address.id_for_label }}">Address</label>
-        {{ form.address }}
-        {% for err in form.address.errors %}<div class="vendor-err">{{ err }}</div>{% endfor %}
-      </div>
-
-      {% if form.is_active %}
-      <div class="vendor-status">
-        <div class="vendor-status-copy">
-          <div class="vendor-status-title">Active Vendor</div>
-          <div class="vendor-status-sub">Keep this enabled so the vendor appears in Yarn PO dropdowns.</div>
+      <div class="jf-grid">
+        <div class="jf-field">
+          <label for="{{ form.name.id_for_label }}">Vendor Name</label>
+          {{ form.name }}
+          {% if form.name.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
         </div>
 
-        <label class="vendor-switch">
-          {{ form.is_active }}
-          <span class="vendor-slider"></span>
-        </label>
-      </div>
-      {% endif %}
-    </div>
+        <div class="jf-field">
+          <label for="{{ form.contact_person.id_for_label }}">Contact Person</label>
+          {{ form.contact_person }}
+          {% if form.contact_person.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.contact_person.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
 
-    <div class="vendor-actions">
-      <a class="vendor-btn" href="{% url 'accounts:vendor_list' %}?embed=1">Cancel</a>
-      <button type="submit" class="vendor-btn primary">Save Vendor</button>
-    </div>
-  </form>
+        <div class="jf-field">
+          <label for="{{ form.phone.id_for_label }}">Phone</label>
+          {{ form.phone }}
+          {% if form.phone.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.phone.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.email.id_for_label }}">Email</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.email.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.gst_number.id_for_label }}">GST Number</label>
+          {{ form.gst_number }}
+          {% if form.gst_number.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.gst_number.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        {% if form.firm %}
+        <div class="jf-field">
+          <label for="{{ form.firm.id_for_label }}">Firm</label>
+          {{ form.firm }}
+          {% if form.firm.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.firm.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="jf-field jf-full">
+          <label for="{{ form.address.id_for_label }}">Address</label>
+          {{ form.address }}
+          {% if form.address.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.address.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        {% if form.is_active %}
+        <div class="jf-field jf-full jf-check">
+          <label for="{{ form.is_active.id_for_label }}">Active</label>
+          <div class="jf-check-row">
+            {{ form.is_active }}
+            <span class="jf-muted">Enable or disable this vendor</span>
+          </div>
+          {% if form.is_active.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.is_active.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="jf-footer">
+        <a class="jb-secondary" href="{% url 'accounts:vendor_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="jb-add jb-save">Save Vendor</button>
+      </div>
+    </form>
+  </section>
 </div>

@@ -1,0 +1,26 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Dyeing PO - InventTech{% endblock %}
+{% block page_title %}PO / Dyeing{% endblock %}
+{% block page_subtitle %}Continue the greige inward stage into dyeing purchase orders{% endblock %}
+
+{% block content %}
+<style>
+  .dpo-tools{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}.dpo-search{display:flex;gap:10px;flex:1 1 320px}.dpo-search input{width:100%;height:38px;border:1px solid rgba(0,0,0,.1);border-radius:999px;padding:0 12px;background:#fff}.dpo-card{border:1px solid rgba(15,23,42,.08);border-radius:16px;background:rgba(255,255,255,.72);padding:14px;margin-bottom:14px}.dpo-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}.dpo-badge{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(16,185,129,.12);color:#047857;font-size:11px;font-weight:900}.dpo-title{font-size:15px;font-weight:900;color:#111827}.dpo-grid{display:grid;grid-template-columns:1fr 1.1fr auto;gap:12px}.dpo-meta{display:grid;grid-template-columns:92px 1fr;gap:5px 8px;font-size:12px}.dpo-lines{display:grid;gap:8px}.dpo-line{padding:8px 0;border-top:1px dashed rgba(15,23,42,.1)}.dpo-line:first-child{border-top:none;padding-top:0}.dpo-empty{text-align:center;padding:28px 12px;color:#667085}@media (max-width:900px){.dpo-grid{grid-template-columns:1fr}}
+</style>
+<section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
+  <div class="jb-head"><div><div class="jb-title">Dyeing Purchase Orders</div><div class="jb-sub">Downstream PO layer created from inwarded Greige POs.</div></div></div>
+  <div class="dpo-tools"><form class="dpo-search" method="get"><input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search by dyeing PO, source greige PO, vendor..."><button class="jb-add" type="submit">Search</button></form><div style="display:flex;gap:10px;flex-wrap:wrap;"><a class="jb-secondary" href="{% url 'accounts:greige_inward_tracker' %}">Greige Inwards</a><a class="jb-add" href="{% url 'accounts:dyeingpo_add' %}">Create Dyeing PO</a></div></div>
+  {% for po in orders %}
+  <div class="dpo-card">
+    <div class="dpo-top"><div><div class="dpo-badge">{{ po.system_number }}</div><div class="dpo-title">{{ po.po_number|default:'No PO Number' }}</div><div class="jb-sub">Date: {{ po.po_date|date:'d-m-Y' }} · Source Greige: {{ po.source_greige_po.system_number }}</div></div></div>
+    <div class="dpo-grid">
+      <div><div class="jb-sub" style="font-weight:800;color:#111827;margin-bottom:6px;">Details</div><div class="dpo-meta"><div>Vendor</div><div>{{ po.vendor.name }}</div><div>Firm</div><div>{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div><div>Available</div><div>{{ po.available_qty|default:'0.00' }}</div><div>Total</div><div>{{ po.total_weight|default:'0.00' }}</div></div></div>
+      <div><div class="jb-sub" style="font-weight:800;color:#111827;margin-bottom:6px;">Dyeing Lines</div><div class="dpo-lines">{% for item in po.items.all %}<div class="dpo-line"><div class="dpo-title" style="font-size:13px;">{{ item.fabric_name }}</div><div class="jb-sub">Qty: {{ item.quantity }}{% if item.unit %} {{ item.unit }}{% endif %}</div></div>{% empty %}<div class="jb-sub">No dyeing items found.</div>{% endfor %}</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><a class="jb-secondary" href="{% url 'accounts:dyeingpo_detail' po.id %}">View</a></div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="dpo-empty">No Dyeing POs found yet.</div>
+  {% endfor %}
+</div></div></div></div></section>
+{% endblock %}

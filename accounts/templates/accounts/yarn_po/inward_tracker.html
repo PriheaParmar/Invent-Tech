@@ -4,16 +4,234 @@
 {% block page_subtitle %}Track inwarded Yarn POs and start Greige PO generation{% endblock %}
 
 {% block content %}
+<style>
+  .yit-page-stretch,
+  .yit-page-stretch .jobbers-embed,
+  .yit-page-stretch .jb-panel{
+    width:100%;
+    max-width:100%;
+  }
+
+  .yit-page-stretch{
+    padding:0;
+    margin:0;
+  }
+
+  .yit-page-stretch .jobbers-embed{
+    padding:0;
+    margin:0;
+  }
+
+  .yit-page-stretch .jb-panel{
+    margin:0;
+  }
+
+  .yit-fullwrap{
+    width:100%;
+  }
+
+  .yit-table{
+    width:100%;
+    table-layout:fixed;
+  }
+
+  .yit-col-left{
+    width:34%;
+    vertical-align:top !important;
+  }
+
+  .yit-col-right{
+    width:66%;
+    vertical-align:top !important;
+  }
+
+  .yit-po-code{
+    font-size:18px;
+    font-weight:900;
+    line-height:1.1;
+    color:var(--orange);
+    margin-bottom:8px;
+  }
+
+  .yit-meta{
+    display:grid;
+    gap:4px;
+    font-size:12px;
+    line-height:1.45;
+    color:rgba(15,23,42,.78);
+  }
+
+  .yit-meta strong{
+    color:#111827;
+  }
+
+  .yit-inward-list{
+    margin-top:12px;
+    display:grid;
+    gap:10px;
+  }
+
+  .yit-inward-card{
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:14px;
+    background:rgba(255,255,255,.66);
+    padding:10px 12px;
+  }
+
+  .yit-inward-no{
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:rgba(15,23,42,.65);
+    margin-bottom:8px;
+  }
+
+  .yit-inward-item{
+    padding:7px 0;
+    border-top:1px dashed rgba(15,23,42,.10);
+  }
+
+  .yit-inward-item:first-child{
+    border-top:none;
+    padding-top:0;
+  }
+
+  .yit-inward-fabric{
+    font-size:13px;
+    font-weight:700;
+    color:#111827;
+    line-height:1.35;
+  }
+
+  .yit-inward-sub{
+    font-size:12px;
+    color:rgba(15,23,42,.68);
+    margin-top:2px;
+    line-height:1.4;
+  }
+
+  .yit-status-card{
+    min-height:156px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:10px;
+    padding:18px;
+    border:1px dashed rgba(15,23,42,.14);
+    border-radius:16px;
+    background:rgba(255,255,255,.55);
+  }
+
+  .yit-status-title{
+    font-size:15px;
+    font-weight:900;
+    color:#111827;
+    line-height:1.2;
+  }
+
+  .yit-status-sub{
+    font-size:12px;
+    color:rgba(15,23,42,.68);
+    line-height:1.45;
+    max-width:360px;
+  }
+
+  .yit-greige-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+
+  .yit-greige-meta{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    font-size:12px;
+    color:rgba(15,23,42,.72);
+  }
+
+  .yit-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:28px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    border:1px solid rgba(15,23,42,.08);
+  }
+
+  .yit-pill-started{
+    background:rgba(16,185,129,.10);
+    color:#047857;
+    border-color:rgba(16,185,129,.18);
+  }
+
+  .yit-inner-table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+  }
+
+  .yit-inner-table th,
+  .yit-inner-table td{
+    padding:10px 8px;
+    border-top:1px solid rgba(15,23,42,.08);
+    text-align:left;
+    vertical-align:top;
+    font-size:12px;
+    overflow-wrap:anywhere;
+  }
+
+  .yit-inner-table thead th{
+    border-top:none;
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    opacity:.7;
+  }
+
+  .yit-empty{
+    text-align:center;
+    padding:14px 10px;
+    font-size:12px;
+    color:rgba(15,23,42,.64);
+  }
+
+  .yit-compact-btn{
+    height:32px !important;
+    padding:0 12px !important;
+    border-radius:10px !important;
+    font-size:12px !important;
+  }
+
+  @media (max-width: 980px){
+    .yit-table{
+      min-width:980px;
+    }
+  }
+</style>
+
 <section class="page-section is-active">
-  <div class="canvas">
-    <div class="jb-page">
+  <div class="yit-fullwrap">
+    <div class="jb-page yit-page-stretch">
       <div class="jobbers-embed">
         <div class="jb-panel">
 
           <div class="jb-head">
             <div>
-              <div class="jb-title">Yarn Inwards Tracker</div>
-              <div class="jb-sub">Track inwarded Yarn POs and check whether greige process has started.</div>
+              <div class="jb-title">Yarn Inwards</div>
+              <div class="jb-sub">Track inwarded Yarn POs, available yarn, and greige process status.</div>
             </div>
           </div>
 
@@ -23,96 +241,140 @@
                 type="search"
                 name="q"
                 value="{{ q|default:'' }}"
-                placeholder="Search by system no, PO no, vendor, firm..."
+                placeholder="Search by yarn PO, vendor, firm..."
               >
               <button class="jb-search-btn" type="submit">Search</button>
             </form>
 
             <div class="jb-tool-actions">
-              <a class="jb-add" href="{% url 'accounts:yarnpo_list' %}">Back to Yarn PO</a>
+              <a class="jb-add" href="{% url 'accounts:yarnpo_list' %}">
+                Back to Yarn PO
+              </a>
             </div>
           </div>
 
           <div class="jb-tablewrap">
-            <table class="jb-table" style="min-width: 1280px;">
+            <table class="jb-table yit-table">
               <thead>
                 <tr>
-                  <th>Yarn PO</th>
-                  <th>Vendor / Firm</th>
-                  <th>Inward Summary</th>
-                  <th>Greige Status</th>
-                  <th>Greige PO</th>
-                  <th>Action</th>
+                  <th class="yit-col-left">Yarn Inward Details</th>
+                  <th class="yit-col-right">PO Greige Details</th>
                 </tr>
               </thead>
               <tbody>
                 {% for row in rows %}
                 <tr>
-                  <td>
-                    <div class="jb-line-title">{{ row.po.system_number }}</div>
-                    <div class="jb-line-sub">
-                      PO No: {{ row.po.po_number|default:"—" }}<br>
-                      PO Date: {{ row.po.po_date|date:"d-m-Y" }}<br>
-                      Total Weight: {{ row.po.total_weight|default:"0.00" }}
-                    </div>
-                  </td>
+                  <td class="yit-col-left">
+                    <div class="yit-po-code">{{ row.po.system_number }}</div>
 
-                  <td>
-                    <div class="jb-vendor-name">{{ row.po.vendor.name }}</div>
-                    <div class="jb-vendor-sub">
-                      <strong>Firm:</strong>
-                      {% if row.po.firm %}{{ row.po.firm.firm_name }}{% else %}—{% endif %}
+                    <div class="yit-meta">
+                      {% if row.po.po_number %}
+                        <div><strong>PO No:</strong> {{ row.po.po_number }}</div>
+                      {% endif %}
+                      <div><strong>Date:</strong> {{ row.po.po_date|date:"d-m-Y" }}</div>
+                      <div><strong>Vendor:</strong> {{ row.po.vendor.name }}</div>
+                      {% if row.po.firm %}
+                        <div><strong>Firm:</strong> {{ row.po.firm.firm_name }}</div>
+                      {% endif %}
+                      <div><strong>Total Ordered:</strong> {{ row.po.total_weight|default:"0.00" }}</div>
+                      <div><strong>Available Yarn:</strong> {{ row.po.remaining_qty_total|default:"0.00" }}</div>
+                      <div><strong>Total Inward:</strong> {{ row.po.total_inward_qty|default:"0.00" }}</div>
                     </div>
-                  </td>
 
-                  <td>
-                    <div class="jb-line-sub">
-                      Total Inward: {{ row.po.total_inward_qty|default:"0.00" }}<br>
-                      Remaining: {{ row.po.remaining_qty_total|default:"0.00" }}<br>
-                      Inward Entries: {{ row.po.inwards.count }}
-                    </div>
-                  </td>
+                    {% if row.inward_entries %}
+                      <div class="yit-inward-list">
+                        {% for inward_block in row.inward_entries %}
+                          <div class="yit-inward-card">
+                            <div class="yit-inward-no">
+                              Inward No: {{ inward_block.inward.inward_number }}
+                            </div>
 
-                  <td>
-                    {% if row.greige_started %}
-                      <span class="jb-status-pill is-approved">Started</span>
-                      <div class="jb-status-note">Greige PO has been generated.</div>
-                    {% else %}
-                      <span class="jb-status-pill is-pending">Not Started</span>
-                      <div class="jb-status-note">Greige process is not started yet.</div>
+                            {% for item in inward_block.items %}
+                              <div class="yit-inward-item">
+                                <div class="yit-inward-fabric">{{ item.fabric_name }}</div>
+                                <div class="yit-inward-sub">
+                                  Received: {{ item.inward_qty }}{% if item.unit %} {{ item.unit }}{% endif %}
+                                </div>
+                              </div>
+                            {% endfor %}
+                          </div>
+                        {% endfor %}
+                      </div>
                     {% endif %}
                   </td>
 
-                  <td>
-                    {% if row.greige_po %}
-                      <div class="jb-line-title">{{ row.greige_po.system_number }}</div>
-                      <div class="jb-line-sub">
-                        Date: {{ row.greige_po.po_date|date:"d-m-Y" }}<br>
-                        Weight: {{ row.greige_po.total_weight|default:"0.00" }}
+                  <td class="yit-col-right">
+                    {% if not row.greige_started %}
+                      <div class="yit-status-card">
+                        <div class="yit-status-title">Greige process is not started yet</div>
+                        <div class="yit-status-sub">
+                          No Greige PO has been generated for this Yarn PO yet.
+                        </div>
+
+                        <form method="post" action="{% url 'accounts:generate_greige_po_from_yarn' row.po.id %}">
+                          {% csrf_token %}
+                          <button type="submit" class="jb-add yit-compact-btn">
+                            Generate Greige PO
+                          </button>
+                        </form>
                       </div>
                     {% else %}
-                      <div class="jb-line-sub">No Greige PO generated yet.</div>
-                    {% endif %}
-                  </td>
+                      <div class="yit-greige-top">
+                        <div class="yit-greige-meta">
+                          <span class="yit-pill yit-pill-started">Started</span>
+                          <span><strong>Greige PO:</strong> {{ row.greige_po.system_number }}</span>
+                          <span><strong>Date:</strong> {{ row.greige_po.po_date|date:"d-m-Y" }}</span>
+                        </div>
 
-                  <td class="jb-actions">
-                    {% if row.greige_started %}
-                      <a class="jb-link" href="{% url 'accounts:greigepo_list' %}">View Greige PO</a>
-                    {% else %}
-                      <form method="post" action="{% url 'accounts:generate_greige_po_from_yarn' row.po.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="jb-link jb-link-button">
-                          Generate Greige PO
-                        </button>
-                      </form>
+                        <a class="jb-link" href="{% url 'accounts:greigepo_list' %}">
+                          View Greige PO
+                        </a>
+                      </div>
+
+                      <table class="yit-inner-table">
+                        <thead>
+                          <tr>
+                            <th>PO No.</th>
+                            <th>Fabric</th>
+                            <th>Weight</th>
+                            <th>Inward No.</th>
+                            <th>Greige Received</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for item in row.greige_items %}
+                          <tr>
+                            <td>{{ row.greige_po.system_number }}</td>
+                            <td>{{ item.fabric_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>
+                              {% if row.inward_entries %}
+                                {{ row.inward_entries.0.inward.inward_number }}
+                              {% else %}
+                                —
+                              {% endif %}
+                            </td>
+                            <td>{{ item.quantity }}</td>
+                            <td>
+                              <a class="jb-link" href="{% url 'accounts:greigepo_list' %}">
+                                View
+                              </a>
+                            </td>
+                          </tr>
+                          {% empty %}
+                          <tr>
+                            <td colspan="6" class="yit-empty">No Greige items found.</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
                     {% endif %}
                   </td>
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="6" class="jb-empty">
-                    No inwarded Yarn POs found yet.
-                  </td>
+                  <td colspan="2" class="jb-empty">No inwarded Yarn POs found yet.</td>
                 </tr>
                 {% endfor %}
               </tbody>

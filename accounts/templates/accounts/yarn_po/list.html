@@ -16,161 +16,197 @@
     min-width:0;
   }
 
-  .yarnpo-shell{
-    background:#fff;
-    border:1px solid rgba(15,23,42,.08);
-    border-radius:24px;
-    box-shadow:0 18px 55px rgba(15,23,42,.08);
-    padding:18px;
+  .jobbers-embed{
+    padding:10px 6px;
   }
 
-  .yarnpo-head{
+  .jb-panel{
+    background:rgba(255,255,255,.72);
+    border:2px dashed rgb(0,0,0);
+    border-radius:18px;
+    box-shadow:0 12px 36px rgba(15,23,42,.08);
+    padding:18px;
+    width:100%;
+    min-width:0;
+  }
+
+  .jb-head{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:14px;
-    margin-bottom:16px;
+    gap:12px;
+    margin-bottom:14px;
   }
 
-  .yarnpo-title{
-    font-size:22px;
-    font-weight:950;
-    letter-spacing:-.03em;
-    color:#0f172a;
+  .jb-title{
+    font-size:18px;
+    font-weight:900;
+    line-height:1.1;
+    color:#111827;
   }
 
-  .yarnpo-sub{
-    margin-top:4px;
+  .jb-sub{
     font-size:12px;
-    color:#667085;
+    opacity:.72;
+    margin-top:4px;
+    color:#475467;
   }
 
-  .yarnpo-toolbar{
+  .jb-tools{
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:12px;
     flex-wrap:wrap;
-    margin-bottom:16px;
+    margin-bottom:14px;
   }
 
-  .yarnpo-search{
-    flex:1 1 320px;
+  .jb-search{
     display:flex;
     align-items:center;
     gap:10px;
-    min-width:260px;
-  }
-
-  .yarnpo-search input{
-    flex:1 1 auto;
+    flex:1 1 320px;
     min-width:0;
-    height:42px;
-    border:1px solid rgba(15,23,42,.10);
-    border-radius:14px;
-    padding:0 14px;
-    outline:none;
-    background:#fff;
-    color:#111827;
-    font:inherit;
   }
 
-  .yarnpo-btn{
-    height:42px;
-    padding:0 16px;
-    border-radius:12px;
-    border:1px solid rgba(15,23,42,.10);
+  .jb-search input[type="search"]{
+    appearance:none;
+    width:100%;
+    box-sizing:border-box;
+    border:1px solid rgba(0,0,0,.10);
+    background:rgba(255,255,255,.92);
+    color:inherit;
+    outline:none;
+    transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    min-width:0;
+    height:38px;
+    padding:0 12px;
+    border-radius:999px;
+  }
+
+  .jb-search input[type="search"]:focus{
+    border-color:rgba(238,61,133,.35);
+    box-shadow:0 0 0 4px rgba(238,61,133,.10);
     background:#fff;
-    color:#111827;
+  }
+
+  .jb-search-btn,
+  .jb-add,
+  .jb-secondary{
+    appearance:none;
+    border:1px solid rgba(0,0,0,.10);
+    border-radius:12px;
     text-decoration:none;
+    cursor:pointer;
+    transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+    height:38px;
+    padding:0 14px;
+    font-weight:700;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:8px;
-    font-size:12px;
-    font-weight:900;
-    cursor:pointer;
-    transition:.18s ease;
+    white-space:nowrap;
   }
 
-  .yarnpo-btn:hover{
+  .jb-search-btn,
+  .jb-secondary{
+    background:rgba(255,255,255,.85);
+    color:#000;
+  }
+
+  .jb-search-btn:hover,
+  .jb-secondary:hover{
     background:#000;
     color:#fff;
   }
 
-  .yarnpo-btn.primary{
-    background:linear-gradient(180deg, rgba(250,189,100,1), rgba(239,157,47,1));
+  .jb-add{
+    background:var(--orange);
     color:#fff;
-    border:none;
-    box-shadow:0 12px 22px rgba(239,157,47,.18);
+    border-color:transparent;
   }
 
-  .yarnpo-btn.primary:hover{
+  .jb-add:hover{
     background:#000;
     color:#fff;
+  }
+
+  .jb-tool-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
   }
 
   .yarnpo-list{
     display:flex;
     flex-direction:column;
-    gap:14px;
+    gap:12px;
+    width:100%;
+    min-width:0;
   }
 
   .yarnpo-card{
-    border:1px solid rgba(15,23,42,.08);
-    border-radius:20px;
-    background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.92));
-    padding:16px;
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:14px;
+    background:rgba(255,255,255,.55);
+    padding:12px;
+    width:100%;
+    min-width:0;
   }
 
   .yarnpo-card-top{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:14px;
-    margin-bottom:14px;
+    gap:10px;
+    margin-bottom:10px;
   }
 
   .yarnpo-badge{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    min-height:30px;
-    padding:0 12px;
+    min-height:26px;
+    padding:0 10px;
     border-radius:999px;
-    background:rgba(250,189,100,.14);
-    color:#ef6c00;
-    font-size:12px;
+    background:rgba(250,189,100,.16);
+    color:var(--orange);
+    font-size:11px;
     font-weight:900;
-    margin-bottom:8px;
+    margin-bottom:6px;
   }
 
   .yarnpo-po-no{
-    font-size:18px;
-    font-weight:950;
-    color:#0f172a;
-    line-height:1.2;
+    font-size:14px;
+    font-weight:900;
+    color:#111827;
+    line-height:1.25;
+    word-break:break-word;
   }
 
   .yarnpo-po-sub{
     margin-top:4px;
-    font-size:12px;
+    font-size:11px;
     color:#667085;
     font-weight:700;
+    line-height:1.45;
   }
 
   .yarnpo-status{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    min-height:30px;
-    padding:0 12px;
+    min-height:26px;
+    padding:0 10px;
     border-radius:999px;
-    font-size:11px;
+    font-size:10px;
     font-weight:900;
     text-transform:uppercase;
     letter-spacing:.05em;
     white-space:nowrap;
+    flex-shrink:0;
   }
 
   .yarnpo-status.pending{
@@ -190,32 +226,32 @@
 
   .yarnpo-grid{
     display:grid;
-    grid-template-columns:1.1fr 1.2fr .9fr .9fr;
-    gap:14px;
+    grid-template-columns:1.05fr 1.2fr 1fr .95fr auto;
+    gap:12px;
     align-items:start;
+    width:100%;
+    min-width:0;
   }
 
   .yarnpo-box{
-    border:1px solid rgba(15,23,42,.06);
-    border-radius:16px;
-    background:rgba(255,255,255,.86);
-    padding:12px;
+    min-width:0;
   }
 
   .yarnpo-box-title{
-    font-size:11px;
+    font-size:10px;
     text-transform:uppercase;
     letter-spacing:.08em;
     color:#667085;
     font-weight:900;
-    margin-bottom:8px;
+    margin-bottom:6px;
   }
 
   .yarnpo-meta{
     display:grid;
-    grid-template-columns:84px 1fr;
-    gap:6px 8px;
-    font-size:12px;
+    grid-template-columns:72px 1fr;
+    gap:5px 6px;
+    font-size:11px;
+    min-width:0;
   }
 
   .yarnpo-meta .k{
@@ -226,51 +262,71 @@
   .yarnpo-meta .v{
     color:#111827;
     font-weight:800;
+    min-width:0;
+    word-break:break-word;
   }
 
   .yarnpo-lines{
     display:flex;
     flex-direction:column;
-    gap:8px;
+    gap:7px;
+    min-width:0;
   }
 
   .yarnpo-line{
-    border:1px solid rgba(15,23,42,.06);
+    padding:8px 10px;
     border-radius:12px;
-    background:rgba(15,23,42,.03);
-    padding:10px 11px;
+    background:rgba(0,0,0,.03);
+    min-width:0;
   }
 
   .yarnpo-line-title{
-    font-size:13px;
+    font-size:12px;
     font-weight:900;
     color:#111827;
     line-height:1.35;
+    word-break:break-word;
   }
 
   .yarnpo-line-sub{
     margin-top:4px;
-    font-size:11px;
+    font-size:10px;
     color:#667085;
     font-weight:700;
     line-height:1.5;
+    word-break:break-word;
   }
 
-  .yarnpo-metrics{
+  .yarnpo-vendor-name{
+    font-size:13px;
+    font-weight:900;
+    color:#111827;
+    word-break:break-word;
+  }
+
+  .yarnpo-vendor-sub{
+    margin-top:5px;
+    font-size:11px;
+    color:#667085;
+    line-height:1.5;
+    font-weight:700;
+    word-break:break-word;
+  }
+
+  .yarnpo-summary{
     display:grid;
     grid-template-columns:1fr;
-    gap:8px;
+    gap:7px;
   }
 
-  .yarnpo-metric{
-    border:1px solid rgba(15,23,42,.06);
+  .yarnpo-summary-box{
+    padding:8px 10px;
     border-radius:12px;
-    background:rgba(15,23,42,.03);
-    padding:10px 11px;
+    background:rgba(0,0,0,.03);
   }
 
-  .yarnpo-metric-label{
-    font-size:10px;
+  .yarnpo-summary-label{
+    font-size:9px;
     text-transform:uppercase;
     letter-spacing:.08em;
     color:#667085;
@@ -278,92 +334,131 @@
     margin-bottom:4px;
   }
 
-  .yarnpo-metric-value{
-    font-size:14px;
-    font-weight:950;
+  .yarnpo-summary-value{
+    font-size:13px;
+    font-weight:900;
     color:#111827;
+    word-break:break-word;
   }
 
-  .yarnpo-review-note{
-    margin-top:10px;
-    font-size:12px;
+  .yarnpo-status-note{
+    margin-top:8px;
+    font-size:11px;
     color:#667085;
     line-height:1.5;
     font-weight:700;
+    word-break:break-word;
+  }
+
+  .yarnpo-actions-col{
+    min-width:84px;
+  }
+
+  .yarnpo-actions-title{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:6px;
   }
 
   .yarnpo-actions{
     display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-top:14px;
+    flex-direction:column;
+    gap:6px;
   }
 
-  .yarnpo-link{
+  .jb-link{
+    font-weight:700;
+    text-decoration:none;
+    color:var(--orange);
     display:inline-flex;
     align-items:center;
-    justify-content:center;
-    min-height:36px;
-    padding:0 12px;
-    border-radius:10px;
-    text-decoration:none;
-    border:1px solid rgba(15,23,42,.10);
-    background:#fff;
-    color:#111827;
-    font-size:12px;
-    font-weight:800;
+    justify-content:flex-start;
+    min-height:28px;
   }
 
-  .yarnpo-link:hover{
-    background:#000;
-    color:#fff;
+  .jb-link:hover{
+    text-decoration:underline;
   }
 
-  .yarnpo-link.danger{
-    color:#dc2626;
-    border-color:rgba(220,38,38,.18);
-    background:rgba(220,38,38,.04);
+  .jb-link-danger{
+    color:#d92d20;
   }
 
-  .yarnpo-inline-delete{
-    display:inline;
+  .jb-link-danger:hover{
+    color:#b42318;
   }
 
-  .yarnpo-link-button{
+  .jb-link-button{
     background:none;
+    border:none;
+    padding:0;
     cursor:pointer;
     font:inherit;
+    font-weight:700;
+    text-align:left;
   }
 
-  .yarnpo-empty{
-    padding:26px 18px;
+  .jb-inline-delete{
+    display:block;
+    margin:0;
+  }
+
+  .jb-empty{
+    padding:14px 12px;
+    opacity:.7;
     text-align:center;
-    border:1px dashed rgba(15,23,42,.14);
-    border-radius:18px;
-    color:#667085;
-    font-weight:800;
+    font-weight:700;
   }
 
-  @media (max-width: 1200px){
+  @media (max-width: 1280px){
     .yarnpo-grid{
       grid-template-columns:1fr 1fr;
     }
+
+    .yarnpo-actions-col{
+      grid-column:1 / -1;
+      min-width:0;
+    }
+
+    .yarnpo-actions{
+      flex-direction:row;
+      flex-wrap:wrap;
+      gap:10px 14px;
+    }
   }
 
-  @media (max-width: 760px){
-    .yarnpo-head,
-    .yarnpo-card-top,
-    .yarnpo-toolbar{
-      flex-direction:column;
+  @media (max-width: 768px){
+    .jb-tools{
       align-items:stretch;
+    }
+
+    .jb-search{
+      flex:1 1 100%;
+    }
+
+    .jb-tool-actions{
+      width:100%;
+    }
+
+    .jb-tool-actions > *{
+      flex:1 1 auto;
+    }
+
+    .yarnpo-card-top{
+      flex-direction:column;
+      align-items:flex-start;
     }
 
     .yarnpo-grid{
       grid-template-columns:1fr;
     }
 
-    .yarnpo-search{
-      width:100%;
+    .yarnpo-actions{
+      flex-direction:column;
+      gap:6px;
     }
   }
 </style>
@@ -371,189 +466,188 @@
 <section class="page-section is-active">
   <div class="canvas">
     <div class="yarnpo-list-page">
-      <div class="yarnpo-shell">
-        <div class="yarnpo-head">
-          <div>
-            <div class="yarnpo-title">Yarn Purchase Orders</div>
-            <div class="yarnpo-sub">All generated Yarn POs, their status, metrics, and actions.</div>
-          </div>
-        </div>
+      <div class="jobbers-embed">
+        <div class="jb-panel">
 
-        <div class="yarnpo-toolbar">
-          <form class="yarnpo-search" method="get">
-            <input
-              type="search"
-              name="q"
-              value="{{ q|default:'' }}"
-              placeholder="Search by system no, PO no, vendor, firm..."
-            >
-            <button class="yarnpo-btn" type="submit">Search</button>
-          </form>
-
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <a class="yarnpo-btn" href="{% url 'accounts:yarn_inward_tracker' %}">
-              Yarn Inwards
-            </a>
-
-            <a class="yarnpo-btn primary" href="{% url 'accounts:yarnpo_add' %}">
-              Generate PO
-            </a>
-          </div>
-        </div>
-
-        <div class="yarnpo-list">
-          {% for po in orders %}
-          <div class="yarnpo-card">
-            <div class="yarnpo-card-top">
-              <div>
-                <div class="yarnpo-badge">{{ po.system_number }}</div>
-                <div class="yarnpo-po-no">{{ po.po_number|default:"No PO Number" }}</div>
-                <div class="yarnpo-po-sub">
-                  {{ po.po_date|date:"d-m-Y" }}
-                  {% if po.cancel_date %} · Cancel: {{ po.cancel_date|date:"d-m-Y" }}{% endif %}
-                </div>
-              </div>
-
-              <span class="yarnpo-status {% if po.approval_status == 'approved' %}approved{% elif po.approval_status == 'rejected' %}rejected{% else %}pending{% endif %}">
-                {{ po.get_approval_status_display }}
-              </span>
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">Yarn Purchase Orders</div>
+              <div class="jb-sub">All generated yarn purchase orders with status, vendor details, inward progress, and actions.</div>
             </div>
+          </div>
 
-            <div class="yarnpo-grid">
-              <div class="yarnpo-box">
-                <div class="yarnpo-box-title">PO Details</div>
-                <div class="yarnpo-meta">
-                  <div class="k">System</div>
-                  <div class="v">{{ po.system_number }}</div>
+          <div class="jb-tools">
+            <form class="jb-search" method="get">
+              <input
+                type="search"
+                name="q"
+                value="{{ q|default:'' }}"
+                placeholder="Search by system no, PO no, vendor, firm..."
+              >
+              <button class="jb-search-btn" type="submit">Search</button>
+            </form>
 
-                  <div class="k">PO No</div>
-                  <div class="v">{{ po.po_number|default:"—" }}</div>
+            <div class="jb-tool-actions">
+              <a class="jb-secondary" href="{% url 'accounts:yarn_inward_tracker' %}">
+                Yarn Inwards
+              </a>
 
-                  <div class="k">Date</div>
-                  <div class="v">{{ po.po_date|date:"d-m-Y" }}</div>
+              <a class="jb-add" href="{% url 'accounts:yarnpo_add' %}">
+                Generate PO
+              </a>
+            </div>
+          </div>
 
-                  <div class="k">Remarks</div>
-                  <div class="v">{{ po.remarks|default:"—"|truncatechars:80 }}</div>
+          <div class="yarnpo-list">
+            {% for po in orders %}
+            <div class="yarnpo-card">
+              <div class="yarnpo-card-top">
+                <div>
+                  <div class="yarnpo-badge">{{ po.system_number }}</div>
+                  <div class="yarnpo-po-no">{{ po.po_number|default:"No PO Number" }}</div>
+                  <div class="yarnpo-po-sub">
+                    {{ po.po_date|date:"d-m-Y" }}
+                    {% if po.cancel_date %} · Cancel: {{ po.cancel_date|date:"d-m-Y" }}{% endif %}
+                  </div>
                 </div>
+
+                <span class="yarnpo-status {% if po.approval_status == 'approved' %}approved{% elif po.approval_status == 'rejected' %}rejected{% else %}pending{% endif %}">
+                  {{ po.get_approval_status_display }}
+                </span>
               </div>
 
-              <div class="yarnpo-box">
-                <div class="yarnpo-box-title">Yarn Lines</div>
-                <div class="yarnpo-lines">
-                  {% for item in po.items.all %}
-                  <div class="yarnpo-line">
-                    <div class="yarnpo-line-title">
-                      {% if item.material_type %}
-                        {{ item.material_type.name }}
-                      {% elif item.material %}
-                        {{ item.material.name }}
-                      {% else %}
-                        Yarn Item
-                      {% endif %}
-                    </div>
-                    <div class="yarnpo-line-sub">
-                      Qty: {{ item.quantity|default:"0.00" }}
-                      {% if item.unit %} {{ item.unit }}{% endif %}
-                      {% if item.count %} · Count: {{ item.count }}{% endif %}
-                      {% if item.gsm %} · GSM: {{ item.gsm }}{% endif %}
-                      {% if item.rate %} · Rate: ₹{{ item.rate }}{% endif %}
-                      <br>
-                      Received: {{ item.inward_qty_total|default:"0.00" }} · Remaining: {{ item.remaining_qty_total|default:"0.00" }}
-                    </div>
+              <div class="yarnpo-grid">
+                <div class="yarnpo-box">
+                  <div class="yarnpo-box-title">PO Details</div>
+                  <div class="yarnpo-meta">
+                    <div class="k">System</div>
+                    <div class="v">{{ po.system_number }}</div>
+
+                    <div class="k">PO No</div>
+                    <div class="v">{{ po.po_number|default:"—" }}</div>
+
+                    <div class="k">Date</div>
+                    <div class="v">{{ po.po_date|date:"d-m-Y" }}</div>
+
+                    <div class="k">Remarks</div>
+                    <div class="v">{{ po.remarks|default:"—"|truncatechars:80 }}</div>
                   </div>
-                  {% empty %}
-                  <div class="yarnpo-line">
-                    <div class="yarnpo-line-sub">No yarn lines added.</div>
-                  </div>
-                  {% endfor %}
                 </div>
-              </div>
 
-              <div class="yarnpo-box">
-                <div class="yarnpo-box-title">Vendor / Firm</div>
-                <div class="yarnpo-meta">
-                  <div class="k">Vendor</div>
-                  <div class="v">{{ po.vendor.name }}</div>
+                <div class="yarnpo-box">
+                  <div class="yarnpo-box-title">Yarn Lines</div>
+                  <div class="yarnpo-lines">
+                    {% for item in po.items.all %}
+                    <div class="yarnpo-line">
+                      <div class="yarnpo-line-title">
+                        {% if item.material_type %}
+                          {{ item.material_type.name }}
+                        {% elif item.material %}
+                          {{ item.material.name }}
+                        {% else %}
+                          Yarn Item
+                        {% endif %}
+                      </div>
+                      <div class="yarnpo-line-sub">
+                        Qty: {{ item.quantity|default:"0.00" }}
+                        {% if item.unit %} {{ item.unit }}{% endif %}
+                        {% if item.count %} · Count: {{ item.count }}{% endif %}
+                        {% if item.gsm %} · GSM: {{ item.gsm }}{% endif %}
+                        {% if item.rate %} · Rate: ₹{{ item.rate }}{% endif %}
+                        <br>
+                        Received: {{ item.inward_qty_total|default:"0.00" }} · Remaining: {{ item.remaining_qty_total|default:"0.00" }}
+                      </div>
+                    </div>
+                    {% empty %}
+                    <div class="yarnpo-line">
+                      <div class="yarnpo-line-sub">No yarn lines added.</div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
 
-                  <div class="k">Contact</div>
-                  <div class="v">
+                <div class="yarnpo-box">
+                  <div class="yarnpo-box-title">Vendor / Firm</div>
+                  <div class="yarnpo-vendor-name">{{ po.vendor.name }}</div>
+                  <div class="yarnpo-vendor-sub">
                     {% if po.vendor.contact_person %}{{ po.vendor.contact_person }}{% else %}—{% endif %}
                     {% if po.vendor.phone %}<br>{{ po.vendor.phone }}{% endif %}
-                  </div>
-
-                  <div class="k">Firm</div>
-                  <div class="v">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
-
-                  <div class="k">Address</div>
-                  <div class="v">{{ po.shipping_address|default:"No shipping address"|truncatechars:90 }}</div>
-                </div>
-              </div>
-
-              <div class="yarnpo-box">
-                <div class="yarnpo-box-title">Summary</div>
-                <div class="yarnpo-metrics">
-                  <div class="yarnpo-metric">
-                    <div class="yarnpo-metric-label">Total Weight</div>
-                    <div class="yarnpo-metric-value">{{ po.total_weight|default:"0.00" }}</div>
-                  </div>
-
-                  <div class="yarnpo-metric">
-                    <div class="yarnpo-metric-label">Total Inward</div>
-                    <div class="yarnpo-metric-value">{{ po.total_inward_qty|default:"0.00" }}</div>
-                  </div>
-
-                  <div class="yarnpo-metric">
-                    <div class="yarnpo-metric-label">Remaining</div>
-                    <div class="yarnpo-metric-value">{{ po.remaining_qty_total|default:"0.00" }}</div>
-                  </div>
-
-                  <div class="yarnpo-metric">
-                    <div class="yarnpo-metric-label">Grand Total</div>
-                    <div class="yarnpo-metric-value">₹{{ po.grand_total|default:"0.00" }}</div>
+                    <br><strong>Firm:</strong> {% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}
+                    <br>{{ po.shipping_address|default:"No shipping address"|truncatechars:90 }}
                   </div>
                 </div>
 
-                <div class="yarnpo-review-note">
-                  {% if po.reviewed_by %}
-                    Reviewed by {{ po.reviewed_by.username }}
-                    {% if po.reviewed_at %}<br>{{ po.reviewed_at|date:"d-m-Y H:i" }}{% endif %}
-                  {% else %}
-                    Waiting for admin review
-                  {% endif %}
+                <div class="yarnpo-box">
+                  <div class="yarnpo-box-title">Summary</div>
+                  <div class="yarnpo-summary">
+                    <div class="yarnpo-summary-box">
+                      <div class="yarnpo-summary-label">Total Weight</div>
+                      <div class="yarnpo-summary-value">{{ po.total_weight|default:"0.00" }}</div>
+                    </div>
 
-                  {% if po.approval_status == 'rejected' and po.rejection_reason %}
-                    <br><strong>Reason:</strong> {{ po.rejection_reason|truncatechars:100 }}
-                  {% endif %}
+                    <div class="yarnpo-summary-box">
+                      <div class="yarnpo-summary-label">Total Inward</div>
+                      <div class="yarnpo-summary-value">{{ po.total_inward_qty|default:"0.00" }}</div>
+                    </div>
+
+                    <div class="yarnpo-summary-box">
+                      <div class="yarnpo-summary-label">Remaining</div>
+                      <div class="yarnpo-summary-value">{{ po.remaining_qty_total|default:"0.00" }}</div>
+                    </div>
+
+                    <div class="yarnpo-summary-box">
+                      <div class="yarnpo-summary-label">Grand Total</div>
+                      <div class="yarnpo-summary-value">₹{{ po.grand_total|default:"0.00" }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="yarnpo-actions-col">
+                  <div class="yarnpo-actions-title">Status / Actions</div>
+
+                  <div class="yarnpo-status-note" style="margin-top:0; margin-bottom:8px;">
+                    {% if po.reviewed_by %}
+                      Reviewed by {{ po.reviewed_by.username }}
+                      {% if po.reviewed_at %}<br>{{ po.reviewed_at|date:"d-m-Y H:i" }}{% endif %}
+                    {% else %}
+                      Waiting for admin review
+                    {% endif %}
+
+                    {% if po.approval_status == 'rejected' and po.rejection_reason %}
+                      <br><strong>Reason:</strong> {{ po.rejection_reason|truncatechars:100 }}
+                    {% endif %}
+                  </div>
+
+                  <div class="yarnpo-actions">
+                    {% if can_review_yarn_po %}
+                      <a class="jb-link" href="{% url 'accounts:yarnpo_review' po.id %}">Review</a>
+                    {% endif %}
+
+                    <a class="jb-link" href="{% url 'accounts:yarnpo_pdf' po.id %}" target="_blank">PDF</a>
+                    <a class="jb-link" href="{% url 'accounts:yarnpo_inward' po.id %}">Inward</a>
+                    <a class="jb-link" href="{% url 'accounts:yarnpo_edit' po.id %}">Edit</a>
+
+                    <form method="post" action="{% url 'accounts:yarnpo_delete' po.id %}" class="jb-inline-delete">
+                      {% csrf_token %}
+                      <button
+                        type="submit"
+                        class="jb-link jb-link-button jb-link-danger"
+                        onclick="return confirm('Delete this Yarn PO?')"
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div class="yarnpo-actions">
-              {% if can_review_yarn_po %}
-                <a class="yarnpo-link" href="{% url 'accounts:yarnpo_review' po.id %}">Review</a>
-              {% endif %}
-
-              <a class="yarnpo-link" href="{% url 'accounts:yarnpo_pdf' po.id %}" target="_blank">PDF</a>
-              <a class="yarnpo-link" href="{% url 'accounts:yarnpo_inward' po.id %}">Yarn Inward</a>
-              <a class="yarnpo-link" href="{% url 'accounts:yarnpo_edit' po.id %}">Edit</a>
-
-              <form method="post" action="{% url 'accounts:yarnpo_delete' po.id %}" class="yarnpo-inline-delete">
-                {% csrf_token %}
-                <button
-                  type="submit"
-                  class="yarnpo-link yarnpo-link-button danger"
-                  onclick="return confirm('Delete this Yarn PO?')"
-                >
-                  Delete
-                </button>
-              </form>
+            {% empty %}
+            <div class="jb-empty">
+              No Yarn POs found yet. Generate your first PO.
             </div>
+            {% endfor %}
           </div>
-          {% empty %}
-          <div class="yarnpo-empty">
-            No Yarn POs found yet. Generate your first PO.
-          </div>
-          {% endfor %}
+
         </div>
       </div>
     </div>

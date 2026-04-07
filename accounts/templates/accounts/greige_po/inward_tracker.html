@@ -1,0 +1,58 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Greige Inwards - InventTech{% endblock %}
+{% block page_title %}PO / Greige Inwards{% endblock %}
+{% block page_subtitle %}Track inwarded Greige POs and start Dyeing PO generation{% endblock %}
+
+{% block content %}
+<style>
+  .git-tools{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}.git-search{display:flex;gap:10px;flex:1 1 320px}.git-search input{width:100%;height:38px;border:1px solid rgba(0,0,0,.1);border-radius:999px;padding:0 12px;background:#fff}.git-table{width:100%;border-collapse:collapse}.git-table th,.git-table td{padding:14px 12px;border-top:1px solid rgba(15,23,42,.08);text-align:left;vertical-align:top}.git-table thead th{border-top:none;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#667085}.git-card{display:grid;gap:8px}.git-pill{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(250,189,100,.16);color:var(--orange);font-size:11px;font-weight:900}.git-mini{display:grid;gap:8px}.git-mini-card{border:1px solid rgba(15,23,42,.08);border-radius:12px;padding:10px;background:rgba(255,255,255,.72)}.git-mini-title{font-size:12px;font-weight:800;color:#111827}.git-mini-sub{font-size:12px;color:#667085;margin-top:3px}.git-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-start}.git-empty{text-align:center;padding:24px 12px;color:#667085}@media (max-width:980px){.git-wrap{overflow:auto;}.git-table{min-width:980px}}
+</style>
+<section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
+  <div class="jb-head"><div><div class="jb-title">Greige Inwards</div><div class="jb-sub">Track inwarded Greige POs, available greige stock, and dyeing process status.</div></div></div>
+  <div class="git-tools"><form class="git-search" method="get"><input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search by greige PO, vendor, firm..."><button class="jb-add" type="submit">Search</button></form><a class="jb-secondary" href="{% url 'accounts:greigepo_list' %}">Back to Greige PO</a></div>
+  <div class="git-wrap"><table class="git-table"><thead><tr><th>Greige Inward Details</th><th>Dyeing PO Details</th></tr></thead><tbody>
+    {% for row in rows %}
+    <tr>
+      <td>
+        <div class="git-card">
+          <div class="git-pill">{{ row.po.system_number }}</div>
+          <div class="git-mini-title">{{ row.po.po_number|default:'No PO Number' }}</div>
+          <div class="git-mini-sub">Vendor: {{ row.po.vendor.name }} · Firm: {% if row.po.firm %}{{ row.po.firm.firm_name }}{% else %}—{% endif %}</div>
+          <div class="git-mini-sub">Available Greige: {{ row.po.remaining_qty_total|default:'0.00' }}</div>
+          <div class="git-mini">
+            {% for inward_entry in row.inward_entries %}
+            <div class="git-mini-card">
+              <div class="git-mini-title">{{ inward_entry.inward.inward_number }} · {{ inward_entry.inward.inward_date|date:'d-m-Y' }}</div>
+              {% for item in inward_entry.items %}<div class="git-mini-sub">{{ item.fabric_name }} — Ordered {{ item.ordered_qty }} / Inward {{ item.inward_qty }}{% if item.unit %} {{ item.unit }}{% endif %}</div>{% endfor %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </td>
+      <td>
+        {% if row.dyeing_po %}
+        <div class="git-card">
+          <div class="git-pill" style="background:rgba(16,185,129,.12);color:#047857;">Dyeing started</div>
+          <div class="git-mini-title">{{ row.dyeing_po.system_number }}</div>
+          <div class="git-mini-sub">Vendor: {{ row.dyeing_po.vendor.name }} · Total Weight: {{ row.dyeing_po.total_weight|default:'0.00' }}</div>
+          <div class="git-mini">
+            {% for item in row.dyeing_items %}<div class="git-mini-card"><div class="git-mini-title">{{ item.fabric_name }}</div><div class="git-mini-sub">Qty: {{ item.quantity }}{% if item.unit %} {{ item.unit }}{% endif %}</div></div>{% empty %}<div class="git-empty">No dyeing items found.</div>{% endfor %}
+          </div>
+          <div class="git-actions"><a class="jb-secondary" href="{% url 'accounts:dyeingpo_detail' row.dyeing_po.id %}">View Dyeing PO</a></div>
+        </div>
+        {% else %}
+        <div class="git-card">
+          <div class="git-pill" style="background:rgba(59,130,246,.12);color:#1d4ed8;">Ready for dyeing</div>
+          <div class="git-mini-title">Dyeing process is not started yet</div>
+          <div class="git-mini-sub">No Dyeing PO has been generated for this Greige PO yet.</div>
+          <div class="git-actions"><a class="jb-add" href="{% url 'accounts:generate_dyeing_po_from_greige' row.po.id %}">Generate Dyeing PO</a></div>
+        </div>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="2" class="git-empty">No inwarded Greige POs found yet.</td></tr>
+    {% endfor %}
+  </tbody></table></div>
+</div></div></div></div></section>
+{% endblock %}

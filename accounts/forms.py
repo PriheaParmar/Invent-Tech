@@ -4,7 +4,6 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django import forms
-from .models import YarnPOInward
 
 import re
 
@@ -23,7 +22,11 @@ from .models import (
     MaterialType,
     Vendor,
     YarnPurchaseOrder,
+    GreigePurchaseOrder,
     YarnPurchaseOrderItem,
+    YarnPOInward,
+    GreigePOInward,
+    DyeingPurchaseOrder,
 )
 
 # ============================================================
@@ -568,3 +571,131 @@ YarnPurchaseOrderItemFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
 )
+class GreigePurchaseOrderForm(forms.ModelForm):
+    class Meta:
+        model = GreigePurchaseOrder
+        fields = [
+            "po_number",
+            "internal_po_number",
+            "source_yarn_po",
+            "po_date",
+            "available_qty",
+            "vendor",
+            "firm",
+            "shipping_address",
+            "delivery_period",
+            "expected_delivery_date",
+            "cancel_date",
+            "director",
+            "validity_period",
+            "address",
+            "delivery_schedule",
+            "remarks",
+        ]
+        widgets = {
+            "po_date": forms.DateInput(attrs={"type": "date"}),
+            "expected_delivery_date": forms.DateInput(attrs={"type": "date"}),
+            "cancel_date": forms.DateInput(attrs={"type": "date"}),
+            "remarks": forms.Textarea(attrs={"rows": 3}),
+            "address": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, user=None, source_yarn_po=None, lock_source=False, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["vendor"].queryset = Vendor.objects.filter(owner=user, is_active=True).order_by("name") if user else Vendor.objects.none()
+        self.fields["firm"].queryset = Firm.objects.filter(owner=user).order_by("firm_name") if user else Firm.objects.none()
+
+        source_qs = YarnPurchaseOrder.objects.filter(items__inward_items__isnull=False).distinct().order_by("-id")
+        if user is not None:
+            source_qs = source_qs.filter(owner=user)
+
+        if self.instance.pk and self.instance.source_yarn_po_id:
+            source_qs = (source_qs | YarnPurchaseOrder.objects.filter(pk=self.instance.source_yarn_po_id)).distinct()
+
+        if source_yarn_po is not None:
+            source_qs = (source_qs | YarnPurchaseOrder.objects.filter(pk=source_yarn_po.pk)).distinct()
+            self.fields["source_yarn_po"].initial = source_yarn_po.pk
+
+        self.fields["source_yarn_po"].queryset = source_qs
+        self.fields["source_yarn_po"].empty_label = "Select source yarn PO"
+        self.fields["vendor"].empty_label = "Select vendor"
+        self.fields["firm"].empty_label = "Select firm"
+
+        if lock_source:
+            self.fields["source_yarn_po"].disabled = True
+
+        if not self.is_bound:
+            from django.utils import timezone
+            self.fields["po_date"].initial = self.instance.po_date or timezone.localdate()
+            if self.instance.pk and not self.initial.get("available_qty"):
+                self.fields["available_qty"].initial = self.instance.remaining_qty_total
+
+
+class GreigePOInwardForm(forms.ModelForm):
+    class Meta:
+        model = GreigePOInward
+        fields = ["inward_date", "notes"]
+        widgets = {
+            "inward_date": forms.DateInput(attrs={"type": "date"}),
+            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
+        }
+
+
+class DyeingPurchaseOrderForm(forms.ModelForm):
+    class Meta:
+        model = DyeingPurchaseOrder
+        fields = [
+            "po_number",
+            "internal_po_number",
+            "source_greige_po",
+            "po_date",
+            "available_qty",
+            "vendor",
+            "firm",
+            "shipping_address",
+            "delivery_period",
+            "expected_delivery_date",
+            "cancel_date",
+            "director",
+            "validity_period",
+            "address",
+            "delivery_schedule",
+            "remarks",
+        ]
+        widgets = {
+            "po_date": forms.DateInput(attrs={"type": "date"}),
+            "expected_delivery_date": forms.DateInput(attrs={"type": "date"}),
+            "cancel_date": forms.DateInput(attrs={"type": "date"}),
+            "remarks": forms.Textarea(attrs={"rows": 3}),
+            "address": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, user=None, source_greige_po=None, lock_source=False, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["vendor"].queryset = Vendor.objects.filter(owner=user, is_active=True).order_by("name") if user else Vendor.objects.none()
+        self.fields["firm"].queryset = Firm.objects.filter(owner=user).order_by("firm_name") if user else Firm.objects.none()
+
+        source_qs = GreigePurchaseOrder.objects.filter(items__inward_items__isnull=False).distinct().order_by("-id")
+        if user is not None:
+            source_qs = source_qs.filter(owner=user)
+
+        if self.instance.pk and self.instance.source_greige_po_id:
+            source_qs = (source_qs | GreigePurchaseOrder.objects.filter(pk=self.instance.source_greige_po_id)).distinct()
+
+        if source_greige_po is not None:
+            source_qs = (source_qs | GreigePurchaseOrder.objects.filter(pk=source_greige_po.pk)).distinct()
+            self.fields["source_greige_po"].initial = source_greige_po.pk
+
+        self.fields["source_greige_po"].queryset = source_qs
+        self.fields["source_greige_po"].empty_label = "Select source greige PO"
+        self.fields["vendor"].empty_label = "Select vendor"
+        self.fields["firm"].empty_label = "Select firm"
+
+        if lock_source:
+            self.fields["source_greige_po"].disabled = True
+
+        if not self.is_bound:
+            from django.utils import timezone
+            self.fields["po_date"].initial = self.instance.po_date or timezone.localdate()

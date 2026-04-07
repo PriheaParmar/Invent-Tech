@@ -793,17 +793,31 @@ document.addEventListener("click", function (e) {
   const closeBtn = e.target.closest("[data-embed-close]");
   if (!closeBtn) return;
 
+  const utilitiesRoot = document.getElementById("section-utilities");
+  const mastersPanel = document.getElementById("mastersEmbedPanel");
+  const mastersMount = document.getElementById("mastersEmbedMount");
+
+  if (utilitiesRoot && utilitiesRoot.contains(closeBtn) && mastersPanel && mastersMount) {
+    e.preventDefault();
+    mastersPanel.style.display = "none";
+    mastersPanel.style.pointerEvents = "none";
+    mastersMount.classList.remove("is-loading");
+    mastersMount.innerHTML = "";
+    return;
+  }
+
   e.preventDefault();
 
-  // Find the embed container
-  const embed = closeBtn.closest(".parties-embed, .mat-embed, .jb-embed");
+  const embed = closeBtn.closest(
+    ".jobbers-embed, .vendor-embed, .parties-embed, .materials-embed, .material-form-embed, .pt-embed"
+  );
 
   if (embed) {
-    embed.remove(); // remove popup/embed
-  } else {
-    // fallback (if used as modal)
-    window.history.back();
+    embed.remove();
+    return;
   }
+
+  window.history.back();
 });
 </script>
   {% block extra_js %}{% endblock %}

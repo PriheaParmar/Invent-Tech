@@ -92,4 +92,18 @@ urlpatterns = [
 
     # Greige Purchase Orders
     path("po/greige/", views.greigepo_list, name="greigepo_list"),
+    path("po/greige/add/", views.greigepo_create, name="greigepo_add"),
+    path("po/greige/add/from-yarn/<int:yarn_po_id>/", views.greigepo_create, name="greigepo_add_from_yarn"),
+    path("po/greige/<int:pk>/", views.greigepo_detail, name="greigepo_detail"),
+    path("po/greige/<int:pk>/edit/", views.greigepo_update, name="greigepo_edit"),
+    path("po/greige/<int:pk>/delete/", views.greigepo_delete, name="greigepo_delete"),
+    path("po/greige/<int:pk>/inward/", views.greigepo_inward, name="greigepo_inward"),
+    path("po/greige/inwards/", views.greige_inward_tracker, name="greige_inward_tracker"),
+    path("po/greige/<int:pk>/generate-dyeing/", views.generate_dyeing_po_from_greige, name="generate_dyeing_po_from_greige"),
+
+    # Dyeing Purchase Orders
+    path("po/dyeing/", views.dyeingpo_list, name="dyeingpo_list"),
+    path("po/dyeing/add/", views.dyeingpo_create, name="dyeingpo_add"),
+    path("po/dyeing/add/from-greige/<int:greige_po_id>/", views.dyeingpo_create, name="dyeingpo_add_from_greige"),
+    path("po/dyeing/<int:pk>/", views.dyeingpo_detail, name="dyeingpo_detail"),
 ]

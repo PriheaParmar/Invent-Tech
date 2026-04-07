@@ -1,0 +1,47 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Greige PO Detail - InventTech{% endblock %}
+{% block page_title %}PO / Greige / Detail{% endblock %}
+{% block page_subtitle %}Review greige order, inward progress, and dyeing connection{% endblock %}
+
+{% block content %}
+<style>
+  .gpd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}.gpd-field{display:flex;flex-direction:column;gap:6px}.gpd-label{font-size:12px;font-weight:700;color:rgba(15,23,42,.72)}.gpd-value{min-height:42px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff;font-size:14px;color:#111827;display:flex;align-items:center}.gpd-value.is-area{min-height:84px;align-items:flex-start;white-space:pre-wrap}.gpd-span-2{grid-column:span 2}.gpd-span-3{grid-column:span 3}.gpd-block{margin-top:16px;border:1px solid rgba(15,23,42,.08);border-radius:18px;background:rgba(255,255,255,.72);overflow:hidden}.gpd-block-head{padding:16px 18px;font-weight:800;border-bottom:1px solid rgba(15,23,42,.08)}.gpd-block-body{padding:0 18px 18px}.gpd-table{width:100%;border-collapse:collapse}.gpd-table th,.gpd-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:13px;vertical-align:top}.gpd-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}@media (max-width:1100px){.gpd-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gpd-span-3{grid-column:span 2}}@media (max-width:760px){.gpd-grid{grid-template-columns:1fr}.gpd-span-2,.gpd-span-3{grid-column:span 1}}
+</style>
+<section class="page-section is-active">
+  <div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
+    <div class="jb-head"><div><div class="jb-title">Greige PO Detail</div><div class="jb-sub">Complete greige stage details with source Yarn and next Dyeing connection.</div></div></div>
+    <div style="padding:18px;">
+      <div class="gpd-grid">
+        <div class="gpd-field"><div class="gpd-label">Greige PO No</div><div class="gpd-value">{{ po.system_number }}</div></div>
+        <div class="gpd-field"><div class="gpd-label">Internal PO Number</div><div class="gpd-value">{{ po.internal_po_number|default:'—' }}</div></div>
+        <div class="gpd-field"><div class="gpd-label">Source Yarn PO</div><div class="gpd-value">{% if source_yarn_po %}{{ source_yarn_po.system_number }}{% else %}—{% endif %}</div></div>
+        <div class="gpd-field"><div class="gpd-label">Date</div><div class="gpd-value">{{ po.po_date|date:'d-m-Y' }}</div></div>
+        <div class="gpd-field"><div class="gpd-label">Available Qty</div><div class="gpd-value">{{ po.available_qty|default:'0.00' }}</div></div>
+        <div class="gpd-field"><div class="gpd-label">Total Inward</div><div class="gpd-value">{{ po.total_inward_qty|default:'0.00' }}</div></div>
+        <div class="gpd-field"><div class="gpd-label">Vendor</div><div class="gpd-value">{{ po.vendor.name }}</div></div>
+        <div class="gpd-field"><div class="gpd-label">Firm</div><div class="gpd-value">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div></div>
+        <div class="gpd-field"><div class="gpd-label">Expected Delivery</div><div class="gpd-value">{% if po.expected_delivery_date %}{{ po.expected_delivery_date|date:'d-m-Y' }}{% else %}—{% endif %}</div></div>
+        <div class="gpd-field gpd-span-2"><div class="gpd-label">Shipping Address</div><div class="gpd-value">{{ po.shipping_address|default:'—' }}</div></div>
+        <div class="gpd-field"><div class="gpd-label">Dyeing PO</div><div class="gpd-value">{% if existing_dyeing_po %}{{ existing_dyeing_po.system_number }}{% else %}Not created yet{% endif %}</div></div>
+        <div class="gpd-field gpd-span-3"><div class="gpd-label">Remarks</div><div class="gpd-value is-area">{{ po.remarks|default:'—' }}</div></div>
+      </div>
+      <div class="gpd-actions">
+        <a class="jb-secondary" href="{% url 'accounts:greigepo_list' %}">Back</a>
+        <a class="jb-secondary" href="{% url 'accounts:greigepo_edit' po.id %}">Edit</a>
+        <a class="jb-add" href="{% url 'accounts:greigepo_inward' po.id %}">Greige Inward</a>
+        {% if existing_dyeing_po %}
+          <a class="jb-add" href="{% url 'accounts:dyeingpo_detail' existing_dyeing_po.id %}">View Dyeing PO</a>
+        {% else %}
+          <a class="jb-add" href="{% url 'accounts:generate_dyeing_po_from_greige' po.id %}">Generate Dyeing PO</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="gpd-block"><div class="gpd-block-head">Greige PO Items</div><div class="gpd-block-body"><table class="gpd-table"><thead><tr><th>Fabric</th><th>Source Yarn</th><th>Quantity</th><th>Inward</th><th>Remaining</th><th>Remark</th></tr></thead><tbody>{% for item in po.items.all %}<tr><td>{{ item.fabric_name }}</td><td>{{ item.yarn_name|default:'—' }}</td><td>{{ item.quantity }}</td><td>{{ item.inward_qty_total|default:'0.00' }}</td><td>{{ item.remaining_qty_total|default:'0.00' }}</td><td>{{ item.remark|default:'—' }}</td></tr>{% empty %}<tr><td colspan="6" class="jb-empty">No items found.</td></tr>{% endfor %}</tbody></table></div></div>
+
+    <div class="gpd-block"><div class="gpd-block-head">Greige Inward Entries</div><div class="gpd-block-body"><table class="gpd-table"><thead><tr><th>Inward No</th><th>Date</th><th>Item</th><th>Qty</th><th>Remark</th></tr></thead><tbody>{% for inward in greige_inwards %}{% for inward_item in inward.items.all %}<tr><td>{{ inward.inward_number }}</td><td>{{ inward.inward_date|date:'d-m-Y' }}</td><td>{{ inward_item.po_item.fabric_name }}</td><td>{{ inward_item.quantity }}</td><td>{{ inward_item.remark|default:'—' }}</td></tr>{% endfor %}{% empty %}<tr><td colspan="5" class="jb-empty">No greige inward entries found.</td></tr>{% endfor %}</tbody></table></div></div>
+
+    <div class="gpd-block"><div class="gpd-block-head">Source Yarn Inward Details</div><div class="gpd-block-body"><table class="gpd-table"><thead><tr><th>Inward No</th><th>Date</th><th>Item</th><th>Qty</th></tr></thead><tbody>{% for inward in source_inwards %}{% for inward_item in inward.items.all %}<tr><td>{{ inward.inward_number }}</td><td>{{ inward.inward_date|date:'d-m-Y' }}</td><td>{% if inward_item.po_item.material_type %}{{ inward_item.po_item.material_type.name }}{% elif inward_item.po_item.material %}{{ inward_item.po_item.material.name }}{% else %}Yarn Item{% endif %}</td><td>{{ inward_item.quantity }}</td></tr>{% endfor %}{% empty %}<tr><td colspan="4" class="jb-empty">No Yarn inward data found.</td></tr>{% endfor %}</tbody></table></div></div>
+  </div></div></div></div>
+</section>
+{% endblock %}

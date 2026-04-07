@@ -16,165 +16,190 @@
     min-width:0;
   }
 
-  .yarnpo-inward-shell{
-    width:100%;
-    background:#fff;
-    border:1px solid rgba(15,23,42,.08);
-    border-radius:24px;
-    box-shadow:0 18px 55px rgba(15,23,42,.08);
-    overflow:hidden;
+  .jobbers-embed{
+    padding:10px 6px;
   }
 
-  .yarnpo-inward-top{
+  .jb-panel{
+    background:rgba(255,255,255,.72);
+    border:2px dashed rgb(0,0,0);
+    border-radius:18px;
+    box-shadow:0 12px 36px rgba(15,23,42,.08);
+    padding:16px;
+    width:100%;
+    min-width:0;
+  }
+
+  .jb-head{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:14px;
-    padding:18px;
-    border-bottom:1px solid rgba(15,23,42,.06);
-    background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.95));
-  }
-
-  .yarnpo-inward-top-left{
-    display:flex;
-    align-items:flex-start;
     gap:12px;
+    margin-bottom:12px;
   }
 
-  .yarnpo-inward-top-ico{
-    width:24px;
-    height:24px;
-    border-radius:8px;
-    background:linear-gradient(180deg, rgba(250,189,100,1), rgba(239,157,47,1));
-    box-shadow:0 8px 18px rgba(239,157,47,.18);
-    flex:0 0 auto;
-    margin-top:2px;
-  }
-
-  .yarnpo-inward-title{
-    font-size:22px;
-    font-weight:950;
-    letter-spacing:-.03em;
-    color:#0f172a;
-    line-height:1.2;
-  }
-
-  .yarnpo-inward-sub{
-    margin-top:4px;
-    font-size:12px;
-    color:#667085;
-  }
-
-  .yarnpo-inward-top-right{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    flex-wrap:wrap;
-    justify-content:flex-end;
-  }
-
-  .yarnpo-inward-remaining{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-height:38px;
-    padding:0 14px;
-    border-radius:999px;
-    background:rgba(250,189,100,.14);
-    color:#ef6c00;
-    font-size:12px;
+  .jb-title{
+    font-size:18px;
     font-weight:900;
-    white-space:nowrap;
+    line-height:1.1;
+    color:#111827;
   }
 
-  .yarnpo-btn{
-    height:42px;
-    padding:0 16px;
+  .jb-sub{
+    font-size:12px;
+    opacity:.72;
+    margin-top:4px;
+    color:#475467;
+  }
+
+  .jb-btn,
+  .jb-add,
+  .jb-secondary{
+    appearance:none;
+    border:1px solid rgba(0,0,0,.10);
     border-radius:12px;
-    border:1px solid rgba(15,23,42,.10);
-    background:#fff;
-    color:#111827;
     text-decoration:none;
+    cursor:pointer;
+    transition:background .18s ease,color .18s ease,border-color .18s ease;
+    height:38px;
+    padding:0 14px;
+    font-weight:700;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:8px;
-    font-size:12px;
+    white-space:nowrap;
+    background:rgba(255,255,255,.85);
+    color:#000;
+  }
+
+  .jb-btn:hover,
+  .jb-secondary:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .jb-add{
+    background:var(--orange);
+    color:#fff;
+    border-color:transparent;
+  }
+
+  .jb-add:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .yarnpo-topbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .yarnpo-topbar-left{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    min-width:0;
+  }
+
+  .yarnpo-top-ico{
+    width:22px;
+    height:22px;
+    border-radius:7px;
+    background:linear-gradient(180deg, rgba(250,189,100,1), rgba(239,157,47,1));
+    flex:0 0 auto;
+    margin-top:2px;
+  }
+
+  .yarnpo-top-title{
+    font-size:18px;
     font-weight:900;
-    cursor:pointer;
-    transition:.18s ease;
+    color:#111827;
+    line-height:1.15;
   }
 
-  .yarnpo-btn:hover{
-    background:#000;
-    color:#fff;
+  .yarnpo-top-sub{
+    margin-top:4px;
+    font-size:12px;
+    color:#667085;
+    font-weight:700;
   }
 
-  .yarnpo-btn.primary{
-    background:linear-gradient(180deg, #f97316, #ea580c);
-    color:#fff;
-    border:none;
-    box-shadow:0 10px 20px rgba(234,88,12,.20);
+  .yarnpo-topbar-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
   }
 
-  .yarnpo-btn.primary:hover{
-    background:#000;
-    color:#fff;
+  .yarnpo-remaining{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:34px;
+    padding:0 12px;
+    border-radius:999px;
+    background:rgba(250,189,100,.14);
+    color:#ef6c00;
+    font-size:11px;
+    font-weight:900;
+    white-space:nowrap;
   }
 
-  .yarnpo-btn svg{
-    width:16px;
-    height:16px;
-    fill:none;
-    stroke:currentColor;
-    stroke-width:2;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-  }
-
-  .yarnpo-inward-body{
-    padding:18px;
-  }
-
-  .yarnpo-inward-header-grid{
+  .yarnpo-grid{
     display:grid;
+    gap:12px;
+  }
+
+  .yarnpo-header-grid{
     grid-template-columns:repeat(3, minmax(0, 1fr));
-    gap:14px;
-    margin-bottom:16px;
+    margin-bottom:12px;
   }
 
   .yarnpo-field{
     display:flex;
     flex-direction:column;
-    gap:7px;
+    gap:5px;
     min-width:0;
   }
 
   .yarnpo-field label{
-    font-size:12px;
-    font-weight:900;
-    color:rgba(15,23,42,.76);
-    letter-spacing:.02em;
+    font-size:11px;
+    font-weight:800;
+    color:#344054;
   }
 
   .yarnpo-field input,
   .yarnpo-field textarea,
   .yarnpo-field select{
     width:100%;
-    min-height:42px;
+    min-height:38px;
     border:1px solid rgba(15,23,42,.10);
-    border-radius:14px;
-    padding:10px 12px;
+    border-radius:11px;
+    padding:8px 11px;
     outline:none;
     box-sizing:border-box;
-    background:#fff;
+    background:rgba(255,255,255,.92);
     color:#111827;
     font:inherit;
+    transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
   }
 
   .yarnpo-field textarea{
-    min-height:90px;
+    min-height:84px;
     resize:vertical;
+  }
+
+  .yarnpo-field input:focus,
+  .yarnpo-field textarea:focus,
+  .yarnpo-field select:focus{
+    border-color:rgba(238,61,133,.35);
+    box-shadow:0 0 0 4px rgba(238,61,133,.10);
+    background:#fff;
   }
 
   .yarnpo-field.readonly input{
@@ -184,17 +209,17 @@
 
   .yarnpo-err{
     color:#dc2626;
-    font-size:12px;
+    font-size:11px;
     font-weight:700;
     margin-top:2px;
   }
 
   .yarnpo-block{
-    border:1px solid rgba(15,23,42,.08);
-    border-radius:20px;
-    background:rgba(255,255,255,.96);
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:14px;
+    background:rgba(255,255,255,.55);
     overflow:hidden;
-    margin-bottom:16px;
+    margin-bottom:12px;
   }
 
   .yarnpo-block-head{
@@ -202,33 +227,34 @@
     align-items:center;
     justify-content:space-between;
     gap:12px;
-    padding:14px 16px;
+    padding:12px 14px;
     border-bottom:1px solid rgba(15,23,42,.06);
-    background:rgba(248,250,252,.95);
+    background:rgba(248,250,252,.55);
   }
 
   .yarnpo-block-title{
-    font-size:16px;
-    font-weight:950;
-    color:#0f172a;
-    letter-spacing:-.01em;
+    font-size:15px;
+    font-weight:900;
+    color:#111827;
+    line-height:1.2;
   }
 
   .yarnpo-block-sub{
     margin-top:3px;
-    font-size:12px;
+    font-size:11px;
     color:#667085;
+    font-weight:700;
   }
 
   .yarnpo-block-body{
-    padding:16px;
+    padding:14px;
   }
 
   .yarnpo-meta-grid{
     display:grid;
-    grid-template-columns:120px 1fr 120px 1fr;
-    gap:8px 12px;
-    font-size:13px;
+    grid-template-columns:110px 1fr 110px 1fr;
+    gap:7px 12px;
+    font-size:12px;
   }
 
   .yarnpo-meta-grid .k{
@@ -239,31 +265,33 @@
   .yarnpo-meta-grid .v{
     color:#374151;
     font-weight:700;
+    word-break:break-word;
   }
 
   .yarnpo-error-box{
-    margin-bottom:14px;
-    padding:12px;
-    border-radius:14px;
+    margin-bottom:12px;
+    padding:10px 12px;
+    border-radius:12px;
     background:rgba(239,68,68,.08);
     border:1px solid rgba(239,68,68,.18);
   }
 
-  .yarnpo-grid-table{
+  .yarnpo-table-wrap{
     overflow:auto;
     border:1px solid rgba(15,23,42,.06);
-    border-radius:16px;
+    border-radius:14px;
+    background:rgba(255,255,255,.55);
   }
 
   .yarnpo-table{
     width:100%;
-    min-width:1080px;
+    min-width:980px;
     border-collapse:collapse;
   }
 
   .yarnpo-table th,
   .yarnpo-table td{
-    padding:11px 12px;
+    padding:10px 11px;
     border-bottom:1px solid rgba(15,23,42,.06);
     text-align:left;
     vertical-align:top;
@@ -271,64 +299,70 @@
   }
 
   .yarnpo-table thead th{
-    font-size:11px;
+    font-size:10px;
     text-transform:uppercase;
     letter-spacing:.08em;
     color:#667085;
     font-weight:900;
-    background:rgba(248,250,252,.96);
+    background:rgba(248,250,252,.65);
     white-space:nowrap;
   }
 
   .yarnpo-table tfoot td{
-    background:rgba(248,250,252,.75);
+    background:rgba(248,250,252,.65);
     font-weight:900;
   }
 
   .yarnpo-material{
     font-weight:900;
     color:#111827;
+    word-break:break-word;
   }
 
   .yarnpo-small{
-    font-size:11px;
+    font-size:10px;
     color:#667085;
     font-weight:700;
     margin-top:4px;
     line-height:1.45;
+    word-break:break-word;
   }
 
   .yarnpo-inline-input{
     width:100%;
-    min-height:38px;
+    min-height:36px;
     border:1px solid rgba(15,23,42,.10);
-    border-radius:12px;
-    padding:8px 10px;
+    border-radius:10px;
+    padding:7px 10px;
     outline:none;
     box-sizing:border-box;
     background:#fff;
+    color:#111827;
+    font:inherit;
   }
 
   .yarnpo-inline-input:focus{
-    border-color:rgba(250,189,100,.8);
-    box-shadow:0 0 0 3px rgba(250,189,100,.14);
+    border-color:rgba(238,61,133,.35);
+    box-shadow:0 0 0 4px rgba(238,61,133,.10);
+    background:#fff;
   }
 
   .yarnpo-history-wrap{
     overflow:auto;
     border:1px solid rgba(15,23,42,.06);
-    border-radius:16px;
+    border-radius:14px;
+    background:rgba(255,255,255,.55);
   }
 
   .yarnpo-history-table{
     width:100%;
-    min-width:980px;
+    min-width:920px;
     border-collapse:collapse;
   }
 
   .yarnpo-history-table th,
   .yarnpo-history-table td{
-    padding:11px 12px;
+    padding:10px 11px;
     border-bottom:1px solid rgba(15,23,42,.06);
     text-align:left;
     vertical-align:top;
@@ -336,9 +370,9 @@
   }
 
   .yarnpo-history-table thead th{
-    background:#f97316;
-    color:#fff;
-    font-size:11px;
+    background:rgba(248,250,252,.65);
+    color:#667085;
+    font-size:10px;
     text-transform:uppercase;
     letter-spacing:.08em;
     font-weight:900;
@@ -350,34 +384,37 @@
     justify-content:flex-end;
     gap:10px;
     flex-wrap:wrap;
-    margin-top:18px;
+    margin-top:14px;
   }
 
   @media (max-width: 1100px){
-    .yarnpo-inward-header-grid,
+    .yarnpo-header-grid,
     .yarnpo-meta-grid{
       grid-template-columns:1fr 1fr;
     }
   }
 
   @media (max-width: 760px){
-    .yarnpo-inward-top,
-    .yarnpo-actionsbar{
+    .yarnpo-topbar,
+    .yarnpo-actionsbar,
+    .jb-head{
       flex-direction:column;
       align-items:stretch;
     }
 
-    .yarnpo-inward-top-right{
+    .yarnpo-topbar-right{
       width:100%;
       justify-content:space-between;
     }
 
-    .yarnpo-inward-header-grid,
+    .yarnpo-header-grid,
     .yarnpo-meta-grid{
       grid-template-columns:1fr;
     }
 
-    .yarnpo-btn{
+    .jb-btn,
+    .jb-add,
+    .jb-secondary{
       width:100%;
     }
   }
@@ -386,41 +423,40 @@
 <section class="page-section is-active">
   <div class="canvas">
     <div class="yarnpo-inward-page">
-      <div class="yarnpo-inward-shell">
-        <div class="yarnpo-inward-top">
-          <div class="yarnpo-inward-top-left">
-            <div class="yarnpo-inward-top-ico"></div>
+      <div class="jobbers-embed">
+        <div class="jb-panel">
+
+          <div class="jb-head">
             <div>
-              <div class="yarnpo-inward-title">Yarn Inward</div>
-              <div class="yarnpo-inward-sub">Record inward quantities against the selected Yarn PO.</div>
+              <div class="jb-title">Yarn Inward</div>
+              <div class="jb-sub">Create and manage inward entries against the selected Yarn PO.</div>
             </div>
           </div>
 
-          <div class="yarnpo-inward-top-right">
-            <div class="yarnpo-inward-remaining">
-              Remaining Weight: {{ po.remaining_qty_total|default:"0.00" }}
+          <div class="yarnpo-topbar">
+            <div class="yarnpo-topbar-left">
+              <div class="yarnpo-top-ico"></div>
+              <div>
+                <div class="yarnpo-top-title">Inward For Yarn</div>
+                <div class="yarnpo-top-sub">Record inward quantities against this Yarn PO.</div>
+              </div>
             </div>
 
-            <button
-  type="button"
-  class="yarnpo-btn"
-  onclick="window.location.href=`{% url 'accounts:yarnpo_list' %}`"
->
-  Back to Yarn PO List
-</button>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M15 18l-6-6 6-6"></path>
-              </svg>
-              Back to Yarn PO List
-            </button>
-          </div>
-        </div>
+            <div class="yarnpo-topbar-right">
+              <div class="yarnpo-remaining">
+                Remaining Weight: {{ po.remaining_qty_total|default:"0.00" }}
+              </div>
 
-        <div class="yarnpo-inward-body">
+              <a class="jb-btn" href="{% url 'accounts:yarnpo_list' %}">
+                Back to Yarn PO List
+              </a>
+            </div>
+          </div>
+
           <form method="post">
             {% csrf_token %}
 
-            <div class="yarnpo-inward-header-grid">
+            <div class="yarnpo-grid yarnpo-header-grid">
               <div class="yarnpo-field readonly">
                 <label>PO Number</label>
                 <input type="text" value="{{ po.system_number }}" readonly>
@@ -480,7 +516,7 @@
               </div>
 
               <div class="yarnpo-block-body">
-                <div class="yarnpo-field" style="margin-bottom:14px;">
+                <div class="yarnpo-field" style="margin-bottom:12px;">
                   <label for="{{ inward_form.notes.id_for_label }}">Notes / Challan Remarks</label>
                   {{ inward_form.notes }}
                   {% for err in inward_form.notes.errors %}
@@ -499,7 +535,7 @@
                   </div>
                 {% endif %}
 
-                <div class="yarnpo-grid-table">
+                <div class="yarnpo-table-wrap">
                   <table class="yarnpo-table">
                     <thead>
                       <tr>
@@ -537,23 +573,23 @@
                         <td>{{ item.remaining_qty_total|default:"0.00" }}</td>
                         <td>
                           <input
-                            class="yarnpo-inline-input"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            name="qty_{{ item.id }}"
-                            value=""
-                            placeholder="0.00"
-                          >
+  class="yarnpo-inline-input"
+  type="number"
+  step="0.01"
+  min="0"
+  name="qty_{{ item.id }}"
+  value=""
+  placeholder="0.00"
+>
                         </td>
                         <td>
                           <input
-                            class="yarnpo-inline-input"
-                            type="text"
-                            name="remark_{{ item.id }}"
-                            value=""
-                            placeholder="Optional remark"
-                          >
+  class="yarnpo-inline-input"
+  type="text"
+  name="remark_{{ item.id }}"
+  value=""
+  placeholder="Optional remark"
+>
                         </td>
                       </tr>
                       {% endfor %}
@@ -626,14 +662,10 @@
             </div>
 
             <div class="yarnpo-actionsbar">
-              <button
-  type="button"
-  class="yarnpo-btn"
-  onclick="window.location.href=`{% url 'accounts:yarnpo_list' %}`"
->
+              <a class="jb-secondary" href="{% url 'accounts:yarnpo_list' %}">
                 Cancel
-              </button>
-              <button type="submit" class="yarnpo-btn primary">Submit Inward</button>
+              </a>
+              <button type="submit" class="jb-add">Submit Inward</button>
             </div>
 
           </form>

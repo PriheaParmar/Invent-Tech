@@ -1,12 +1,15 @@
 {% extends "accounts/base_app.html" %}
+{% load static %}
+
 {% block title %}Vendors - InventTech{% endblock %}
 {% block page_title %}Vendors{% endblock %}
 {% block page_subtitle %}Manage vendor master records{% endblock %}
+
 {% block content %}
 <section class="page-section is-active">
   <div class="canvas">
-    <div class="card soft big">
-      {% include "accounts/vendors/list_embed.html" %}
+    <div class="jb-page">
+      {% include "accounts/vendors/list_embed.html" with full_page=True %}
     </div>
   </div>
 </section>

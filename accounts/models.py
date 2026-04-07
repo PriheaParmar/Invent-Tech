@@ -568,6 +568,18 @@ class GreigePurchaseOrder(OwnedModel):
     system_number = models.CharField(max_length=30, unique=True, blank=True)
     po_number = models.CharField(max_length=30, blank=True, default="")
     po_date = models.DateField(default=timezone.localdate)
+    internal_po_number = models.CharField(max_length=30, blank=True, default="")
+    available_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    shipping_address = models.CharField(max_length=255, blank=True, default="")
+    delivery_period = models.CharField(max_length=100, blank=True, default="")
+    expected_delivery_date = models.DateField(null=True, blank=True)
+    cancel_date = models.DateField(null=True, blank=True)
+
+    director = models.CharField(max_length=120, blank=True, default="")
+    validity_period = models.CharField(max_length=100, blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    delivery_schedule = models.CharField(max_length=150, blank=True, default="")
 
     source_yarn_po = models.ForeignKey(
         "YarnPurchaseOrder",
@@ -591,6 +603,17 @@ class GreigePurchaseOrder(OwnedModel):
 
     remarks = models.TextField(blank=True, default="")
     total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    @property
+    def total_inward_qty(self):
+        total = self.inwards.aggregate(total=Sum("items__quantity")).get("total") or Decimal("0")
+        return total
+
+    @property
+    def remaining_qty_total(self):
+        ordered = self.total_weight or Decimal("0")
+        inward = self.total_inward_qty or Decimal("0")
+        return ordered - inward if ordered > inward else Decimal("0")
 
     class Meta:
         ordering = ["-id"]
@@ -616,6 +639,130 @@ class GreigePurchaseOrderItem(models.Model):
 
     fabric_name = models.CharField(max_length=150)
     yarn_name = models.CharField(max_length=150, blank=True, default="")
+    unit = models.CharField(max_length=20, blank=True, default="")
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    remark = models.CharField(max_length=255, blank=True, default="")
+
+    @property
+    def inward_qty_total(self):
+        total = self.inward_items.aggregate(total=Sum("quantity")).get("total") or Decimal("0")
+        return total
+
+    @property
+    def remaining_qty_total(self):
+        ordered = self.quantity or Decimal("0")
+        inward = self.inward_qty_total or Decimal("0")
+        return ordered - inward if ordered > inward else Decimal("0")
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.po} - {self.fabric_name}"
+
+
+class GreigePOInward(OwnedModel):
+    po = models.ForeignKey(
+        "GreigePurchaseOrder",
+        on_delete=models.CASCADE,
+        related_name="inwards",
+    )
+    inward_number = models.CharField(max_length=30, unique=True)
+    inward_date = models.DateField(default=timezone.localdate)
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-inward_date", "-id"]
+
+    def __str__(self):
+        return self.inward_number
+
+
+class GreigePOInwardItem(models.Model):
+    inward = models.ForeignKey(
+        "GreigePOInward",
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+    po_item = models.ForeignKey(
+        "GreigePurchaseOrderItem",
+        on_delete=models.CASCADE,
+        related_name="inward_items",
+    )
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    remark = models.CharField(max_length=255, blank=True, default="")
+
+    class Meta:
+        unique_together = ("inward", "po_item")
+
+    def __str__(self):
+        return f"{self.inward.inward_number} / {self.po_item_id}"
+
+
+class DyeingPurchaseOrder(OwnedModel):
+    system_number = models.CharField(max_length=30, unique=True, blank=True)
+    po_number = models.CharField(max_length=30, blank=True, default="")
+    po_date = models.DateField(default=timezone.localdate)
+    internal_po_number = models.CharField(max_length=30, blank=True, default="")
+    available_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    shipping_address = models.CharField(max_length=255, blank=True, default="")
+    delivery_period = models.CharField(max_length=100, blank=True, default="")
+    expected_delivery_date = models.DateField(null=True, blank=True)
+    cancel_date = models.DateField(null=True, blank=True)
+
+    director = models.CharField(max_length=120, blank=True, default="")
+    validity_period = models.CharField(max_length=100, blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    delivery_schedule = models.CharField(max_length=150, blank=True, default="")
+
+    source_greige_po = models.ForeignKey(
+        "GreigePurchaseOrder",
+        on_delete=models.CASCADE,
+        related_name="dyeing_pos",
+    )
+
+    vendor = models.ForeignKey(
+        "Vendor",
+        on_delete=models.PROTECT,
+        related_name="dyeing_purchase_orders",
+    )
+
+    firm = models.ForeignKey(
+        "Firm",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="dyeing_purchase_orders",
+    )
+
+    remarks = models.TextField(blank=True, default="")
+    total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ["-id"]
+
+    def __str__(self):
+        return self.system_number or f"Dyeing PO {self.pk or 'Draft'}"
+
+
+class DyeingPurchaseOrderItem(models.Model):
+    po = models.ForeignKey(
+        "DyeingPurchaseOrder",
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+
+    source_greige_po_item = models.ForeignKey(
+        "GreigePurchaseOrderItem",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_dyeing_items",
+    )
+
+    fabric_name = models.CharField(max_length=150)
+    greige_name = models.CharField(max_length=150, blank=True, default="")
     unit = models.CharField(max_length=20, blank=True, default="")
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     remark = models.CharField(max_length=255, blank=True, default="")

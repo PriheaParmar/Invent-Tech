@@ -1,0 +1,115 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}{% if mode == 'edit' %}Edit Greige PO{% else %}Create Greige PO{% endif %} - InventTech{% endblock %}
+{% block page_title %}PO / Greige / {% if mode == 'edit' %}Edit{% else %}Create{% endif %}{% endblock %}
+{% block page_subtitle %}Follow the Yarn flow pattern and create the greige middle layer{% endblock %}
+
+{% block content %}
+<style>
+  .gpf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}
+  .gpf-field{display:flex;flex-direction:column;gap:6px}
+  .gpf-field label{font-size:12px;font-weight:700;color:rgba(15,23,42,.72)}
+  .gpf-field input,.gpf-field select,.gpf-field textarea{width:100%;min-height:42px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff;font:inherit}
+  .gpf-field textarea{min-height:84px;resize:vertical}
+  .gpf-span-2{grid-column:span 2}.gpf-span-3{grid-column:span 3}
+  .gpf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .gpf-block{margin-top:16px;border:1px solid rgba(15,23,42,.08);border-radius:18px;background:rgba(255,255,255,.72);overflow:hidden}
+  .gpf-block summary{cursor:pointer;list-style:none;padding:16px 18px;font-weight:800}
+  .gpf-block-body{padding:0 18px 18px;border-top:1px solid rgba(15,23,42,.08)}
+  .gpf-mini-table{width:100%;border-collapse:collapse}.gpf-mini-table th,.gpf-mini-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:13px;vertical-align:top}
+  .gpf-errors{margin:0 18px 18px;padding:12px 14px;border-radius:12px;background:rgba(239,68,68,.08);color:#991b1b;font-size:13px}
+  @media (max-width:1100px){.gpf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gpf-span-3{grid-column:span 2}}
+  @media (max-width:760px){.gpf-grid{grid-template-columns:1fr}.gpf-span-2,.gpf-span-3{grid-column:span 1}}
+</style>
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="jb-page">
+      <div class="jobbers-embed">
+        <div class="jb-panel">
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">{% if mode == 'edit' %}Edit Greige PO{% else %}Purchase Order for Greige Fabric{% endif %}</div>
+              <div class="jb-sub">Create Greige PO from Yarn inward data and continue it into Greige inward and Dyeing PO.</div>
+            </div>
+          </div>
+
+          {% if form.non_field_errors %}
+          <div class="gpf-errors">{{ form.non_field_errors }}</div>
+          {% endif %}
+          {% if existing_po and mode != 'edit' %}
+          <div class="gpf-errors">Greige PO already exists for this Yarn PO. <a href="{% url 'accounts:greigepo_detail' existing_po.id %}">Open existing Greige PO</a></div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            <div style="padding:18px;">
+              <div class="gpf-grid">
+                <div class="gpf-field"><label>Greige PO No</label><input type="text" value="{% if po_obj %}{{ po_obj.system_number }}{% else %}Auto Generated{% endif %}" disabled></div>
+                <div class="gpf-field"><label>Internal PO Number</label>{{ form.internal_po_number }}</div>
+                <div class="gpf-field"><label>Source Yarn PO</label>{{ form.source_yarn_po }}{{ form.source_yarn_po.errors }}</div>
+                <div class="gpf-field"><label>PO Number</label>{{ form.po_number }}</div>
+                <div class="gpf-field"><label>Date</label>{{ form.po_date }}</div>
+                <div class="gpf-field"><label>Available Qty</label>{{ form.available_qty }}</div>
+                <div class="gpf-field"><label>Vendor</label>{{ form.vendor }}</div>
+                <div class="gpf-field"><label>Firm</label>{{ form.firm }}</div>
+                <div class="gpf-field"><label>Cancel Date</label>{{ form.cancel_date }}</div>
+                <div class="gpf-field"><label>Director</label>{{ form.director }}</div>
+                <div class="gpf-field"><label>Validity Period</label>{{ form.validity_period }}</div>
+                <div class="gpf-field"><label>Delivery Period</label>{{ form.delivery_period }}</div>
+                <div class="gpf-field gpf-span-2"><label>Shipping Address</label>{{ form.shipping_address }}</div>
+                <div class="gpf-field gpf-span-2"><label>Address</label>{{ form.address }}</div>
+                <div class="gpf-field"><label>Expected Delivery Date</label>{{ form.expected_delivery_date }}</div>
+                <div class="gpf-field gpf-span-2"><label>Delivery Schedule</label>{{ form.delivery_schedule }}</div>
+                <div class="gpf-field gpf-span-3"><label>Remarks</label>{{ form.remarks }}</div>
+              </div>
+              <div class="gpf-actions">
+                <a class="jb-secondary" href="{% url 'accounts:greigepo_list' %}">Back to Greige PO</a>
+                <button type="submit" class="jb-add">Save Greige PO</button>
+              </div>
+            </div>
+          </form>
+
+          <details class="gpf-block" open>
+            <summary>Source Yarn PO Details</summary>
+            <div class="gpf-block-body">
+              {% if source_yarn_po %}
+              <table class="gpf-mini-table">
+                <tr><th>Yarn PO</th><td>{{ source_yarn_po.system_number }}</td><th>Vendor</th><td>{{ source_yarn_po.vendor.name }}</td></tr>
+                <tr><th>PO No</th><td>{{ source_yarn_po.po_number|default:"—" }}</td><th>Firm</th><td>{% if source_yarn_po.firm %}{{ source_yarn_po.firm.firm_name }}{% else %}—{% endif %}</td></tr>
+                <tr><th>Total Ordered</th><td>{{ source_yarn_po.total_weight|default:"0.00" }}</td><th>Total Inward</th><td>{{ source_yarn_po.total_inward_qty|default:"0.00" }}</td></tr>
+              </table>
+              {% else %}
+              <div class="jb-empty">Choose a source Yarn PO to see linked inward information.</div>
+              {% endif %}
+            </div>
+          </details>
+
+          <details class="gpf-block" open>
+            <summary>Source Yarn Inwards</summary>
+            <div class="gpf-block-body">
+              {% if source_inwards %}
+              <table class="gpf-mini-table">
+                <thead><tr><th>Inward No</th><th>Date</th><th>Item</th><th>Qty</th></tr></thead>
+                <tbody>
+                  {% for inward in source_inwards %}
+                    {% for inward_item in inward.items.all %}
+                    <tr>
+                      <td>{{ inward.inward_number }}</td>
+                      <td>{{ inward.inward_date|date:"d-m-Y" }}</td>
+                      <td>{% if inward_item.po_item.material_type %}{{ inward_item.po_item.material_type.name }}{% elif inward_item.po_item.material %}{{ inward_item.po_item.material.name }}{% else %}Yarn Item{% endif %}</td>
+                      <td>{{ inward_item.quantity }}</td>
+                    </tr>
+                    {% endfor %}
+                  {% endfor %}
+                </tbody>
+              </table>
+              {% else %}
+              <div class="jb-empty">No Yarn inward data found yet.</div>
+              {% endif %}
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

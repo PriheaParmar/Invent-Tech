@@ -28,6 +28,9 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 from .forms import (
     FirmForm,
+    GreigePurchaseOrderForm,
+    GreigePOInwardForm,
+    DyeingPurchaseOrderForm,
     JobberForm,
     JobberTypeForm,
     LocationForm,
@@ -44,6 +47,12 @@ from .forms import (
 
 from .models import (
     Firm,
+    GreigePurchaseOrder,
+    GreigePurchaseOrderItem,
+    GreigePOInward,
+    GreigePOInwardItem,
+    DyeingPurchaseOrder,
+    DyeingPurchaseOrderItem,
     Jobber,
     JobberType,
     Location,
@@ -57,8 +66,6 @@ from .models import (
     YarnPOInwardItem,
     YarnPurchaseOrder,
     YarnPurchaseOrderItem,
-    GreigePurchaseOrder,
-GreigePurchaseOrderItem,
 )
 
 
@@ -79,6 +86,19 @@ def _next_greige_po_number() -> str:
     last = GreigePurchaseOrder.objects.order_by("-id").first()
     next_id = (last.id + 1) if last else 1
     return f"GPO-{next_id:04d}"
+
+
+def _next_greige_inward_number() -> str:
+    last = GreigePOInward.objects.order_by("-id").first()
+    next_id = (last.id + 1) if last else 1
+    return f"GIN-{next_id:04d}"
+
+
+def _next_dyeing_po_number() -> str:
+    last = DyeingPurchaseOrder.objects.order_by("-id").first()
+    next_id = (last.id + 1) if last else 1
+    return f"DPO-{next_id:04d}"
+
 
 def _firm_address(firm):
     if not firm:
@@ -1340,7 +1360,6 @@ def yarnpo_create(request):
 
     if request.method == "POST" and form.is_valid() and formset.is_valid():
         po = form.save(commit=False)
-        po.owner = request.user
 
         if default_firm:
             po.firm = default_firm
@@ -1389,7 +1408,6 @@ def yarnpo_update(request, pk: int):
 
     if request.method == "POST" and form.is_valid() and formset.is_valid():
         po = form.save(commit=False)
-        po.owner = request.user
 
         if default_firm:
             po.firm = default_firm
@@ -1492,7 +1510,7 @@ def yarnpo_inward(request, pk: int):
 
         if not inward_form.errors and not item_errors:
             inward = inward_form.save(commit=False)
-            inward.owner = request.user
+            inward.owner = po.owner
             inward.po = po
             inward.inward_number = _next_yarn_inward_number()
             inward.save()
@@ -1540,7 +1558,10 @@ def yarn_inward_tracker(request):
                 "inwards",
                 queryset=YarnPOInward.objects.prefetch_related("items__po_item__material"),
             ),
-            "greige_pos",
+            Prefetch(
+                "greige_pos",
+                queryset=GreigePurchaseOrder.objects.prefetch_related("items").order_by("-id"),
+            ),
         )
         .filter(inwards__isnull=False)
         .distinct()
@@ -1559,15 +1580,42 @@ def yarn_inward_tracker(request):
         ).distinct()
 
     rows = []
+
     for po in qs:
         po = _attach_yarn_po_metrics(po)
 
-        greige_po = po.greige_pos.order_by("-id").first()
+        greige_po = po.greige_pos.first()
+
+        inward_entries = []
+        for inward in po.inwards.all():
+            inward_items = []
+            for inward_item in inward.items.all():
+                po_item = inward_item.po_item
+                inward_items.append({
+                "inward_item": inward_item,
+                "po_item": po_item,
+                "fabric_name": po_item.material.name if po_item and po_item.material else "Yarn Item",
+                "ordered_qty": po_item.quantity if po_item else 0,
+                "inward_qty": inward_item.quantity,
+                "unit": po_item.unit if po_item else "",
+            })
+
+            inward_entries.append({
+                "inward": inward,
+                "items": inward_items,
+            })
+
+        greige_items = []
+        if greige_po:
+            for item in greige_po.items.all():
+                greige_items.append(item)
 
         rows.append({
             "po": po,
             "greige_po": greige_po,
             "greige_started": bool(greige_po),
+            "inward_entries": inward_entries,
+            "greige_items": greige_items,
         })
 
     return render(
@@ -1581,106 +1629,18 @@ def yarn_inward_tracker(request):
 
 
 @login_required
-@require_http_methods(["POST"])
 def generate_greige_po_from_yarn(request, pk: int):
     yarn_po = get_object_or_404(
-        YarnPurchaseOrder.objects
-        .select_related("vendor", "firm", "owner")
-        .prefetch_related(
-            Prefetch(
-                "items",
-                queryset=YarnPurchaseOrderItem.objects.select_related("material").prefetch_related("inward_items")
-            )
-        ),
+        YarnPurchaseOrder.objects.select_related("owner"),
         pk=pk,
     )
 
     if not _can_access_yarn_po(request.user, yarn_po):
         raise PermissionDenied("You do not have access to this Yarn PO.")
 
-    if yarn_po.greige_pos.exists():
-        return redirect("accounts:yarn_inward_tracker")
-
-    if yarn_po.total_inward_qty <= 0:
-        return redirect("accounts:yarn_inward_tracker")
-
-    greige_po = GreigePurchaseOrder.objects.create(
-        owner=request.user,
-        system_number=_next_greige_po_number(),
-        po_number=yarn_po.po_number or "",
-        po_date=timezone.localdate(),
-        source_yarn_po=yarn_po,
-        vendor=yarn_po.vendor,
-        firm=yarn_po.firm,
-        remarks=f"Generated from Yarn PO {yarn_po.system_number}",
-        total_weight=Decimal("0"),
-    )
-
-    total_weight = Decimal("0")
-    item_rows = []
-
-    for yarn_item in yarn_po.items.all():
-        inward_qty = yarn_item.inward_qty_total or Decimal("0")
-        if inward_qty <= 0:
-            continue
-
-        yarn_name = yarn_item.material.name if yarn_item.material else "Yarn Item"
-
-        item_rows.append(
-            GreigePurchaseOrderItem(
-                po=greige_po,
-                source_yarn_po_item=yarn_item,
-                fabric_name=yarn_name,
-                yarn_name=yarn_name,
-                unit=yarn_item.unit or "",
-                quantity=inward_qty,
-                remark=f"Generated from inward qty of {yarn_po.system_number}",
-            )
-        )
-        total_weight += inward_qty
-
-    if not item_rows:
-        greige_po.delete()
-        return redirect("accounts:yarn_inward_tracker")
-
-    GreigePurchaseOrderItem.objects.bulk_create(item_rows)
-    greige_po.total_weight = total_weight
-    greige_po.save(update_fields=["total_weight", "updated_at"])
-
-    return redirect("accounts:greigepo_list")
+    return redirect("accounts:greigepo_add_from_yarn", yarn_po_id=pk)
 
 
-@login_required
-def greigepo_list(request):
-    q = (request.GET.get("q") or "").strip()
-
-    qs = (
-        GreigePurchaseOrder.objects
-        .select_related("vendor", "firm", "source_yarn_po", "owner")
-        .prefetch_related("items")
-        .order_by("-id")
-    )
-
-    if not _can_review_yarn_po(request.user):
-        qs = qs.filter(owner=request.user)
-
-    if q:
-        qs = qs.filter(
-            Q(system_number__icontains=q)
-            | Q(po_number__icontains=q)
-            | Q(vendor__name__icontains=q)
-            | Q(source_yarn_po__system_number__icontains=q)
-            | Q(firm__firm_name__icontains=q)
-        ).distinct()
-
-    return render(
-        request,
-        "accounts/greige_po/list.html",
-        {
-            "orders": qs,
-            "q": q,
-        },
-    )
 @login_required
 @require_POST
 def yarnpo_delete(request, pk: int):
@@ -1949,6 +1909,574 @@ def jobbertype_delete(request, pk):
     return redirect(url)
 
 
+def _can_access_greige_po(user, po):
+    return bool(_can_review_yarn_po(user) or po.owner_id == user.id)
+
+
+def _can_access_dyeing_po(user, po):
+    return bool(_can_review_yarn_po(user) or po.owner_id == user.id)
+
+
+def _greige_source_queryset():
+    return (
+        YarnPurchaseOrder.objects
+        .select_related("vendor", "firm", "owner")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=YarnPurchaseOrderItem.objects.select_related("material", "material_type").prefetch_related("inward_items"),
+            ),
+            Prefetch(
+                "inwards",
+                queryset=YarnPOInward.objects.prefetch_related("items__po_item__material", "items__po_item__material_type"),
+            ),
+        )
+    )
+
+
+def _greige_po_queryset():
+    return (
+        GreigePurchaseOrder.objects
+        .select_related("vendor", "firm", "source_yarn_po", "owner")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=GreigePurchaseOrderItem.objects.select_related("source_yarn_po_item").prefetch_related("inward_items"),
+            ),
+            Prefetch(
+                "inwards",
+                queryset=GreigePOInward.objects.prefetch_related("items__po_item"),
+            ),
+            Prefetch(
+                "dyeing_pos",
+                queryset=DyeingPurchaseOrder.objects.prefetch_related("items").order_by("-id"),
+            ),
+        )
+        .order_by("-id")
+    )
+
+
+def _dyeing_po_queryset():
+    return (
+        DyeingPurchaseOrder.objects
+        .select_related("vendor", "firm", "source_greige_po", "owner")
+        .prefetch_related(
+            Prefetch("items", queryset=DyeingPurchaseOrderItem.objects.select_related("source_greige_po_item"))
+        )
+        .order_by("-id")
+    )
+
+
+def _sync_greige_po_items_from_source(greige_po):
+    yarn_po = (
+        _greige_source_queryset()
+        .filter(pk=greige_po.source_yarn_po_id)
+        .first()
+    )
+    if yarn_po is None:
+        return Decimal("0")
+
+    item_rows = []
+    total_weight = Decimal("0")
+
+    for yarn_item in yarn_po.items.all():
+        inward_qty = yarn_item.inward_qty_total or Decimal("0")
+        if inward_qty <= 0:
+            continue
+
+        yarn_name = (
+            yarn_item.material_type.name
+            if yarn_item.material_type
+            else (yarn_item.material.name if yarn_item.material else "Yarn Item")
+        )
+
+        item_rows.append(
+            GreigePurchaseOrderItem(
+                po=greige_po,
+                source_yarn_po_item=yarn_item,
+                fabric_name=yarn_name,
+                yarn_name=yarn_name,
+                unit=yarn_item.unit or "",
+                quantity=inward_qty,
+                remark=f"Generated from Yarn inward of {yarn_po.system_number}",
+            )
+        )
+        total_weight += inward_qty
+
+    GreigePurchaseOrderItem.objects.filter(po=greige_po).delete()
+    if item_rows:
+        GreigePurchaseOrderItem.objects.bulk_create(item_rows)
+
+    greige_po.total_weight = total_weight
+    greige_po.available_qty = total_weight
+    greige_po.save(update_fields=["total_weight", "available_qty", "updated_at"])
+    return total_weight
+
+
+def _sync_dyeing_po_items_from_source(dyeing_po):
+    greige_po = (
+        _greige_po_queryset()
+        .filter(pk=dyeing_po.source_greige_po_id)
+        .first()
+    )
+    if greige_po is None:
+        return Decimal("0")
+
+    item_rows = []
+    total_weight = Decimal("0")
+
+    for greige_item in greige_po.items.all():
+        inward_qty = greige_item.inward_qty_total or Decimal("0")
+        if inward_qty <= 0:
+            continue
+
+        greige_name = greige_item.fabric_name or "Greige Item"
+
+        item_rows.append(
+            DyeingPurchaseOrderItem(
+                po=dyeing_po,
+                source_greige_po_item=greige_item,
+                fabric_name=greige_name,
+                greige_name=greige_name,
+                unit=greige_item.unit or "",
+                quantity=inward_qty,
+                remark=f"Generated from Greige inward of {greige_po.system_number}",
+            )
+        )
+        total_weight += inward_qty
+
+    DyeingPurchaseOrderItem.objects.filter(po=dyeing_po).delete()
+    if item_rows:
+        DyeingPurchaseOrderItem.objects.bulk_create(item_rows)
+
+    dyeing_po.total_weight = total_weight
+    dyeing_po.available_qty = total_weight
+    dyeing_po.save(update_fields=["total_weight", "available_qty", "updated_at"])
+    return total_weight
+
+
 @login_required
 def po_home(request):
     return render(request, "accounts/po/index.html")
+
+
+@login_required
+def greigepo_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = _greige_po_queryset()
+    if not _can_review_yarn_po(request.user):
+        qs = qs.filter(owner=request.user)
+
+    if q:
+        qs = qs.filter(
+            Q(system_number__icontains=q)
+            | Q(po_number__icontains=q)
+            | Q(vendor__name__icontains=q)
+            | Q(source_yarn_po__system_number__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        ).distinct()
+
+    return render(
+        request,
+        "accounts/greige_po/list.html",
+        {
+            "orders": qs,
+            "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def greigepo_create(request, yarn_po_id=None):
+    source_yarn_po = None
+    if yarn_po_id is not None:
+        source_yarn_po = get_object_or_404(_greige_source_queryset(), pk=yarn_po_id)
+        if not _can_access_yarn_po(request.user, source_yarn_po):
+            raise PermissionDenied("You do not have access to this Yarn PO.")
+
+    if request.method == "POST":
+        form = GreigePurchaseOrderForm(
+            request.POST,
+            user=request.user,
+            source_yarn_po=source_yarn_po,
+            lock_source=bool(source_yarn_po),
+        )
+
+        if form.is_valid():
+            selected_source = source_yarn_po or form.cleaned_data["source_yarn_po"]
+            if not _can_access_yarn_po(request.user, selected_source):
+                raise PermissionDenied("You do not have access to this Yarn PO.")
+
+            if not selected_source.inwards.exists():
+                form.add_error("source_yarn_po", "Selected Yarn PO has no inward entries yet.")
+            elif selected_source.greige_pos.exists():
+                form.add_error("source_yarn_po", "Greige PO already exists for this Yarn PO.")
+            else:
+                greige_po = form.save(commit=False)
+                greige_po.owner = selected_source.owner
+                greige_po.system_number = _next_greige_po_number()
+                greige_po.source_yarn_po = selected_source
+                if greige_po.firm and not greige_po.shipping_address:
+                    greige_po.shipping_address = _firm_address(greige_po.firm)
+                greige_po.save()
+                _sync_greige_po_items_from_source(greige_po)
+                return redirect("accounts:greigepo_list")
+    else:
+        initial = {}
+        if source_yarn_po is not None:
+            initial = {
+                "po_number": source_yarn_po.po_number or "",
+                "po_date": timezone.localdate(),
+                "available_qty": source_yarn_po.total_inward_qty or Decimal("0"),
+                "vendor": source_yarn_po.vendor_id,
+                "firm": source_yarn_po.firm_id if source_yarn_po.firm else None,
+                "shipping_address": _firm_address(source_yarn_po.firm) if source_yarn_po.firm else "",
+                "remarks": f"Generated from Yarn PO {source_yarn_po.system_number}",
+            }
+
+        form = GreigePurchaseOrderForm(
+            initial=initial,
+            user=request.user,
+            source_yarn_po=source_yarn_po,
+            lock_source=bool(source_yarn_po),
+        )
+
+    source_inwards = list(source_yarn_po.inwards.all()) if source_yarn_po else []
+    existing_po = source_yarn_po.greige_pos.order_by("-id").first() if source_yarn_po else None
+
+    return render(
+        request,
+        "accounts/greige_po/form.html",
+        {
+            "form": form,
+            "mode": "add",
+            "po_obj": None,
+            "source_yarn_po": source_yarn_po,
+            "source_inwards": source_inwards,
+            "existing_po": existing_po,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def greigepo_update(request, pk: int):
+    po = get_object_or_404(_greige_po_queryset(), pk=pk)
+    if not _can_access_greige_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Greige PO.")
+
+    form = GreigePurchaseOrderForm(
+        request.POST or None,
+        user=request.user,
+        instance=po,
+        source_yarn_po=po.source_yarn_po,
+        lock_source=True,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        po = form.save(commit=False)
+        if po.firm and not po.shipping_address:
+            po.shipping_address = _firm_address(po.firm)
+        po.save()
+        return redirect("accounts:greigepo_list")
+
+    return render(
+        request,
+        "accounts/greige_po/form.html",
+        {
+            "form": form,
+            "mode": "edit",
+            "po_obj": po,
+            "source_yarn_po": po.source_yarn_po,
+            "source_inwards": list(po.source_yarn_po.inwards.all()) if po.source_yarn_po else [],
+            "existing_po": None,
+        },
+    )
+
+
+@login_required
+def greigepo_detail(request, pk: int):
+    po = get_object_or_404(_greige_po_queryset(), pk=pk)
+    if not _can_access_greige_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Greige PO.")
+
+    return render(
+        request,
+        "accounts/greige_po/detail.html",
+        {
+            "po": po,
+            "source_yarn_po": po.source_yarn_po,
+            "source_inwards": list(po.source_yarn_po.inwards.all()) if po.source_yarn_po else [],
+            "existing_dyeing_po": po.dyeing_pos.first(),
+            "greige_inwards": list(po.inwards.all()),
+        },
+    )
+
+
+@login_required
+@require_POST
+def greigepo_delete(request, pk: int):
+    po = get_object_or_404(GreigePurchaseOrder, pk=pk, owner=request.user)
+    po.delete()
+    return redirect("accounts:greigepo_list")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def greigepo_inward(request, pk: int):
+    po = get_object_or_404(_greige_po_queryset(), pk=pk)
+    if not _can_access_greige_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Greige PO.")
+
+    item_errors = {}
+    line_inputs = {}
+    inward_form = GreigePOInwardForm(request.POST or None)
+
+    if request.method == "POST" and inward_form.is_valid():
+        line_payload = []
+
+        for item in po.items.all():
+            raw_qty = (request.POST.get(f"qty_{item.id}") or "").strip()
+            remark = (request.POST.get(f"remark_{item.id}") or "").strip()
+
+            line_inputs[item.id] = {"qty": raw_qty, "remark": remark}
+
+            if not raw_qty:
+                continue
+
+            try:
+                qty = Decimal(raw_qty)
+            except InvalidOperation:
+                item_errors[item.id] = "Enter a valid quantity."
+                continue
+
+            if qty <= 0:
+                continue
+
+            if qty > item.remaining_qty_total:
+                item_errors[item.id] = "Entered quantity is greater than remaining quantity."
+                continue
+
+            line_payload.append((item, qty, remark))
+
+        if not line_payload:
+            inward_form.add_error(None, "Enter at least one inward quantity.")
+
+        if not inward_form.errors and not item_errors:
+            inward = inward_form.save(commit=False)
+            inward.owner = po.owner
+            inward.po = po
+            inward.inward_number = _next_greige_inward_number()
+            inward.save()
+
+            GreigePOInwardItem.objects.bulk_create([
+                GreigePOInwardItem(
+                    inward=inward,
+                    po_item=item,
+                    quantity=qty,
+                    remark=remark,
+                )
+                for item, qty, remark in line_payload
+            ])
+            return redirect("accounts:greigepo_inward", pk=po.pk)
+
+    line_rows = [
+        {
+            "item": item,
+            "qty_value": line_inputs.get(item.id, {}).get("qty", ""),
+            "remark_value": line_inputs.get(item.id, {}).get("remark", ""),
+            "error": item_errors.get(item.id, ""),
+        }
+        for item in po.items.all()
+    ]
+
+    return render(
+        request,
+        "accounts/greige_po/inward.html",
+        {
+            "po": po,
+            "inward_form": inward_form,
+            "line_rows": line_rows,
+            "existing_inwards": po.inwards.all().order_by("-inward_date", "-id"),
+        },
+    )
+
+
+@login_required
+def greige_inward_tracker(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = _greige_po_queryset().filter(inwards__isnull=False).distinct()
+    if not _can_review_yarn_po(request.user):
+        qs = qs.filter(owner=request.user)
+
+    if q:
+        qs = qs.filter(
+            Q(system_number__icontains=q)
+            | Q(po_number__icontains=q)
+            | Q(vendor__name__icontains=q)
+            | Q(source_yarn_po__system_number__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        ).distinct()
+
+    rows = []
+    for po in qs:
+        dyeing_po = po.dyeing_pos.first()
+
+        inward_entries = []
+        for inward in po.inwards.all():
+            inward_entries.append({
+                "inward": inward,
+                "items": [
+                    {
+                        "inward_item": inward_item,
+                        "po_item": inward_item.po_item,
+                        "fabric_name": inward_item.po_item.fabric_name if inward_item.po_item else "Greige Item",
+                        "ordered_qty": inward_item.po_item.quantity if inward_item.po_item else 0,
+                        "inward_qty": inward_item.quantity,
+                        "unit": inward_item.po_item.unit if inward_item.po_item else "",
+                    }
+                    for inward_item in inward.items.all()
+                ],
+            })
+
+        rows.append({
+            "po": po,
+            "dyeing_po": dyeing_po,
+            "dyeing_started": bool(dyeing_po),
+            "inward_entries": inward_entries,
+            "dyeing_items": list(dyeing_po.items.all()) if dyeing_po else [],
+        })
+
+    return render(
+        request,
+        "accounts/greige_po/inward_tracker.html",
+        {
+            "rows": rows,
+            "q": q,
+        },
+    )
+
+
+@login_required
+def generate_dyeing_po_from_greige(request, pk: int):
+    greige_po = get_object_or_404(_greige_po_queryset(), pk=pk)
+    if not _can_access_greige_po(request.user, greige_po):
+        raise PermissionDenied("You do not have access to this Greige PO.")
+    return redirect("accounts:dyeingpo_add_from_greige", greige_po_id=pk)
+
+
+@login_required
+def dyeingpo_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = _dyeing_po_queryset()
+    if not _can_review_yarn_po(request.user):
+        qs = qs.filter(owner=request.user)
+
+    if q:
+        qs = qs.filter(
+            Q(system_number__icontains=q)
+            | Q(po_number__icontains=q)
+            | Q(vendor__name__icontains=q)
+            | Q(source_greige_po__system_number__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        ).distinct()
+
+    return render(
+        request,
+        "accounts/dyeing_po/list.html",
+        {
+            "orders": qs,
+            "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def dyeingpo_create(request, greige_po_id=None):
+    source_greige_po = None
+    if greige_po_id is not None:
+        source_greige_po = get_object_or_404(_greige_po_queryset(), pk=greige_po_id)
+        if not _can_access_greige_po(request.user, source_greige_po):
+            raise PermissionDenied("You do not have access to this Greige PO.")
+
+    if request.method == "POST":
+        form = DyeingPurchaseOrderForm(
+            request.POST,
+            user=request.user,
+            source_greige_po=source_greige_po,
+            lock_source=bool(source_greige_po),
+        )
+
+        if form.is_valid():
+            selected_source = source_greige_po or form.cleaned_data["source_greige_po"]
+            if not _can_access_greige_po(request.user, selected_source):
+                raise PermissionDenied("You do not have access to this Greige PO.")
+
+            if not selected_source.inwards.exists():
+                form.add_error("source_greige_po", "Selected Greige PO has no inward entries yet.")
+            elif selected_source.dyeing_pos.exists():
+                form.add_error("source_greige_po", "Dyeing PO already exists for this Greige PO.")
+            else:
+                dyeing_po = form.save(commit=False)
+                dyeing_po.owner = selected_source.owner
+                dyeing_po.system_number = _next_dyeing_po_number()
+                dyeing_po.source_greige_po = selected_source
+                if dyeing_po.firm and not dyeing_po.shipping_address:
+                    dyeing_po.shipping_address = _firm_address(dyeing_po.firm)
+                dyeing_po.save()
+                _sync_dyeing_po_items_from_source(dyeing_po)
+                return redirect("accounts:dyeingpo_list")
+    else:
+        initial = {}
+        if source_greige_po is not None:
+            initial = {
+                "po_number": source_greige_po.po_number or "",
+                "po_date": timezone.localdate(),
+                "available_qty": source_greige_po.total_inward_qty or Decimal("0"),
+                "vendor": source_greige_po.vendor_id,
+                "firm": source_greige_po.firm_id if source_greige_po.firm else None,
+                "shipping_address": _firm_address(source_greige_po.firm) if source_greige_po.firm else "",
+                "remarks": f"Generated from Greige PO {source_greige_po.system_number}",
+            }
+
+        form = DyeingPurchaseOrderForm(
+            initial=initial,
+            user=request.user,
+            source_greige_po=source_greige_po,
+            lock_source=bool(source_greige_po),
+        )
+
+    return render(
+        request,
+        "accounts/dyeing_po/form.html",
+        {
+            "form": form,
+            "mode": "add",
+            "po_obj": None,
+            "source_greige_po": source_greige_po,
+            "source_inwards": list(source_greige_po.inwards.all()) if source_greige_po else [],
+            "existing_po": source_greige_po.dyeing_pos.order_by("-id").first() if source_greige_po else None,
+        },
+    )
+
+
+@login_required
+def dyeingpo_detail(request, pk: int):
+    po = get_object_or_404(_dyeing_po_queryset(), pk=pk)
+    if not _can_access_dyeing_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Dyeing PO.")
+
+    return render(
+        request,
+        "accounts/dyeing_po/detail.html",
+        {
+            "po": po,
+            "source_greige_po": po.source_greige_po,
+            "source_inwards": list(po.source_greige_po.inwards.all()) if po.source_greige_po else [],
+        },
+    )

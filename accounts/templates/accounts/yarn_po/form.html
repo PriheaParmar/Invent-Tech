@@ -6,334 +6,279 @@
 {% block content %}
 <style>
   .canvas{
-    grid-template-columns: 1fr !important;
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
   }
 
-  .po-form-stage{
-    position: relative;
+  .yarnpo-form-page{
+    width:100%;
+    min-width:0;
   }
 
-  .po-form-shell{
-    position: relative;
-    background:
-      radial-gradient(circle at top right, rgba(250,189,100,.18), transparent 24%),
-      radial-gradient(circle at bottom left, rgba(238,61,133,.10), transparent 22%),
-      var(--card, #ffffff);
-    border: 1px solid rgba(15,23,42,.08);
-    border-radius: 26px;
-    box-shadow: 0 22px 60px rgba(15,23,42,.08);
-    padding: 20px;
-    overflow: hidden;
+  .jobbers-embed{
+    padding:10px 6px;
   }
 
-  .po-form-shell::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    pointer-events:none;
-    background:
-      linear-gradient(120deg, rgba(255,255,255,.32), transparent 22%, transparent 78%, rgba(255,255,255,.18));
-    opacity:.75;
+  .jb-panel{
+    background:rgba(255,255,255,.72);
+    border:2px dashed rgb(0,0,0);
+    border-radius:18px;
+    box-shadow:0 12px 36px rgba(15,23,42,.08);
+    padding:16px;
+    width:100%;
+    min-width:0;
   }
 
-  .po-form-top{
-    position: relative;
-    z-index: 1;
+  .jb-head{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:16px;
-    margin-bottom: 16px;
+    gap:12px;
+    margin-bottom:12px;
   }
 
-  .po-main-title{
-    font-size: 22px;
-    font-weight: 950;
-    letter-spacing: -.03em;
-    line-height: 1.05;
-    color: var(--text, #0f172a);
+  .jb-title{
+    font-size:18px;
+    font-weight:900;
+    line-height:1.1;
+    color:#111827;
   }
 
-  .po-main-sub{
-    margin-top: 6px;
-    font-size: 12px;
-    color: var(--muted, #667085);
+  .jb-sub{
+    font-size:12px;
+    opacity:.72;
+    margin-top:4px;
+    color:#475467;
   }
 
-  .po-btn,
-  .po-add-btn{
-    border:none;
-    outline:none;
-    cursor:pointer;
+  .jb-btn,
+  .jb-add,
+  .jb-secondary{
+    appearance:none;
+    border:1px solid rgba(0,0,0,.10);
+    border-radius:12px;
     text-decoration:none;
+    cursor:pointer;
+    transition:background .18s ease,color .18s ease,border-color .18s ease;
+    height:38px;
+    padding:0 14px;
+    font-weight:700;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:8px;
-    height:40px;
-    padding:0 16px;
-    border-radius:12px;
-    font-weight:900;
-    transition:.18s ease;
-    font-size:12px;
+    white-space:nowrap;
   }
 
-  .po-btn{
-    background: rgba(255,255,255,.95);
+  .jb-btn,
+  .jb-secondary{
+    background:rgba(255,255,255,.85);
     color:#000;
-    border: 1px solid rgba(0,0,0,.10);
   }
 
-  .po-btn:hover{
+  .jb-btn:hover,
+  .jb-secondary:hover{
     background:#000;
     color:#fff;
   }
 
-  .po-btn.primary{
-    background: var(--orange, rgba(250,189,100,1));
+  .jb-add{
+    background:var(--orange);
     color:#fff;
-    border:none;
-    box-shadow: 0 12px 24px rgba(250,189,100,.22);
+    border-color:transparent;
   }
 
-  .po-btn.primary:hover{
-    background:#0b0b12;
-    color:#fff;
-  }
-
-  .po-add-btn{
-    background: linear-gradient(180deg, rgba(250,189,100,1), rgba(239,157,47,1));
-    color:#fff;
-    box-shadow: 0 12px 22px rgba(239,157,47,.18);
-  }
-
-  .po-add-btn:hover{
+  .jb-add:hover{
     background:#000;
     color:#fff;
   }
 
-  .po-ico{
-    width: 16px;
-    height: 16px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2.1;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+  .jb-errors{
+    padding:10px 12px;
+    border-radius:12px;
+    background:rgba(238,61,133,.10);
+    border:1px solid rgba(238,61,133,.22);
+    font-weight:800;
+    color:#7a163f;
+    margin-bottom:12px;
   }
 
-  .po-errors{
-    position: relative;
-    z-index: 1;
-    padding: 11px 13px;
-    border-radius: 14px;
-    background: rgba(238,61,133,.10);
-    border: 1px solid rgba(238,61,133,.22);
-    font-weight: 800;
-    color: #7a163f;
-    margin-bottom: 16px;
-  }
-
-  .po-hero-strip{
-    position: relative;
-    z-index: 1;
+  .yarnpo-top-grid{
     display:grid;
-    grid-template-columns: 1.1fr .9fr;
-    gap: 14px;
-    margin-bottom: 16px;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:12px;
   }
 
-  .po-hero-box{
-    border: 1px solid rgba(15,23,42,.07);
-    border-radius: 18px;
-    background: rgba(255,255,255,.72);
-    backdrop-filter: blur(10px);
-    padding: 14px 16px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
+  .yarnpo-top-box{
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:14px;
+    background:rgba(255,255,255,.52);
+    padding:10px 12px;
   }
 
-  .po-hero-label{
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: .12em;
-    color: var(--muted, #667085);
-    font-weight: 900;
-    margin-bottom: 8px;
+  .yarnpo-top-label{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:5px;
   }
 
-  .po-hero-value{
-    font-size: 20px;
-    font-weight: 950;
-    letter-spacing: -.03em;
-    color: #111827;
+  .yarnpo-top-value{
+    font-size:16px;
+    font-weight:900;
+    color:#111827;
+    line-height:1.2;
+    word-break:break-word;
   }
 
-  .po-hero-sub{
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--muted, #667085);
-    font-weight: 700;
+  .yarnpo-top-sub{
+    margin-top:4px;
+    font-size:11px;
+    color:#667085;
+    font-weight:700;
   }
 
-  .po-grid{
-    position: relative;
-    z-index: 1;
+  .yarnpo-grid{
     display:grid;
-    gap:14px;
+    gap:10px;
   }
 
-  .po-header-grid{
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-bottom: 16px;
+  .yarnpo-header-grid{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    margin-bottom:12px;
   }
 
-  .po-field{
+  .yarnpo-field{
     display:flex;
     flex-direction:column;
-    gap:7px;
+    gap:5px;
     min-width:0;
   }
 
-  .po-field label{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size: 12px;
-    font-weight: 900;
-    color: rgba(15,23,42,.76);
-    letter-spacing: .02em;
+  .yarnpo-field.span-2{
+    grid-column:span 2;
   }
 
-  .po-field input,
-  .po-field select,
-  .po-field textarea{
+  .yarnpo-field label{
+    font-size:11px;
+    font-weight:800;
+    color:#344054;
+  }
+
+  .yarnpo-field input,
+  .yarnpo-field select,
+  .yarnpo-field textarea{
     width:100%;
     box-sizing:border-box;
-    min-height:42px;
-    padding:10px 13px;
-    border-radius:14px;
+    min-height:38px;
+    padding:8px 11px;
+    border-radius:11px;
     border:1px solid rgba(15,23,42,.10);
-    background: rgba(255,255,255,.92);
+    background:rgba(255,255,255,.92);
     outline:none;
-    color: var(--text, #0f172a);
-    font: inherit;
+    color:#111827;
+    font:inherit;
     appearance:none;
-    transition: .18s ease;
-    box-shadow: inset 0 1px 2px rgba(15,23,42,.03);
+    transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
   }
 
-  .po-field textarea{
-    min-height:92px;
+  .yarnpo-field textarea{
+    min-height:84px;
     resize:vertical;
   }
 
-  .po-field select{
+  .yarnpo-field select{
     background-image:
       linear-gradient(45deg, transparent 50%, rgba(0,0,0,.45) 50%),
       linear-gradient(135deg, rgba(0,0,0,.45) 50%, transparent 50%);
-    background-position: calc(100% - 18px) 18px, calc(100% - 12px) 18px;
+    background-position: calc(100% - 18px) 16px, calc(100% - 12px) 16px;
     background-size: 6px 6px, 6px 6px;
     background-repeat: no-repeat;
-    padding-right: 36px;
+    padding-right:34px;
   }
 
-  .po-field input:focus,
-  .po-field select:focus,
-  .po-field textarea:focus{
-    border-color: rgba(250,189,100,.68);
-    box-shadow: 0 0 0 4px rgba(250,189,100,.14);
+  .yarnpo-field input:focus,
+  .yarnpo-field select:focus,
+  .yarnpo-field textarea:focus{
+    border-color:rgba(238,61,133,.35);
+    box-shadow:0 0 0 4px rgba(238,61,133,.10);
+    background:#fff;
   }
 
-  .po-readonly input,
-  .po-summary input[readonly]{
-    background: linear-gradient(180deg, rgba(248,250,252,1), rgba(238,242,247,1));
-    color:#334155;
-    font-weight:800;
+  .yarnpo-err{
+    color:rgba(238,61,133,1);
+    font-size:11px;
+    font-weight:700;
   }
 
-  .po-span-2{
-    grid-column: span 2;
+  .yarnpo-lines-wrap{
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:16px;
+    background:rgba(255,255,255,.52);
+    padding:12px;
+    margin-bottom:12px;
   }
 
-  .po-lines-wrap{
-    position: relative;
-    z-index: 1;
-    margin-top: 4px;
-    border: 1px solid rgba(15,23,42,.08);
-    border-radius: 20px;
-    background: rgba(255,255,255,.64);
-    padding: 14px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
-  }
-
-  .po-lines-head{
+  .yarnpo-lines-head{
     display:flex;
-    align-items:center;
+    align-items:flex-start;
     justify-content:space-between;
-    gap:14px;
-    margin-bottom: 12px;
+    gap:10px;
+    margin-bottom:10px;
   }
 
-  .po-lines-title{
-    font-size: 18px;
-    font-weight: 900;
-    color: var(--text, #0f172a);
-    letter-spacing: -.02em;
+  .yarnpo-lines-title{
+    font-size:15px;
+    font-weight:900;
+    color:#111827;
   }
 
-  .po-lines-sub{
-    font-size: 12px;
-    color: var(--muted, #667085);
-    margin-top: 3px;
+  .yarnpo-lines-sub{
+    font-size:11px;
+    color:#667085;
+    margin-top:3px;
+    font-weight:700;
   }
 
-  .po-rows{
+  .yarnpo-rows{
     display:flex;
     flex-direction:column;
-    gap:12px;
-    margin-bottom: 8px;
-  }
-
-  .po-row{
-    border:1px solid rgba(0,0,0,.06);
-    border-radius:18px;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.95), rgba(250,251,253,.82));
-    padding: 14px;
-    box-shadow: 0 8px 20px rgba(15,23,42,.04);
-  }
-
-  .po-line-grid{
-    display:grid;
-    grid-template-columns:
-      2.2fr
-      .9fr
-      .95fr
-      .8fr
-      .7fr
-      .7fr
-      .72fr
-      .72fr
-      .72fr
-      .72fr
-      1fr
-      1.35fr
-      .85fr
-      1fr
-      52px;
     gap:10px;
+  }
+
+  .yarnpo-row{
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:14px;
+    background:rgba(255,255,255,.88);
+    padding:10px;
+  }
+
+  .yarnpo-row-top,
+  .yarnpo-row-bottom{
+    display:grid;
+    gap:10px;
+  }
+
+  .yarnpo-row-top{
+    grid-template-columns:2fr .9fr .95fr .95fr 44px;
+    align-items:end;
+    margin-bottom:10px;
+  }
+
+  .yarnpo-row-bottom{
+    grid-template-columns:.9fr .9fr .9fr .9fr .9fr .9fr 1fr 1.2fr .9fr 1fr;
     align-items:end;
   }
 
-  .po-wide{
-    min-width: 0;
+  .yarnpo-yarn-select{
+    position:relative;
   }
 
-  .po-yarn-select{
-    position: relative;
-  }
-
-  .po-yarn-select::after{
+  .yarnpo-yarn-select::after{
     content:"";
     position:absolute;
     right:12px;
@@ -342,408 +287,430 @@
     height:8px;
     border-right:2px solid rgba(0,0,0,.45);
     border-bottom:2px solid rgba(0,0,0,.45);
-    transform: translateY(-65%) rotate(45deg);
+    transform:translateY(-65%) rotate(45deg);
     pointer-events:none;
   }
 
-  .po-delete-field{
-    align-items:center;
+  .yarnpo-delete-field{
+    display:flex;
+    align-items:flex-end;
     justify-content:flex-end;
   }
 
-  .po-remove{
-    width: 38px;
-    height: 38px;
-    border-radius: 999px;
-    border: none;
-    background: linear-gradient(180deg, rgba(250,189,100,1), rgba(239,157,47,1));
-    color: #fff;
-    font-size: 20px;
-    line-height: 1;
+  .yarnpo-remove{
+    width:34px;
+    height:34px;
+    border-radius:999px;
+    border:none;
+    background:var(--orange);
+    color:#fff;
+    font-size:18px;
+    line-height:1;
     cursor:pointer;
     display:grid;
     place-items:center;
-    box-shadow: 0 10px 18px rgba(239,157,47,.18);
   }
 
-  .po-remove:hover{
-    background: rgba(238,61,133,1);
+  .yarnpo-remove:hover{
+    background:#000;
+    color:#fff;
   }
 
-  .po-err{
-    color: rgba(238,61,133,1);
-    font-size: 12px;
-    font-weight: 700;
-    margin-top: 3px;
-  }
-
-  .po-footer-grid{
-    position: relative;
-    z-index: 1;
+  .yarnpo-footer-grid{
     display:grid;
-    grid-template-columns: 1.15fr .85fr;
-    gap:18px;
-    align-items:start;
-    margin-top: 16px;
+    grid-template-columns:1.05fr .95fr;
+    gap:12px;
+    margin-top:12px;
   }
 
-  .po-terms-card,
-  .po-summary{
-    border:1px solid rgba(0,0,0,.06);
-    border-radius:18px;
-    background: rgba(255,255,255,.72);
-    padding: 14px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
+  .yarnpo-card{
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:14px;
+    background:rgba(255,255,255,.52);
+    padding:12px;
   }
 
-  .po-summary-top{
+  .yarnpo-card-title{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:8px;
+  }
+
+  .yarnpo-summary-top{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:12px;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(0,0,0,.06);
+    gap:10px;
+    margin-bottom:10px;
+    padding-bottom:10px;
+    border-bottom:1px solid rgba(15,23,42,.08);
   }
 
-  .po-summary-title,
-  .po-terms-title{
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--muted, #667085);
+  .yarnpo-total-weight{
+    font-size:15px;
+    font-weight:900;
+    color:#111827;
   }
 
-  .po-total-weight{
-    font-size: 20px;
-    font-weight: 950;
-    color: var(--text, #0f172a);
-  }
-
-  .po-summary-grid{
+  .yarnpo-summary-grid{
     display:grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap:12px;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:10px;
   }
 
-  .po-actionsbar{
-    position: relative;
-    z-index: 1;
+  .yarnpo-actionsbar{
     display:flex;
     justify-content:flex-end;
     gap:10px;
-    margin-top: 18px;
-    flex-wrap: wrap;
+    margin-top:14px;
+    flex-wrap:wrap;
   }
 
-  @media (max-width: 1420px){
-    .po-line-grid{
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+  @media (max-width: 1280px){
+    .yarnpo-row-top{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
     }
 
-    .po-delete-field{
-      align-items:flex-start;
+    .yarnpo-delete-field{
+      justify-content:flex-start;
+    }
+
+    .yarnpo-row-bottom{
+      grid-template-columns:repeat(4, minmax(0, 1fr));
     }
   }
 
   @media (max-width: 1080px){
-    .po-hero-strip,
-    .po-header-grid,
-    .po-footer-grid,
-    .po-summary-grid{
-      grid-template-columns: 1fr;
+    .yarnpo-top-grid,
+    .yarnpo-header-grid,
+    .yarnpo-footer-grid,
+    .yarnpo-summary-grid{
+      grid-template-columns:1fr;
     }
 
-    .po-span-2{
-      grid-column: span 1;
+    .yarnpo-field.span-2{
+      grid-column:span 1;
+    }
+
+    .yarnpo-row-bottom{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
     }
   }
 
   @media (max-width: 720px){
-    .po-form-top,
-    .po-lines-head,
-    .po-actionsbar{
+    .jb-head,
+    .yarnpo-lines-head,
+    .yarnpo-actionsbar{
       flex-direction:column;
       align-items:stretch;
     }
 
-    .po-line-grid{
-      grid-template-columns: 1fr;
+    .yarnpo-row-top,
+    .yarnpo-row-bottom{
+      grid-template-columns:1fr;
     }
 
-    .po-btn,
-    .po-add-btn{
+    .jb-btn,
+    .jb-add,
+    .jb-secondary{
       width:100%;
     }
   }
 </style>
 
 <section class="page-section is-active">
-  <div class="canvas po-form-stage">
-    <form method="post" class="po-form-shell">
-      {% csrf_token %}
-      {{ formset.management_form }}
+  <div class="canvas">
+    <div class="yarnpo-form-page">
+      <div class="jobbers-embed">
+        <form method="post" class="jb-panel">
+          {% csrf_token %}
+          {{ formset.management_form }}
 
-      <div class="po-form-top">
-        <div>
-          <div class="po-main-title">Purchase Order For Yarn</div>
-          <div class="po-main-sub">Premium purchase sheet for yarn vendors with live totals and line-wise controls.</div>
-        </div>
-        <a class="po-btn" href="{% url 'accounts:yarnpo_list' %}">Back to List</a>
-      </div>
-
-      {% if form.non_field_errors or formset.non_form_errors %}
-      <div class="po-errors">
-        {{ form.non_field_errors }}
-        {{ formset.non_form_errors }}
-      </div>
-      {% endif %}
-
-      <div class="po-hero-strip">
-        <div class="po-hero-box">
-          <div class="po-hero-label">System Number</div>
-          <div class="po-hero-value">{{ system_number_preview }}</div>
-          <div class="po-hero-sub">This number is generated automatically.</div>
-        </div>
-
-        <div class="po-hero-box">
-          <div class="po-hero-label">Firm</div>
-          <div class="po-hero-value">{% if auto_firm_name %}{{ auto_firm_name }}{% else %}No firm found{% endif %}</div>
-          <div class="po-hero-sub">Firm is auto-linked from your saved profile/firm details.</div>
-          {{ form.firm.as_hidden }}
-        </div>
-      </div>
-
-      <div class="po-grid po-header-grid">
-        <div class="po-field">
-          <label for="{{ form.po_number.id_for_label }}">PO Number</label>
-          {{ form.po_number }}
-          {% for err in form.po_number.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-        </div>
-
-        <div class="po-field">
-          <label for="{{ form.po_date.id_for_label }}">Date</label>
-          {{ form.po_date }}
-          {% for err in form.po_date.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-        </div>
-
-        <div class="po-field">
-          <label for="{{ form.cancel_date.id_for_label }}">Cancel Date</label>
-          {{ form.cancel_date }}
-          {% for err in form.cancel_date.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-        </div>
-
-        <div class="po-field">
-          <label for="{{ form.vendor.id_for_label }}">Vendor</label>
-          {{ form.vendor }}
-          {% for err in form.vendor.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-        </div>
-
-        <div class="po-field po-span-2">
-          <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
-          {{ form.shipping_address }}
-          {% for err in form.shipping_address.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-        </div>
-
-        <div class="po-field po-span-2">
-          <label for="{{ form.remarks.id_for_label }}">Remarks</label>
-          {{ form.remarks }}
-          {% for err in form.remarks.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-        </div>
-      </div>
-
-      <div class="po-lines-wrap">
-        <div class="po-lines-head">
-          <div>
-            <div class="po-lines-title">Yarn Details</div>
-            <div class="po-lines-sub">Add one or more yarn lines. Totals update automatically.</div>
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">{% if mode == 'edit' %}Edit Yarn PO{% else %}Generate Yarn PO{% endif %}</div>
+              <div class="jb-sub">Compact yarn purchase order form with cleaner row layout.</div>
+            </div>
+            <a class="jb-btn" href="{% url 'accounts:yarnpo_list' %}">Back to List</a>
           </div>
 
-          <button type="button" class="po-add-btn" id="addYarnRow">
-            <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 5v14"></path>
-              <path d="M5 12h14"></path>
-            </svg>
-            Add Row
-          </button>
-        </div>
+          {% if form.non_field_errors or formset.non_form_errors %}
+          <div class="jb-errors">
+            {{ form.non_field_errors }}
+            {{ formset.non_form_errors }}
+          </div>
+          {% endif %}
 
-        <div id="poRows" class="po-rows">
-          {% for item_form in formset.forms %}
-          <div class="po-row" data-row>
-            {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
-            <div class="po-line-grid">
-              <div class="po-field po-wide po-yarn-select">
-  <label>Yarn Type</label>
-  {{ item_form.material_type }}
-  {% for err in item_form.material_type.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-</div>
+          <div class="yarnpo-top-grid">
+            <div class="yarnpo-top-box">
+              <div class="yarnpo-top-label">System Number</div>
+              <div class="yarnpo-top-value">{{ system_number_preview }}</div>
+              <div class="yarnpo-top-sub">This number is generated automatically.</div>
+            </div>
 
-              <div class="po-field">
-                <label>Unit</label>
-                {{ item_form.unit }}
+            <div class="yarnpo-top-box">
+              <div class="yarnpo-top-label">Firm</div>
+              <div class="yarnpo-top-value">{% if auto_firm_name %}{{ auto_firm_name }}{% else %}No firm found{% endif %}</div>
+              <div class="yarnpo-top-sub">Firm is auto-linked from saved firm details.</div>
+              {{ form.firm.as_hidden }}
+            </div>
+          </div>
+
+          <div class="yarnpo-grid yarnpo-header-grid">
+            <div class="yarnpo-field">
+              <label for="{{ form.po_number.id_for_label }}">PO Number</label>
+              {{ form.po_number }}
+              {% for err in form.po_number.errors %}<div class="yarnpo-err">{{ err }}</div>{% endfor %}
+            </div>
+
+            <div class="yarnpo-field">
+              <label for="{{ form.po_date.id_for_label }}">Date</label>
+              {{ form.po_date }}
+              {% for err in form.po_date.errors %}<div class="yarnpo-err">{{ err }}</div>{% endfor %}
+            </div>
+
+            <div class="yarnpo-field">
+              <label for="{{ form.cancel_date.id_for_label }}">Cancel Date</label>
+              {{ form.cancel_date }}
+              {% for err in form.cancel_date.errors %}<div class="yarnpo-err">{{ err }}</div>{% endfor %}
+            </div>
+
+            <div class="yarnpo-field">
+              <label for="{{ form.vendor.id_for_label }}">Vendor</label>
+              {{ form.vendor }}
+              {% for err in form.vendor.errors %}<div class="yarnpo-err">{{ err }}</div>{% endfor %}
+            </div>
+
+            <div class="yarnpo-field span-2">
+              <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
+              {{ form.shipping_address }}
+              {% for err in form.shipping_address.errors %}<div class="yarnpo-err">{{ err }}</div>{% endfor %}
+            </div>
+
+            <div class="yarnpo-field span-2">
+              <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+              {{ form.remarks }}
+              {% for err in form.remarks.errors %}<div class="yarnpo-err">{{ err }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <div class="yarnpo-lines-wrap">
+            <div class="yarnpo-lines-head">
+              <div>
+                <div class="yarnpo-lines-title">Yarn Details</div>
+                <div class="yarnpo-lines-sub">Each row is split into a compact top row and bottom row.</div>
               </div>
 
-              <div class="po-field">
-                <label>MTR / Qty</label>
-                {{ item_form.quantity }}
+              <button type="button" class="jb-add" id="addYarnRow">
+                <svg style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14"></path>
+                  <path d="M5 12h14"></path>
+                </svg>
+                Add Row
+              </button>
+            </div>
+
+            <div id="poRows" class="yarnpo-rows">
+              {% for item_form in formset.forms %}
+              <div class="yarnpo-row" data-row>
+                {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                <div class="yarnpo-row-top">
+                  <div class="yarnpo-field yarnpo-yarn-select">
+                    <label>Yarn Type</label>
+                    {{ item_form.material_type }}
+                    {% for err in item_form.material_type.errors %}<div class="yarnpo-err">{{ err }}</div>{% endfor %}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>Unit</label>
+                    {{ item_form.unit }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>MTR / Qty</label>
+                    {{ item_form.quantity }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>Rate</label>
+                    {{ item_form.rate }}
+                  </div>
+
+                  <div class="yarnpo-delete-field">
+                    <button type="button" class="yarnpo-remove po-row-remove" title="Remove row">×</button>
+                    <div style="display:none;">{{ item_form.DELETE }}</div>
+                  </div>
+                </div>
+
+                <div class="yarnpo-row-bottom">
+                  <div class="yarnpo-field">
+                    <label>Value</label>
+                    {{ item_form.value }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>Dia</label>
+                    {{ item_form.dia }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>Gauge</label>
+                    {{ item_form.gauge }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>Rolls</label>
+                    {{ item_form.rolls }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>Count</label>
+                    {{ item_form.count }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>GSM</label>
+                    {{ item_form.gsm }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>S/L</label>
+                    {{ item_form.sl }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>HSN Code</label>
+                    {{ item_form.hsn_code }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>Final Amount</label>
+                    {{ item_form.final_amount }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>Remark</label>
+                    {{ item_form.remark }}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <template id="emptyYarnRowTemplate">
+              <div class="yarnpo-row" data-row>
+                {% with item_form=formset.empty_form %}
+                {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                <div class="yarnpo-row-top">
+                  <div class="yarnpo-field yarnpo-yarn-select">
+                    <label>Yarn Type</label>
+                    {{ item_form.material_type }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>Unit</label>
+                    {{ item_form.unit }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>MTR / Qty</label>
+                    {{ item_form.quantity }}
+                  </div>
+
+                  <div class="yarnpo-field">
+                    <label>Rate</label>
+                    {{ item_form.rate }}
+                  </div>
+
+                  <div class="yarnpo-delete-field">
+                    <button type="button" class="yarnpo-remove po-row-remove" title="Remove row">×</button>
+                    <div style="display:none;">{{ item_form.DELETE }}</div>
+                  </div>
+                </div>
+
+                <div class="yarnpo-row-bottom">
+                  <div class="yarnpo-field"><label>Value</label>{{ item_form.value }}</div>
+                  <div class="yarnpo-field"><label>Dia</label>{{ item_form.dia }}</div>
+                  <div class="yarnpo-field"><label>Gauge</label>{{ item_form.gauge }}</div>
+                  <div class="yarnpo-field"><label>Rolls</label>{{ item_form.rolls }}</div>
+                  <div class="yarnpo-field"><label>Count</label>{{ item_form.count }}</div>
+                  <div class="yarnpo-field"><label>GSM</label>{{ item_form.gsm }}</div>
+                  <div class="yarnpo-field"><label>S/L</label>{{ item_form.sl }}</div>
+                  <div class="yarnpo-field"><label>HSN Code</label>{{ item_form.hsn_code }}</div>
+                  <div class="yarnpo-field"><label>Final Amount</label>{{ item_form.final_amount }}</div>
+                  <div class="yarnpo-field"><label>Remark</label>{{ item_form.remark }}</div>
+                </div>
+                {% endwith %}
+              </div>
+            </template>
+          </div>
+
+          <div class="yarnpo-footer-grid">
+            <div class="yarnpo-card">
+              <div class="yarnpo-card-title">Terms & Conditions</div>
+              <div class="yarnpo-field" style="margin-top:8px;">
+                {{ form.terms_conditions }}
+                {% for err in form.terms_conditions.errors %}<div class="yarnpo-err">{{ err }}</div>{% endfor %}
+              </div>
+            </div>
+
+            <div class="yarnpo-card">
+              <div class="yarnpo-summary-top">
+                <div class="yarnpo-card-title" style="margin-bottom:0;">Summary</div>
+                <div class="yarnpo-total-weight">Total Weight: <strong id="totalWeightText">{{ po_obj.total_weight|default:"0.00" }}</strong></div>
               </div>
 
-              <div class="po-field">
-                <label>Value</label>
-                {{ item_form.value }}
-              </div>
+              <div class="yarnpo-summary-grid">
+                <div class="yarnpo-field">
+                  <label>Sub Total</label>
+                  <input type="text" id="subtotalPreview" value="{{ po_obj.subtotal|default:'0.00' }}" readonly>
+                </div>
 
-              <div class="po-field">
-                <label>Dia</label>
-                {{ item_form.dia }}
-              </div>
+                <div class="yarnpo-field">
+                  <label for="{{ form.discount_percent.id_for_label }}">Discount (%)</label>
+                  {{ form.discount_percent }}
+                </div>
 
-              <div class="po-field">
-                <label>Gauge</label>
-                {{ item_form.gauge }}
-              </div>
+                <div class="yarnpo-field">
+                  <label>After Discount Value</label>
+                  <input type="text" id="afterDiscountPreview" value="{{ po_obj.after_discount_value|default:'0.00' }}" readonly>
+                </div>
 
-              <div class="po-field">
-                <label>Rolls</label>
-                {{ item_form.rolls }}
-              </div>
+                <div class="yarnpo-field">
+                  <label for="{{ form.others.id_for_label }}">Others</label>
+                  {{ form.others }}
+                </div>
 
-              <div class="po-field">
-                <label>Count</label>
-                {{ item_form.count }}
-              </div>
+                <div class="yarnpo-field">
+                  <label for="{{ form.cgst_percent.id_for_label }}">CGST %</label>
+                  {{ form.cgst_percent }}
+                </div>
 
-              <div class="po-field">
-                <label>GSM</label>
-                {{ item_form.gsm }}
-              </div>
+                <div class="yarnpo-field">
+                  <label for="{{ form.sgst_percent.id_for_label }}">SGST %</label>
+                  {{ form.sgst_percent }}
+                </div>
 
-              <div class="po-field">
-                <label>S/L</label>
-                {{ item_form.sl }}
-              </div>
-
-              <div class="po-field">
-                <label>HSN Code</label>
-                {{ item_form.hsn_code }}
-              </div>
-
-              <div class="po-field po-wide">
-                <label>Remark</label>
-                {{ item_form.remark }}
-              </div>
-
-              <div class="po-field">
-                <label>Rate</label>
-                {{ item_form.rate }}
-              </div>
-
-              <div class="po-field">
-                <label>Final Amount</label>
-                {{ item_form.final_amount }}
-              </div>
-
-              <div class="po-field po-delete-field">
-                <label>&nbsp;</label>
-                <button type="button" class="po-remove po-row-remove" title="Remove row">×</button>
-                <div style="display:none;">{{ item_form.DELETE }}</div>
+                <div class="yarnpo-field span-2">
+                  <label>Grand Total</label>
+                  <input type="text" id="grandTotalPreview" value="{{ po_obj.grand_total|default:'0.00' }}" readonly>
+                </div>
               </div>
             </div>
           </div>
-          {% endfor %}
-        </div>
 
-        <template id="emptyYarnRowTemplate">
-          <div class="po-row" data-row>
-            {% with item_form=formset.empty_form %}
-            {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
-            <div class="po-line-grid">
-              <div class="po-field po-wide po-yarn-select"><label>Yarn Type</label>{{ item_form.material_type }}</div>
-              <div class="po-field"><label>Unit</label>{{ item_form.unit }}</div>
-              <div class="po-field"><label>MTR / Qty</label>{{ item_form.quantity }}</div>
-              <div class="po-field"><label>Value</label>{{ item_form.value }}</div>
-              <div class="po-field"><label>Dia</label>{{ item_form.dia }}</div>
-              <div class="po-field"><label>Gauge</label>{{ item_form.gauge }}</div>
-              <div class="po-field"><label>Rolls</label>{{ item_form.rolls }}</div>
-              <div class="po-field"><label>Count</label>{{ item_form.count }}</div>
-              <div class="po-field"><label>GSM</label>{{ item_form.gsm }}</div>
-              <div class="po-field"><label>S/L</label>{{ item_form.sl }}</div>
-              <div class="po-field"><label>HSN Code</label>{{ item_form.hsn_code }}</div>
-              <div class="po-field po-wide"><label>Remark</label>{{ item_form.remark }}</div>
-              <div class="po-field"><label>Rate</label>{{ item_form.rate }}</div>
-              <div class="po-field"><label>Final Amount</label>{{ item_form.final_amount }}</div>
-              <div class="po-field po-delete-field">
-                <label>&nbsp;</label>
-                <button type="button" class="po-remove po-row-remove" title="Remove row">×</button>
-                <div style="display:none;">{{ item_form.DELETE }}</div>
-              </div>
-            </div>
-            {% endwith %}
+          <div class="yarnpo-actionsbar">
+            <button type="submit" class="jb-add">Save Yarn PO</button>
+            <a class="jb-secondary" href="{% url 'accounts:yarnpo_list' %}">Cancel</a>
           </div>
-        </template>
+        </form>
       </div>
-
-      <div class="po-footer-grid">
-        <div class="po-terms-card">
-          <div class="po-terms-title">Terms & Conditions</div>
-          <div class="po-field" style="margin-top:10px;">
-            {{ form.terms_conditions }}
-            {% for err in form.terms_conditions.errors %}<div class="po-err">{{ err }}</div>{% endfor %}
-          </div>
-        </div>
-
-        <div class="po-summary">
-          <div class="po-summary-top">
-            <div class="po-summary-title">Summary</div>
-            <div class="po-total-weight">Total Weight: <strong id="totalWeightText">{{ po_obj.total_weight|default:"0.00" }}</strong></div>
-          </div>
-
-          <div class="po-summary-grid">
-            <div class="po-field">
-              <label>Sub Total</label>
-              <input type="text" id="subtotalPreview" value="{{ po_obj.subtotal|default:'0.00' }}" readonly>
-            </div>
-
-            <div class="po-field">
-              <label for="{{ form.discount_percent.id_for_label }}">Discount (%)</label>
-              {{ form.discount_percent }}
-            </div>
-
-            <div class="po-field">
-              <label>After Discount Value</label>
-              <input type="text" id="afterDiscountPreview" value="{{ po_obj.after_discount_value|default:'0.00' }}" readonly>
-            </div>
-
-            <div class="po-field">
-              <label for="{{ form.others.id_for_label }}">Others</label>
-              {{ form.others }}
-            </div>
-
-            <div class="po-field">
-              <label for="{{ form.cgst_percent.id_for_label }}">CGST %</label>
-              {{ form.cgst_percent }}
-            </div>
-
-            <div class="po-field">
-              <label for="{{ form.sgst_percent.id_for_label }}">SGST %</label>
-              {{ form.sgst_percent }}
-            </div>
-
-            <div class="po-field po-span-2">
-              <label>Grand Total</label>
-              <input type="text" id="grandTotalPreview" value="{{ po_obj.grand_total|default:'0.00' }}" readonly>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="po-actionsbar">
-        <button type="submit" class="po-btn primary">Save Yarn PO</button>
-        <a class="po-btn" href="{% url 'accounts:yarnpo_list' %}">Cancel</a>
-      </div>
-    </form>
+    </div>
   </div>
 </section>
 {% endblock %}

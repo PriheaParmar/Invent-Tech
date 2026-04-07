@@ -289,41 +289,6 @@
 </section>
 
 
-<!-- =========================================================
-  SECTION 2: UTILITIES
-========================================================= -->
-<section id="section-utilities" class="page-section">
-  <div class="canvas">
-    <section class="grid util-grid-section">
-      <div class="card soft big c8">
-
-        <div class="card-head util-head">
-          <div>
-            <div class="card-title">Utilities</div>
-            <div class="card-sub">Masters, setup, uploads & configuration — everything in one place.</div>
-          </div>
-
-          <div class="util-search">
-            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21 21l-4.3-4.3"></path>
-              <path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"></path>
-            </svg>
-            <input id="utilSearch" type="text"
-              placeholder="Search utilities… (jobber, shade, greige, bom, catalogue)" />
-          </div>
-        </div>
-
-        <div id="utilSections" class="util-sections"></div>
-
-        <div class="tiny-note" style="margin-top:10px;">
-          Clicking a tile will open the module inside dashboard (no new page).
-        </div>
-
-      </div>
-    </section>
-  </div>
-</section>
-
 {% endblock %}
 {% block extra_js %}
 <script>
@@ -564,50 +529,47 @@
       return u.toString();
     }
 
-    function isMastersUrl(hrefOrAction) {
-      if (!hrefOrAction) return false;
+function isMastersUrl(hrefOrAction) {
+  if (!hrefOrAction) return false;
 
-      const base = LAST_MASTERS_URL || window.location.origin;
+  const base = LAST_MASTERS_URL || window.location.origin;
 
-      let urlObj;
-      try {
-        urlObj = new URL(hrefOrAction, base);
-      } catch {
-        return false;
-      }
+  let urlObj;
+  try {
+    urlObj = new URL(hrefOrAction, base);
+  } catch {
+    return false;
+  }
 
-      const path = (urlObj.pathname || "").replace(/\/+$/, "") + "/";
+  const path = (urlObj.pathname || "").replace(/\/+$/, "") + "/";
 
-      const routeJobber = ROUTES["Jobber"] ? new URL(ROUTES["Jobber"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeType = ROUTES["Jobber Type"] ? new URL(ROUTES["Jobber Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeMaterial = ROUTES["Material / Trim"] ? new URL(ROUTES["Material / Trim"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeParty = ROUTES["Party"] ? new URL(ROUTES["Party"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeVendor = ROUTES["Vendor"] ? new URL(ROUTES["Vendor"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeLocation = ROUTES["Location"] ? new URL(ROUTES["Location"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeMaterialShade = ROUTES["Material Shade"] ? new URL(ROUTES["Material Shade"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const routeMaterialType = ROUTES["Material Type"] ? new URL(ROUTES["Material Type"], window.location.origin).pathname.replace(/\/+$/, "") + "/" : "";
-      const prefixes = [
-        "/master/jobbers/",
-        "/master/jobber-types/",
-        "/master/materials/",
-        "/master/parties/",
-        "/master/vendors/",
-        "/master/locations/",
-        "/master/material-shades/",
-        "/master/material-types/",
+  const allowedRoutes = [
+    ROUTES["Jobber"],
+    ROUTES["Jobber Type"],
+    ROUTES["Material / Trim"],
+    ROUTES["Party"],
+    ROUTES["Vendor"],
+    ROUTES["Location"],
+    ROUTES["Material Shades"],
+    ROUTES["Material Type"],
+  ]
+    .filter(Boolean)
+    .map((u) => new URL(u, window.location.origin).pathname.replace(/\/+$/, "") + "/");
 
-        routeJobber,
-        routeType,
-        routeMaterial,
-        routeParty,
-        routeVendor,
-        routeLocation,
-        routeMaterialShade,
-        routeMaterialType,
-      ].filter(Boolean);
+  const prefixes = [
+    "/master/jobbers/",
+    "/master/jobber-types/",
+    "/master/materials/",
+    "/master/parties/",
+    "/master/vendors/",
+    "/master/locations/",
+    "/master/material-shades/",
+    "/master/material-types/",
+    ...allowedRoutes,
+  ];
 
-      return prefixes.some((p) => path.startsWith(p));
-    }
+  return prefixes.some((p) => path.startsWith(p));
+}
 
     function bootUtilities() {
       const container = document.getElementById("utilSections");

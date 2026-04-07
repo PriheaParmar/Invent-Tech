@@ -3,7 +3,9 @@
 
 {% block title %}Utilities - InventTech{% endblock %}
 {% block extra_head %}
+{% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/utilities.css' %}">
+{% endblock %}
 {% endblock %}
 
 {% block content %}
@@ -694,8 +696,12 @@
 
   function bootUtilities() {
     const container = document.getElementById("utilSections");
+    const panel = document.getElementById("mastersEmbedPanel");
+    const mount = document.getElementById("mastersEmbedMount");
+    const utilitiesRoot = document.getElementById("section-utilities");
     const input = document.getElementById("utilSearch");
-    if (!container || !input) return;
+
+    if (!container || !panel || !mount || !utilitiesRoot || !input) return;
 
     renderUtilities("");
 
@@ -703,7 +709,7 @@
       renderUtilities(this.value);
     });
 
-    container.addEventListener("click", function (e) {
+    utilitiesRoot.addEventListener("click", function (e) {
       const closeBtn = e.target.closest("[data-embed-close]");
       if (closeBtn) {
         e.preventDefault();
@@ -736,7 +742,7 @@
       }
     });
 
-    container.addEventListener("submit", function (e) {
+    utilitiesRoot.addEventListener("submit", function (e) {
       const form = e.target.closest("form");
       if (!form) return;
 
