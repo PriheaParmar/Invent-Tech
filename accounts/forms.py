@@ -19,6 +19,7 @@ from .models import (
     Location,
     Firm,
     MaterialShade,
+    MaterialSubType,
     MaterialType,
     Vendor,
     YarnPurchaseOrder,
@@ -121,6 +122,27 @@ class CustomUserCreationForm(UserCreationForm):
 # MATERIALS
 # ============================================================
 
+
+
+class MaterialTypeSelect(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+        if value:
+            obj = self.choices.queryset.filter(pk=value).first() if hasattr(self.choices, "queryset") else None
+            if obj is not None:
+                option.setdefault("attrs", {})["data-kind"] = obj.material_kind or ""
+        return option
+
+
+class MaterialSubTypeSelect(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+        if value:
+            obj = self.choices.queryset.filter(pk=value).first() if hasattr(self.choices, "queryset") else None
+            if obj is not None:
+                option.setdefault("attrs", {})["data-kind"] = obj.material_kind or ""
+                option.setdefault("attrs", {})["data-material-type"] = str(obj.material_type_id or "")
+        return option
 class MaterialForm(forms.Form):
     material_kind = forms.ChoiceField(
         choices=Material.MATERIAL_KIND_CHOICES,
@@ -132,6 +154,13 @@ class MaterialForm(forms.Form):
         queryset=MaterialType.objects.none(),
         required=False,
         empty_label="Select Material Type",
+        widget=MaterialTypeSelect(),
+    )
+    material_sub_type = forms.ModelChoiceField(
+        queryset=MaterialSubType.objects.none(),
+        required=False,
+        empty_label="Select Material Sub Type",
+        widget=MaterialSubTypeSelect(),
     )
     material_shade = forms.ModelChoiceField(
         queryset=MaterialShade.objects.none(),
@@ -191,6 +220,21 @@ class MaterialForm(forms.Form):
             type_qs = type_qs.filter(material_kind=kind)
         type_qs = type_qs.order_by("name")
 
+        sub_type_qs = MaterialSubType.objects.all()
+        if user is not None:
+            sub_type_qs = sub_type_qs.filter(owner=user)
+        if kind:
+            sub_type_qs = sub_type_qs.filter(material_kind=kind)
+
+        selected_type_id = (
+            (self.data.get("material_type") or "").strip()
+            or str(self.initial.get("material_type") or "").strip()
+            or str(getattr(instance, "material_type_id", "") or "").strip()
+        )
+        if selected_type_id.isdigit():
+            sub_type_qs = sub_type_qs.filter(material_type_id=int(selected_type_id))
+        sub_type_qs = sub_type_qs.select_related("material_type").order_by("material_type__name", "name")
+
         shade_qs = MaterialShade.objects.all()
         if user is not None:
             shade_qs = shade_qs.filter(owner=user)
@@ -199,15 +243,18 @@ class MaterialForm(forms.Form):
         shade_qs = shade_qs.order_by("name")
 
         self.fields["material_type"].queryset = type_qs
+        self.fields["material_sub_type"].queryset = sub_type_qs
         self.fields["material_shade"].queryset = shade_qs
 
         self.fields["material_type"].label_from_instance = lambda o: f"{o.get_material_kind_display()} — {o.name}"
+        self.fields["material_sub_type"].label_from_instance = lambda o: f"{o.material_type.name} — {o.name}"
         self.fields["material_shade"].label_from_instance = lambda o: f"{o.get_material_kind_display()} — {o.name}"
 
         if instance and not self.is_bound:
             self.initial.update({
                 "material_kind": instance.material_kind,
                 "material_type": instance.material_type_id,
+                "material_sub_type": instance.material_sub_type_id,
                 "material_shade": instance.material_shade_id,
                 "name": instance.name,
                 "remarks": instance.remarks,
@@ -262,6 +309,14 @@ class MaterialForm(forms.Form):
         if k and mt and mt.material_kind != k:
             self.add_error("material_type", "Selected Material Type does not belong to selected Kind.")
 
+        mst = cd.get("material_sub_type")
+        if mst and not mt:
+            self.add_error("material_type", "Select Material Type before choosing Material Sub Type.")
+        if k and mst and mst.material_kind != k:
+            self.add_error("material_sub_type", "Selected Material Sub Type does not belong to selected Kind.")
+        if mt and mst and mst.material_type_id != mt.id:
+            self.add_error("material_sub_type", "Selected Material Sub Type does not belong to selected Material Type.")
+
         ms = cd.get("material_shade")
         if k and ms and ms.material_kind != k:
             self.add_error("material_shade", "Selected Material Shade does not belong to selected Kind.")
@@ -278,6 +333,7 @@ class MaterialForm(forms.Form):
         material = self.instance or Material()
         material.material_kind = k
         material.material_type = cd.get("material_type")
+        material.material_sub_type = cd.get("material_sub_type")
         material.material_shade = cd.get("material_shade")
         material.name = cd["name"]
         material.remarks = cd.get("remarks", "")
@@ -443,6 +499,57 @@ class MaterialTypeForm(forms.ModelForm):
             "material_kind": forms.RadioSelect(choices=Material.MATERIAL_KIND_CHOICES),
             "description": forms.Textarea(attrs={"rows": 3}),
         }
+
+
+
+
+class MaterialSubTypeForm(forms.ModelForm):
+    class Meta:
+        model = MaterialSubType
+        fields = ["material_kind", "material_type", "name", "description"]
+        widgets = {
+            "material_kind": forms.RadioSelect(choices=Material.MATERIAL_KIND_CHOICES),
+            "material_type": MaterialTypeSelect(),
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+        type_qs = MaterialType.objects.all()
+        if user is not None:
+            type_qs = type_qs.filter(owner=user)
+        type_qs = type_qs.order_by("name")
+
+        self.fields["material_type"].queryset = type_qs
+        self.fields["material_type"].empty_label = "Select Material Type"
+        self.fields["material_type"].label_from_instance = lambda o: f"{o.get_material_kind_display()} — {o.name}"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        material_kind = cleaned_data.get("material_kind")
+        material_type = cleaned_data.get("material_type")
+        name = (cleaned_data.get("name") or "").strip()
+
+        if self.user is not None and material_type and material_type.owner_id != self.user.id:
+            self.add_error("material_type", "Selected Material Type is not available for this user.")
+
+        if material_kind and material_type and material_type.material_kind != material_kind:
+            self.add_error("material_type", "Selected Material Type does not belong to selected Kind.")
+
+        if self.user is not None and material_type and name:
+            qs = MaterialSubType.objects.filter(
+                owner=self.user,
+                material_type=material_type,
+                name__iexact=name,
+            )
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                self.add_error("name", "This material sub type already exists for the selected material type.")
+
+        return cleaned_data
 
 
 # ============================================================

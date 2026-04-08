@@ -1,169 +1,411 @@
 {% extends "accounts/base_app.html" %}
 {% block title %}PO - InventTech{% endblock %}
 {% block page_title %}Purchase Orders{% endblock %}
-{% block page_subtitle %}Create and manage purchase orders across yarn, greige, dyed and ready fabric{% endblock %}
+{% block page_subtitle %}Yarn, Greige, Dyeing{% endblock %}
 
 {% block content %}
 <style>
-  .po-note{
-    margin-top: 10px;
-    color: rgba(15,23,42,.55);
-    font-size: 12px;
-  }
-
-  .po-soon{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    margin-top: 8px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    background: rgba(250,189,100,.16);
-    border: 1px solid rgba(250,189,100,.28);
-    color: rgba(15,23,42,.75);
-  }
-
-  .po-page-shell{
+  .po-wrap{
     grid-column: 1 / -1;
   }
 
-  #poSearch{
-    width: 320px;
+  .po-card{
+    padding: 20px;
+    border-radius: 24px;
   }
 
-  @media (max-width: 900px){
-    #poSearch{ width: 100%; }
+  .po-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+
+  .po-head-title{
+    font-size:22px;
+    font-weight:900;
+    letter-spacing:-.03em;
+    color:#0f172a;
+  }
+
+  .po-search{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:260px;
+    padding:10px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,.82);
+    border:1px solid rgba(15,23,42,.10);
+  }
+
+  .po-search .ico{
+    width:17px;
+    height:17px;
+    color:rgba(15,23,42,.45);
+  }
+
+  .po-search input{
+    width:100%;
+    border:none;
+    outline:none;
+    background:transparent;
+    font-size:13px;
+    color:#0f172a;
+  }
+
+  .po-flow{
+    display:grid;
+    grid-template-columns:repeat(6, minmax(0,1fr));
+    gap:10px;
+    margin-bottom:18px;
+  }
+
+  .po-flow-item{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:50px;
+    padding:10px;
+    border-radius:14px;
+    font-size:12px;
+    font-weight:800;
+    color:#0f172a;
+    background:rgba(255,255,255,.88);
+    border:1px solid rgba(15,23,42,.08);
+  }
+
+  .po-flow-item::after{
+    content:"→";
+    position:absolute;
+    right:-10px;
+    top:50%;
+    transform:translateY(-50%);
+    width:20px;
+    height:20px;
+    display:grid;
+    place-items:center;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.08);
+    color:rgba(15,23,42,.55);
+    font-size:11px;
+    font-weight:900;
+  }
+
+  .po-flow-item:last-child::after{
+    display:none;
+  }
+
+  .po-sections{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .po-section{
+    padding:16px;
+    border-radius:20px;
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(15,23,42,.08);
+  }
+
+  .po-section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+  }
+
+  .po-section-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .po-badge{
+    min-width:32px;
+    height:32px;
+    padding:0 10px;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.08em;
+    background:rgba(238,61,133,.10);
+    color:rgba(238,61,133,1);
+    border:1px solid rgba(238,61,133,.18);
+  }
+
+  .po-name{
+    font-size:15px;
+    font-weight:850;
+    color:#0f172a;
+  }
+
+  .po-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:12px;
+  }
+
+  .po-tile{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:14px;
+    border-radius:16px;
+    text-decoration:none;
+    color:inherit;
+    background:rgba(255,255,255,.9);
+    border:1px solid rgba(15,23,42,.08);
+    transition:.16s ease;
+  }
+
+  .po-tile:hover{
+    transform:translateY(-2px);
+    border-color:rgba(28,109,216,.18);
+    
+    border:1px solid rgba(28, 109, 216, 1);
+    box-shadow:0 14px 34px rgba(15,23,42,.08);
+  }
+
+  .po-ico-box{
+    width:42px;
+    height:42px;
+    border-radius:12px;
+    display:grid;
+    place-items:center;
+    background:rgba(15,23,42,.04);
+    border:1px solid rgba(15,23,42,.08);
+    flex:0 0 auto;
+  }
+
+  .po-ico{
+    width:20px;
+    height:20px;
+    color:rgba(238,61,133,1);
+  }
+
+  .po-tile-title{
+    font-size:14px;
+    font-weight:800;
+    color:#0f172a;
+    margin-bottom:2px;
+  }
+
+  .po-tile-sub{
+    font-size:12px;
+    color:rgba(15,23,42,.56);
+    line-height:1.5;
+  }
+
+  .po-empty{
+    display:none;
+    padding:14px;
+    border-radius:14px;
+    background:rgba(255,255,255,.82);
+    border:1px dashed rgba(15,23,42,.12);
+    font-size:12px;
+    color:rgba(15,23,42,.56);
+  }
+
+  @media (max-width: 980px){
+    .po-flow{
+      grid-template-columns:repeat(3, minmax(0,1fr));
+    }
+
+    .po-flow-item:nth-child(3)::after{
+      display:none;
+    }
+  }
+
+  @media (max-width: 760px){
+    .po-grid{
+      grid-template-columns:1fr;
+    }
+
+    .po-flow{
+      grid-template-columns:repeat(2, minmax(0,1fr));
+    }
+
+    .po-flow-item:nth-child(2)::after,
+    .po-flow-item:nth-child(4)::after{
+      display:none;
+    }
+
+    .po-search{
+      width:100%;
+      min-width:0;
+    }
+  }
+
+  @media (max-width: 520px){
+    .po-flow{
+      grid-template-columns:1fr;
+    }
+
+    .po-flow-item::after{
+      display:none;
+    }
   }
 </style>
 
 <section class="page-section is-active">
   <div class="canvas">
-    <section class="grid util-grid-section po-page-shell">
-      <div class="card soft big c8">
+    <section class="grid util-grid-section po-wrap">
+      <div class="card soft big c8 po-card">
 
-        <div class="card-head util-head">
-          <div>
-            <div class="card-title">PO</div>
-            <div class="card-sub">Choose the purchase order type you want to generate.</div>
-          </div>
+        <div class="po-head">
+          <div class="po-head-title">PO Workflow</div>
 
-          <div class="util-search">
+          <label class="po-search" aria-label="Search purchase order modules">
             <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M21 21l-4.3-4.3"></path>
               <path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"></path>
             </svg>
-            <input id="poSearch" type="text" placeholder="Search PO type…">
-          </div>
+            <input id="poSearch" type="text" placeholder="Search PO or inward">
+          </label>
         </div>
 
-        <div class="util-layout">
-          <div class="util-row util-row-1">
-            <div class="util-group" data-tag="po" style="grid-column: span 8; --cols:8;">
-              <div class="util-group-head">
-                <div class="util-group-title">PURCHASE ORDERS</div>
-                <div class="util-group-line"></div>
-                <div class="util-group-count">6</div>
+        <div class="po-flow">
+          <div class="po-flow-item">Yarn PO</div>
+          <div class="po-flow-item">Yarn Inward</div>
+          <div class="po-flow-item">Greige PO</div>
+          <div class="po-flow-item">Greige Inward</div>
+          <div class="po-flow-item">Dyeing PO</div>
+          <div class="po-flow-item">Dyeing Inward</div>
+        </div>
+
+        <div class="po-sections">
+
+          <div class="po-section po-stage">
+            <div class="po-section-head">
+              <div class="po-section-title">
+                <span class="po-badge">01</span>
+                <div class="po-name">Yarn</div>
               </div>
+            </div>
 
-              <div class="util-group-grid" id="poTiles">
+            <div class="po-grid">
+              <a class="po-tile po-search-item" href="{% url 'accounts:yarnpo_list' %}" data-search="yarn yarn po purchase order procurement">
+                <div class="po-ico-box">
+                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 7h10v10H7z"></path>
+                    <path d="M9 3v4"></path>
+                    <path d="M15 3v4"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="po-tile-title">Yarn PO</div>
+                  <div class="po-tile-sub">Create and manage yarn purchase orders.</div>
+                </div>
+              </a>
 
-  <a class="util-tile" href="{% url 'accounts:yarnpo_list' %}" data-title="Yarn PO">
-    <span class="util-ico">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M7 7h10v10H7z"></path>
-        <path d="M9 3v4"></path>
-        <path d="M15 3v4"></path>
-        <path d="M3 9h4"></path>
-        <path d="M17 9h4"></path>
-      </svg>
-    </span>
-    <div class="util-meta">
-      <div class="util-title">Yarn PO</div>
-      <div class="po-note">Create and manage yarn purchase orders.</div>
-    </div>
-  </a>
-
-  <a class="util-tile" href="{% url 'accounts:yarn_inward_tracker' %}" data-title="Yarn Inwards">
-    <span class="util-ico">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M8 7h8"></path>
-        <path d="M6 12h12"></path>
-        <path d="M4 17h16"></path>
-      </svg>
-    </span>
-    <div class="util-meta">
-      <div class="util-title">Yarn Inwards</div>
-      <div class="po-note">Track inwarded Yarn POs and start greige process.</div>
-    </div>
-  </a>
-
-  <a class="util-tile" href="{% url 'accounts:greigepo_list' %}" data-title="Greige PO">
-    <span class="util-ico">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 7h16"></path>
-        <path d="M4 12h16"></path>
-        <path d="M4 17h16"></path>
-      </svg>
-    </span>
-    <div class="util-meta">
-      <div class="util-title">Greige PO</div>
-      <div class="po-note">Generate and track Greige POs from inwarded Yarn POs.</div>
-    </div>
-  </a>
-
-  <a class="util-tile" href="{% url 'accounts:dyeing_inward_tracker' %}" data-title="Dyeing Inwards">
-    <span class="util-ico">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 3c3 4 5 6.6 5 9a5 5 0 1 1-10 0c0-2.4 2-5 5-9z"></path>
-        <path d="M7 17h10"></path>
-      </svg>
-    </span>
-    <div class="util-meta">
-      <div class="util-title">Dyeing Inwards</div>
-      <div class="po-note">Track inwarded Dyeing POs before finished lot handling.</div>
-    </div>
-  </a>
-
-  <a class="util-tile" href="{% url 'accounts:dyeingpo_list' %}" data-title="Dyeing PO">
-    <span class="util-ico">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 3c3 4 5 6.6 5 9a5 5 0 1 1-10 0c0-2.4 2-5 5-9z"></path>
-      </svg>
-    </span>
-    <div class="util-meta">
-      <div class="util-title">Dyeing PO</div>
-      <div class="po-note">Continue greige inward flow into dyeing purchase orders.</div>
-    </div>
-  </a>
-
-  <a class="util-tile" href="#" data-title="Ready Fabric PO" data-soon="1">
-    <span class="util-ico">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M5 6h14v12H5z"></path>
-        <path d="M9 10h6"></path>
-        <path d="M9 14h4"></path>
-      </svg>
-    </span>
-    <div class="util-meta">
-      <div class="util-title">Ready Fabric PO</div>
-      <div class="po-note">For ready/finished fabric procurement.</div>
-      <div class="po-soon">Coming next</div>
-    </div>
-  </a>
-
-</div>
+              <a class="po-tile po-search-item" href="{% url 'accounts:yarn_inward_tracker' %}" data-search="yarn inward inwards tracker receipt">
+                <div class="po-ico-box">
+                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 7h8"></path>
+                    <path d="M6 12h12"></path>
+                    <path d="M4 17h16"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="po-tile-title">Yarn Inwards</div>
+                  <div class="po-tile-sub">Track inward and continue to Greige.</div>
+                </div>
+              </a>
             </div>
           </div>
-        </div>
 
-        <div class="tiny-note" style="margin-top:10px;">
-          Yarn, Greige, Dyeing, and inward tracking now follow the same connected purchase-order structure.
-        </div>
+          <div class="po-section po-stage">
+            <div class="po-section-head">
+              <div class="po-section-title">
+                <span class="po-badge">02</span>
+                <div class="po-name">Greige</div>
+              </div>
+            </div>
 
+            <div class="po-grid">
+              <a class="po-tile po-search-item" href="{% url 'accounts:greigepo_list' %}" data-search="greige greige po purchase order">
+                <div class="po-ico-box">
+                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16"></path>
+                    <path d="M4 12h16"></path>
+                    <path d="M4 17h16"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="po-tile-title">Greige PO</div>
+                  <div class="po-tile-sub">Manage greige orders from yarn flow.</div>
+                </div>
+              </a>
+
+              <a class="po-tile po-search-item" href="{% url 'accounts:greige_inward_tracker' %}" data-search="greige inward inwards tracker">
+                <div class="po-ico-box">
+                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 6h10"></path>
+                    <path d="M5 12h14"></path>
+                    <path d="M3 18h18"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="po-tile-title">Greige Inwards</div>
+                  <div class="po-tile-sub">Track inward and continue to Dyeing.</div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <div class="po-section po-stage">
+            <div class="po-section-head">
+              <div class="po-section-title">
+                <span class="po-badge">03</span>
+                <div class="po-name">Dyeing</div>
+              </div>
+            </div>
+
+            <div class="po-grid">
+              <a class="po-tile po-search-item" href="{% url 'accounts:dyeingpo_list' %}" data-search="dyeing dyeing po purchase order">
+                <div class="po-ico-box">
+                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3c3 4 5 6.6 5 9a5 5 0 1 1-10 0c0-2.4 2-5 5-9z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="po-tile-title">Dyeing PO</div>
+                  <div class="po-tile-sub">Manage dyeing orders from greige flow.</div>
+                </div>
+              </a>
+
+              <a class="po-tile po-search-item" href="{% url 'accounts:dyeing_inward_tracker' %}" data-search="dyeing inward inwards tracker">
+                <div class="po-ico-box">
+                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 7h12"></path>
+                    <path d="M4 12h16"></path>
+                    <path d="M8 17h8"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="po-tile-title">Dyeing Inwards</div>
+                  <div class="po-tile-sub">Track dyed inward quantities.</div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <div id="poEmptyState" class="po-empty">
+            No matching modules found.
+          </div>
+
+        </div>
       </div>
     </section>
   </div>
@@ -174,22 +416,34 @@
 <script>
   (function () {
     const input = document.getElementById("poSearch");
-    const tiles = Array.from(document.querySelectorAll("#poTiles .util-tile"));
+    const items = Array.from(document.querySelectorAll(".po-search-item"));
+    const stages = Array.from(document.querySelectorAll(".po-stage"));
+    const emptyState = document.getElementById("poEmptyState");
 
-    input?.addEventListener("input", () => {
-      const q = (input.value || "").toLowerCase().trim();
+    function applySearch() {
+      const q = (input?.value || "").toLowerCase().trim();
+      let visibleCount = 0;
 
-      tiles.forEach((tile) => {
-        const title = (tile.dataset.title || "").toLowerCase();
-        tile.style.display = (!q || title.includes(q)) ? "" : "none";
+      items.forEach((item) => {
+        const text = (item.dataset.search || "").toLowerCase();
+        const matched = !q || text.includes(q);
+        item.style.display = matched ? "" : "none";
+        if (matched) visibleCount += 1;
       });
-    });
 
-    document.querySelectorAll('#poTiles .util-tile[data-soon="1"]').forEach((tile) => {
-      tile.addEventListener("click", (e) => {
-        e.preventDefault();
+      stages.forEach((stage) => {
+        const hasVisible = Array.from(stage.querySelectorAll(".po-search-item"))
+          .some((item) => item.style.display !== "none");
+        stage.style.display = hasVisible ? "" : "none";
       });
-    });
+
+      if (emptyState) {
+        emptyState.style.display = visibleCount ? "none" : "block";
+      }
+    }
+
+    input?.addEventListener("input", applySearch);
+    applySearch();
   })();
 </script>
 {% endblock %}

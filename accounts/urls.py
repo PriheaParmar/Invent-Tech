@@ -70,6 +70,13 @@ urlpatterns = [
     path("master/material-types/<int:pk>/edit/", views.materialtype_update, name="materialtype_edit"),
     path("master/material-types/<int:pk>/delete/", views.materialtype_delete, name="materialtype_delete"),
 
+
+    # Material Sub Types
+    path("master/material-sub-types/", views.materialsubtype_list, name="materialsubtype_list"),
+    path("master/material-sub-types/add/", views.materialsubtype_create, name="materialsubtype_add"),
+    path("master/material-sub-types/<int:pk>/edit/", views.materialsubtype_update, name="materialsubtype_edit"),
+    path("master/material-sub-types/<int:pk>/delete/", views.materialsubtype_delete, name="materialsubtype_delete"),
+
     # Vendor master
     path("master/vendors/", views.vendor_list, name="vendor_list"),
     path("master/vendors/add/", views.vendor_create, name="vendor_add"),

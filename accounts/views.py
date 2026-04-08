@@ -37,6 +37,7 @@ from .forms import (
     LocationForm,
     MaterialForm,
     MaterialShadeForm,
+    MaterialSubTypeForm,
     MaterialTypeForm,
     PartyForm,
     VendorForm,
@@ -61,6 +62,7 @@ from .models import (
     Location,
     Material,
     MaterialShade,
+    MaterialSubType,
     MaterialType,
     Party,
     UserExtra,
@@ -591,7 +593,15 @@ def material_create(request):
 @require_http_methods(["GET", "POST"])
 def material_edit(request, pk: int):
     material = get_object_or_404(
-        Material.objects.select_related("yarn", "greige", "finished", "trim"),
+        Material.objects.select_related(
+            "material_type",
+            "material_sub_type",
+            "material_shade",
+            "yarn",
+            "greige",
+            "finished",
+            "trim",
+        ),
         pk=pk,
     )
 
@@ -631,23 +641,44 @@ def material_edit(request, pk: int):
 def material_list(request):
     q = (request.GET.get("q") or "").strip()
     selected_type = (request.GET.get("type") or "").strip()
+    selected_sub_type = (request.GET.get("sub_type") or "").strip()
 
-    qs = Material.objects.all().order_by("-id").select_related("yarn", "greige", "finished", "trim")
+    qs = Material.objects.all().order_by("-id").select_related(
+        "material_type",
+        "material_sub_type",
+        "material_shade",
+        "yarn",
+        "greige",
+        "finished",
+        "trim",
+    )
 
     if selected_type.isdigit():
         qs = qs.filter(material_type_id=int(selected_type))
+
+    if selected_sub_type.isdigit():
+        qs = qs.filter(material_sub_type_id=int(selected_sub_type))
 
     if q:
         qs = qs.filter(
             Q(name__icontains=q)
             | Q(remarks__icontains=q)
+            | Q(material_type__name__icontains=q)
+            | Q(material_sub_type__name__icontains=q)
+            | Q(material_shade__name__icontains=q)
         )
+
+    sub_type_choices = MaterialSubType.objects.filter(owner=request.user).select_related("material_type").order_by("material_type__name", "name")
+    if selected_type.isdigit():
+        sub_type_choices = sub_type_choices.filter(material_type_id=int(selected_type))
 
     ctx = {
         "materials": qs,
         "q": q,
         "selected_type": selected_type,
+        "selected_sub_type": selected_sub_type,
         "type_choices": MaterialType.objects.filter(owner=request.user).order_by("name"),
+        "sub_type_choices": sub_type_choices,
     }
 
     tpl = "accounts/materials/list_embed.html" if _is_embed(request) else "accounts/materials/list_page.html"
@@ -1051,6 +1082,103 @@ def materialtype_delete(request, pk: int):
     mt.delete()
 
     url = reverse("accounts:materialtype_list")
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+
+
+
+def _materialsubtype_list_url(request):
+    url = reverse("accounts:materialsubtype_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
+@login_required
+def materialsubtype_list(request):
+    q = (request.GET.get("q") or "").strip()
+    selected_kind = (request.GET.get("kind") or "").strip()
+    selected_type = (request.GET.get("type") or "").strip()
+
+    qs = MaterialSubType.objects.filter(owner=request.user).select_related("material_type").order_by("material_type__name", "name")
+
+    if selected_kind:
+        qs = qs.filter(material_kind=selected_kind)
+
+    if selected_type.isdigit():
+        qs = qs.filter(material_type_id=int(selected_type))
+
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q)
+            | Q(description__icontains=q)
+            | Q(material_type__name__icontains=q)
+        )
+
+    type_choices = MaterialType.objects.filter(owner=request.user).order_by("name")
+    if selected_kind:
+        type_choices = type_choices.filter(material_kind=selected_kind)
+
+    ctx = {
+        "sub_types": qs,
+        "q": q,
+        "selected_kind": selected_kind,
+        "selected_type": selected_type,
+        "kind_choices": Material.MATERIAL_KIND_CHOICES,
+        "type_choices": type_choices,
+    }
+    tpl = "accounts/material_sub_types/list_embed.html" if _is_embed(request) else "accounts/material_sub_types/list.html"
+    return render(request, tpl, ctx)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def materialsubtype_create(request):
+    form = MaterialSubTypeForm(request.POST or None, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _materialsubtype_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    tpl = "accounts/material_sub_types/form_embed.html" if _is_embed(request) else "accounts/material_sub_types/form.html"
+    return render(request, tpl, {"form": form, "mode": "add"})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def materialsubtype_update(request, pk: int):
+    sub_type = get_object_or_404(MaterialSubType, pk=pk, owner=request.user)
+    form = MaterialSubTypeForm(request.POST or None, instance=sub_type, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _materialsubtype_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    tpl = "accounts/material_sub_types/form_embed.html" if _is_embed(request) else "accounts/material_sub_types/form.html"
+    return render(request, tpl, {"form": form, "mode": "edit", "material_sub_type": sub_type})
+
+
+@login_required
+@require_POST
+def materialsubtype_delete(request, pk: int):
+    sub_type = get_object_or_404(MaterialSubType, pk=pk, owner=request.user)
+    sub_type.delete()
+
+    url = _materialsubtype_list_url(request)
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
@@ -2528,6 +2656,10 @@ def dyeingpo_detail(request, pk: int):
         },
     )
 
+def _next_dyeing_inward_number() -> str:
+    last = DyeingPOInward.objects.order_by("-id").first()
+    next_id = (last.id + 1) if last else 1
+    return f"DIN-{next_id:04d}"
 
 @login_required
 @require_POST

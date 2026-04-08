@@ -59,6 +59,12 @@ UTILITIES_GROUPS = [
                 "kind": "embed",
             },
             {
+                "title": "Material Sub Types",
+                "subtitle": "Link reusable sub types under each material type.",
+                "url_name": "accounts:materialsubtype_list",
+                "kind": "embed",
+            },
+            {
                 "title": "Material Shades",
                 "subtitle": "Maintain reusable shades and codes.",
                 "url_name": "accounts:materialshade_list",

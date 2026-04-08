@@ -89,7 +89,6 @@ class Jobber(OwnedModel):
 # ============================================================
 
 class Material(models.Model):
-    # ✅ Needed because your forms.py uses Material.MATERIAL_KIND_CHOICES
     MATERIAL_KIND_CHOICES = [
         ("yarn", "Yarn"),
         ("greige", "Greige"),
@@ -103,9 +102,16 @@ class Material(models.Model):
         default="yarn",
     )
 
-    # Step 2 (master-driven)
     material_type = models.ForeignKey(
         "MaterialType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="materials",
+    )
+
+    material_sub_type = models.ForeignKey(
+        "MaterialSubType",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -241,22 +247,20 @@ class Party(models.Model):
     phone_number = models.CharField(max_length=15, blank=True)
     email = models.EmailField(blank=True)
 
+    bank_name = models.CharField(max_length=120, blank=True)
+    account_number = models.CharField(max_length=30, blank=True)
+    ifsc_code = models.CharField(max_length=20, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-id"]
+        ordering = ["party_name"]
 
     def __str__(self):
         return self.party_name
 
 
-# ============================================================
-# LOCATION
-# ============================================================
-
-class Location(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="locations")
+class Location(OwnedModel):
     name = models.CharField(max_length=120)
     city = models.CharField(max_length=80, blank=True, default="")
     state = models.CharField(max_length=80, blank=True, default="")
@@ -307,6 +311,30 @@ class MaterialShade(OwnedModel):
         return self.name
 
 
+class MaterialSubType(OwnedModel):
+    material_kind = models.CharField(
+        max_length=20,
+        choices=MATERIAL_KIND_CHOICES,
+        db_index=True,
+        null=True,
+        blank=True,
+    )
+    material_type = models.ForeignKey(
+        MaterialType,
+        on_delete=models.CASCADE,
+        related_name="sub_types",
+    )
+    name = models.CharField(max_length=120)
+    description = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("owner", "material_type", "name")]
+
+    def __str__(self):
+        return self.name
+
+
 # ============================================================
 # FIRM
 # ============================================================
@@ -328,34 +356,37 @@ class Firm(models.Model):
         INDIVIDUAL = "individual", "Individual"
         STARTUP = "startup", "Startup"
         OTHER = "other", "Other"
-    firm_type = models.CharField(max_length=30, choices=FIRM_TYPES)
-    
-    address_line = models.CharField(max_length=255)
-    city = models.CharField(max_length=80)
-    state = models.CharField(max_length=80)
-    pincode = models.CharField(max_length=10)
 
-    phone = models.CharField(max_length=20, blank=True, default="")
-    email = models.EmailField(blank=True, default="")
-    website = models.URLField(blank=True, default="")
+    firm_type = models.CharField(max_length=20, choices=FirmType.choices, default=FirmType.COMPANY)
+    address_line = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    pincode = models.CharField(max_length=12, blank=True)
 
-    gst_number = models.CharField(max_length=15, blank=True, default="")
-    pan_number = models.CharField(max_length=10, blank=True, default="")
-    tan_number = models.CharField(max_length=10, blank=True, default="")
-    cin_number = models.CharField(max_length=21, blank=True, default="")
+    phone = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    website = models.URLField(blank=True)
 
-    bank_name = models.CharField(max_length=120, blank=True, default="")
-    account_holder_name = models.CharField(max_length=120, blank=True, default="")
-    account_number = models.CharField(max_length=30, blank=True, default="")
-    ifsc_code = models.CharField(max_length=11, blank=True, default="")
-    branch_name = models.CharField(max_length=120, blank=True, default="")
+    gst_number = models.CharField(max_length=20, blank=True)
+    pan_number = models.CharField(max_length=20, blank=True)
+    tan_number = models.CharField(max_length=20, blank=True)
+    cin_number = models.CharField(max_length=30, blank=True)
 
-    updated_at = models.DateTimeField(auto_now=True)
+    bank_name = models.CharField(max_length=120, blank=True)
+    account_holder_name = models.CharField(max_length=120, blank=True)
+    account_number = models.CharField(max_length=40, blank=True)
+    ifsc_code = models.CharField(max_length=20, blank=True)
+    branch_name = models.CharField(max_length=120, blank=True)
+
+    logo = models.ImageField(upload_to="firm_logos/", blank=True, null=True)
 
     def __str__(self):
         return self.firm_name
-    
-    
+
+    @property
+    def full_address(self):
+        parts = [self.address_line, self.city, self.state, self.pincode]
+        return ", ".join([p for p in parts if p])
 
 
 
@@ -389,8 +420,20 @@ class YarnPurchaseOrder(OwnedModel):
     po_number = models.CharField(max_length=30, blank=True, default="")
     po_date = models.DateField()
     cancel_date = models.DateField(null=True, blank=True)
-    vendor = models.ForeignKey("Vendor", on_delete=models.PROTECT, related_name="yarn_purchase_orders")
-    firm = models.ForeignKey("Firm", on_delete=models.SET_NULL, null=True, blank=True, related_name="yarn_purchase_orders")
+
+    vendor = models.ForeignKey(
+        "Vendor",
+        on_delete=models.PROTECT,
+        related_name="yarn_purchase_orders",
+    )
+    firm = models.ForeignKey(
+        "Firm",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="yarn_purchase_orders",
+    )
+
     shipping_address = models.TextField(blank=True, default="")
     remarks = models.TextField(blank=True, default="")
     terms_conditions = models.TextField(blank=True, default="")
@@ -409,15 +452,12 @@ class YarnPurchaseOrder(OwnedModel):
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
 
-
     approval_status = models.CharField(
         max_length=20,
         choices=ApprovalStatus.choices,
         default=ApprovalStatus.PENDING,
     )
-
     rejection_reason = models.TextField(blank=True, default="")
-
     reviewed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -425,7 +465,6 @@ class YarnPurchaseOrder(OwnedModel):
         on_delete=models.SET_NULL,
         related_name="reviewed_yarn_purchase_orders",
     )
-
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     @property
@@ -441,27 +480,6 @@ class YarnPurchaseOrder(OwnedModel):
         ordered = self.total_weight or Decimal("0")
         inward = self.total_inward_qty or Decimal("0")
         return ordered - inward if ordered > inward else Decimal("0")
-
-    class ApprovalStatus(models.TextChoices):
-        PENDING = "pending", "Pending"
-        APPROVED = "approved", "Approved"
-        REJECTED = "rejected", "Rejected"
-
-    approval_status = models.CharField(
-        max_length=20,
-        choices=ApprovalStatus.choices,
-        default=ApprovalStatus.PENDING,
-    )
-
-    reviewed_by = models.ForeignKey(
-        User,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="reviewed_yarn_pos",
-    )
-
-    reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-id"]
