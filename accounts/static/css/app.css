@@ -2169,7 +2169,7 @@ body.modal-open{
 }
 
 /* make all widgets clean */
-.material-form-embed input,
+.material-form-embed input:not([type="radio"]):not([type="checkbox"]),
 .material-form-embed select,
 .material-form-embed textarea{
   width: 100% !important;
@@ -2181,6 +2181,31 @@ body.modal-open{
   background: rgba(255,255,255,.92);
   outline: none;
   appearance: none;
+}
+
+.material-form-embed input[type="radio"]{
+  width: 16px !important;
+  height: 16px;
+  padding: 0;
+  margin: 2px 0 0;
+  border: 0;
+  background: transparent;
+  appearance: auto;
+  accent-color: var(--orange);
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.material-form-embed input[type="checkbox"]{
+  width: 16px !important;
+  height: 16px;
+  padding: 0;
+  margin: 2px 0 0;
+  border: 0;
+  background: transparent;
+  appearance: auto;
+  flex: 0 0 auto;
+  cursor: pointer;
 }
 
 .material-form-embed textarea{

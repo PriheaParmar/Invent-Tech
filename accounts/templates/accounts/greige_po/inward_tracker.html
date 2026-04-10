@@ -4,7 +4,6 @@
 {% block page_subtitle %}Track inwarded Greige POs and start Dyeing PO generation{% endblock %}
 
 {% block content %}
-{% include 'accounts/po/_po_nav.html' with active_po_tab='greige-inward' back_route='accounts:greigepo_list' back_label='Back to Greige PO List' po_nav_title='Greige Inward Tracker' %}
 
 <style>
   .git-tools{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}.git-search{display:flex;gap:10px;flex:1 1 320px}.git-search input{width:100%;height:38px;border:1px solid rgba(0,0,0,.1);border-radius:999px;padding:0 12px;background:#fff}.git-table{width:100%;border-collapse:collapse}.git-table th,.git-table td{padding:14px 12px;border-top:1px solid rgba(15,23,42,.08);text-align:left;vertical-align:top}.git-table thead th{border-top:none;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#667085}.git-card{display:grid;gap:8px}.git-pill{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(250,189,100,.16);color:var(--orange);font-size:11px;font-weight:900}.git-mini{display:grid;gap:8px}.git-mini-card{border:1px solid rgba(15,23,42,.08);border-radius:12px;padding:10px;background:rgba(255,255,255,.72)}.git-mini-title{font-size:12px;font-weight:800;color:#111827}.git-mini-sub{font-size:12px;color:#667085;margin-top:3px}.git-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-start}.git-empty{text-align:center;padding:24px 12px;color:#667085}@media (max-width:980px){.git-wrap{overflow:auto;}.git-table{min-width:980px}}
