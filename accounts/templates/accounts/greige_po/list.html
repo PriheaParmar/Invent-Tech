@@ -4,6 +4,8 @@
 {% block page_subtitle %}Create and manage greige purchase orders{% endblock %}
 
 {% block content %}
+{% include 'accounts/po/_po_nav.html' with active_po_tab='greige' back_route='accounts:po_home' back_label='Back to PO Home' po_nav_title='Greige Purchase Orders' %}
+
 <style>
   .canvas{
     grid-template-columns:1fr !important;

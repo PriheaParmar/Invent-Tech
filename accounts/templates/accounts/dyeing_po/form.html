@@ -4,11 +4,13 @@
 {% block page_subtitle %}Generate Dyeing PO from Greige inward data{% endblock %}
 
 {% block content %}
+{% include 'accounts/po/_po_nav.html' with active_po_tab='dyeing' back_route='accounts:dyeingpo_list' back_label='Back to Dyeing PO List' po_nav_title='Dyeing Purchase Order Form' %}
+
 <style>
   .dpf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}.dpf-field{display:flex;flex-direction:column;gap:6px}.dpf-field label{font-size:12px;font-weight:700;color:rgba(15,23,42,.72)}.dpf-field input,.dpf-field select,.dpf-field textarea{width:100%;min-height:42px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff;font:inherit}.dpf-field textarea{min-height:84px;resize:vertical}.dpf-span-2{grid-column:span 2}.dpf-span-3{grid-column:span 3}.dpf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}.dpf-block{margin-top:16px;border:1px solid rgba(15,23,42,.08);border-radius:18px;background:rgba(255,255,255,.72);overflow:hidden}.dpf-block summary{cursor:pointer;list-style:none;padding:16px 18px;font-weight:800}.dpf-block-body{padding:0 18px 18px;border-top:1px solid rgba(15,23,42,.08)}.dpf-mini-table{width:100%;border-collapse:collapse}.dpf-mini-table th,.dpf-mini-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:13px;vertical-align:top}.dpf-errors{margin:0 18px 18px;padding:12px 14px;border-radius:12px;background:rgba(239,68,68,.08);color:#991b1b;font-size:13px}@media (max-width:1100px){.dpf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dpf-span-3{grid-column:span 2}}@media (max-width:760px){.dpf-grid{grid-template-columns:1fr}.dpf-span-2,.dpf-span-3{grid-column:span 1}}
 </style>
 <section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
-  <div class="jb-head"><div><div class="jb-title">{% if mode == 'edit' %}Edit Dyeing PO{% else %}Purchase Order for Dyeing{% endif %}</div><div class="jb-sub">Continue the greige inward stage into dyeing and then into dyeing inward.</div></div></div>
+  <div class="jb-head"><div><div class="jb-title">{% if mode == 'edit' %}Edit Dyeing PO{% else %}Purchase Order for Dyeing{% endif %}</div><div class="jb-sub">Continue the greige inward stage into dyeing and then into ready inward handling.</div></div></div>
   {% if form.non_field_errors %}<div class="dpf-errors">{{ form.non_field_errors }}</div>{% endif %}
   {% if existing_po and mode != 'edit' %}<div class="dpf-errors">Dyeing PO already exists for this Greige PO. <a href="{% url 'accounts:dyeingpo_detail' existing_po.id %}">Open existing Dyeing PO</a></div>{% endif %}
   <form method="post">{% csrf_token %}<div style="padding:18px;"><div class="dpf-grid">

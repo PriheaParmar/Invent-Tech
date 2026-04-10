@@ -1,0 +1,99 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/vendors.css' %}?v=3">
+
+<div class="jobbers-embed vendor-embed catalogue-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Catalogue</div>
+        <div class="jb-sub">Manage catalogue setup like wear type, season line, and references</div>
+      </div>
+
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:catalogue_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search catalogue name, wear type or description"
+          autocomplete="off"
+          aria-label="Search catalogue"
+        >
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:catalogue_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Catalogue</th>
+            <th>Wear Type</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for catalogue in catalogues %}
+          <tr>
+            <td>{{ catalogue.name }}</td>
+            <td>{{ catalogue.wear_type|default:"—" }}</td>
+            <td>{{ catalogue.description|default:"—" }}</td>
+            <td>
+              {% if catalogue.is_active %}
+              <span class="jb-badge jb-badge-active">Active</span>
+              {% else %}
+              <span class="jb-badge jb-badge-inactive">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="jb-actions">
+              <a class="jb-link" href="{% url 'accounts:catalogue_edit' catalogue.id %}{% if not full_page %}?embed=1{% endif %}">
+                Edit
+              </a>
+              <span class="jb-dot">•</span>
+              <form
+                method="post"
+                action="{% url 'accounts:catalogue_delete' catalogue.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="catalogue &quot;{{ catalogue.name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                <button class="jb-link jb-link-danger jb-link-button" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="jb-empty">No catalogue records found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+  </section>
+</div>

@@ -1,53 +1,52 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=1">
+
 <div class="jobbers-embed materials-embed">
-  <div class="jb-panel">
-    <div class="jb-head mat-head">
+  <section class="jb-panel">
+    <div class="jb-head">
       <div>
-        <div class="jb-title mat-title">Materials</div>
-        <div class="jb-sub mat-sub">Yarn • Greige • Finished • Trim</div>
+        <div class="jb-title">Materials</div>
+        <div class="jb-sub">Yarn • Greige • Finished • Trim</div>
       </div>
 
-      <div class="jb-head-actions mat-head-actions">
-
-        <button type="button" class="jb-iconbtn jb-close mat-iconbtn" data-embed-close aria-label="Close">
-          <svg class="jb-ico mat-ico" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M18 6L6 18"></path>
-            <path d="M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
     </div>
 
-    <div class="jb-tools mat-tools">
-      <form method="get" action="{% url 'accounts:material_list' %}" class="jb-search mat-search search-material">
-        <div class="search-material">
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:material_list' %}">
+        {% if not full_page %}
         <input type="hidden" name="embed" value="1">
+        {% endif %}
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search material name or remarks"
+          autocomplete="off"
+          aria-label="Search materials"
+        >
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
 
-        <input type="search" name="q" placeholder="Search materials…" value="{{ q|default:'' }}">
-
-        <select name="type" class="jb-search-btn mat-btn" onchange="this.form.submit()">
-          <option value="">All Types</option>
-          {% for t in type_choices %}
-            <option value="{{ t.id }}" {% if selected_type == t.id|stringformat:"s" %}selected{% endif %}>
-              {{ t.name }}
-            </option>
-          {% endfor %}
-        </select>
-
-
-        <button class="jb-search-btn mat-btn primary" type="submit">Search</button>
-
-        <a class="jb-add mat-add" href="{% url 'accounts:material_kind_picker' %}?embed=1" title="Add material">
-          <svg class="jb-add-ico mat-ico" viewBox="0 0 24 24" aria-hidden="true">
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:material_kind_picker' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Add material">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 5v14"></path>
             <path d="M5 12h14"></path>
           </svg>
         </a>
-        </div>
-      </form>
+      </div>
     </div>
 
-    <div class="jb-tablewrap mat-tablewrap">
-      <table class="jb-table mat-table">
+    <div class="jb-tablewrap">
+      <table class="jb-table">
         <thead>
           <tr>
             <th>Image</th>
@@ -55,95 +54,99 @@
             <th>Material Name</th>
             <th>Key Attributes</th>
             <th>Remarks</th>
-            <th class="jb-actions mat-actions">Actions</th>
+            <th style="width: 140px;">Actions</th>
           </tr>
         </thead>
 
         <tbody>
           {% for m in materials %}
-            <tr>
-              <td>
-                {% if m.image %}
-                  <img
-                    src="{{ m.image.url }}"
-                    alt="{{ m.name }}"
-                    class="mat-thumb"
-                  >
-                {% else %}
-                  <span class="mat-thumb mat-thumb-empty"></span>
+          <tr>
+            <td>
+              {% if m.image %}
+                <img src="{{ m.image.url }}" alt="{{ m.name }}" class="mat-thumb">
+              {% else %}
+                <span class="mat-thumb mat-thumb-empty"></span>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="mat-badge">{{ m.get_material_kind_display }}</span>
+
+              {% if m.material_type %}
+                <div class="mat-meta-text">{{ m.material_type.name }}</div>
+              {% endif %}
+
+              {% if m.material_sub_type %}
+                <div class="mat-meta-subtext">Sub Type: {{ m.material_sub_type.name }}</div>
+              {% endif %}
+
+              {% if m.material_shade %}
+                <div class="mat-meta-subtext">Shade: {{ m.material_shade.name }}</div>
+              {% endif %}
+            </td>
+
+            <td><strong>{{ m.name }}</strong></td>
+
+            <td>
+              {% if m.material_kind == "yarn" and m.yarn %}
+                {{ m.yarn.yarn_type }}{% if m.yarn.yarn_subtype %} / {{ m.yarn.yarn_subtype }}{% endif %}
+                {% if m.yarn.count_denier %} • {{ m.yarn.count_denier }}{% endif %}
+                {% if m.yarn.color %} • {{ m.yarn.color }}{% endif %}
+
+              {% elif m.material_kind == "greige" and m.greige %}
+                {{ m.greige.fabric_type }}
+                {% if m.greige.gsm %} • GSM: {{ m.greige.gsm }}{% endif %}
+                {% if m.greige.width %} • W: {{ m.greige.width }}{% endif %}
+                {% if m.greige.construction %} • {{ m.greige.construction }}{% endif %}
+
+              {% elif m.material_kind == "finished" and m.finished %}
+                {{ m.finished.base_fabric_type }}
+                {% if m.finished.get_finish_type_display %} • {{ m.finished.get_finish_type_display }}{% endif %}
+                {% if m.finished.gsm %} • GSM: {{ m.finished.gsm }}{% endif %}
+                {% if m.finished.width %} • W: {{ m.finished.width }}{% endif %}
+                {% if m.finished.end_use %} • {{ m.finished.end_use }}{% endif %}
+
+              {% elif m.material_kind == "trim" and m.trim %}
+                {{ m.trim.trim_type }}
+                {% if m.trim.size %} • {{ m.trim.size }}{% endif %}
+                {% if m.trim.color %} • {{ m.trim.color }}{% endif %}
+                {% if m.trim.brand %} • {{ m.trim.brand }}{% endif %}
+
+              {% else %}
+                —
+              {% endif %}
+            </td>
+
+            <td>{{ m.remarks|default:"—" }}</td>
+
+            <td class="jb-actions">
+              <a class="jb-link" href="{% url 'accounts:material_edit' m.id %}{% if not full_page %}?embed=1{% endif %}">Edit</a>
+              <span class="jb-dot">•</span>
+
+              <form method="post"
+                    action="{% url 'accounts:material_delete' m.id %}{% if not full_page %}?embed=1{% endif %}"
+                    class="jb-inline-delete"
+                    style="display:inline;">
+                {% csrf_token %}
+                {% if not full_page %}
+                <input type="hidden" name="embed" value="1">
                 {% endif %}
-              </td>
-
-              <td>
-                <span class="mat-badge">{{ m.get_material_kind_display }}</span>
-
-                {% if m.material_type %}
-                  <div class="mat-meta-text">
-                    {{ m.material_type.name }}
-                  </div>
-                {% endif %}
-
-                {% if m.material_shade %}
-                  <div class="mat-meta-subtext">
-                    Shade: {{ m.material_shade.name }}
-                  </div>
-                {% endif %}
-              </td>
-
-              <td>
-                <strong>{{ m.name }}</strong>
-              </td>
-
-              <td>
-                {% if m.material_kind == "yarn" and m.yarn %}
-                  {{ m.yarn.yarn_type }}{% if m.yarn.yarn_subtype %} / {{ m.yarn.yarn_subtype }}{% endif %}
-                  {% if m.yarn.count_denier %} • {{ m.yarn.count_denier }}{% endif %}
-                  {% if m.yarn.color %} • {{ m.yarn.color }}{% endif %}
-
-                {% elif m.material_kind == "greige" and m.greige %}
-                  {{ m.greige.fabric_type }}
-                  {% if m.greige.gsm %} • GSM: {{ m.greige.gsm }}{% endif %}
-                  {% if m.greige.width %} • W: {{ m.greige.width }}{% endif %}
-                  {% if m.greige.construction %} • {{ m.greige.construction }}{% endif %}
-
-                {% elif m.material_kind == "finished" and m.finished %}
-                  {{ m.finished.base_fabric_type }}
-                  {% if m.finished.get_finish_type_display %} • {{ m.finished.get_finish_type_display }}{% endif %}
-                  {% if m.finished.gsm %} • GSM: {{ m.finished.gsm }}{% endif %}
-                  {% if m.finished.width %} • W: {{ m.finished.width }}{% endif %}
-                  {% if m.finished.end_use %} • {{ m.finished.end_use }}{% endif %}
-
-                {% elif m.material_kind == "trim" and m.trim %}
-                  {{ m.trim.trim_type }}
-                  {% if m.trim.size %} • {{ m.trim.size }}{% endif %}
-                  {% if m.trim.color %} • {{ m.trim.color }}{% endif %}
-                  {% if m.trim.brand %} • {{ m.trim.brand }}{% endif %}
-
-                {% else %}
-                  —
-                {% endif %}
-              </td>
-
-              <td>{{ m.remarks|default:"—" }}</td>
-
-              <td class="jb-actions mat-actions">
-                <a class="jb-link mat-link" href="{% url 'accounts:material_edit' m.id %}?embed=1">Edit</a>
-                <span class="jb-dot mat-dot">•</span>
-
-                <form method="post" action="{% url 'accounts:material_delete' m.id %}" class="jb-inline-delete" style="display:inline;">
-                  {% csrf_token %}
-                  <input type="hidden" name="embed" value="1">
-                  <button type="submit" class="jb-link jb-link-button jb-link-danger mat-link danger" onclick="return confirm('Delete this material?')">Delete</button>
-                </form>
-              </td>
-            </tr>
+                <button
+                  type="submit"
+                  class="jb-link jb-link-button jb-link-danger"
+                  onclick="return confirm('Delete this material?')">
+                  Delete
+                </button>
+              </form>
+            </td>
+          </tr>
           {% empty %}
-            <tr>
-              <td colspan="6" class="jb-empty mat-empty">No materials found.</td>
-            </tr>
+          <tr>
+            <td colspan="6" class="jb-empty">No materials found.</td>
+          </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 </div>

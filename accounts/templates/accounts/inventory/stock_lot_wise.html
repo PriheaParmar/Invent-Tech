@@ -1,0 +1,520 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Stock Lot Wise{% endblock %}
+{% block page_title %}Stock Lot Wise{% endblock %}
+{% block page_subtitle %}Dyeing inward based stock lot register{% endblock %}
+
+{% block content %}
+<style>
+  .slw-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  .slw-panel{
+    background:#fff;
+    border:1px solid #e7ebf1;
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(15, 23, 42, 0.04);
+    overflow:hidden;
+  }
+
+  .slw-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    padding:18px 20px;
+    border-bottom:1px solid #eef2f7;
+    background:linear-gradient(180deg, #fcfdff 0%, #f8fafc 100%);
+  }
+
+  .slw-head-copy{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .slw-kicker{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#7c8aa5;
+  }
+
+  .slw-title{
+    margin:0;
+    font-size:22px;
+    line-height:1.2;
+    font-weight:700;
+    color:#172033;
+  }
+
+  .slw-sub{
+    margin:0;
+    font-size:13px;
+    color:#667085;
+  }
+
+  .slw-head-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .slw-btn,
+  .slw-btn:visited{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-height:40px;
+    padding:0 14px;
+    border-radius:12px;
+    border:1px solid #dbe3ee;
+    background:#fff;
+    color:#1f2937;
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+    cursor:pointer;
+    transition:.2s ease;
+  }
+
+  .slw-btn:hover{
+    border-color:#c7d2e3;
+    background:#f8fafc;
+  }
+
+  .slw-btn-primary{
+    border-color:#1d4ed8;
+    background:#1d4ed8;
+    color:#fff !important;
+  }
+
+  .slw-btn-primary:hover{
+    background:#1e40af;
+    border-color:#1e40af;
+  }
+
+  .slw-body{
+    padding:18px 20px 20px;
+  }
+
+  .slw-filters{
+    display:grid;
+    grid-template-columns: minmax(260px, 1.3fr) minmax(220px, 1fr) auto auto;
+    gap:12px;
+    align-items:center;
+    margin-bottom:18px;
+  }
+
+  .slw-field,
+  .slw-select{
+    width:100%;
+    height:42px;
+    border:1px solid #d9e2ec;
+    border-radius:12px;
+    background:#fff;
+    padding:0 12px;
+    font-size:13px;
+    color:#1f2937;
+    outline:none;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+
+  .slw-field:focus,
+  .slw-select:focus{
+    border-color:#7c9cff;
+    box-shadow:0 0 0 3px rgba(59, 130, 246, 0.10);
+  }
+
+  .slw-stats{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:14px;
+    margin-bottom:16px;
+  }
+
+  .slw-stat{
+    border:1px solid #e8edf4;
+    border-radius:16px;
+    padding:14px 16px;
+    background:#fff;
+  }
+
+  .slw-stat-label{
+    font-size:12px;
+    font-weight:600;
+    color:#7b8798;
+    margin-bottom:8px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+
+  .slw-stat-value{
+    font-size:24px;
+    font-weight:700;
+    color:#182230;
+    line-height:1;
+  }
+
+  .slw-note{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    border:1px solid #e7ecf3;
+    background:#f8fafc;
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:18px;
+    color:#5f6b7c;
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  .slw-note-dot{
+    width:9px;
+    height:9px;
+    border-radius:999px;
+    background:#3b82f6;
+    margin-top:5px;
+    flex:0 0 auto;
+  }
+
+  .slw-table-wrap{
+    border:1px solid #e7ebf1;
+    border-radius:16px;
+    overflow:auto;
+    background:#fff;
+  }
+
+  .slw-table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    min-width:1050px;
+  }
+
+  .slw-table thead th{
+    position:sticky;
+    top:0;
+    z-index:1;
+    background:#f8fafc;
+    color:#5b6678;
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    padding:13px 14px;
+    border-bottom:1px solid #e6ebf2;
+    text-align:left;
+    white-space:nowrap;
+  }
+
+  .slw-table tbody td{
+    padding:14px;
+    border-bottom:1px solid #eff3f8;
+    font-size:13px;
+    color:#1f2937;
+    vertical-align:middle;
+  }
+
+  .slw-table tbody tr:hover{
+    background:#fbfdff;
+  }
+
+  .slw-table tbody tr:last-child td{
+    border-bottom:none;
+  }
+
+  .slw-right{
+    text-align:right !important;
+  }
+
+  .slw-lot{
+    font-weight:700;
+    color:#172033;
+  }
+
+  .slw-meta{
+    display:block;
+    margin-top:4px;
+    font-size:12px;
+    color:#7b8798;
+  }
+
+  .slw-chip{
+    display:inline-flex;
+    align-items:center;
+    padding:5px 10px;
+    border-radius:999px;
+    background:#eef4ff;
+    color:#2952cc;
+    font-size:12px;
+    font-weight:700;
+    border:1px solid #d9e6ff;
+  }
+
+  .slw-muted{
+    color:#7b8798;
+    font-size:12px;
+  }
+
+  .slw-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:34px;
+    padding:0 12px;
+    border-radius:10px;
+    border:1px solid #dbe3ee;
+    text-decoration:none;
+    font-size:12px;
+    font-weight:700;
+    color:#1f2937;
+    background:#fff;
+  }
+
+  .slw-link:hover{
+    background:#f8fafc;
+    border-color:#c7d2e3;
+  }
+
+  .slw-empty{
+    border:1px dashed #d7dee8;
+    border-radius:16px;
+    padding:40px 20px;
+    text-align:center;
+    background:#fbfcfe;
+  }
+
+  .slw-empty h3{
+    margin:0 0 8px;
+    font-size:18px;
+    color:#172033;
+  }
+
+  .slw-empty p{
+    margin:0;
+    font-size:13px;
+    color:#6b7280;
+  }
+
+  .slw-pagination{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:10px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+
+  .slw-page-text{
+    font-size:13px;
+    color:#667085;
+    font-weight:600;
+  }
+
+  @media (max-width: 1024px){
+    .slw-filters{
+      grid-template-columns:1fr 1fr;
+    }
+    .slw-stats{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width: 640px){
+    .slw-head{
+      flex-direction:column;
+      align-items:stretch;
+    }
+    .slw-head-actions{
+      width:100%;
+    }
+    .slw-filters{
+      grid-template-columns:1fr;
+    }
+    .slw-btn,
+    .slw-btn-primary{
+      width:100%;
+    }
+    .slw-body{
+      padding:14px;
+    }
+  }
+</style>
+
+<div class="slw-wrap">
+  <div class="slw-panel">
+    <div class="slw-head">
+      <div class="slw-head-copy">
+        <div class="slw-kicker">Inventory Register</div>
+        <h1 class="slw-title">Stock Lot Wise</h1>
+        <p class="slw-sub">Track dyeing inward lots material-wise in a clean operational view.</p>
+      </div>
+
+      <div class="slw-head-actions">
+        <a href="{% url 'accounts:dashboard' %}" class="slw-btn">Dashboard</a>
+        <a href="{% url 'accounts:dyeing_inward_tracker' %}" class="slw-btn">Dyeing Inwards</a>
+      </div>
+    </div>
+
+    <div class="slw-body">
+      <form method="get" class="slw-filters">
+        <input
+          type="text"
+          name="q"
+          value="{{ q }}"
+          class="slw-field"
+          placeholder="Search lot, material, vendor, firm, source"
+        >
+
+        <select name="material" class="slw-select">
+          <option value="">All Materials</option>
+          {% for material in material_choices %}
+            <option value="{{ material }}" {% if selected_material == material %}selected{% endif %}>
+              {{ material }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <button type="submit" class="slw-btn slw-btn-primary">Apply Filters</button>
+        <a href="{% url 'accounts:stock_lot_wise' %}" class="slw-btn">Reset</a>
+      </form>
+
+      <div class="slw-stats">
+        <div class="slw-stat">
+          <div class="slw-stat-label">Total Lots</div>
+          <div class="slw-stat-value">{{ summary.total_lots }}</div>
+        </div>
+        <div class="slw-stat">
+          <div class="slw-stat-label">Total Inward Qty</div>
+          <div class="slw-stat-value">{{ summary.total_quantity }}</div>
+        </div>
+        <div class="slw-stat">
+          <div class="slw-stat-label">Final Stock</div>
+          <div class="slw-stat-value">{{ summary.total_final_stock }}</div>
+        </div>
+      </div>
+
+      <div class="slw-note">
+        <span class="slw-note-dot"></span>
+        <div>
+          This screen is derived from <strong>Dyeing inward entries only</strong>. Lot-wise used quantity is not tracked yet in the current flow, so final stock currently reflects recorded inward quantity for each lot row.
+        </div>
+      </div>
+
+      {% if rows %}
+        <div class="slw-table-wrap">
+          <table class="slw-table">
+            <thead>
+              <tr>
+                <th>Lot</th>
+                <th>Process</th>
+                <th>Material</th>
+                <th>Vendor / Firm</th>
+                <th>Source</th>
+                <th>Date</th>
+                <th class="slw-right">Qty</th>
+                <th class="slw-right">Used Qty</th>
+                <th class="slw-right">Final Stock</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in rows %}
+                <tr>
+                  <td>
+                    <div class="slw-lot">{{ row.lot_number }}</div>
+                    {% if row.remark %}
+                      <span class="slw-meta">{{ row.remark }}</span>
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    <span class="slw-chip">{{ row.stage_label }}</span>
+                  </td>
+
+                  <td>
+                    <div>{{ row.material_name }}</div>
+                  </td>
+
+                  <td>
+                    <div>{{ row.vendor_name }}</div>
+                    <span class="slw-meta">{{ row.firm_name }}</span>
+                  </td>
+
+                  <td>
+                    <div>{{ row.source_number }}</div>
+                  </td>
+
+                  <td>
+                    {% if row.lot_date %}
+                      {{ row.lot_date|date:"d M Y" }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+
+                  <td class="slw-right">
+                    {{ row.quantity }} {{ row.unit }}
+                  </td>
+
+                  <td class="slw-right">
+                    {% if row.used_quantity is None %}
+                      <span class="slw-muted">Not tracked</span>
+                    {% else %}
+                      {{ row.used_quantity }} {{ row.unit }}
+                    {% endif %}
+                  </td>
+
+                  <td class="slw-right">
+                    <strong>{{ row.final_stock }}</strong> {{ row.unit }}
+                  </td>
+
+                  <td>
+                    {% if row.detail_url %}
+                      <a href="{{ row.detail_url }}" class="slw-link">{{ row.detail_label }}</a>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+          <div class="slw-pagination">
+            {% if page_obj.has_previous %}
+              <a class="slw-btn" href="?q={{ q }}&material={{ selected_material }}&page={{ page_obj.previous_page_number }}">
+                Previous
+              </a>
+            {% endif %}
+
+            <span class="slw-page-text">
+              Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+              <a class="slw-btn" href="?q={{ q }}&material={{ selected_material }}&page={{ page_obj.next_page_number }}">
+                Next
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="slw-empty">
+          <h3>No stock lots found</h3>
+          <p>Try changing the filters or add dyeing inward entries first.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

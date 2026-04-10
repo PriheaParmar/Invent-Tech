@@ -96,10 +96,10 @@ UTILITIES_GROUPS = [
             },
         ],
     },
-    {
-        "title": "Purchase Orders",
-        "description": "Entry points for buying workflows and reviews.",
-        "items": [
+            {
+                "title": "Purchase Orders",
+                "description": "Entry points for buying workflows and reviews.",
+                "items": [
             {
                 "title": "PO Home",
                 "subtitle": "Central purchase order landing page.",
@@ -112,6 +112,25 @@ UTILITIES_GROUPS = [
                 "url_name": "accounts:yarnpo_list",
                 "kind": "page",
             },
+            {
+                "title": "Brands",
+                "subtitle": "Manage reusable customer and garment brand names.",
+                "url_name": "accounts:brand_list",
+                "kind": "embed",
+            },
+            {
+            "title": "Catalogue",
+            "subtitle": "Manage catalogue and wear type records.",
+            "url_name": "accounts:catalogue_list",
+            "kind": "embed",
+            },
+            {
+            "title": "Pattern Type",
+            "subtitle": "....",
+            "url_name": "accounts:patterntype_list",
+            "kind": "embed",
+        },
+            
         ],
     },
 ]

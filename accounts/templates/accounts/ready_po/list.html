@@ -1,0 +1,186 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Ready PO - InventTech{% endblock %}
+{% block page_title %}PO / Ready{% endblock %}
+{% block page_subtitle %}Create and manage ready purchase orders{% endblock %}
+
+{% block content %}
+<style>
+  .canvas{grid-template-columns:1fr !important;width:100%;min-width:0}
+  .readypo-list-page{width:100%;min-width:0}
+  .jobbers-embed{padding:10px 6px}
+  .jb-panel{background:rgba(255,255,255,.72);border:2px dashed rgb(0,0,0);border-radius:18px;box-shadow:0 12px 36px rgba(15,23,42,.08);padding:18px;width:100%;min-width:0}
+  .jb-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .jb-title{font-size:18px;font-weight:900;line-height:1.1;color:#111827}
+  .jb-sub{font-size:12px;opacity:.72;margin-top:4px;color:#475467}
+  .jb-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .jb-search{display:flex;align-items:center;gap:10px;flex:1 1 320px;min-width:0}
+  .jb-search input[type="search"]{appearance:none;width:100%;box-sizing:border-box;border:1px solid rgba(0,0,0,.10);background:rgba(255,255,255,.92);color:inherit;outline:none;transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;min-width:0;height:38px;padding:0 12px;border-radius:999px}
+  .jb-search input[type="search"]:focus{border-color:rgba(238,61,133,.35);box-shadow:0 0 0 4px rgba(238,61,133,.10);background:#fff}
+  .jb-search-btn,.jb-add,.jb-secondary{appearance:none;border:1px solid rgba(0,0,0,.10);border-radius:12px;text-decoration:none;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease;height:38px;padding:0 14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+  .jb-search-btn,.jb-secondary{background:rgba(255,255,255,.85);color:#000}
+  .jb-search-btn:hover,.jb-secondary:hover{background:#000;color:#fff}
+  .jb-add{background:var(--orange);color:#fff;border-color:transparent}
+  .jb-add:hover{background:#000;color:#fff}
+  .jb-tool-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .po-list{display:flex;flex-direction:column;gap:12px;width:100%;min-width:0}
+  .po-card{border:1px solid rgba(15,23,42,.06);border-radius:14px;background:rgba(255,255,255,.55);padding:12px;width:100%;min-width:0}
+  .po-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .po-badge{display:inline-flex;align-items:center;justify-content:center;min-height:26px;padding:0 10px;border-radius:999px;background:rgba(250,189,100,.16);color:var(--orange);font-size:11px;font-weight:900;margin-bottom:6px}
+  .po-no{font-size:14px;font-weight:900;color:#111827;line-height:1.25;word-break:break-word}
+  .po-sub{margin-top:4px;font-size:11px;color:#667085;font-weight:700;line-height:1.45}
+  .po-status{display:inline-flex;align-items:center;justify-content:center;min-height:26px;padding:0 10px;border-radius:999px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;flex-shrink:0}
+  .po-status.pending{background:rgba(250,189,100,.16);color:#b76c00}
+  .po-status.approved{background:rgba(34,197,94,.14);color:#15803d}
+  .po-status.partial{background:rgba(59,130,246,.14);color:#1d4ed8}
+  .po-grid{display:grid;grid-template-columns:1.05fr 1.2fr 1fr .95fr auto;gap:12px;align-items:start;width:100%;min-width:0}
+  .po-box{min-width:0}
+  .po-box-title{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#667085;font-weight:900;margin-bottom:6px}
+  .po-meta{display:grid;grid-template-columns:72px 1fr;gap:5px 6px;font-size:11px;min-width:0}
+  .po-meta .k{color:#667085;font-weight:800}
+  .po-meta .v{color:#111827;font-weight:800;min-width:0;word-break:break-word}
+  .po-lines{display:flex;flex-direction:column;gap:7px;min-width:0}
+  .po-line{padding:8px 10px;border-radius:12px;background:rgba(0,0,0,.03);min-width:0}
+  .po-line-title{font-size:12px;font-weight:900;color:#111827;line-height:1.35;word-break:break-word}
+  .po-line-sub{margin-top:4px;font-size:10px;color:#667085;font-weight:700;line-height:1.5;word-break:break-word}
+  .po-vendor-name{font-size:13px;font-weight:900;color:#111827;word-break:break-word}
+  .po-vendor-sub{margin-top:5px;font-size:11px;color:#667085;line-height:1.5;font-weight:700;word-break:break-word}
+  .po-summary{display:grid;grid-template-columns:1fr;gap:7px}
+  .po-summary-box{padding:8px 10px;border-radius:12px;background:rgba(0,0,0,.03)}
+  .po-summary-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#667085;font-weight:900;margin-bottom:4px}
+  .po-summary-value{font-size:13px;font-weight:900;color:#111827;word-break:break-word}
+  .po-status-note{margin-top:8px;font-size:11px;color:#667085;line-height:1.5;font-weight:700;word-break:break-word}
+  .po-actions-col{min-width:84px}
+  .po-actions-title{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#667085;font-weight:900;margin-bottom:6px}
+  .po-actions{display:flex;flex-direction:column;gap:6px}
+  .jb-link{font-weight:700;text-decoration:none;color:var(--orange);display:inline-flex;align-items:center;justify-content:flex-start;min-height:28px}
+  .jb-link:hover{text-decoration:underline}
+  .jb-link-danger{color:#d92d20}
+  .jb-link-danger:hover{color:#b42318}
+  .jb-link-button{background:none;border:none;padding:0;cursor:pointer;font:inherit;font-weight:700;text-align:left}
+  .jb-inline-delete{display:block;margin:0}
+  .jb-empty{padding:14px 12px;opacity:.7;text-align:center;font-weight:700}
+  @media (max-width: 1280px){.po-grid{grid-template-columns:1fr 1fr}.po-actions-col{grid-column:1 / -1;min-width:0}.po-actions{flex-direction:row;flex-wrap:wrap;gap:10px 14px}}
+  @media (max-width: 768px){.jb-tools{align-items:stretch}.jb-search{flex:1 1 100%}.jb-tool-actions{width:100%}.jb-tool-actions > *{flex:1 1 auto}.po-card-top{flex-direction:column;align-items:flex-start}.po-grid{grid-template-columns:1fr}.po-actions{flex-direction:column;gap:6px}}
+</style>
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="readypo-list-page">
+      <div class="jobbers-embed">
+        <div class="jb-panel">
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">Ready Purchase Orders</div>
+              <div class="jb-sub">All generated ready purchase orders with source dyeing linkage, inward progress, vendor details, and actions.</div>
+            </div>
+          </div>
+
+          <div class="jb-tools">
+            <form class="jb-search" method="get">
+              <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search by system no, PO no, vendor, firm...">
+              <button class="jb-search-btn" type="submit">Search</button>
+            </form>
+
+            <div class="jb-tool-actions">
+              <a class="jb-secondary" href="{% url 'accounts:ready_inward_tracker' %}">Ready Inwards</a>
+              <a class="jb-add" href="{% url 'accounts:readypo_add' %}">Generate PO</a>
+            </div>
+          </div>
+
+          <div class="po-list">
+            {% for po in orders %}
+            <div class="po-card">
+              <div class="po-card-top">
+                <div>
+                  <div class="po-badge">{{ po.system_number }}</div>
+                  <div class="po-no">{{ po.po_number|default:"No PO Number" }}</div>
+                  <div class="po-sub">{{ po.po_date|date:"d-m-Y" }}{% if po.cancel_date %} · Cancel: {{ po.cancel_date|date:"d-m-Y" }}{% endif %}</div>
+                </div>
+
+                <span class="po-status {% if po.total_inward_qty and po.remaining_qty_total == 0 %}approved{% elif po.total_inward_qty %}partial{% else %}pending{% endif %}">
+                  {% if po.total_inward_qty and po.remaining_qty_total == 0 %}Completed{% elif po.total_inward_qty %}Partial Inward{% else %}Pending Inward{% endif %}
+                </span>
+              </div>
+
+              <div class="po-grid">
+                <div class="po-box">
+                  <div class="po-box-title">PO Details</div>
+                  <div class="po-meta">
+                    <div class="k">System</div><div class="v">{{ po.system_number }}</div>
+                    <div class="k">PO No</div><div class="v">{{ po.po_number|default:"—" }}</div>
+                    <div class="k">Source</div><div class="v">{{ po.source_dyeing_po.system_number|default:"—" }}</div>
+                    <div class="k">Remarks</div><div class="v">{{ po.remarks|default:"—"|truncatechars:80 }}</div>
+                  </div>
+                </div>
+
+                <div class="po-box">
+                  <div class="po-box-title">Ready Lines</div>
+                  <div class="po-lines">
+                    {% for item in po.items.all %}
+                    <div class="po-line">
+                      <div class="po-line-title">{{ item.fabric_name|default:"Ready Item" }}</div>
+                      <div class="po-line-sub">
+                        Qty: {{ item.quantity|default:"0.00" }}
+                        {% if item.unit %} {{ item.unit }}{% endif %}
+                        {% if item.dyeing_name %} · Dyeing: {{ item.dyeing_name }}{% endif %}
+                        <br>
+                        Received: {{ item.inward_qty_total|default:"0.00" }} · Remaining: {{ item.remaining_qty_total|default:"0.00" }}
+                      </div>
+                    </div>
+                    {% empty %}
+                    <div class="po-line"><div class="po-line-sub">No ready lines added.</div></div>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <div class="po-box">
+                  <div class="po-box-title">Vendor / Firm</div>
+                  <div class="po-vendor-name">{{ po.vendor.name }}</div>
+                  <div class="po-vendor-sub">
+                    {% if po.vendor.contact_person %}{{ po.vendor.contact_person }}{% else %}—{% endif %}
+                    {% if po.vendor.phone %}<br>{{ po.vendor.phone }}{% endif %}
+                    <br><strong>Firm:</strong> {% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}
+                    <br>{{ po.shipping_address|default:"No shipping address"|truncatechars:90 }}
+                  </div>
+                </div>
+
+                <div class="po-box">
+                  <div class="po-box-title">Summary</div>
+                  <div class="po-summary">
+                    <div class="po-summary-box"><div class="po-summary-label">Total Weight</div><div class="po-summary-value">{{ po.total_weight|default:"0.00" }}</div></div>
+                    <div class="po-summary-box"><div class="po-summary-label">Total Inward</div><div class="po-summary-value">{{ po.total_inward_qty|default:"0.00" }}</div></div>
+                    <div class="po-summary-box"><div class="po-summary-label">Remaining</div><div class="po-summary-value">{{ po.remaining_qty_total|default:"0.00" }}</div></div>
+                    <div class="po-summary-box"><div class="po-summary-label">Inward Entries</div><div class="po-summary-value">{{ po.inwards.all|length }}</div></div>
+                  </div>
+                </div>
+
+                <div class="po-actions-col">
+                  <div class="po-actions-title">Status / Actions</div>
+                  <div class="po-status-note" style="margin-top:0; margin-bottom:8px;">
+                    Source Dyeing PO: {{ po.source_dyeing_po.system_number|default:"—" }}
+                    <br>Inward Entries: {{ po.inwards.all|length }}
+                  </div>
+
+                  <div class="po-actions">
+                    <a class="jb-link" href="{% url 'accounts:readypo_detail' po.id %}">View</a>
+                    <a class="jb-link" href="{% url 'accounts:readypo_inward' po.id %}">Inward</a>
+                    <a class="jb-link" href="{% url 'accounts:readypo_edit' po.id %}">Edit</a>
+                    <a class="jb-link" href="{% url 'accounts:dyeingpo_detail' po.source_dyeing_po_id %}">Source Dyeing PO</a>
+                    <form method="post" action="{% url 'accounts:readypo_delete' po.id %}" class="jb-inline-delete">
+                      {% csrf_token %}
+                      <button type="submit" class="jb-link jb-link-button jb-link-danger" onclick="return confirm('Delete this Ready PO?')">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="jb-empty">No Ready POs found yet. Generate your first PO.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

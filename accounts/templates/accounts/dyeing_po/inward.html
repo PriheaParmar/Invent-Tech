@@ -4,11 +4,13 @@
 {% block page_subtitle %}Create and manage inward entries against Dyeing PO{% endblock %}
 
 {% block content %}
+{% include 'accounts/po/_po_nav.html' with active_po_tab='dyeing-inward' back_route='accounts:dyeingpo_list' back_label='Back to Dyeing PO List' po_nav_title='Dyeing Inward Entry' %}
+
 <style>
   .din-grid{display:grid;gap:14px}.din-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.din-pill{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border-radius:999px;background:rgba(250,189,100,.14);color:#ef6c00;font-size:11px;font-weight:900}.din-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.din-field{display:flex;flex-direction:column;gap:6px}.din-field label{font-size:12px;font-weight:700;color:#344054}.din-field input,.din-field textarea{width:100%;min-height:40px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff}.din-field textarea{min-height:84px}.din-block{border:1px solid rgba(15,23,42,.06);border-radius:14px;background:rgba(255,255,255,.55);padding:14px}.din-table{width:100%;border-collapse:collapse}.din-table th,.din-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:12px;vertical-align:top}.din-table thead th{border-top:none;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#667085}.din-input{width:100%;min-height:36px;border:1px solid rgba(15,23,42,.1);border-radius:10px;padding:0 10px}.din-err{font-size:11px;color:#b42318;font-weight:700;margin-top:4px}.din-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;flex-wrap:wrap}@media (max-width:900px){.din-fields{grid-template-columns:1fr}}
 </style>
 <section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
-  <div class="jb-head"><div><div class="jb-title">Dyeing Inward</div><div class="jb-sub">Record inwarded dyed fabric quantities before moving to finished lot handling.</div></div></div>
+  <div class="jb-head"><div><div class="jb-title">Dyeing Inward</div><div class="jb-sub">Record inwarded dyed fabric quantities before moving to ready handling.</div></div></div>
   <div class="din-grid" style="padding:18px;">
     <div class="din-head">
       <div>
@@ -17,6 +19,11 @@
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <span class="din-pill">Remaining: {{ po.remaining_qty_total|default:"0.00" }}</span>
+        {% if existing_ready_po %}
+          <a class="jb-secondary" href="{% url 'accounts:readypo_detail' existing_ready_po.id %}">View Ready PO</a>
+        {% elif po.inwards.all|length %}
+          <a class="jb-secondary" href="{% url 'accounts:generate_ready_po_from_dyeing' po.id %}">Generate Ready PO</a>
+        {% endif %}
         <a class="jb-secondary" href="{% url 'accounts:dyeingpo_list' %}">Back to Dyeing PO</a>
       </div>
     </div>

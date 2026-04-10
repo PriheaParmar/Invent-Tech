@@ -1,0 +1,94 @@
+{% load static %}
+
+{# Use the same CSS file your Jobber Type embed uses #}
+<link rel="stylesheet" href="{% static 'css/jobbers/types.css' %}?v=1">
+
+<div class="jobbers-embed jb-types-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Material Units</div>
+        <div class="jb-sub">Manage reusable units for PO item rows</div>
+      </div>
+
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+
+    <div class="jb-tools" style="margin-bottom: 14px;">
+      <form class="jb-search" method="get" action="{% url 'accounts:materialunit_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+        <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search material unit..." autocomplete="off">
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
+    </div>
+
+    <form method="post"
+          action="{% url 'accounts:materialunit_list' %}{% if not full_page %}?embed=1{% endif %}"
+          class="jb-inline-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="jb-inline-field">
+        <label for="{{ form.name.id_for_label }}">New Unit</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+        <div class="jb-field-errors">
+          {% for error in form.name.errors %}
+          <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <button class="jb-add" type="submit">Add</button>
+    </form>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for unit in units %}
+          <tr>
+            <td>{{ unit.name }}</td>
+            <td class="jb-actions">
+              <a class="jb-link" href="{% url 'accounts:materialunit_edit' unit.id %}{% if not full_page %}?embed=1{% endif %}">Edit</a>
+              <span class="jb-dot">•</span>
+
+              <form method="post"
+                    action="{% url 'accounts:materialunit_delete' unit.id %}{% if not full_page %}?embed=1{% endif %}"
+                    class="jb-inline-delete"
+                    onsubmit="return confirm('Delete this material unit?')">
+                {% csrf_token %}
+                {% if not full_page %}
+                <input type="hidden" name="embed" value="1">
+                {% endif %}
+                <button class="jb-link jb-link-danger jb-link-button" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="2" class="jb-empty">No units found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

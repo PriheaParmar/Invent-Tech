@@ -4,6 +4,8 @@
 {% block page_subtitle %}Follow the Yarn flow pattern and create the greige middle layer{% endblock %}
 
 {% block content %}
+{% include 'accounts/po/_po_nav.html' with active_po_tab='greige' back_route='accounts:greigepo_list' back_label='Back to Greige PO List' po_nav_title='Greige Purchase Order Form' %}
+
 <style>
   .gpf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}
   .gpf-field{display:flex;flex-direction:column;gap:6px}

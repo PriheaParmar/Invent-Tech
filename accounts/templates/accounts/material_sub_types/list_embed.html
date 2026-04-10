@@ -1,0 +1,110 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=3">
+
+<div class="jobbers-embed material-subtype-list-embed">
+  <section class="jb-panel">
+    {% include "accounts/_messages_embed.html" %}
+
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Material Sub Types</div>
+        <div class="jb-sub">Manage sub types under each material type</div>
+      </div>
+
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:materialsubtype_list' %}" data-embed-autosubmit-form="1">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search material sub type, description, or material type"
+          autocomplete="off"
+        >
+
+        <button class="jb-search-btn" type="submit">Search</button>
+
+        <select name="kind" class="jb-search-btn" data-embed-autosubmit="1">
+          <option value="">All Kinds</option>
+          {% for value, label in kind_choices %}
+            <option value="{{ value }}" {% if selected_kind == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+
+        <select name="type" class="jb-search-btn" data-embed-autosubmit="1">
+          <option value="">All Types</option>
+          {% for t in type_choices %}
+            <option value="{{ t.id }}" {% if selected_type == t.id|stringformat:'s' %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </form>
+
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:materialsubtype_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Kind</th>
+            <th>Material Type</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for st in sub_types %}
+          <tr>
+            <td>{{ st.get_material_kind_display|default:"—" }}</td>
+            <td>{{ st.material_type.name|default:"—" }}</td>
+            <td>{{ st.name }}</td>
+            <td>{{ st.description|default:"—" }}</td>
+            <td class="jb-actions">
+              <a class="jb-link" href="{% url 'accounts:materialsubtype_edit' st.id %}{% if not full_page %}?embed=1{% endif %}">Edit</a>
+              <span class="jb-dot">•</span>
+              <form
+                method="post"
+                action="{% url 'accounts:materialsubtype_delete' st.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete"
+                onsubmit="return confirm('Delete this material sub type?')"
+              >
+                {% csrf_token %}
+                {% if not full_page %}
+                <input type="hidden" name="embed" value="1">
+                {% endif %}
+                <button class="jb-link jb-link-danger jb-link-button" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="jb-empty">No material sub types found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

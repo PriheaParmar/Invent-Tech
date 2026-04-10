@@ -1,59 +1,156 @@
-{# accounts/parties/form_embed.html #}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=1">
 
-<div class="party-form-embed compact">
-  <div class="pf-head">
-    <div>
-      <div class="pf-title">{% if mode == "edit" %}Edit Party{% else %}Create Party{% endif %}</div>
-      <div class="pf-sub">Enter details</div>
-    </div>
+<div class="jobbers-embed jobber-form-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">
+          {% if mode == "add" %}Add Party{% else %}Edit Party{% endif %}
+        </div>
+        <div class="jb-sub">Manage party details</div>
+      </div>
 
-    <div class="pf-head-actions">
-      <a class="pf-back" href="{% url 'accounts:party_list' %}?embed=1" title="Back">
-        <svg class="pf-back-ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6"></path>
-        </svg>
-      </a>
+      <div class="jf-head-actions">
+        <a class="jb-iconbtn jb-back" href="{% url 'accounts:party_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+          <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
 
-      <button type="button" class="pf-close" data-embed-close title="Close">
-        <svg class="pf-ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M18 6L6 18"></path>
-          <path d="M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <form class="pf-form"
-        method="post"
-        action="{% if mode == 'edit' %}{% url 'accounts:party_edit' party.id %}{% else %}{% url 'accounts:party_add' %}{% endif %}?embed=1">
-    {% csrf_token %}
-    <input type="hidden" name="embed" value="1" />
-
-    <div class="pf-grid">
-      {% for field in form %}
-        {# Only big fields full width #}
-        {% if field.name == "address" or field.name == "notes" or field.name == "remarks" %}
-          <div class="pf-field pf-full">
-        {% else %}
-          <div class="pf-field">
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
         {% endif %}
+      </div>
+    </div>
 
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
+    {% if mode == "add" %}
+      {% url "accounts:party_add" as action_url %}
+    {% else %}
+      {% url "accounts:party_edit" party.id as action_url %}
+    {% endif %}
 
-            {% if field.help_text %}
-              <div class="pf-help">{{ field.help_text }}</div>
-            {% endif %}
-
-            {% if field.errors %}
-              <div class="pf-err">{{ field.errors|striptags }}</div>
-            {% endif %}
-          </div>
+    {% if form.non_field_errors %}
+    <div class="jb-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
       {% endfor %}
     </div>
+    {% endif %}
 
-    <div class="pf-footer">
-      <button type="submit" class="pf-btn pf-btn-save">Save</button>
-    </div>
-  </form>
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="jf-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="jf-grid">
+        <div class="jf-field">
+          <label for="{{ form.party_name.id_for_label }}">Party Name</label>
+          {{ form.party_name }}
+          {% if form.party_name.errors %}
+          <div class="jb-field-errors">{% for error in form.party_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.full_name.id_for_label }}">Full Name</label>
+          {{ form.full_name }}
+          {% if form.full_name.errors %}
+          <div class="jb-field-errors">{% for error in form.full_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field jf-full">
+          <label for="{{ form.address.id_for_label }}">Address</label>
+          {{ form.address }}
+          {% if form.address.errors %}
+          <div class="jb-field-errors">{% for error in form.address.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.pan_number.id_for_label }}">PAN Number</label>
+          {{ form.pan_number }}
+          {% if form.pan_number.errors %}
+          <div class="jb-field-errors">{% for error in form.pan_number.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.gst_number.id_for_label }}">GST Number</label>
+          {{ form.gst_number }}
+          {% if form.gst_number.errors %}
+          <div class="jb-field-errors">{% for error in form.gst_number.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.tan_number.id_for_label }}">TAN Number</label>
+          {{ form.tan_number }}
+          {% if form.tan_number.errors %}
+          <div class="jb-field-errors">{% for error in form.tan_number.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.state.id_for_label }}">State</label>
+          {{ form.state }}
+          {% if form.state.errors %}
+          <div class="jb-field-errors">{% for error in form.state.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+          {{ form.phone_number }}
+          {% if form.phone_number.errors %}
+          <div class="jb-field-errors">{% for error in form.phone_number.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field jf-full">
+          <label for="{{ form.email.id_for_label }}">Email</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+          <div class="jb-field-errors">{% for error in form.email.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.bank_name.id_for_label }}">Bank Name</label>
+          {{ form.bank_name }}
+          {% if form.bank_name.errors %}
+          <div class="jb-field-errors">{% for error in form.bank_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.account_number.id_for_label }}">Account Number</label>
+          {{ form.account_number }}
+          {% if form.account_number.errors %}
+          <div class="jb-field-errors">{% for error in form.account_number.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field jf-full">
+          <label for="{{ form.ifsc_code.id_for_label }}">IFSC Code</label>
+          {{ form.ifsc_code }}
+          {% if form.ifsc_code.errors %}
+          <div class="jb-field-errors">{% for error in form.ifsc_code.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="jf-footer">
+        <a class="jb-secondary" href="{% url 'accounts:party_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="jb-add jb-save">Save Party</button>
+      </div>
+    </form>
+  </section>
 </div>

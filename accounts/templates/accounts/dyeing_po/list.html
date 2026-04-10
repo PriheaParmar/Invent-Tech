@@ -1,9 +1,12 @@
 {% extends "accounts/base_app.html" %}
-{% block title %}Greige PO - InventTech{% endblock %}
-{% block page_title %}PO / Greige{% endblock %}
-{% block page_subtitle %}Create and manage greige purchase orders{% endblock %}
+
+{% block title %}Dyeing PO - InventTech{% endblock %}
+{% block page_title %}PO / Dyeing{% endblock %}
+{% block page_subtitle %}Create and manage dyeing purchase orders{% endblock %}
 
 {% block content %}
+{% include 'accounts/po/_po_nav.html' with active_po_tab='dyeing' back_route='accounts:po_home' back_label='Back to PO Home' po_nav_title='Dyeing Purchase Orders' %}
+
 <style>
   .canvas{
     grid-template-columns:1fr !important;
@@ -11,7 +14,7 @@
     min-width:0;
   }
 
-  .greigepo-list-page{
+  .dyeingpo-list-page{
     width:100%;
     min-width:0;
   }
@@ -465,14 +468,14 @@
 
 <section class="page-section is-active">
   <div class="canvas">
-    <div class="greigepo-list-page">
+    <div class="dyeingpo-list-page">
       <div class="jobbers-embed">
         <div class="jb-panel">
 
           <div class="jb-head">
             <div>
-              <div class="jb-title">Greige Purchase Orders</div>
-              <div class="jb-sub">All generated greige purchase orders with source, inward progress, vendor details, and actions.</div>
+              <div class="jb-title">Dyeing Purchase Orders</div>
+              <div class="jb-sub">All generated dyeing purchase orders with source, inward progress, vendor details, and ready-stage actions.</div>
             </div>
           </div>
 
@@ -488,11 +491,11 @@
             </form>
 
             <div class="jb-tool-actions">
-              <a class="jb-secondary" href="{% url 'accounts:greige_inward_tracker' %}">
-                Greige Inwards
+              <a class="jb-secondary" href="{% url 'accounts:dyeing_inward_tracker' %}">
+                Dyeing Inwards
               </a>
 
-              <a class="jb-add" href="{% url 'accounts:greigepo_add' %}">
+              <a class="jb-add" href="{% url 'accounts:dyeingpo_add' %}">
                 Generate PO
               </a>
             </div>
@@ -533,7 +536,7 @@
                     <div class="v">{{ po.po_number|default:"—" }}</div>
 
                     <div class="k">Source</div>
-                    <div class="v">{{ po.source_yarn_po.system_number|default:"—" }}</div>
+                    <div class="v">{{ po.source_greige_po.system_number|default:"—" }}</div>
 
                     <div class="k">Remarks</div>
                     <div class="v">{{ po.remarks|default:"—"|truncatechars:80 }}</div>
@@ -541,22 +544,22 @@
                 </div>
 
                 <div class="po-box">
-                  <div class="po-box-title">Greige Lines</div>
+                  <div class="po-box-title">Dyeing Lines</div>
                   <div class="po-lines">
                     {% for item in po.items.all %}
                     <div class="po-line">
-                      <div class="po-line-title">{{ item.fabric_name|default:"Greige Item" }}</div>
+                      <div class="po-line-title">{{ item.fabric_name|default:"Dyeing Item" }}</div>
                       <div class="po-line-sub">
                         Qty: {{ item.quantity|default:"0.00" }}
                         {% if item.unit %} {{ item.unit }}{% endif %}
-                        {% if item.yarn_name %} · Yarn: {{ item.yarn_name }}{% endif %}
+                        {% if item.greige_name %} · Greige: {{ item.greige_name }}{% endif %}
                         <br>
                         Received: {{ item.inward_qty_total|default:"0.00" }} · Remaining: {{ item.remaining_qty_total|default:"0.00" }}
                       </div>
                     </div>
                     {% empty %}
                     <div class="po-line">
-                      <div class="po-line-sub">No greige lines added.</div>
+                      <div class="po-line-sub">No dyeing lines added.</div>
                     </div>
                     {% endfor %}
                   </div>
@@ -592,8 +595,8 @@
                     </div>
 
                     <div class="po-summary-box">
-                      <div class="po-summary-label">Dyeing POs</div>
-                      <div class="po-summary-value">{{ po.dyeing_pos.all|length }}</div>
+                      <div class="po-summary-label">Ready POs</div>
+                      <div class="po-summary-value">{{ po.ready_pos.all|length }}</div>
                     </div>
                   </div>
                 </div>
@@ -602,26 +605,34 @@
                   <div class="po-actions-title">Status / Actions</div>
 
                   <div class="po-status-note" style="margin-top:0; margin-bottom:8px;">
-                    Source Yarn PO: {{ po.source_yarn_po.system_number|default:"—" }}
+                    Source Greige PO: {{ po.source_greige_po.system_number|default:"—" }}
                     <br>Inward Entries: {{ po.inwards.all|length }}
-                    {% if po.dyeing_pos.all|length %}
-                      <br>Dyeing PO generated
+                    {% if po.ready_pos.all|length %}
+                      <br>Ready PO generated
                     {% else %}
-                      <br>Waiting for Dyeing PO generation
+                      <br>Waiting for Ready PO generation
                     {% endif %}
                   </div>
 
                   <div class="po-actions">
-                    <a class="jb-link" href="{% url 'accounts:greigepo_detail' po.id %}">View</a>
-                    <a class="jb-link" href="{% url 'accounts:greigepo_inward' po.id %}">Inward</a>
-                    <a class="jb-link" href="{% url 'accounts:greigepo_edit' po.id %}">Edit</a>
+                    <a class="jb-link" href="{% url 'accounts:dyeingpo_detail' po.id %}">View</a>
+                    <a class="jb-link" href="{% url 'accounts:dyeingpo_inward' po.id %}">Inward</a>
+                    <a class="jb-link" href="{% url 'accounts:dyeingpo_edit' po.id %}">Edit</a>
 
-                    <form method="post" action="{% url 'accounts:greigepo_delete' po.id %}" class="jb-inline-delete">
+                    {% with ready_po=po.ready_pos.all.0 %}
+                      {% if ready_po %}
+                        <a class="jb-link" href="{% url 'accounts:readypo_detail' ready_po.id %}">View Ready PO</a>
+                      {% else %}
+                        <a class="jb-link" href="{% url 'accounts:generate_ready_po_from_dyeing' po.id %}">Generate Ready PO</a>
+                      {% endif %}
+                    {% endwith %}
+
+                    <form method="post" action="{% url 'accounts:dyeingpo_delete' po.id %}" class="jb-inline-delete">
                       {% csrf_token %}
                       <button
                         type="submit"
                         class="jb-link jb-link-button jb-link-danger"
-                        onclick="return confirm('Delete this Greige PO?')"
+                        onclick="return confirm('Delete this Dyeing PO?')"
                       >
                         Delete
                       </button>
@@ -632,7 +643,7 @@
             </div>
             {% empty %}
             <div class="jb-empty">
-              No Greige POs found yet. Generate your first PO.
+              No Dyeing POs found yet. Generate your first PO.
             </div>
             {% endfor %}
           </div>

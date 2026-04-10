@@ -1,8 +1,11 @@
-<div class="material-form-embed">
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=2">
+
+<div class="material-form-embed material-kind-picker">
   <div class="mf-head">
     <div>
       <div class="mf-title">Choose Material Kind</div>
-      <div class="mf-sub">Select what you want to create first</div>
+      <div class="mf-sub">Select the material category you want to create</div>
     </div>
 
     <button type="button" class="mf-iconbtn" data-embed-close aria-label="Close">
@@ -13,24 +16,28 @@
     </button>
   </div>
 
-  <form method="get" action="{% url 'accounts:material_create' %}" class="mf-form">
+  <form method="get" action="{% url 'accounts:material_create' %}" class="mf-form mf-kind-form">
     <input type="hidden" name="embed" value="1">
+
 
     <div class="kind-radio-grid">
       {% for value, label in kind_choices %}
         <label class="kind-radio-card">
           <input type="radio" name="kind" value="{{ value }}" required>
           <div class="kind-radio-content">
-            <strong>{{ label }}</strong>
-            <div>Create {{ label|lower }} material</div>
+            <div class="kind-radio-top">
+              <span class="kind-radio-dot"></span>
+              <strong>{{ label }}</strong>
+            </div>
+            <div class="kind-radio-text">Create {{ label|lower }} material</div>
           </div>
         </label>
       {% endfor %}
     </div>
 
-    <div class="mf-actions">
-      <button type="submit" class="mf-btn mf-btn-save">Continue</button>
+    <div class="mf-actions mf-actions-split">
       <button type="button" class="mf-btn mf-btn-close" data-embed-close>Close</button>
+      <button type="submit" class="mf-btn mf-btn-save">Continue</button>
     </div>
   </form>
 </div>

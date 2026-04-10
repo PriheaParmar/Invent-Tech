@@ -1,74 +1,86 @@
-{# Uses existing Party embed CSS classes (pt- / parties-embed) #}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/locations/list.css' %}?v=1">
+<div class="locations-embed">
+  <section class="lc-panel">
+    <div class="lc-head">
+      <div>
+        <div class="lc-title">Locations</div>
+        <div class="lc-sub">Stock storage locations and warehouses</div>
+      </div>
 
-<div class="parties-embed">
-    <div class="pt-head">
-        <div>
-            <div class="pt-title">Locations</div>
-            <div class="pt-sub">Manage locations</div>
-        </div>
-
-        <div class="pt-head-actions">
-            <a class="pt-add" href="{% url 'accounts:location_add' %}?embed=1">
-                <svg class="pt-add-ico" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 5v14M5 12h14"></path>
-                </svg>
-                Create
-            </a>
-
-            <button type="button" class="pt-close" data-embed-close title="Close">
-                <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M18 6L6 18"></path>
-                    <path d="M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
+      {% if not full_page %}
+      <button type="button" class="lc-iconbtn lc-close" data-embed-close aria-label="Close">
+        <svg class="lc-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
     </div>
 
-    <div class="pt-tools">
-        <form class="pt-search" method="get" action="{% url 'accounts:location_list' %}">
-            <input type="hidden" name="embed" value="1">
-            <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search location (name, city, state)…">
-            <button class="pt-search-btn" type="submit">Search</button>
-        </form>
+    <div class="lc-tools">
+      <form class="lc-search" method="get" action="{% url 'accounts:location_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+        <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search name, city, state, address or pincode" autocomplete="off" aria-label="Search locations">
+        <button class="lc-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="lc-tool-actions">
+        <a class="lc-add" href="{% url 'accounts:location_add' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Add location">
+          <svg class="lc-ico lc-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </a>
+      </div>
     </div>
 
-    <div class="pt-tablewrap">
-        <table class="pt-table">
-            <thead>
-                <tr>
-                    <th style="width:40%;">Name</th>
-                    <th style="width:20%;">City</th>
-                    <th style="width:20%;">State</th>
-                    <th class="pt-actions" style="width:20%;">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for l in locations %}
-                <tr>
-                    <td>{{ l.name }}</td>
-                    <td>{{ l.city|default:"—" }}</td>
-                    <td>{{ l.state|default:"—" }}</td>
-
-                    <td class="pt-actions">
-                        <a class="pt-link" href="{% url 'accounts:location_edit' l.id %}">Edit</a>
-                        <span class="pt-dot">•</span>
-
-                        <form method="post" action="{% url 'accounts:location_delete' l.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button class="pt-link danger" type="submit"
-                                onclick="return confirm('Delete this location?')">
-                                Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="pt-empty">No locations found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="lc-tablewrap">
+      <table class="lc-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Pincode</th>
+            <th>Status</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in locations %}
+          <tr>
+            <td>{{ l.name }}</td>
+            <td>{{ l.city|default:"—" }}</td>
+            <td>{{ l.state|default:"—" }}</td>
+            <td>{{ l.pincode|default:"—" }}</td>
+            <td>
+              {% if l.is_active %}
+              <span class="lc-badge lc-badge-active">Active</span>
+              {% else %}
+              <span class="lc-badge lc-badge-inactive">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="lc-actions">
+              <a class="lc-link" href="{% url 'accounts:location_edit' l.id %}{% if not full_page %}?embed=1{% endif %}">Edit</a>
+              <span class="lc-dot">•</span>
+              <form method="post" action="{% url 'accounts:location_delete' l.id %}{% if not full_page %}?embed=1{% endif %}" class="lc-inline-delete js-jb-delete-form" data-delete-label="location &quot;{{ l.name|escape }}&quot;">
+                {% csrf_token %}
+                <button class="lc-link lc-link-danger lc-link-button" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="lc-empty">No locations found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+
+    {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+  </section>
 </div>

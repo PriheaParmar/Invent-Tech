@@ -1,0 +1,55 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/types.css' %}?v=1">
+
+<div class="{% if full_page %}jb-page{% endif %}">
+  <div class="jobbers-embed jb-types-embed">
+    <section class="jb-panel">
+      <div class="jb-head">
+        <div>
+          <div class="jb-title">Edit Pattern Type</div>
+          <div class="jb-sub">Update the selected type</div>
+        </div>
+
+        <div class="jb-head-actions">
+          <a class="jb-iconbtn jb-back"
+             href="{% url 'accounts:patterntype_list' %}{% if not full_page %}?embed=1{% endif %}"
+             aria-label="Back">
+            <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
+              <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+            </svg>
+          </a>
+
+          {% if not full_page %}
+          <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+            <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 6L6 18"></path>
+              <path d="M6 6l12 12"></path>
+            </svg>
+          </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <form method="post"
+            action="{% url 'accounts:patterntype_edit' pattern_type.id %}{% if not full_page %}?embed=1{% endif %}"
+            class="jb-inline-form">
+        {% csrf_token %}
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <div class="jb-inline-field">
+          <label for="{{ form.name.id_for_label }}">Type Name</label>
+          {{ form.name }}
+          {% if form.name.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <button class="jb-add" type="submit">Update</button>
+      </form>
+    </section>
+  </div>
+</div>

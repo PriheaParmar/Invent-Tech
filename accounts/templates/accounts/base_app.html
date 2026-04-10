@@ -59,7 +59,7 @@
 
 
 
-    <a class="sb-link {% if request.resolver_match.url_name == 'po_home' or request.resolver_match.url_name|slice:':7' == 'yarnpo_' %}active{% endif %}" href="{% url 'accounts:po_home' %}">
+    <a class="sb-link {% if request.path|slice:':4' == '/po/' %}active{% endif %}" href="{% url 'accounts:po_home' %}">
   <span class="sb-ico">
     <svg class="ico" viewBox="0 0 24 24">
       <path d="M6 3h9l3 3v15H6z"></path>
@@ -72,14 +72,14 @@
   <span class="sb-text">PO</span>
 </a>
 
-        <a class="sb-link" href="#">
-          <span class="sb-ico">
-            <svg class="ico" viewBox="0 0 24 24">
-              <path d="M21 8l-9-5-9 5v10l9 5 9-5V8zM3 8l9 5 9-5" />
-            </svg>
-          </span>
-          <span class="sb-text">Inventory</span>
-        </a>
+        <a class="sb-link {% if request.resolver_match.url_name == 'stock_lot_wise' %}active{% endif %}" href="{% url 'accounts:stock_lot_wise' %}">
+  <span class="sb-ico">
+    <svg class="ico" viewBox="0 0 24 24">
+      <path d="M21 8l-9-5-9 5v10l9 5 9-5V8zM3 8l9 5 9-5" />
+    </svg>
+  </span>
+  <span class="sb-text">Inventory</span>
+</a>
 
         <a class="sb-link" href="#">
           <span class="sb-ico">

@@ -1,0 +1,16 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}{% if mode == "add" %}Add Catalogue{% else %}Edit Catalogue{% endif %} - InventTech{% endblock %}
+{% block page_title %}{% if mode == "add" %}Add Catalogue{% else %}Edit Catalogue{% endif %}{% endblock %}
+{% block page_subtitle %}Manage catalogue master records{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="jb-page">
+      {% include "accounts/catalogues/form_embed.html" with full_page=True %}
+    </div>
+  </div>
+</section>
+{% endblock %}

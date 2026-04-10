@@ -1,0 +1,103 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/main_categories.css' %}?v=1">
+
+<div class="mc-embed">
+  <section class="mc-panel">
+    <div class="mc-head">
+      <div>
+        <div class="mc-title">Main Categories</div>
+        <div class="mc-sub">Manage reusable main categories</div>
+      </div>
+
+      {% if not full_page %}
+      <button type="button" class="mc-iconbtn" data-embed-close aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+
+    <div class="mc-tools">
+      <form class="mc-search" method="get" action="{% url 'accounts:maincategory_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+        <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search main category..." autocomplete="off">
+        <button class="mc-search-btn" type="submit">Search</button>
+      </form>
+    </div>
+
+    <form method="post"
+          action="{% url 'accounts:maincategory_list' %}{% if not full_page %}?embed=1{% endif %}"
+          class="mc-grid-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="mc-field">
+        <label for="{{ form.name.id_for_label }}">Main Category</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+        <div class="mc-errors">
+          {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="mc-field">
+        <label for="{{ form.description.id_for_label }}">Description</label>
+        {{ form.description }}
+        {% if form.description.errors %}
+        <div class="mc-errors">
+          {% for error in form.description.errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="mc-form-actions">
+        <button class="mc-add" type="submit">Add</button>
+      </div>
+    </form>
+
+    <div class="mc-tablewrap">
+      <table class="mc-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for category in categories %}
+          <tr>
+            <td>{{ category.name }}</td>
+            <td>{{ category.description|default:"—" }}</td>
+            <td class="mc-actions">
+              <a class="mc-link" href="{% url 'accounts:maincategory_edit' category.id %}{% if not full_page %}?embed=1{% endif %}">Edit</a>
+              <span class="mc-dot">•</span>
+              <form method="post"
+                    action="{% url 'accounts:maincategory_delete' category.id %}{% if not full_page %}?embed=1{% endif %}"
+                    class="mc-inline-delete"
+                    onsubmit="return confirm('Delete this main category?')">
+                {% csrf_token %}
+                {% if not full_page %}
+                <input type="hidden" name="embed" value="1">
+                {% endif %}
+                <button class="mc-link mc-link-danger mc-link-button" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="mc-empty">No main categories found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

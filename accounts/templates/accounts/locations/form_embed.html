@@ -1,62 +1,122 @@
-{# Locations - Embed Form (opens inside Utilities embed panel) #}
-
-<div class="parties-embed party-form-embed">
-  <div class="pt-head">
-    <div>
-      <div class="pt-title">
-        {% if mode == "edit" %}Edit Location{% else %}Create Location{% endif %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/locations/form.css' %}?v=1">
+<div class="locations-embed location-form-embed">
+  <section class="lc-panel">
+    <div class="lc-head">
+      <div>
+        <div class="lc-title">
+          {% if mode == "edit" %}Edit Location{% else %}Add Location{% endif %}
+        </div>
+        <div class="lc-sub">Where your stock is stored and tracked</div>
       </div>
-      <div class="pt-sub">Enter location details</div>
+
+      <div class="lf-head-actions">
+        <a class="lc-iconbtn lc-back" href="{% url 'accounts:location_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+          <svg class="lc-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="lc-iconbtn lc-close" data-embed-close aria-label="Close">
+          <svg class="lc-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
     </div>
 
-    <div class="pt-head-actions">
-      <a class="pt-back" href="{% url 'accounts:location_list' %}?embed=1" title="Back">
-        <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6"></path>
-        </svg>
-      </a>
-
-      <button type="button" class="pt-close" data-embed-close title="Close">
-        <svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M18 6L6 18"></path>
-          <path d="M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <form method="post"
-        action="{% if mode == 'edit' %}{% url 'accounts:location_edit' location.id %}{% else %}{% url 'accounts:location_add' %}{% endif %}"
-        class="pt-form">
-    {% csrf_token %}
-    <input type="hidden" name="embed" value="1">
-
-    {% if form.non_field_errors %}
-      <div class="pt-errors">
-        {{ form.non_field_errors }}
-      </div>
+    {% if mode == "add" %}
+      {% url "accounts:location_add" as action_url %}
+    {% else %}
+      {% url "accounts:location_edit" location.id as action_url %}
     {% endif %}
 
-    <div class="pt-grid">
-      {% for field in form.visible_fields %}
-        <div class="pt-field {% if field.name == 'address' %}pt-full{% endif %}">
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-
-          {% if field.help_text %}
-            <div class="pt-help">{{ field.help_text }}</div>
-          {% endif %}
-
-          {% for err in field.errors %}
-            <div class="pt-err">{{ err }}</div>
-          {% endfor %}
-        </div>
+    {% if form.non_field_errors %}
+    <div class="lc-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
       {% endfor %}
     </div>
+    {% endif %}
 
-    <div class="pt-actionsbar">
-      <button type="submit" class="pt-btn primary">Save</button>
-      <a class="pt-btn" href="{% url 'accounts:location_list' %}?embed=1">Cancel</a>
-    </div>
-  </form>
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="lf-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="lf-grid">
+        <div class="lf-field">
+          <label for="{{ form.name.id_for_label }}">Name</label>
+          {{ form.name }}
+          {% if form.name.errors %}
+          <div class="lc-field-errors">
+            {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="lf-field">
+          <label for="{{ form.city.id_for_label }}">City</label>
+          {{ form.city }}
+          {% if form.city.errors %}
+          <div class="lc-field-errors">
+            {% for error in form.city.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="lf-field">
+          <label for="{{ form.state.id_for_label }}">State</label>
+          {{ form.state }}
+          {% if form.state.errors %}
+          <div class="lc-field-errors">
+            {% for error in form.state.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="lf-field">
+          <label for="{{ form.pincode.id_for_label }}">Pincode</label>
+          {{ form.pincode }}
+          {% if form.pincode.errors %}
+          <div class="lc-field-errors">
+            {% for error in form.pincode.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="lf-field lf-full">
+          <label for="{{ form.address.id_for_label }}">Address</label>
+          {{ form.address }}
+          {% if form.address.errors %}
+          <div class="lc-field-errors">
+            {% for error in form.address.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="lf-field lf-full lf-check">
+          <label for="{{ form.is_active.id_for_label }}">Active</label>
+          <div class="lf-check-row">
+            {{ form.is_active }}
+            <span class="lf-muted">Use this location for active stock storage</span>
+          </div>
+          {% if form.is_active.errors %}
+          <div class="lc-field-errors">
+            {% for error in form.is_active.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="lf-footer">
+        <a class="lc-secondary" href="{% url 'accounts:location_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="lc-add">Save Location</button>
+      </div>
+    </form>
+  </section>
 </div>

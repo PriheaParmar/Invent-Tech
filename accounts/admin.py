@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Jobber, JobberType, UserExtra, Party, Location
+from .models import Jobber, JobberType, UserExtra, Party, Location, Brand, Catalogue
 
 @admin.register(JobberType)
 class JobberTypeAdmin(admin.ModelAdmin):
@@ -27,3 +27,17 @@ class PartyAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Location)
+
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ("name", "owner", "is_active", "created_at")
+    search_fields = ("name", "description", "owner__username")
+    list_filter = ("is_active", "owner")
+    ordering = ("name",)
+    
+@admin.register(Catalogue)
+class CatalogueAdmin(admin.ModelAdmin):
+    list_display = ("name", "wear_type", "owner", "is_active", "created_at")
+    search_fields = ("name", "wear_type", "description", "owner__username")
+    list_filter = ("is_active", "owner", "wear_type")
+    ordering = ("name",)

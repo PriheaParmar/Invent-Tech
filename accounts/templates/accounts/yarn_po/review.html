@@ -4,14 +4,31 @@
 {% block page_subtitle %}Approve or reject purchase order{% endblock %}
 
 {% block content %}
+{% include 'accounts/po/_po_nav.html' with active_po_tab='yarn' back_route='accounts:yarnpo_list' back_label='Back to Yarn PO List' po_nav_title='Yarn PO Review' %}
+
 <style>
+  :root{
+    --rv-text:#0f172a;
+    --rv-text-soft:#667085;
+    --rv-line:rgba(15,23,42,.08);
+    --rv-line-soft:rgba(15,23,42,.06);
+    --rv-bg:#ffffff;
+    --rv-bg-soft:#f8fafc;
+    --rv-bg-soft-2:#f3f6f9;
+    --rv-shadow:0 18px 48px rgba(15,23,42,.06);
+    --rv-shadow-soft:0 10px 24px rgba(15,23,42,.04);
+    --rv-dark:#111827;
+  }
+
   .review-shell{
-    width: 100%;
-    background: #fff;
-    border: 1px solid rgba(15,23,42,.08);
-    border-radius: 22px;
-    box-shadow: 0 18px 55px rgba(15,23,42,.08);
-    padding: 18px;
+    width:100%;
+    background:
+      radial-gradient(circle at top right, rgba(15,23,42,.04), transparent 22%),
+      linear-gradient(180deg, #fbfcfe 0%, #ffffff 30%);
+    border:1px solid var(--rv-line);
+    border-radius:24px;
+    box-shadow:var(--rv-shadow);
+    padding:18px;
   }
 
   .review-head{
@@ -20,74 +37,177 @@
     gap:14px;
     align-items:flex-start;
     margin-bottom:16px;
+    padding:16px 18px;
+    border-radius:20px;
+    background:linear-gradient(180deg, rgba(248,250,252,.95), rgba(255,255,255,.98));
+    border:1px solid var(--rv-line);
+  }
+
+  .review-head-main{
+    min-width:0;
+  }
+
+  .review-eyebrow{
+    display:inline-flex;
+    align-items:center;
+    min-height:24px;
+    padding:0 10px;
+    border-radius:999px;
+    background:#eef2f6;
+    color:#475467;
+    border:1px solid rgba(15,23,42,.06);
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:8px;
   }
 
   .review-title{
-    font-size: 20px;
-    font-weight: 950;
-    color: #0f172a;
+    font-size:24px;
+    font-weight:950;
+    color:var(--rv-text);
+    line-height:1.05;
+    letter-spacing:-.02em;
+  }
+
+  .review-subtitle{
+    margin-top:5px;
+    font-size:12px;
+    font-weight:700;
+    color:var(--rv-text-soft);
+    line-height:1.45;
   }
 
   .review-status{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    min-height:30px;
+    min-height:32px;
     padding:0 12px;
     border-radius:999px;
     font-size:11px;
     font-weight:900;
     text-transform:uppercase;
-    letter-spacing:.05em;
+    letter-spacing:.06em;
+    border:1px solid transparent;
+    white-space:nowrap;
   }
 
-  .review-status.pending{ background: rgba(250,189,100,.16); color: #b76c00; }
-  .review-status.approved{ background: rgba(34,197,94,.14); color: #15803d; }
-  .review-status.rejected{ background: rgba(239,68,68,.14); color: #dc2626; }
+  .review-status.pending{
+    background:rgba(245,158,11,.12);
+    color:#a16207;
+    border-color:rgba(245,158,11,.18);
+  }
+
+  .review-status.approved{
+    background:rgba(34,197,94,.12);
+    color:#15803d;
+    border-color:rgba(34,197,94,.18);
+  }
+
+  .review-status.rejected{
+    background:rgba(239,68,68,.12);
+    color:#dc2626;
+    border-color:rgba(239,68,68,.16);
+  }
 
   .review-grid{
     display:grid;
-    grid-template-columns: 1.2fr .8fr;
+    grid-template-columns:1.2fr .8fr;
     gap:18px;
   }
 
   .review-card{
-    border: 1px solid rgba(15,23,42,.08);
-    border-radius: 18px;
-    background: rgba(255,255,255,.9);
-    padding: 14px;
+    border:1px solid var(--rv-line);
+    border-radius:20px;
+    background:rgba(255,255,255,.96);
+    padding:15px;
+    box-shadow:var(--rv-shadow-soft);
   }
 
-  .review-meta{
+  .review-card-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .review-card-title{
+    font-size:15px;
+    font-weight:900;
+    color:var(--rv-text);
+    letter-spacing:-.01em;
+  }
+
+  .review-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:28px;
+    padding:0 10px;
+    border-radius:999px;
+    background:var(--rv-bg-soft);
+    color:#475467;
+    border:1px solid var(--rv-line);
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    white-space:nowrap;
+  }
+
+  .review-meta-grid{
     display:grid;
-    grid-template-columns: 110px 1fr;
-    gap: 6px 10px;
-    font-size: 13px;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:10px;
   }
 
-  .review-meta .k{ font-weight: 900; color:#111827; }
-  .review-meta .v{ font-weight: 700; color:#374151; }
+  .review-meta-item{
+    background:var(--rv-bg-soft);
+    border:1px solid var(--rv-line-soft);
+    border-radius:16px;
+    padding:11px 12px;
+  }
+
+  .review-meta-item .k{
+    font-size:10px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+    color:var(--rv-text-soft);
+  }
+
+  .review-meta-item .v{
+    margin-top:5px;
+    font-size:13px;
+    font-weight:900;
+    color:var(--rv-text);
+    line-height:1.4;
+    word-break:break-word;
+  }
 
   .review-tablewrap{
     overflow:auto;
-    border-radius: 16px;
-    border: 1px solid rgba(15,23,42,.08);
-    margin-top: 12px;
+    border-radius:16px;
+    border:1px solid var(--rv-line);
+    margin-top:14px;
+    background:#fff;
   }
 
   .review-table{
     width:100%;
-    border-collapse: collapse;
-    min-width: 760px;
+    border-collapse:collapse;
+    min-width:760px;
   }
 
   .review-table th,
   .review-table td{
-    padding: 11px 12px;
-    border-bottom: 1px solid rgba(15,23,42,.06);
+    padding:11px 12px;
+    border-bottom:1px solid var(--rv-line-soft);
     text-align:left;
     vertical-align:top;
-    font-size: 12px;
+    font-size:12px;
   }
 
   .review-table thead th{
@@ -95,40 +215,92 @@
     letter-spacing:.08em;
     color:#667085;
     font-weight:900;
-    font-size:11px;
-    background: rgba(248,250,252,.95);
+    font-size:10px;
+    background:linear-gradient(180deg, #fafbfd 0%, #f3f6f9 100%);
+    white-space:nowrap;
+  }
+
+  .review-table tbody tr:hover{
+    background:#fbfcfe;
+  }
+
+  .review-table .material-name{
+    font-weight:900;
+    color:var(--rv-text);
+  }
+
+  .review-empty{
+    text-align:center;
+    color:var(--rv-text-soft);
+    font-weight:700;
+    padding:16px 12px;
   }
 
   .review-summary{
     display:grid;
-    grid-template-columns: 1fr auto;
-    gap:8px 12px;
-    font-size: 13px;
+    gap:10px;
+  }
+
+  .review-summary-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 12px;
+    border-radius:14px;
+    background:var(--rv-bg-soft);
+    border:1px solid var(--rv-line-soft);
+  }
+
+  .review-summary-row.total{
+    background:linear-gradient(180deg, #f3f6f9 0%, #eef2f6 100%);
+    border-color:var(--rv-line);
   }
 
   .review-summary .k{
-    font-weight: 900;
-    color: #111827;
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:#475467;
   }
 
   .review-summary .v{
-    font-weight: 800;
-    color: #374151;
+    font-size:13px;
+    font-weight:900;
+    color:var(--rv-text);
     text-align:right;
+    white-space:nowrap;
   }
 
   .review-reason{
-    margin-top: 12px;
+    margin-top:14px;
+  }
+
+  .review-reason label{
+    display:block;
+    margin-bottom:7px;
+    font-size:12px;
+    font-weight:900;
+    color:var(--rv-text);
   }
 
   .review-reason textarea{
     width:100%;
-    min-height:90px;
+    min-height:96px;
     border:1px solid rgba(15,23,42,.10);
     border-radius:14px;
     padding:10px 12px;
     outline:none;
     resize:vertical;
+    background:#fff;
+    color:var(--rv-text);
+    font:inherit;
+  }
+
+  .review-reason textarea:focus{
+    border-color:rgba(15,23,42,.18);
+    box-shadow:0 0 0 3px rgba(15,23,42,.05);
   }
 
   .review-actions{
@@ -140,46 +312,86 @@
   }
 
   .review-btn{
-    height: 40px;
-    padding: 0 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(0,0,0,.10);
-    background: rgba(255,255,255,.94);
-    font-weight: 800;
+    min-height:40px;
+    padding:0 16px;
+    border-radius:12px;
+    border:1px solid rgba(15,23,42,.10);
+    background:#fff;
+    color:var(--rv-text);
+    font-weight:800;
     cursor:pointer;
     text-decoration:none;
     display:inline-flex;
     align-items:center;
     justify-content:center;
+    transition:all .18s ease;
   }
 
   .review-btn:hover{
-    background:#000;
-    color:#fff;
+    background:var(--rv-bg-soft);
+    border-color:rgba(15,23,42,.16);
   }
 
   .review-btn.approve{
-    background: var(--orange);
+    background:#111827;
     color:#fff;
-    border:none;
+    border-color:#111827;
+  }
+
+  .review-btn.approve:hover{
+    background:#0b1220;
+    border-color:#0b1220;
+    color:#fff;
   }
 
   .review-btn.reject{
-    background: rgba(238,61,133,.12);
-    border-color: rgba(238,61,133,.22);
-    color: rgba(238,61,133,1);
+    background:rgba(239,68,68,.08);
+    border-color:rgba(239,68,68,.16);
+    color:#dc2626;
+  }
+
+  .review-btn.reject:hover{
+    background:rgba(239,68,68,.12);
+    color:#b91c1c;
   }
 
   .review-error{
-    color: #dc2626;
-    font-size: 12px;
-    font-weight: 700;
-    margin-top: 6px;
+    color:#dc2626;
+    font-size:12px;
+    font-weight:700;
+    margin-top:6px;
   }
 
   @media (max-width: 980px){
     .review-grid{
-      grid-template-columns: 1fr;
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width: 720px){
+    .review-shell{
+      padding:14px;
+      border-radius:18px;
+    }
+
+    .review-head{
+      padding:14px;
+      border-radius:16px;
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .review-meta-grid{
+      grid-template-columns:1fr;
+    }
+
+    .review-actions{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .review-btn{
+      width:100%;
     }
   }
 </style>
@@ -188,8 +400,10 @@
   <div class="canvas">
     <div class="review-shell">
       <div class="review-head">
-        <div>
+        <div class="review-head-main">
+          <div class="review-eyebrow">Purchase Order Review</div>
           <div class="review-title">Details of {{ po.system_number }}</div>
+          <div class="review-subtitle">Review the purchase order details and take the final action.</div>
         </div>
 
         <span class="review-status {% if po.approval_status == 'approved' %}approved{% elif po.approval_status == 'rejected' %}rejected{% else %}pending{% endif %}">
@@ -199,21 +413,36 @@
 
       <div class="review-grid">
         <div class="review-card">
-          <div class="review-meta">
-            <div class="k">PO No.</div>
-            <div class="v">: {{ po.system_number }}</div>
+          <div class="review-card-head">
+            <div class="review-card-title">Order Details</div>
+            <div class="review-chip">Yarn PO</div>
+          </div>
 
-            <div class="k">Internal PO No</div>
-            <div class="v">: {{ po.po_number|default:"—" }}</div>
+          <div class="review-meta-grid">
+            <div class="review-meta-item">
+              <div class="k">PO No.</div>
+              <div class="v">{{ po.system_number }}</div>
+            </div>
 
-            <div class="k">PO Date</div>
-            <div class="v">: {{ po.po_date|date:"d-m-Y" }}</div>
+            <div class="review-meta-item">
+              <div class="k">Internal PO No</div>
+              <div class="v">{{ po.po_number|default:"—" }}</div>
+            </div>
 
-            <div class="k">Vendor</div>
-            <div class="v">: {{ po.vendor.name }}</div>
+            <div class="review-meta-item">
+              <div class="k">PO Date</div>
+              <div class="v">{{ po.po_date|date:"d-m-Y" }}</div>
+            </div>
 
-            <div class="k">Firm</div>
-            <div class="v">: {% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
+            <div class="review-meta-item">
+              <div class="k">Vendor</div>
+              <div class="v">{{ po.vendor.name }}</div>
+            </div>
+
+            <div class="review-meta-item">
+              <div class="k">Firm</div>
+              <div class="v">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
+            </div>
           </div>
 
           <div class="review-tablewrap">
@@ -231,13 +460,15 @@
                 {% for item in po.items.all %}
                 <tr>
                   <td>
-                    {% if item.material_type %}
-                      {{ item.material_type.name }}
-                    {% elif item.material %}
-                      {{ item.material.name }}
-                    {% else %}
-                      —
-                    {% endif %}
+                    <div class="material-name">
+                      {% if item.material_type %}
+                        {{ item.material_type.name }}
+                      {% elif item.material %}
+                        {{ item.material.name }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </div>
                   </td>
                   <td>{{ item.quantity|default:"0.00" }}</td>
                   <td>{{ item.unit|default:"—" }}</td>
@@ -246,7 +477,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="5">No line items found.</td>
+                  <td colspan="5" class="review-empty">No line items found.</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -255,32 +486,51 @@
         </div>
 
         <div class="review-card">
+          <div class="review-card-head">
+            <div class="review-card-title">Summary & Action</div>
+            <div class="review-chip">{{ po.items.count }} Item{{ po.items.count|pluralize }}</div>
+          </div>
+
           <div class="review-summary">
-            <div class="k">Sub Total (₹)</div>
-            <div class="v">₹{{ po.subtotal|default:"0.00" }}</div>
+            <div class="review-summary-row">
+              <div class="k">Sub Total (₹)</div>
+              <div class="v">₹{{ po.subtotal|default:"0.00" }}</div>
+            </div>
 
-            <div class="k">Discount In (%)</div>
-            <div class="v">{{ po.discount_percent|default:"0" }}</div>
+            <div class="review-summary-row">
+              <div class="k">Discount In (%)</div>
+              <div class="v">{{ po.discount_percent|default:"0" }}</div>
+            </div>
 
-            <div class="k">After Discount (₹)</div>
-            <div class="v">₹{{ po.after_discount_value|default:"0.00" }}</div>
+            <div class="review-summary-row">
+              <div class="k">After Discount (₹)</div>
+              <div class="v">₹{{ po.after_discount_value|default:"0.00" }}</div>
+            </div>
 
-            <div class="k">Others (₹)</div>
-            <div class="v">₹{{ po.others|default:"0.00" }}</div>
+            <div class="review-summary-row">
+              <div class="k">Others (₹)</div>
+              <div class="v">₹{{ po.others|default:"0.00" }}</div>
+            </div>
 
-            <div class="k">CGST (%)</div>
-            <div class="v">{{ po.cgst_percent|default:"0" }}</div>
+            <div class="review-summary-row">
+              <div class="k">CGST (%)</div>
+              <div class="v">{{ po.cgst_percent|default:"0" }}</div>
+            </div>
 
-            <div class="k">SGST (%)</div>
-            <div class="v">{{ po.sgst_percent|default:"0" }}</div>
+            <div class="review-summary-row">
+              <div class="k">SGST (%)</div>
+              <div class="v">{{ po.sgst_percent|default:"0" }}</div>
+            </div>
 
-            <div class="k">Grand Total (₹)</div>
-            <div class="v">₹{{ po.grand_total|default:"0.00" }}</div>
+            <div class="review-summary-row total">
+              <div class="k">Grand Total (₹)</div>
+              <div class="v">₹{{ po.grand_total|default:"0.00" }}</div>
+            </div>
           </div>
 
           {% if po.rejection_reason %}
           <div class="review-reason">
-            <label><strong>Current rejection reason</strong></label>
+            <label>Current rejection reason</label>
             <textarea readonly>{{ po.rejection_reason }}</textarea>
           </div>
           {% endif %}
@@ -290,7 +540,7 @@
             <form method="post">
               {% csrf_token %}
               <input type="hidden" name="decision" value="reject">
-              <label><strong>Rejection reason</strong></label>
+              <label>Rejection reason</label>
               {{ review_form.rejection_reason }}
               {% for err in review_form.rejection_reason.errors %}
                 <div class="review-error">{{ err }}</div>
@@ -303,7 +553,7 @@
             </form>
           </div>
 
-          <form method="post" style="margin-top: 10px;">
+          <form method="post" style="margin-top:10px;">
             {% csrf_token %}
             <input type="hidden" name="decision" value="approve">
             <div class="review-actions">

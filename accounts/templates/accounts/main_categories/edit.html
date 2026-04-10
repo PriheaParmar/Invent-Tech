@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Edit Main Category - InventTech{% endblock %}
+{% block page_title %}Edit Main Category{% endblock %}
+{% block page_subtitle %}Update the selected main category{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/main_categories/edit_embed.html" with full_page=True %}
+</div>
+{% endblock %}

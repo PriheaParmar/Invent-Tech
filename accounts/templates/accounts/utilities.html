@@ -97,7 +97,8 @@
       "Vendor",
       "Jobber Type",
       "Jobber",
-      "Material Type Linking",
+      "Material Sub Type",
+      "Material Unit"
     ],
     Production: ["Techpack", "BOM", "Job Card Details", "Branch SKU"],
     Dyeing: ["Dyeing Master", "Greige Master", "Dyeing Other Charge Headers"],
@@ -115,9 +116,16 @@
     "Material / Trim": "{% url 'accounts:material_list' %}",
     "Material Type": "{% url 'accounts:materialtype_list' %}",
     "Material Shades": "{% url 'accounts:materialshade_list' %}",
+    "Material Sub Type": "{% url 'accounts:materialsubtype_list' %}",
+    "Brand": "{% url 'accounts:brand_list' %}",
     "Party": "{% url 'accounts:party_list' %}",
     "Vendor": "{% url 'accounts:vendor_list' %}",
-    "Location": "{% url 'accounts:location_list' %}"
+    "Location": "{% url 'accounts:location_list' %}",
+    "Material Unit": "{% url 'accounts:materialunit_list' %}",
+    "Category": "{% url 'accounts:category_list' %}",
+    "Main Category": "{% url 'accounts:maincategory_list' %}",
+    "Catalogue": "{% url 'accounts:catalogue_list' %}",
+    "Pattern Type": "{% url 'accounts:patterntype_list' %}",
   };
 
   const UTILITIES = [
@@ -135,7 +143,7 @@
     { name: "Vendor", tag: "Masters", icon: "vendor" },
     { name: "Jobber Type", tag: "Masters", icon: "jobber-type" },
     { name: "Jobber", tag: "Masters", icon: "jobber" },
-    { name: "Material Type Linking", tag: "Masters", icon: "link" },
+    { name: "Material Sub Type", tag: "Masters", icon: "material-sub-type" },
 
     { name: "Techpack", tag: "Production", icon: "file" },
     { name: "BOM", tag: "Production", icon: "bom" },
@@ -194,32 +202,46 @@
     });
   }
 
+  const MASTER_TILE_NAMES = [
+    "Jobber",
+    "Jobber Type",
+    "Material / Trim",
+    "Material Type",
+    "Material Shades",
+    "Material Sub Type",
+  "Main Category",
+  "Pattern Type",
+  "Catalogue",
+    "Party",
+    "Vendor",
+    "Category",
+    "Location",
+  ];
+
+  const MASTER_ROUTE_PREFIXES = MASTER_TILE_NAMES
+    .map((name) => ROUTES[name])
+    .filter(Boolean)
+    .map((url) => {
+      try {
+        const path = new URL(url, window.location.origin).pathname.replace(/\/+$/, "");
+        return path;
+      } catch (err) {
+        return "";
+      }
+    })
+    .filter(Boolean);
+
   function isMastersTile(name) {
-    return [
-      "Jobber",
-      "Jobber Type",
-      "Material / Trim",
-      "Material Type",
-      "Material Shades",
-      "Party",
-      "Vendor",
-      "Location",
-    ].includes(name);
+    return MASTER_TILE_NAMES.includes(name);
   }
 
   function isMastersUrl(url) {
     try {
-      const path = new URL(url, window.location.origin).pathname;
-      return [
-        "/master/jobbers/",
-        "/master/jobber-types/",
-        "/master/materials/",
-        "/master/material-types/",
-        "/master/material-shades/",
-        "/master/parties/",
-        "/master/vendors/",
-        "/master/locations/",
-      ].some((prefix) => path.startsWith(prefix));
+      const path = new URL(url, window.location.origin).pathname.replace(/\/+$/, "");
+
+      return MASTER_ROUTE_PREFIXES.some((prefix) => {
+        return path === prefix || path.startsWith(prefix + "/");
+      });
     } catch (err) {
       return false;
     }
@@ -264,6 +286,18 @@
           <path d="M12 4l8 4-8 4-8-4 8-4z"></path>
           <path d="M4 12l8 4 8-4"></path>
           <path d="M4 16l8 4 8-4"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "material-sub-type") {
+      return `
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="5" width="7" height="5" rx="1.2"></rect>
+          <rect x="13" y="5" width="7" height="5" rx="1.2"></rect>
+          <rect x="8.5" y="14" width="7" height="5" rx="1.2"></rect>
+          <path d="M7.5 10v2.2h9v1.8"></path>
+          <path d="M16.5 10v2.2"></path>
         </svg>
       `;
     }
@@ -670,6 +704,7 @@
       if (reqId !== MASTERS_REQUEST_SEQ) return;
 
       mount.innerHTML = html;
+      initMastersEmbed(mount);
       mount.scrollTop = 0;
     } catch (err) {
       if (reqId !== MASTERS_REQUEST_SEQ) return;
@@ -686,12 +721,139 @@
     const mount = document.getElementById("mastersEmbedMount");
     if (!panel || !mount) return;
 
+    closeJobberDeleteModal();
+
     MASTERS_REQUEST_SEQ += 1;
     LAST_MASTERS_URL = null;
     panel.style.display = "none";
     panel.style.pointerEvents = "none";
     mount.classList.remove("is-loading");
     mount.innerHTML = "";
+  }
+
+  function getJobberDeleteModal() {
+    const mount = document.getElementById("mastersEmbedMount");
+    if (!mount) return null;
+    return mount.querySelector("#jbDeleteConfirm");
+  }
+
+    function submitEmbedForm(form) {
+    if (!form) return;
+
+    if (typeof form.requestSubmit === "function") {
+      form.requestSubmit();
+      return;
+    }
+
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  }
+
+  function bindEmbedAutosubmit(mount) {
+    if (!mount) return;
+
+    mount.querySelectorAll("[data-embed-autosubmit-form]").forEach(function (form) {
+      form.querySelectorAll("[data-embed-autosubmit]").forEach(function (field) {
+        if (field.dataset.bound === "1") return;
+
+        field.dataset.bound = "1";
+        field.removeAttribute("onchange");
+        field.onchange = null;
+        field.addEventListener("change", function () {
+          submitEmbedForm(form);
+        });
+      });
+    });
+  }
+
+  function bindMaterialSubtypeForm(mount) {
+    if (!mount) return;
+
+    const form = mount.querySelector('[data-material-subtype-form="1"]');
+    if (!form || form.dataset.kindSyncBound === "1") return;
+
+    form.dataset.kindSyncBound = "1";
+
+    const kindInputs = form.querySelectorAll('input[name="material_kind"]');
+    const typeSelect = form.querySelector('[name="material_type"]');
+
+    if (!kindInputs.length || !typeSelect) return;
+
+    function selectedKind() {
+      const checked = Array.from(kindInputs).find(function (input) {
+        return input.checked;
+      });
+      return checked ? checked.value : "";
+    }
+
+    function syncTypes() {
+      const kind = selectedKind();
+      let hasVisibleChoice = false;
+
+      Array.from(typeSelect.options).forEach(function (option) {
+        if (!option.value) {
+          option.hidden = false;
+          option.disabled = false;
+          return;
+        }
+
+        const optionKind = option.getAttribute("data-kind") || "";
+        const shouldShow = !kind || optionKind === kind;
+
+        option.hidden = !shouldShow;
+        option.disabled = !shouldShow;
+
+        if (shouldShow) {
+          hasVisibleChoice = true;
+        }
+      });
+
+      const currentOption = typeSelect.options[typeSelect.selectedIndex];
+      if (currentOption && currentOption.value && currentOption.disabled) {
+        typeSelect.value = "";
+      }
+
+      typeSelect.disabled = !!kind && !hasVisibleChoice;
+    }
+
+    kindInputs.forEach(function (input) {
+      input.addEventListener("change", syncTypes);
+    });
+
+    syncTypes();
+  }
+
+  function initMastersEmbed(mount) {
+    bindEmbedAutosubmit(mount);
+    bindMaterialSubtypeForm(mount);
+  }
+  function openJobberDeleteModal(form) {
+    const modal = getJobberDeleteModal();
+    const label = form.getAttribute("data-delete-label") || "this item";
+
+    if (!modal) {
+      if (window.confirm(`Are you sure you want to delete ${label}? This action cannot be undone.`)) {
+        form.dataset.confirmed = "1";
+        form.requestSubmit();
+      }
+      return;
+    }
+
+    const text = modal.querySelector("#jbConfirmText");
+    if (text) {
+      text.textContent = `Are you sure you want to delete ${label}? This action cannot be undone.`;
+    }
+
+    modal._pendingForm = form;
+    modal.hidden = false;
+    document.body.classList.add("jb-modal-open");
+  }
+
+  function closeJobberDeleteModal() {
+    const modal = getJobberDeleteModal();
+    if (!modal) return;
+    modal.hidden = true;
+    modal._pendingForm = null;
+    document.body.classList.remove("jb-modal-open");
   }
 
   function bootUtilities() {
@@ -710,6 +872,26 @@
     });
 
     utilitiesRoot.addEventListener("click", function (e) {
+      if (e.target.closest("[data-jb-close]")) {
+        e.preventDefault();
+        closeJobberDeleteModal();
+        return;
+      }
+
+      if (e.target.closest("#jbConfirmDeleteBtn")) {
+        e.preventDefault();
+
+        const modal = getJobberDeleteModal();
+        const form = modal && modal._pendingForm ? modal._pendingForm : null;
+
+        if (form) {
+          closeJobberDeleteModal();
+          form.dataset.confirmed = "1";
+          form.requestSubmit();
+        }
+        return;
+      }
+
       const closeBtn = e.target.closest("[data-embed-close]");
       if (closeBtn) {
         e.preventDefault();
@@ -736,7 +918,10 @@
       const href = link.getAttribute("href") || "";
       if (!href) return;
 
-      if (isMastersUrl(href)) {
+      const isEmbedLink = href.includes("embed=1");
+      const isInsideMastersPanel = !!link.closest("#mastersEmbedMount");
+
+      if (isMastersUrl(href) || (isInsideMastersPanel && isEmbedLink)) {
         e.preventDefault();
         openMastersPanel(href);
       }
@@ -745,6 +930,16 @@
     utilitiesRoot.addEventListener("submit", function (e) {
       const form = e.target.closest("form");
       if (!form) return;
+
+      if (form.matches(".js-jb-delete-form")) {
+        if (form.dataset.confirmed === "1") {
+          delete form.dataset.confirmed;
+        } else {
+          e.preventDefault();
+          openJobberDeleteModal(form);
+          return;
+        }
+      }
 
       const action = form.getAttribute("action") || window.location.href;
       const isMastersForm = isMastersUrl(action) || form.querySelector('input[name="embed"][value="1"]');

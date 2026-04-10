@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Material Sub Types - InventTech{% endblock %}
+{% block page_title %}Material Sub Types{% endblock %}
+{% block page_subtitle %}Manage sub types under each material type{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/material_sub_types/list_embed.html" with full_page=True %}
+</div>
+{% endblock %}

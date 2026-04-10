@@ -1,4 +1,7 @@
 {% extends "accounts/base_app.html" %}
+
 {% block content %}
-  {% include "accounts/materials/list_embed.html" %}
+<div class="jb-page">
+  {% include "accounts/materials/list_embed.html" with full_page=1 %}
+</div>
 {% endblock %}

@@ -16,6 +16,9 @@ urlpatterns = [
     path("profile/save/", views.profile_save, name="profile_save"),
     path("firm/save/", views.firm_save, name="firm_save"),
 
+    # Inventory
+    path("inventory/stock-lot-wise/", views.stock_lot_wise, name="stock_lot_wise"),
+
     # Jobbers (Master)
     path("master/jobbers/", views.jobber_list, name="jobber_list"),
     path("master/jobbers/add/", views.jobber_create, name="jobber_add"),
@@ -49,41 +52,38 @@ urlpatterns = [
     path("master/locations/<int:pk>/edit/", views.location_update, name="location_edit"),
     path("master/locations/<int:pk>/delete/", views.location_delete, name="location_delete"),
 
-    # Firms
-    path("master/firms/", views.firm_list, name="firm_list"),
-    path("master/firms/add/", views.firm_create, name="firm_add"),
-    path("master/firms/<int:pk>/edit/", views.firm_update, name="firm_edit"),
-    path("master/firms/<int:pk>/delete/", views.firm_delete, name="firm_delete"),
-
-    # Optional legacy alias
-    path("master/firm/", views.firm_list, name="firm"),
+    # Firm
+    path("firm/", views.firm_view, name="firm"),
+    path("firms/", views.firm_list, name="firm_list"),
+    path("firms/add/", views.firm_create, name="firm_add"),
+    path("firms/<int:pk>/edit/", views.firm_update, name="firm_edit"),
+    path("firms/<int:pk>/delete/", views.firm_delete, name="firm_delete"),
 
     # Material Shades
-    path("master/material-shades/", views.materialshade_list, name="materialshade_list"),
-    path("master/material-shades/add/", views.materialshade_create, name="materialshade_add"),
-    path("master/material-shades/<int:pk>/edit/", views.materialshade_update, name="materialshade_edit"),
-    path("master/material-shades/<int:pk>/delete/", views.materialshade_delete, name="materialshade_delete"),
+    path("utilities/material-shades/", views.materialshade_list, name="materialshade_list"),
+    path("utilities/material-shades/add/", views.materialshade_create, name="materialshade_add"),
+    path("utilities/material-shades/<int:pk>/edit/", views.materialshade_update, name="materialshade_edit"),
+    path("utilities/material-shades/<int:pk>/delete/", views.materialshade_delete, name="materialshade_delete"),
 
     # Material Types
-    path("master/material-types/", views.materialtype_list, name="materialtype_list"),
-    path("master/material-types/add/", views.materialtype_create, name="materialtype_add"),
-    path("master/material-types/<int:pk>/edit/", views.materialtype_update, name="materialtype_edit"),
-    path("master/material-types/<int:pk>/delete/", views.materialtype_delete, name="materialtype_delete"),
-
+    path("utilities/material-types/", views.materialtype_list, name="materialtype_list"),
+    path("utilities/material-types/add/", views.materialtype_create, name="materialtype_add"),
+    path("utilities/material-types/<int:pk>/edit/", views.materialtype_update, name="materialtype_edit"),
+    path("utilities/material-types/<int:pk>/delete/", views.materialtype_delete, name="materialtype_delete"),
 
     # Material Sub Types
-    path("master/material-sub-types/", views.materialsubtype_list, name="materialsubtype_list"),
-    path("master/material-sub-types/add/", views.materialsubtype_create, name="materialsubtype_add"),
-    path("master/material-sub-types/<int:pk>/edit/", views.materialsubtype_update, name="materialsubtype_edit"),
-    path("master/material-sub-types/<int:pk>/delete/", views.materialsubtype_delete, name="materialsubtype_delete"),
+    path("utilities/material-sub-types/", views.materialsubtype_list, name="materialsubtype_list"),
+    path("utilities/material-sub-types/add/", views.materialsubtype_create, name="materialsubtype_add"),
+    path("utilities/material-sub-types/<int:pk>/edit/", views.materialsubtype_update, name="materialsubtype_edit"),
+    path("utilities/material-sub-types/<int:pk>/delete/", views.materialsubtype_delete, name="materialsubtype_delete"),
 
-    # Vendor master
+    # Vendors
     path("master/vendors/", views.vendor_list, name="vendor_list"),
     path("master/vendors/add/", views.vendor_create, name="vendor_add"),
     path("master/vendors/<int:pk>/edit/", views.vendor_update, name="vendor_edit"),
     path("master/vendors/<int:pk>/delete/", views.vendor_delete, name="vendor_delete"),
 
-   # Purchase Orders
+    # PO Home
     path("po/", views.po_home, name="po_home"),
 
     # Yarn Purchase Orders
@@ -117,4 +117,49 @@ urlpatterns = [
     path("po/dyeing/<int:pk>/delete/", views.dyeingpo_delete, name="dyeingpo_delete"),
     path("po/dyeing/<int:pk>/inward/", views.dyeingpo_inward, name="dyeingpo_inward"),
     path("po/dyeing/inwards/", views.dyeing_inward_tracker, name="dyeing_inward_tracker"),
+    path("po/dyeing/<int:pk>/generate-ready/", views.generate_ready_po_from_dyeing, name="generate_ready_po_from_dyeing"),
+
+    # Ready Purchase Orders
+    path("po/ready/", views.readypo_list, name="readypo_list"),
+    path("po/ready/add/", views.readypo_create, name="readypo_add"),
+    path("po/ready/add/from-dyeing/<int:dyeing_po_id>/", views.readypo_create, name="readypo_add_from_dyeing"),
+    path("po/ready/<int:pk>/", views.readypo_detail, name="readypo_detail"),
+    path("po/ready/<int:pk>/edit/", views.readypo_update, name="readypo_edit"),
+    path("po/ready/<int:pk>/delete/", views.readypo_delete, name="readypo_delete"),
+    path("po/ready/<int:pk>/inward/", views.readypo_inward, name="readypo_inward"),
+    path("po/ready/inwards/", views.ready_inward_tracker, name="ready_inward_tracker"),
+
+    # Brands
+    path("master/brands/", views.brand_list, name="brand_list"),
+    path("master/brands/add/", views.brand_create, name="brand_add"),
+    path("master/brands/<int:pk>/edit/", views.brand_update, name="brand_edit"),
+    path("master/brands/<int:pk>/delete/", views.brand_delete, name="brand_delete"),
+
+    # Material Units
+    path("utilities/material-units/", views.materialunit_list_create, name="materialunit_list"),
+    path("utilities/material-units/<int:pk>/edit/", views.materialunit_edit, name="materialunit_edit"),
+    path("utilities/material-units/<int:pk>/delete/", views.materialunit_delete, name="materialunit_delete"),
+
+    # Categories
+    path("master/categories/", views.category_list, name="category_list"),
+    path("master/categories/add/", views.category_create, name="category_add"),
+    path("master/categories/<int:pk>/edit/", views.category_update, name="category_edit"),
+    path("master/categories/<int:pk>/delete/", views.category_delete, name="category_delete"),
+
+    # Catalogue
+    path("utilities/catalogues/", views.catalogue_list, name="catalogue_list"),
+    path("utilities/catalogues/add/", views.catalogue_create, name="catalogue_add"),
+    path("utilities/catalogues/<int:pk>/edit/", views.catalogue_update, name="catalogue_edit"),
+    path("utilities/catalogues/<int:pk>/delete/", views.catalogue_delete, name="catalogue_delete"),
+
+    # Optional backward-compatible aliases for old main-category naming
+    path("utilities/main-categories/", views.catalogue_list, name="maincategory_list"),
+    path("utilities/main-categories/add/", views.catalogue_create, name="maincategory_add"),
+    path("utilities/main-categories/<int:pk>/edit/", views.catalogue_update, name="maincategory_edit"),
+    path("utilities/main-categories/<int:pk>/delete/", views.catalogue_delete, name="maincategory_delete"),
+    
+        # Pattern Types
+    path("utilities/pattern-types/", views.patterntype_list_create, name="patterntype_list"),
+    path("utilities/pattern-types/<int:pk>/edit/", views.patterntype_edit, name="patterntype_edit"),
+    path("utilities/pattern-types/<int:pk>/delete/", views.patterntype_delete, name="patterntype_delete"),
 ]

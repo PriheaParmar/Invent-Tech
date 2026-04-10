@@ -4,6 +4,8 @@
 {% block page_subtitle %}Create and manage inward entries against Greige PO{% endblock %}
 
 {% block content %}
+{% include 'accounts/po/_po_nav.html' with active_po_tab='greige-inward' back_route='accounts:greigepo_list' back_label='Back to Greige PO List' po_nav_title='Greige Inward Entry' %}
+
 <style>
   .gin-grid{display:grid;gap:14px}.gin-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.gin-pill{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border-radius:999px;background:rgba(250,189,100,.14);color:#ef6c00;font-size:11px;font-weight:900}.gin-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.gin-field{display:flex;flex-direction:column;gap:6px}.gin-field label{font-size:12px;font-weight:700;color:#344054}.gin-field input,.gin-field textarea{width:100%;min-height:40px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff}.gin-field textarea{min-height:84px}.gin-block{border:1px solid rgba(15,23,42,.06);border-radius:14px;background:rgba(255,255,255,.55);padding:14px}.gin-table{width:100%;border-collapse:collapse}.gin-table th,.gin-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:12px;vertical-align:top}.gin-table thead th{border-top:none;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#667085}.gin-input{width:100%;min-height:36px;border:1px solid rgba(15,23,42,.1);border-radius:10px;padding:0 10px}.gin-err{font-size:11px;color:#b42318;font-weight:700;margin-top:4px}.gin-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;flex-wrap:wrap}@media (max-width:900px){.gin-fields{grid-template-columns:1fr}}
 </style>

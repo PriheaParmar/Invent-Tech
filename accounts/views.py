@@ -1,17 +1,21 @@
 import json
 from io import BytesIO
+from django import forms
 from decimal import Decimal, InvalidOperation
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.db.models import Q, Prefetch, Sum
-
+from .forms import ReadyPurchaseOrderForm
+from .models import ReadyPurchaseOrder
 from datetime import timedelta
 from decimal import Decimal
 from calendar import monthcalendar
+from django.contrib import messages
 from zoneinfo import ZoneInfo
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.core.paginator import Paginator
 
 from .navigation import UTILITIES_GROUPS
 from django.contrib.auth import authenticate, login, logout
@@ -35,16 +39,24 @@ from .forms import (
     JobberForm,
     JobberTypeForm,
     LocationForm,
+    CategoryForm,
     MaterialForm,
     MaterialShadeForm,
     MaterialSubTypeForm,
     MaterialTypeForm,
     PartyForm,
+    MainCategoryForm,
+    PatternTypeForm,
     VendorForm,
+    CatalogueForm,
+    BrandForm,
     YarnPOInwardForm,
     YarnPOReviewForm,
     YarnPurchaseOrderForm,
     YarnPurchaseOrderItemFormSet,
+    ReadyPurchaseOrderForm,
+    ReadyPOInwardForm,
+    MaterialUnitForm,
 )
 
 from .models import (
@@ -56,21 +68,31 @@ from .models import (
     DyeingPurchaseOrder,
     DyeingPurchaseOrderItem,
     DyeingPOInward,
+    Catalogue,
     DyeingPOInwardItem,
     Jobber,
     JobberType,
+    Category,
     Location,
     Material,
     MaterialShade,
     MaterialSubType,
     MaterialType,
     Party,
+    MainCategory,
+    PatternType,
     UserExtra,
     Vendor,
+    Brand,
     YarnPOInward,
     YarnPOInwardItem,
     YarnPurchaseOrder,
     YarnPurchaseOrderItem,
+    ReadyPurchaseOrder,
+    ReadyPurchaseOrderItem,
+    ReadyPOInward,
+    ReadyPOInwardItem,
+    MaterialUnit,
 )
 
 
@@ -104,6 +126,10 @@ def _next_dyeing_po_number() -> str:
     next_id = (last.id + 1) if last else 1
     return f"DPO-{next_id:04d}"
 
+def _next_ready_po_number() -> str:
+    last = ReadyPurchaseOrder.objects.order_by("-id").first()
+    next_id = (last.id + 1) if last else 1
+    return f"RPO-{next_id:04d}"
 
 def _firm_address(firm):
     if not firm:
@@ -593,15 +619,7 @@ def material_create(request):
 @require_http_methods(["GET", "POST"])
 def material_edit(request, pk: int):
     material = get_object_or_404(
-        Material.objects.select_related(
-            "material_type",
-            "material_sub_type",
-            "material_shade",
-            "yarn",
-            "greige",
-            "finished",
-            "trim",
-        ),
+        Material.objects.select_related("yarn", "greige", "finished", "trim"),
         pk=pk,
     )
 
@@ -641,44 +659,23 @@ def material_edit(request, pk: int):
 def material_list(request):
     q = (request.GET.get("q") or "").strip()
     selected_type = (request.GET.get("type") or "").strip()
-    selected_sub_type = (request.GET.get("sub_type") or "").strip()
 
-    qs = Material.objects.all().order_by("-id").select_related(
-        "material_type",
-        "material_sub_type",
-        "material_shade",
-        "yarn",
-        "greige",
-        "finished",
-        "trim",
-    )
+    qs = Material.objects.all().order_by("-id").select_related("yarn", "greige", "finished", "trim")
 
     if selected_type.isdigit():
         qs = qs.filter(material_type_id=int(selected_type))
-
-    if selected_sub_type.isdigit():
-        qs = qs.filter(material_sub_type_id=int(selected_sub_type))
 
     if q:
         qs = qs.filter(
             Q(name__icontains=q)
             | Q(remarks__icontains=q)
-            | Q(material_type__name__icontains=q)
-            | Q(material_sub_type__name__icontains=q)
-            | Q(material_shade__name__icontains=q)
         )
-
-    sub_type_choices = MaterialSubType.objects.filter(owner=request.user).select_related("material_type").order_by("material_type__name", "name")
-    if selected_type.isdigit():
-        sub_type_choices = sub_type_choices.filter(material_type_id=int(selected_type))
 
     ctx = {
         "materials": qs,
         "q": q,
         "selected_type": selected_type,
-        "selected_sub_type": selected_sub_type,
         "type_choices": MaterialType.objects.filter(owner=request.user).order_by("name"),
-        "sub_type_choices": sub_type_choices,
     }
 
     tpl = "accounts/materials/list_embed.html" if _is_embed(request) else "accounts/materials/list_page.html"
@@ -700,11 +697,38 @@ def material_delete(request, pk: int):
 # ==========================
 # PARTIES (embed supported)
 # ==========================
+def _party_list_url(request):
+    url = reverse("accounts:party_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
 @login_required
 def party_list(request):
-    parties = Party.objects.all().order_by("-id")
-    tpl = "accounts/parties/list_embed.html" if _is_embed(request) else "accounts/parties/list.html"
-    return render(request, tpl, {"parties": parties})
+    q = (request.GET.get("q") or "").strip()
+
+    qs = Party.objects.all().order_by("party_name")
+
+    if q:
+        qs = qs.filter(
+            Q(party_name__icontains=q)
+            | Q(full_name__icontains=q)
+            | Q(phone_number__icontains=q)
+            | Q(gst_number__icontains=q)
+            | Q(pan_number__icontains=q)
+            | Q(email__icontains=q)
+        )
+
+    template = "accounts/parties/list_embed.html" if _is_embed(request) else "accounts/parties/list.html"
+    return render(
+        request,
+        template,
+        {
+            "parties": qs,
+            "q": q,
+        },
+    )
 
 
 @login_required
@@ -714,13 +738,21 @@ def party_create(request):
 
     if request.method == "POST" and form.is_valid():
         form.save()
-        url = reverse("accounts:party_list")
+
+        url = _party_list_url(request)
         if _is_embed(request):
             return JsonResponse({"ok": True, "url": url})
         return redirect(url)
 
-    tpl = "accounts/parties/form_embed.html" if _is_embed(request) else "accounts/parties/form.html"
-    return render(request, tpl, {"form": form, "mode": "add"})
+    template = "accounts/parties/form_embed.html" if _is_embed(request) else "accounts/parties/form.html"
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "mode": "add",
+        },
+    )
 
 
 @login_required
@@ -731,26 +763,44 @@ def party_update(request, pk):
 
     if request.method == "POST" and form.is_valid():
         form.save()
-        url = reverse("accounts:party_list")
+
+        url = _party_list_url(request)
         if _is_embed(request):
             return JsonResponse({"ok": True, "url": url})
         return redirect(url)
 
-    tpl = "accounts/parties/form_embed.html" if _is_embed(request) else "accounts/parties/form.html"
-    return render(request, tpl, {"form": form, "mode": "edit", "party": party})
+    template = "accounts/parties/form_embed.html" if _is_embed(request) else "accounts/parties/form.html"
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "mode": "edit",
+            "party": party,
+        },
+    )
 
 
 @login_required
-@require_POST
+@require_http_methods(["GET", "POST"])
 def party_delete(request, pk):
     party = get_object_or_404(Party, pk=pk)
-    party.delete()
 
-    url = reverse("accounts:party_list")
-    if _is_embed(request):
-        return JsonResponse({"ok": True, "url": url})
-    return redirect(url)
+    if request.method == "POST":
+        party.delete()
+        url = _party_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
 
+    template = "accounts/parties/embed_confirm_delete.html" if _is_embed(request) else "accounts/parties/confirm_delete.html"
+    return render(
+        request,
+        template,
+        {
+            "party": party,
+        },
+    )
 
 # ==========================
 # LOCATIONS (embed supported)
@@ -1086,9 +1136,6 @@ def materialtype_delete(request, pk: int):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
 
-
-
-
 def _materialsubtype_list_url(request):
     url = reverse("accounts:materialsubtype_list")
     if _is_embed(request):
@@ -1102,7 +1149,12 @@ def materialsubtype_list(request):
     selected_kind = (request.GET.get("kind") or "").strip()
     selected_type = (request.GET.get("type") or "").strip()
 
-    qs = MaterialSubType.objects.filter(owner=request.user).select_related("material_type").order_by("material_type__name", "name")
+    qs = (
+        MaterialSubType.objects
+        .filter(owner=request.user)
+        .select_related("material_type")
+        .order_by("material_type__name", "name")
+    )
 
     if selected_kind:
         qs = qs.filter(material_kind=selected_kind)
@@ -1182,7 +1234,6 @@ def materialsubtype_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
-
 
 # ==========================
 # VENDORS (embed supported)
@@ -1448,29 +1499,16 @@ def yarnpo_list(request):
 
 
 def _bind_yarnpo_item_formset(request, instance=None):
+    kwargs = {
+        "instance": instance,
+        "prefix": "items",
+        "form_kwargs": {"user": request.user},
+    }
+
     if request.method == "POST":
-        formset = YarnPurchaseOrderItemFormSet(request.POST, instance=instance, prefix="items")
+        formset = YarnPurchaseOrderItemFormSet(request.POST, **kwargs)
     else:
-        formset = YarnPurchaseOrderItemFormSet(instance=instance, prefix="items")
-
-    yarn_type_qs = MaterialType.objects.filter(
-        owner=request.user,
-        material_kind="yarn",
-    ).order_by("name")
-
-    def type_label(obj):
-        return obj.name
-
-    for form in formset.forms:
-        if "material_type" in form.fields:
-            form.fields["material_type"].queryset = yarn_type_qs
-            form.fields["material_type"].label_from_instance = type_label
-            form.fields["material_type"].empty_label = "Select Yarn Type"
-
-    if hasattr(formset, "empty_form") and "material_type" in formset.empty_form.fields:
-        formset.empty_form.fields["material_type"].queryset = yarn_type_qs
-        formset.empty_form.fields["material_type"].label_from_instance = type_label
-        formset.empty_form.fields["material_type"].empty_label = "Select Yarn Type"
+        formset = YarnPurchaseOrderItemFormSet(**kwargs)
 
     return formset
 
@@ -1670,6 +1708,7 @@ def yarnpo_inward(request, pk: int):
             "item_errors": item_errors,
             "line_inputs": line_inputs,
             "existing_inwards": existing_inwards,
+            "next_inward_number_preview": _next_yarn_inward_number(),
         },
     )
 
@@ -2047,6 +2086,8 @@ def _can_access_greige_po(user, po):
 def _can_access_dyeing_po(user, po):
     return bool(_can_review_yarn_po(user) or po.owner_id == user.id)
 
+def _can_access_ready_po(user, po):
+    return bool(_can_review_yarn_po(user) or po.owner_id == user.id)
 
 def _greige_source_queryset():
     return (
@@ -2100,11 +2141,31 @@ def _dyeing_po_queryset():
                 "inwards",
                 queryset=DyeingPOInward.objects.prefetch_related("items__po_item"),
             ),
+            Prefetch(
+            "ready_pos",
+            queryset=ReadyPurchaseOrder.objects.prefetch_related("items").order_by("-id"),
+            ),
         )
         .order_by("-id")
     )
 
-
+def _ready_po_queryset():
+    return (
+        ReadyPurchaseOrder.objects
+        .select_related("vendor", "firm", "source_dyeing_po", "owner")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=ReadyPurchaseOrderItem.objects.select_related("source_dyeing_po_item").prefetch_related("inward_items"),
+            ),
+            Prefetch(
+                "inwards",
+                queryset=ReadyPOInward.objects.prefetch_related("items__po_item"),
+            ),
+        )
+        .order_by("-id")
+    )
+    
 def _sync_greige_po_items_from_source(greige_po):
     yarn_po = (
         _greige_source_queryset()
@@ -2192,6 +2253,46 @@ def _sync_dyeing_po_items_from_source(dyeing_po):
     dyeing_po.save(update_fields=["total_weight", "available_qty", "updated_at"])
     return total_weight
 
+def _sync_ready_po_items_from_source(ready_po):
+    dyeing_po = (
+        _dyeing_po_queryset()
+        .filter(pk=ready_po.source_dyeing_po_id)
+        .first()
+    )
+    if dyeing_po is None:
+        return Decimal("0")
+
+    item_rows = []
+    total_weight = Decimal("0")
+
+    for dyeing_item in dyeing_po.items.all():
+        inward_qty = dyeing_item.inward_qty_total or Decimal("0")
+        if inward_qty <= 0:
+            continue
+
+        dyeing_name = dyeing_item.fabric_name or "Dyeing Item"
+
+        item_rows.append(
+            ReadyPurchaseOrderItem(
+                po=ready_po,
+                source_dyeing_po_item=dyeing_item,
+                fabric_name=dyeing_name,
+                dyeing_name=dyeing_name,
+                unit=dyeing_item.unit or "",
+                quantity=inward_qty,
+                remark=f"Generated from Dyeing inward of {dyeing_po.system_number}",
+            )
+        )
+        total_weight += inward_qty
+
+    ReadyPurchaseOrderItem.objects.filter(po=ready_po).delete()
+    if item_rows:
+        ReadyPurchaseOrderItem.objects.bulk_create(item_rows)
+
+    ready_po.total_weight = total_weight
+    ready_po.available_qty = total_weight
+    ready_po.save(update_fields=["total_weight", "available_qty", "updated_at"])
+    return total_weight
 
 @login_required
 def po_home(request):
@@ -2505,6 +2606,12 @@ def generate_dyeing_po_from_greige(request, pk: int):
         raise PermissionDenied("You do not have access to this Greige PO.")
     return redirect("accounts:dyeingpo_add_from_greige", greige_po_id=pk)
 
+@login_required
+def generate_ready_po_from_dyeing(request, pk: int):
+    dyeing_po = get_object_or_404(_dyeing_po_queryset(), pk=pk)
+    if not _can_access_dyeing_po(request.user, dyeing_po):
+        raise PermissionDenied("You do not have access to this Dyeing PO.")
+    return redirect("accounts:readypo_add_from_dyeing", dyeing_po_id=pk)
 
 @login_required
 def dyeingpo_list(request):
@@ -2653,6 +2760,7 @@ def dyeingpo_detail(request, pk: int):
             "source_greige_po": po.source_greige_po,
             "source_inwards": list(po.source_greige_po.inwards.all()) if po.source_greige_po else [],
             "dyeing_inwards": list(po.inwards.all()),
+            "existing_ready_po": po.ready_pos.order_by("-id").first(),
         },
     )
 
@@ -2660,6 +2768,12 @@ def _next_dyeing_inward_number() -> str:
     last = DyeingPOInward.objects.order_by("-id").first()
     next_id = (last.id + 1) if last else 1
     return f"DIN-{next_id:04d}"
+
+
+def _next_ready_inward_number() -> str:
+    last = ReadyPOInward.objects.order_by("-id").first()
+    next_id = (last.id + 1) if last else 1
+    return f"RIN-{next_id:04d}"
 
 @login_required
 @require_POST
@@ -2746,8 +2860,143 @@ def dyeingpo_inward(request, pk: int):
             "inward_form": inward_form,
             "line_rows": line_rows,
             "existing_inwards": po.inwards.all().order_by("-inward_date", "-id"),
+            "existing_ready_po": po.ready_pos.order_by("-id").first(),
         },
     )
+
+
+
+def _normalize_stock_lot_search_value(value: str) -> str:
+    return (value or "").strip().lower()
+
+
+def _build_stock_lot_rows_for_user(user):
+    rows = []
+
+    dyeing_inward_items = (
+        DyeingPOInwardItem.objects
+        .select_related(
+            "inward",
+            "po_item__po__vendor",
+            "po_item__po__firm",
+        )
+        .filter(inward__owner=user)
+        .order_by("-inward__inward_date", "-id")
+    )
+
+    for inward_item in dyeing_inward_items:
+        inward = inward_item.inward
+        po_item = inward_item.po_item
+        po = po_item.po if po_item else None
+
+        material_name = "Ready / Dyeing Item"
+        if po_item:
+            material_name = (
+                po_item.fabric_name
+                or getattr(po_item, "greige_name", "")
+                or "Ready / Dyeing Item"
+            )
+
+        vendor_name = po.vendor.name if po and po.vendor else "-"
+        firm_name = po.firm.firm_name if po and po.firm else "-"
+        quantity = inward_item.quantity or Decimal("0")
+        unit = po_item.unit if po_item and po_item.unit else "KG"
+
+        rows.append({
+            "stage": "dyeing",
+            "stage_label": "Dyeing",
+            "lot_number": inward.inward_number or f"DYEING-{inward.pk}",
+            "lot_date": inward.inward_date,
+            "material_name": material_name,
+            "material_key": _normalize_stock_lot_search_value(material_name),
+            "vendor_name": vendor_name,
+            "firm_name": firm_name,
+            "source_number": po.system_number if po and po.system_number else (po.po_number if po else "-"),
+            "quantity": quantity,
+            "used_quantity": None,
+            "final_stock": quantity,
+            "unit": unit,
+            "remark": inward_item.remark or "",
+            "detail_url": reverse("accounts:dyeingpo_inward", args=[po.pk]) if po else "",
+            "detail_label": "Open Dyeing Inward",
+            "pk": inward_item.pk,
+        })
+
+    rows.sort(
+        key=lambda row: (
+            row["lot_date"] or timezone.datetime.min.date(),
+            row["pk"],
+        ),
+        reverse=True,
+    )
+    return rows
+
+
+@login_required
+def stock_lot_wise(request):
+    q = (request.GET.get("q") or "").strip()
+    selected_material = (request.GET.get("material") or "").strip()
+
+    all_rows = _build_stock_lot_rows_for_user(request.user)
+
+    material_choices = sorted(
+        {
+            row["material_name"]
+            for row in all_rows
+            if row["material_name"] and row["material_name"] != "-"
+        },
+        key=lambda value: value.lower(),
+    )
+
+    rows = all_rows
+
+    if selected_material:
+        material_key = _normalize_stock_lot_search_value(selected_material)
+        rows = [
+            row for row in rows
+            if row["material_key"] == material_key
+        ]
+
+    if q:
+        q_key = _normalize_stock_lot_search_value(q)
+        filtered_rows = []
+
+        for row in rows:
+            haystack = " ".join([
+                row.get("lot_number", ""),
+                row.get("material_name", ""),
+                row.get("vendor_name", ""),
+                row.get("firm_name", ""),
+                row.get("source_number", ""),
+                row.get("remark", ""),
+            ]).lower()
+
+            if q_key in haystack:
+                filtered_rows.append(row)
+
+        rows = filtered_rows
+
+    total_lots = len(rows)
+    total_quantity = sum((row["quantity"] for row in rows), Decimal("0"))
+    total_final_stock = sum((row["final_stock"] for row in rows), Decimal("0"))
+
+    paginator = Paginator(rows, 20)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    context = {
+        "rows": page_obj.object_list,
+        "page_obj": page_obj,
+        "q": q,
+        "selected_material": selected_material,
+        "material_choices": material_choices,
+        "summary": {
+            "total_lots": total_lots,
+            "total_quantity": total_quantity,
+            "total_final_stock": total_final_stock,
+        },
+    }
+
+    return render(request, "accounts/inventory/stock_lot_wise.html", context)
 
 
 @login_required
@@ -2789,6 +3038,7 @@ def dyeing_inward_tracker(request):
         rows.append({
             "po": po,
             "inward_entries": inward_entries,
+            "ready_po": po.ready_pos.order_by("-id").first(),
         })
 
     return render(
@@ -2799,3 +3049,767 @@ def dyeing_inward_tracker(request):
             "q": q,
         },
     )
+
+
+@login_required
+def readypo_create(request, dyeing_po_id=None):
+    source_dyeing_po = None
+    existing_po = None
+
+    if dyeing_po_id is not None:
+        source_dyeing_po = get_object_or_404(_dyeing_po_queryset(), pk=dyeing_po_id)
+        if not _can_access_dyeing_po(request.user, source_dyeing_po):
+            raise PermissionDenied("You do not have access to this Dyeing PO.")
+
+        existing_po = source_dyeing_po.ready_pos.order_by("-id").first()
+        if existing_po and request.method == "GET":
+            messages.info(request, "Ready PO already exists for this Dyeing PO.")
+            return redirect("accounts:readypo_detail", pk=existing_po.pk)
+
+    if request.method == "POST":
+        form = ReadyPurchaseOrderForm(
+            request.POST,
+            user=request.user,
+            source_dyeing_po=source_dyeing_po,
+            lock_source=bool(source_dyeing_po),
+        )
+
+        if form.is_valid():
+            selected_source = source_dyeing_po or form.cleaned_data.get("source_dyeing_po")
+
+            if selected_source is None:
+                form.add_error("source_dyeing_po", "Please select source Dyeing PO.")
+            elif not _can_access_dyeing_po(request.user, selected_source):
+                raise PermissionDenied("You do not have access to this Dyeing PO.")
+            elif selected_source.ready_pos.exists():
+                existing_po = selected_source.ready_pos.order_by("-id").first()
+                form.add_error("source_dyeing_po", "Ready PO already exists for this Dyeing PO.")
+            else:
+                po = form.save(commit=False)
+                po.owner = selected_source.owner
+                po.system_number = _next_ready_po_number()
+                po.source_dyeing_po = selected_source
+                po.save()
+
+                _sync_ready_po_items_from_source(po)
+
+                messages.success(request, "Ready PO created successfully.")
+                return redirect("accounts:readypo_detail", pk=po.pk)
+    else:
+        form = ReadyPurchaseOrderForm(
+            user=request.user,
+            source_dyeing_po=source_dyeing_po,
+            lock_source=bool(source_dyeing_po),
+        )
+
+    source_inwards = []
+    if source_dyeing_po is not None:
+        source_inwards = source_dyeing_po.inwards.prefetch_related("items__po_item").all()
+
+    return render(
+        request,
+        "accounts/ready_po/form.html",
+        {
+            "form": form,
+            "mode": "create",
+            "po_obj": None,
+            "source_dyeing_po": source_dyeing_po,
+            "source_inwards": source_inwards,
+            "existing_po": existing_po,
+        },
+    )
+
+@login_required
+def readypo_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = _ready_po_queryset()
+    if not _can_review_yarn_po(request.user):
+        qs = qs.filter(owner=request.user)
+
+    if q:
+        qs = qs.filter(
+            Q(system_number__icontains=q)
+            | Q(po_number__icontains=q)
+            | Q(vendor__name__icontains=q)
+            | Q(source_dyeing_po__system_number__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        ).distinct()
+
+    return render(
+        request,
+        "accounts/ready_po/list.html",
+        {
+            "orders": qs,
+            "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def readypo_update(request, pk: int):
+    po = get_object_or_404(_ready_po_queryset(), pk=pk)
+    if not _can_access_ready_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Ready PO.")
+
+    form = ReadyPurchaseOrderForm(
+        request.POST or None,
+        user=request.user,
+        instance=po,
+        source_dyeing_po=po.source_dyeing_po,
+        lock_source=True,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        po = form.save(commit=False)
+        if po.firm and not po.shipping_address:
+            po.shipping_address = _firm_address(po.firm)
+        po.save()
+        return redirect("accounts:readypo_list")
+
+    return render(
+        request,
+        "accounts/ready_po/form.html",
+        {
+            "form": form,
+            "mode": "edit",
+            "po_obj": po,
+            "source_dyeing_po": po.source_dyeing_po,
+            "source_inwards": list(po.source_dyeing_po.inwards.all()) if po.source_dyeing_po else [],
+            "existing_po": None,
+        },
+    )
+
+
+@login_required
+def readypo_detail(request, pk: int):
+    po = get_object_or_404(_ready_po_queryset(), pk=pk)
+    if not _can_access_ready_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Ready PO.")
+
+    return render(
+        request,
+        "accounts/ready_po/detail.html",
+        {
+            "po": po,
+            "source_dyeing_po": po.source_dyeing_po,
+            "source_inwards": list(po.source_dyeing_po.inwards.all()) if po.source_dyeing_po else [],
+            "ready_inwards": list(po.inwards.all()),
+        },
+    )
+
+
+@login_required
+@require_POST
+def readypo_delete(request, pk: int):
+    po = get_object_or_404(ReadyPurchaseOrder, pk=pk, owner=request.user)
+    po.delete()
+    return redirect("accounts:readypo_list")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def readypo_inward(request, pk: int):
+    po = get_object_or_404(_ready_po_queryset(), pk=pk)
+    if not _can_access_ready_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Ready PO.")
+
+    item_errors = {}
+    line_inputs = {}
+    inward_form = ReadyPOInwardForm(request.POST or None)
+
+    if request.method == "POST" and inward_form.is_valid():
+        line_payload = []
+
+        for item in po.items.all():
+            raw_qty = (request.POST.get(f"qty_{item.id}") or "").strip()
+            remark = (request.POST.get(f"remark_{item.id}") or "").strip()
+
+            line_inputs[item.id] = {"qty": raw_qty, "remark": remark}
+
+            if not raw_qty:
+                continue
+
+            try:
+                qty = Decimal(raw_qty)
+            except InvalidOperation:
+                item_errors[item.id] = "Enter a valid quantity."
+                continue
+
+            if qty <= 0:
+                continue
+
+            if qty > item.remaining_qty_total:
+                item_errors[item.id] = "Entered quantity is greater than remaining quantity."
+                continue
+
+            line_payload.append((item, qty, remark))
+
+        if not line_payload:
+            inward_form.add_error(None, "Enter at least one inward quantity.")
+
+        if not inward_form.errors and not item_errors:
+            inward = inward_form.save(commit=False)
+            inward.owner = po.owner
+            inward.po = po
+            inward.inward_number = _next_ready_inward_number()
+            inward.save()
+
+            ReadyPOInwardItem.objects.bulk_create([
+                ReadyPOInwardItem(
+                    inward=inward,
+                    po_item=item,
+                    quantity=qty,
+                    remark=remark,
+                )
+                for item, qty, remark in line_payload
+            ])
+            return redirect("accounts:readypo_inward", pk=po.pk)
+
+    line_rows = [
+        {
+            "item": item,
+            "qty_value": line_inputs.get(item.id, {}).get("qty", ""),
+            "remark_value": line_inputs.get(item.id, {}).get("remark", ""),
+            "error": item_errors.get(item.id, ""),
+        }
+        for item in po.items.all()
+    ]
+
+    return render(
+        request,
+        "accounts/ready_po/inward.html",
+        {
+            "po": po,
+            "inward_form": inward_form,
+            "line_rows": line_rows,
+            "existing_inwards": po.inwards.all().order_by("-inward_date", "-id"),
+        },
+    )
+
+
+@login_required
+def ready_inward_tracker(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = _ready_po_queryset().filter(inwards__isnull=False).distinct()
+    if not _can_review_yarn_po(request.user):
+        qs = qs.filter(owner=request.user)
+
+    if q:
+        qs = qs.filter(
+            Q(system_number__icontains=q)
+            | Q(po_number__icontains=q)
+            | Q(vendor__name__icontains=q)
+            | Q(source_dyeing_po__system_number__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        ).distinct()
+
+    rows = []
+    for po in qs:
+        inward_entries = []
+        for inward in po.inwards.all():
+            inward_entries.append({
+                "inward": inward,
+                "items": [
+                    {
+                        "inward_item": inward_item,
+                        "po_item": inward_item.po_item,
+                        "fabric_name": inward_item.po_item.fabric_name if inward_item.po_item else "Ready Item",
+                        "ordered_qty": inward_item.po_item.quantity if inward_item.po_item else 0,
+                        "inward_qty": inward_item.quantity,
+                        "unit": inward_item.po_item.unit if inward_item.po_item else "",
+                    }
+                    for inward_item in inward.items.all()
+                ],
+            })
+
+        rows.append({
+            "po": po,
+            "inward_entries": inward_entries,
+        })
+
+    return render(
+        request,
+        "accounts/ready_po/inward_tracker.html",
+        {
+            "rows": rows,
+            "q": q,
+        },
+    )
+# ==========================
+# BRANDS (embed supported)
+# ==========================
+@login_required
+def brand_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = Brand.objects.filter(owner=request.user)
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q)
+            | Q(description__icontains=q)
+        )
+
+    ctx = {"brands": qs.order_by("name"), "q": q}
+    tpl = "accounts/brands/list_embed.html" if _is_embed(request) else "accounts/brands/list.html"
+    return render(request, tpl, ctx)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def brand_create(request):
+    form = BrandForm(request.POST or None, user=request.user)
+
+    if request.method == "POST":
+        form.instance.owner = request.user
+
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
+
+            url = reverse("accounts:brand_list")
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+
+    tpl = "accounts/brands/form_embed.html" if _is_embed(request) else "accounts/brands/form.html"
+    return render(request, tpl, {"form": form, "mode": "add"})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def brand_update(request, pk: int):
+    brand = get_object_or_404(Brand, pk=pk, owner=request.user)
+    form = BrandForm(request.POST or None, instance=brand, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+
+        url = reverse("accounts:brand_list")
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    tpl = "accounts/brands/form_embed.html" if _is_embed(request) else "accounts/brands/form.html"
+    return render(request, tpl, {"form": form, "mode": "edit", "brand": brand})
+
+
+@login_required
+@require_POST
+def brand_delete(request, pk: int):
+    brand = get_object_or_404(Brand, pk=pk, owner=request.user)
+    brand.delete()
+
+    url = reverse("accounts:brand_list")
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+def _materialunit_list_url(request):
+    url = reverse("accounts:materialunit_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def materialunit_list_create(request):
+    q = (request.GET.get("q") or "").strip()
+
+    units = MaterialUnit.objects.filter(owner=request.user).order_by("name")
+    if q:
+        units = units.filter(name__icontains=q)
+
+    if request.method == "POST":
+        form = MaterialUnitForm(request.POST, user=request.user)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
+
+            url = _materialunit_list_url(request)
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+    else:
+        form = MaterialUnitForm(user=request.user)
+
+    template = "accounts/material_units/list_embed.html" if _is_embed(request) else "accounts/material_units/list.html"
+    return render(
+        request,
+        template,
+        {
+            "units": units,
+            "form": form,
+            "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def materialunit_edit(request, pk: int):
+    unit = get_object_or_404(MaterialUnit, pk=pk, owner=request.user)
+    form = MaterialUnitForm(request.POST or None, instance=unit, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _materialunit_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = "accounts/material_units/edit_embed.html" if _is_embed(request) else "accounts/material_units/edit.html"
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "unit": unit,
+        },
+    )
+
+
+@login_required
+@require_POST
+def materialunit_delete(request, pk: int):
+    unit = get_object_or_404(MaterialUnit, pk=pk, owner=request.user)
+    unit.delete()
+
+    url = _materialunit_list_url(request)
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+def _category_list_url(request):
+    url = reverse("accounts:category_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
+# ==========================
+# CATEGORIES (embed supported)
+# ==========================
+@login_required
+def category_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = Category.objects.filter(owner=request.user).order_by("name")
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q)
+            | Q(description__icontains=q)
+        )
+
+    ctx = {
+        "categories": qs,
+        "q": q,
+    }
+    tpl = "accounts/categories/list_embed.html" if _is_embed(request) else "accounts/categories/list.html"
+    return render(request, tpl, ctx)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def category_create(request):
+    form = CategoryForm(request.POST or None, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _category_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    tpl = "accounts/categories/form_embed.html" if _is_embed(request) else "accounts/categories/form.html"
+    return render(request, tpl, {"form": form, "mode": "add"})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def category_update(request, pk: int):
+    category = get_object_or_404(Category, pk=pk, owner=request.user)
+    form = CategoryForm(request.POST or None, instance=category, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _category_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    ctx = {
+        "form": form,
+        "mode": "edit",
+        "category": category,
+    }
+    tpl = "accounts/categories/form_embed.html" if _is_embed(request) else "accounts/categories/form.html"
+    return render(request, tpl, ctx)
+
+
+@login_required
+@require_POST
+def category_delete(request, pk: int):
+    category = get_object_or_404(Category, pk=pk, owner=request.user)
+    category.delete()
+
+    url = _category_list_url(request)
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+def _maincategory_list_url(request):
+    url = reverse("accounts:maincategory_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
+class MainCategoryForm(forms.ModelForm):
+    class Meta:
+        model = MainCategory
+        fields = ["name"]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "placeholder": "Enter main category name",
+            }),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_name(self):
+        name = (self.cleaned_data.get("name") or "").strip()
+        if not name:
+            raise forms.ValidationError("Main category name is required.")
+
+        if self.user is not None:
+            qs = MainCategory.objects.filter(owner=self.user, name__iexact=name)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("This main category already exists.")
+
+        return name
+
+
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def maincategory_edit(request, pk: int):
+    category = get_object_or_404(MainCategory, pk=pk, owner=request.user)
+    form = MainCategoryForm(request.POST or None, instance=category, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _maincategory_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = (
+        "accounts/main_categories/edit_embed.html"
+        if _is_embed(request)
+        else "accounts/main_categories/edit.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "category": category,
+        },
+    )
+
+
+@login_required
+@require_POST
+def maincategory_delete(request, pk: int):
+    category = get_object_or_404(MainCategory, pk=pk, owner=request.user)
+    category.delete()
+
+    url = _maincategory_list_url(request)
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+
+def _patterntype_list_url(request):
+    url = reverse("accounts:patterntype_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def patterntype_list_create(request):
+    q = (request.GET.get("q") or "").strip()
+
+    pattern_types = PatternType.objects.filter(owner=request.user).order_by("name")
+    if q:
+        pattern_types = pattern_types.filter(
+            Q(name__icontains=q) | Q(description__icontains=q)
+        )
+
+    if request.method == "POST":
+        form = PatternTypeForm(request.POST, user=request.user)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
+
+            url = _patterntype_list_url(request)
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+    else:
+        form = PatternTypeForm(user=request.user)
+
+    template = (
+        "accounts/pattern_types/list_embed.html"
+        if _is_embed(request)
+        else "accounts/pattern_types/list.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "pattern_types": pattern_types,
+            "form": form,
+            "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def patterntype_edit(request, pk: int):
+    pattern_type = get_object_or_404(PatternType, pk=pk, owner=request.user)
+    form = PatternTypeForm(request.POST or None, instance=pattern_type, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _patterntype_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = (
+        "accounts/pattern_types/edit_embed.html"
+        if _is_embed(request)
+        else "accounts/pattern_types/edit.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "pattern_type": pattern_type,
+        },
+    )
+
+
+@login_required
+@require_POST
+def patterntype_delete(request, pk: int):
+    pattern_type = get_object_or_404(PatternType, pk=pk, owner=request.user)
+    pattern_type.delete()
+
+    url = _patterntype_list_url(request)
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+# ==========================
+# CATALOGUES (embed supported)
+# ==========================
+@login_required
+def catalogue_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = Catalogue.objects.filter(owner=request.user)
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q)
+            | Q(wear_type__icontains=q)
+            | Q(description__icontains=q)
+        )
+
+    ctx = {"catalogues": qs.order_by("name"), "q": q}
+    tpl = "accounts/catalogues/list_embed.html" if _is_embed(request) else "accounts/catalogues/list.html"
+    return render(request, tpl, ctx)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def catalogue_create(request):
+    form = CatalogueForm(request.POST or None, user=request.user)
+
+    if request.method == "POST":
+        form.instance.owner = request.user
+
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
+
+            url = reverse("accounts:catalogue_list")
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+
+    tpl = "accounts/catalogues/form_embed.html" if _is_embed(request) else "accounts/catalogues/form.html"
+    return render(request, tpl, {"form": form, "mode": "add"})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def catalogue_update(request, pk: int):
+    catalogue = get_object_or_404(Catalogue, pk=pk, owner=request.user)
+    form = CatalogueForm(request.POST or None, instance=catalogue, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+
+        url = reverse("accounts:catalogue_list")
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    tpl = "accounts/catalogues/form_embed.html" if _is_embed(request) else "accounts/catalogues/form.html"
+    return render(request, tpl, {"form": form, "mode": "edit", "catalogue": catalogue})
+
+
+@login_required
+@require_POST
+def catalogue_delete(request, pk: int):
+    catalogue = get_object_or_404(Catalogue, pk=pk, owner=request.user)
+    catalogue.delete()
+
+    url = reverse("accounts:catalogue_list")
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)

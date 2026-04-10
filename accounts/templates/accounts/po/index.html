@@ -1,32 +1,65 @@
 {% extends "accounts/base_app.html" %}
 {% block title %}PO - InventTech{% endblock %}
 {% block page_title %}Purchase Orders{% endblock %}
-{% block page_subtitle %}Yarn, Greige, Dyeing{% endblock %}
+{% block page_subtitle %}Yarn, Greige, Dyeing, Ready{% endblock %}
 
 {% block content %}
 <style>
   .po-wrap{
-    grid-column: 1 / -1;
+    grid-column:1 / -1;
   }
 
-  .po-card{
-    padding: 20px;
-    border-radius: 24px;
+  .po-shell{
+    position:relative;
+    overflow:hidden;
+    padding:24px;
+    border-radius:32px;
+    background:
+      radial-gradient(circle at 10% 12%, rgba(255, 210, 95, .22), transparent 22%),
+      radial-gradient(circle at 88% 16%, rgba(108, 170, 255, .18), transparent 24%),
+      radial-gradient(circle at 82% 86%, rgba(238, 61, 133, .16), transparent 22%),
+      linear-gradient(135deg, rgba(255,248,250,.98) 0%, rgba(255,251,240,.98) 34%, rgba(244,248,255,.98) 68%, rgba(250,244,255,.98) 100%);
+    border:1px solid rgba(15,23,42,.08);
+    box-shadow:
+      0 22px 54px rgba(15,23,42,.07),
+      inset 0 1px 0 rgba(255,255,255,.85);
   }
 
-  .po-head{
+  
+
+  .po-shell::before{
+    width:220px;
+    height:220px;
+    top:-90px;
+    right:-70px;
+    background:radial-gradient(circle, rgba(101, 219, 207, .24), rgba(101, 219, 207, 0) 70%);
+  }
+
+  .po-shell::after{
+    width:180px;
+    height:180px;
+    bottom:-70px;
+    left:-50px;
+    background:radial-gradient(circle, rgba(255, 188, 92, .20), rgba(255, 188, 92, 0) 72%);
+  }
+
+  .po-topbar{
+    position:relative;
+    z-index:1;
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:12px;
+    gap:16px;
     flex-wrap:wrap;
-    margin-bottom:18px;
+    margin-bottom:10px;
   }
 
-  .po-head-title{
-    font-size:22px;
+  .po-title{
+    margin:0;
+    font-size:20px;
+    line-height:1;
     font-weight:900;
-    letter-spacing:-.03em;
+    letter-spacing:-.045em;
     color:#0f172a;
   }
 
@@ -34,17 +67,20 @@
     display:flex;
     align-items:center;
     gap:10px;
-    min-width:260px;
-    padding:10px 14px;
+    min-width:290px;
+    padding:12px 16px;
     border-radius:999px;
-    background:rgba(255,255,255,.82);
-    border:1px solid rgba(15,23,42,.10);
+    background:rgba(255,255,255,.86);
+    border:1px solid rgba(15,23,42,.08);
+    box-shadow:0 10px 24px rgba(15,23,42,.05);
+    backdrop-filter:blur(8px);
   }
 
   .po-search .ico{
-    width:17px;
-    height:17px;
-    color:rgba(15,23,42,.45);
+    width:18px;
+    height:18px;
+    color:rgba(15,23,42,.42);
+    flex:0 0 auto;
   }
 
   .po-search input{
@@ -52,208 +88,308 @@
     border:none;
     outline:none;
     background:transparent;
-    font-size:13px;
     color:#0f172a;
+    font-size:13px;
   }
 
-  .po-flow{
-    display:grid;
-    grid-template-columns:repeat(6, minmax(0,1fr));
-    gap:10px;
-    margin-bottom:18px;
+  .po-search input::placeholder{
+    color:rgba(15,23,42,.42);
   }
 
-  .po-flow-item{
+  .po-track{
     position:relative;
+    z-index:1;
     display:flex;
     align-items:center;
-    justify-content:center;
-    min-height:50px;
-    padding:10px;
-    border-radius:14px;
-    font-size:12px;
-    font-weight:800;
-    color:#0f172a;
-    background:rgba(255,255,255,.88);
-    border:1px solid rgba(15,23,42,.08);
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
   }
 
-  .po-flow-item::after{
-    content:"→";
-    position:absolute;
-    right:-10px;
-    top:50%;
-    transform:translateY(-50%);
-    width:20px;
-    height:20px;
+  .po-track-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,.76);
+    border:1px solid rgba(15,23,42,.08);
+    color:#0f172a;
+    font-size:12px;
+    font-weight:700;
+    box-shadow:0 6px 16px rgba(15,23,42,.04);
+  }
+
+  .po-track-no{
+    width:24px;
+    height:24px;
+    border-radius:999px;
     display:grid;
     place-items:center;
-    border-radius:999px;
-    background:#fff;
-    border:1px solid rgba(15,23,42,.08);
-    color:rgba(15,23,42,.55);
     font-size:11px;
     font-weight:900;
+    color:#fff;
+    background:linear-gradient(135deg, rgba(238,61,133,1), rgba(255,190,84,1));
   }
 
-  .po-flow-item:last-child::after{
-    display:none;
+  .po-stage-grid{
+    position:relative;
+    z-index:1;
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0,1fr));
+    gap:16px;
   }
 
-  .po-sections{
+  .po-stage{
+    display:flex;
+  }
+
+  .po-stage-card{
+    width:100%;
+    min-height:292px;
+    padding:18px;
+    border-radius:28px;
+    background:rgba(255,255,255,.78);
+    border:1px solid rgba(15,23,42,.07);
+    box-shadow:
+      0 14px 30px rgba(15,23,42,.05),
+      inset 0 1px 0 rgba(255,255,255,.78);
+    backdrop-filter:blur(10px);
     display:flex;
     flex-direction:column;
-    gap:14px;
+    gap:16px;
+    animation:poRise .55s cubic-bezier(.2,.8,.2,1) both;
+    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
   }
 
-  .po-section{
-    padding:16px;
-    border-radius:20px;
-    background:rgba(255,255,255,.72);
+  .po-stage:nth-child(1) .po-stage-card{ animation-delay:.03s; }
+  .po-stage:nth-child(2) .po-stage-card{ animation-delay:.10s; }
+  .po-stage:nth-child(3) .po-stage-card{ animation-delay:.17s; }
+  .po-stage:nth-child(4) .po-stage-card{ animation-delay:.24s; }
+
+  .po-stage:hover .po-stage-card{
+    transform:translateY(-3px);
+    box-shadow:0 20px 38px rgba(15,23,42,.08);
+    border-color:rgba(28,109,216,.14);
+  }
+
+  .po-stage-card--highlight{
+    background:
+      radial-gradient(circle at 14% 18%, rgba(255, 211, 96, .34), transparent 24%),
+      radial-gradient(circle at 86% 16%, rgba(118, 182, 255, .24), transparent 22%),
+      radial-gradient(circle at 82% 84%, rgba(238, 61, 133, .16), transparent 20%),
+      linear-gradient(135deg, rgba(255,250,241,.96), rgba(255,246,231,.95) 46%, rgba(245,248,255,.95) 100%);
+    border-color:rgba(255,188,74,.22);
+  }
+
+  .po-stage-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  .po-stage-id{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:38px;
+    height:38px;
+    padding:0 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,.74);
     border:1px solid rgba(15,23,42,.08);
+    color:#0f172a;
+    font-size:12px;
+    font-weight:900;
+    letter-spacing:.08em;
   }
 
-  .po-section-head{
+  .po-stage-tag{
+    display:inline-flex;
+    align-items:center;
+    padding:6px 10px;
+    border-radius:999px;
+    background:rgba(15,23,42,.05);
+    border:1px solid rgba(15,23,42,.06);
+    color:rgba(15,23,42,.56);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .po-icon-ring{
+    width:76px;
+    height:76px;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    background:rgba(255,255,255,.78);
+    border:1px solid rgba(15,23,42,.08);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+  }
+
+  .po-ico{
+    width:30px;
+    height:30px;
+    color:#111827;
+  }
+
+  .po-stage-name{
+    margin:0;
+    font-size:24px;
+    line-height:1.08;
+    font-weight:900;
+    letter-spacing:-.04em;
+    color:#0f172a;
+  }
+
+  .po-actions{
+    margin-top:auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .po-action{
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:12px;
-    margin-bottom:12px;
-    flex-wrap:wrap;
-  }
-
-  .po-section-title{
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-
-  .po-badge{
-    min-width:32px;
-    height:32px;
-    padding:0 10px;
-    border-radius:999px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    font-size:11px;
-    font-weight:900;
-    letter-spacing:.08em;
-    background:rgba(238,61,133,.10);
-    color:rgba(238,61,133,1);
-    border:1px solid rgba(238,61,133,.18);
-  }
-
-  .po-name{
-    font-size:15px;
-    font-weight:850;
-    color:#0f172a;
-  }
-
-  .po-grid{
-    display:grid;
-    grid-template-columns:repeat(2, minmax(0,1fr));
-    gap:12px;
-  }
-
-  .po-tile{
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
-    padding:14px;
-    border-radius:16px;
+    padding:13px 14px;
+    border-radius:18px;
     text-decoration:none;
     color:inherit;
-    background:rgba(255,255,255,.9);
+    background:rgba(255,255,255,.84);
     border:1px solid rgba(15,23,42,.08);
-    transition:.16s ease;
+    transition:
+      transform .18s ease,
+      border-color .18s ease,
+      box-shadow .18s ease,
+      background .18s ease;
   }
 
-  .po-tile:hover{
+  .po-stage-card--highlight .po-action{
+    background:rgba(255,255,255,.70);
+  }
+
+  .po-action:hover{
     transform:translateY(-2px);
     border-color:rgba(28,109,216,.18);
-    
-    border:1px solid rgba(28, 109, 216, 1);
-    box-shadow:0 14px 34px rgba(15,23,42,.08);
+    box-shadow:0 12px 24px rgba(15,23,42,.07);
   }
 
-  .po-ico-box{
-    width:42px;
-    height:42px;
-    border-radius:12px;
+  .po-action-main{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+  }
+
+  .po-action-ico{
+    width:40px;
+    height:40px;
+    flex:0 0 auto;
+    border-radius:14px;
     display:grid;
     place-items:center;
     background:rgba(15,23,42,.04);
-    border:1px solid rgba(15,23,42,.08);
-    flex:0 0 auto;
+    border:1px solid rgba(15,23,42,.06);
   }
 
-  .po-ico{
-    width:20px;
-    height:20px;
-    color:rgba(238,61,133,1);
+  .po-action-ico svg{
+    width:18px;
+    height:18px;
+    color:#111827;
   }
 
-  .po-tile-title{
-    font-size:14px;
+  .po-action-copy{
+    min-width:0;
+  }
+
+  .po-action-title{
+    font-size:13px;
     font-weight:800;
     color:#0f172a;
-    margin-bottom:2px;
+    margin-bottom:1px;
   }
 
-  .po-tile-sub{
-    font-size:12px;
-    color:rgba(15,23,42,.56);
-    line-height:1.5;
+  .po-action-sub{
+    font-size:11px;
+    line-height:1.45;
+    color:rgba(15,23,42,.50);
+  }
+
+  .po-arrow{
+    width:30px;
+    height:30px;
+    flex:0 0 auto;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    background:rgba(15,23,42,.04);
+    border:1px solid rgba(15,23,42,.06);
+    color:#0f172a;
+    transition:transform .18s ease;
+  }
+
+  .po-action:hover .po-arrow{
+    transform:translateX(2px);
   }
 
   .po-empty{
     display:none;
-    padding:14px;
-    border-radius:14px;
-    background:rgba(255,255,255,.82);
+    position:relative;
+    z-index:1;
+    margin-top:16px;
+    padding:16px;
+    border-radius:18px;
+    background:rgba(255,255,255,.84);
     border:1px dashed rgba(15,23,42,.12);
-    font-size:12px;
     color:rgba(15,23,42,.56);
+    font-size:13px;
+    text-align:center;
   }
 
-  @media (max-width: 980px){
-    .po-flow{
-      grid-template-columns:repeat(3, minmax(0,1fr));
+  @keyframes poRise{
+    from{
+      opacity:0;
+      transform:translateY(14px);
     }
+    to{
+      opacity:1;
+      transform:translateY(0);
+    }
+  }
 
-    .po-flow-item:nth-child(3)::after{
-      display:none;
+  @media (max-width: 1200px){
+    .po-stage-grid{
+      grid-template-columns:repeat(2, minmax(0,1fr));
     }
   }
 
   @media (max-width: 760px){
-    .po-grid{
-      grid-template-columns:1fr;
+    .po-shell{
+      padding:18px;
+      border-radius:24px;
     }
 
-    .po-flow{
-      grid-template-columns:repeat(2, minmax(0,1fr));
-    }
-
-    .po-flow-item:nth-child(2)::after,
-    .po-flow-item:nth-child(4)::after{
-      display:none;
+    .po-title{
+      font-size:26px;
     }
 
     .po-search{
       width:100%;
       min-width:0;
     }
-  }
 
-  @media (max-width: 520px){
-    .po-flow{
+    .po-stage-grid{
       grid-template-columns:1fr;
     }
 
-    .po-flow-item::after{
-      display:none;
+    .po-stage-card{
+      min-height:unset;
     }
   }
 </style>
@@ -261,151 +397,244 @@
 <section class="page-section is-active">
   <div class="canvas">
     <section class="grid util-grid-section po-wrap">
-      <div class="card soft big c8 po-card">
+      <div class="card soft big c8 po-shell">
 
-        <div class="po-head">
-          <div class="po-head-title">PO Workflow</div>
+        <div class="po-topbar">
+          <h2 class="po-title">Purchase Order Workflow</h2>
 
           <label class="po-search" aria-label="Search purchase order modules">
-            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21 21l-4.3-4.3"></path>
-              <path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"></path>
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.3-4.3"></path>
+              <circle cx="11" cy="11" r="7"></circle>
             </svg>
             <input id="poSearch" type="text" placeholder="Search PO or inward">
           </label>
         </div>
 
-        <div class="po-flow">
-          <div class="po-flow-item">Yarn PO</div>
-          <div class="po-flow-item">Yarn Inward</div>
-          <div class="po-flow-item">Greige PO</div>
-          <div class="po-flow-item">Greige Inward</div>
-          <div class="po-flow-item">Dyeing PO</div>
-          <div class="po-flow-item">Dyeing Inward</div>
+
+        <div class="po-stage-grid">
+
+          <div class="po-stage">
+            <div class="po-stage-card ">
+              <div class="po-stage-top">
+                <span class="po-stage-id">01</span>
+                <span class="po-stage-tag">Start</span>
+              </div>
+
+              <div class="po-icon-ring">
+                <svg class="po-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <rect x="6" y="7" width="12" height="11" rx="2"></rect>
+                  <path d="M9 4v3"></path>
+                  <path d="M15 4v3"></path>
+                </svg>
+              </div>
+
+              <h3 class="po-stage-name">Yarn</h3>
+
+              <div class="po-actions">
+                <a class="po-action po-action-search" href="{% url 'accounts:yarnpo_list' %}" data-search="yarn yarn po purchase order procurement create raw material">
+                  <div class="po-action-main">
+                    <span class="po-action-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <rect x="5" y="5" width="14" height="14" rx="2"></rect>
+                        <path d="M9 12h6"></path>
+                      </svg>
+                    </span>
+                    <div class="po-action-copy">
+                      <div class="po-action-title">Yarn PO</div>
+                      <div class="po-action-sub">Create and manage</div>
+                    </div>
+                  </div>
+                  <span class="po-arrow">→</span>
+                </a>
+
+                <a class="po-action po-action-search" href="{% url 'accounts:yarn_inward_tracker' %}" data-search="yarn inward inwards tracker receipt lot received">
+                  <div class="po-action-main">
+                    <span class="po-action-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M12 4v10"></path>
+                        <path d="M8 10l4 4 4-4"></path>
+                        <path d="M5 18h14"></path>
+                      </svg>
+                    </span>
+                    <div class="po-action-copy">
+                      <div class="po-action-title">Yarn Inwards</div>
+                      <div class="po-action-sub">Track inward</div>
+                    </div>
+                  </div>
+                  <span class="po-arrow">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="po-stage">
+            <div class="po-stage-card">
+              <div class="po-stage-top">
+                <span class="po-stage-id">02</span>
+                <span class="po-stage-tag">Flow</span>
+              </div>
+
+              <div class="po-icon-ring">
+                <svg class="po-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="M5 8h14"></path>
+                  <path d="M5 12h14"></path>
+                  <path d="M5 16h14"></path>
+                </svg>
+              </div>
+
+              <h3 class="po-stage-name">Greige</h3>
+
+              <div class="po-actions">
+                <a class="po-action po-action-search" href="{% url 'accounts:greigepo_list' %}" data-search="greige greige po purchase order unfinished fabric">
+                  <div class="po-action-main">
+                    <span class="po-action-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M4 7h16"></path>
+                        <path d="M4 12h16"></path>
+                        <path d="M4 17h16"></path>
+                      </svg>
+                    </span>
+                    <div class="po-action-copy">
+                      <div class="po-action-title">Greige PO</div>
+                      <div class="po-action-sub">Manage orders</div>
+                    </div>
+                  </div>
+                  <span class="po-arrow">→</span>
+                </a>
+
+                <a class="po-action po-action-search" href="{% url 'accounts:greige_inward_tracker' %}" data-search="greige inward inwards tracker receipt received">
+                  <div class="po-action-main">
+                    <span class="po-action-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M12 4v10"></path>
+                        <path d="M8 10l4 4 4-4"></path>
+                        <path d="M4 18h16"></path>
+                      </svg>
+                    </span>
+                    <div class="po-action-copy">
+                      <div class="po-action-title">Greige Inwards</div>
+                      <div class="po-action-sub">Track inward</div>
+                    </div>
+                  </div>
+                  <span class="po-arrow">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="po-stage">
+            <div class="po-stage-card">
+              <div class="po-stage-top">
+                <span class="po-stage-id">03</span>
+                <span class="po-stage-tag">Process</span>
+              </div>
+
+              <div class="po-icon-ring">
+                <svg class="po-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="M12 3c3 4 5 6.6 5 9a5 5 0 1 1-10 0c0-2.4 2-5 5-9z"></path>
+                </svg>
+              </div>
+
+              <h3 class="po-stage-name">Dyeing</h3>
+
+              <div class="po-actions">
+                <a class="po-action po-action-search" href="{% url 'accounts:dyeingpo_list' %}" data-search="dyeing dyeing po process order coloring treatment">
+                  <div class="po-action-main">
+                    <span class="po-action-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M12 3c3 4 5 6.6 5 9a5 5 0 1 1-10 0c0-2.4 2-5 5-9z"></path>
+                      </svg>
+                    </span>
+                    <div class="po-action-copy">
+                      <div class="po-action-title">Dyeing PO</div>
+                      <div class="po-action-sub">Manage orders</div>
+                    </div>
+                  </div>
+                  <span class="po-arrow">→</span>
+                </a>
+
+                <a class="po-action po-action-search" href="{% url 'accounts:dyeing_inward_tracker' %}" data-search="dyeing inward inwards tracker dyed quantity received">
+                  <div class="po-action-main">
+                    <span class="po-action-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M12 4v10"></path>
+                        <path d="M8 10l4 4 4-4"></path>
+                        <path d="M6 18h12"></path>
+                      </svg>
+                    </span>
+                    <div class="po-action-copy">
+                      <div class="po-action-title">Dyeing Inwards</div>
+                      <div class="po-action-sub">Track inward</div>
+                    </div>
+                  </div>
+                  <span class="po-arrow">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="po-stage">
+            <div class="po-stage-card">
+              <div class="po-stage-top">
+                <span class="po-stage-id">04</span>
+                <span class="po-stage-tag">Final</span>
+              </div>
+
+              <div class="po-icon-ring">
+                <svg class="po-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <rect x="5" y="6" width="14" height="12" rx="2"></rect>
+                  <path d="M9 10h6"></path>
+                  <path d="M9 14h4"></path>
+                </svg>
+              </div>
+
+              <h3 class="po-stage-name">Ready</h3>
+
+              <div class="po-actions">
+                <a class="po-action po-action-search" href="{% url 'accounts:readypo_list' %}" data-search="ready ready po finished purchase order final">
+                  <div class="po-action-main">
+                    <span class="po-action-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <rect x="5" y="6" width="14" height="12" rx="2"></rect>
+                        <path d="M9 10h6"></path>
+                        <path d="M9 14h4"></path>
+                      </svg>
+                    </span>
+                    <div class="po-action-copy">
+                      <div class="po-action-title">Ready PO</div>
+                      <div class="po-action-sub">Manage orders</div>
+                    </div>
+                  </div>
+                  <span class="po-arrow">→</span>
+                </a>
+
+                <a class="po-action po-action-search" href="{% url 'accounts:ready_inward_tracker' %}" data-search="ready inward inwards tracker finished goods receipt">
+                  <div class="po-action-main">
+                    <span class="po-action-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M12 4v10"></path>
+                        <path d="M8 10l4 4 4-4"></path>
+                        <path d="M5 18h14"></path>
+                      </svg>
+                    </span>
+                    <div class="po-action-copy">
+                      <div class="po-action-title">Ready Inwards</div>
+                      <div class="po-action-sub">Track inward</div>
+                    </div>
+                  </div>
+                  <span class="po-arrow">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <div class="po-sections">
-
-          <div class="po-section po-stage">
-            <div class="po-section-head">
-              <div class="po-section-title">
-                <span class="po-badge">01</span>
-                <div class="po-name">Yarn</div>
-              </div>
-            </div>
-
-            <div class="po-grid">
-              <a class="po-tile po-search-item" href="{% url 'accounts:yarnpo_list' %}" data-search="yarn yarn po purchase order procurement">
-                <div class="po-ico-box">
-                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M7 7h10v10H7z"></path>
-                    <path d="M9 3v4"></path>
-                    <path d="M15 3v4"></path>
-                  </svg>
-                </div>
-                <div>
-                  <div class="po-tile-title">Yarn PO</div>
-                  <div class="po-tile-sub">Create and manage yarn purchase orders.</div>
-                </div>
-              </a>
-
-              <a class="po-tile po-search-item" href="{% url 'accounts:yarn_inward_tracker' %}" data-search="yarn inward inwards tracker receipt">
-                <div class="po-ico-box">
-                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8 7h8"></path>
-                    <path d="M6 12h12"></path>
-                    <path d="M4 17h16"></path>
-                  </svg>
-                </div>
-                <div>
-                  <div class="po-tile-title">Yarn Inwards</div>
-                  <div class="po-tile-sub">Track inward and continue to Greige.</div>
-                </div>
-              </a>
-            </div>
-          </div>
-
-          <div class="po-section po-stage">
-            <div class="po-section-head">
-              <div class="po-section-title">
-                <span class="po-badge">02</span>
-                <div class="po-name">Greige</div>
-              </div>
-            </div>
-
-            <div class="po-grid">
-              <a class="po-tile po-search-item" href="{% url 'accounts:greigepo_list' %}" data-search="greige greige po purchase order">
-                <div class="po-ico-box">
-                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 7h16"></path>
-                    <path d="M4 12h16"></path>
-                    <path d="M4 17h16"></path>
-                  </svg>
-                </div>
-                <div>
-                  <div class="po-tile-title">Greige PO</div>
-                  <div class="po-tile-sub">Manage greige orders from yarn flow.</div>
-                </div>
-              </a>
-
-              <a class="po-tile po-search-item" href="{% url 'accounts:greige_inward_tracker' %}" data-search="greige inward inwards tracker">
-                <div class="po-ico-box">
-                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M7 6h10"></path>
-                    <path d="M5 12h14"></path>
-                    <path d="M3 18h18"></path>
-                  </svg>
-                </div>
-                <div>
-                  <div class="po-tile-title">Greige Inwards</div>
-                  <div class="po-tile-sub">Track inward and continue to Dyeing.</div>
-                </div>
-              </a>
-            </div>
-          </div>
-
-          <div class="po-section po-stage">
-            <div class="po-section-head">
-              <div class="po-section-title">
-                <span class="po-badge">03</span>
-                <div class="po-name">Dyeing</div>
-              </div>
-            </div>
-
-            <div class="po-grid">
-              <a class="po-tile po-search-item" href="{% url 'accounts:dyeingpo_list' %}" data-search="dyeing dyeing po purchase order">
-                <div class="po-ico-box">
-                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 3c3 4 5 6.6 5 9a5 5 0 1 1-10 0c0-2.4 2-5 5-9z"></path>
-                  </svg>
-                </div>
-                <div>
-                  <div class="po-tile-title">Dyeing PO</div>
-                  <div class="po-tile-sub">Manage dyeing orders from greige flow.</div>
-                </div>
-              </a>
-
-              <a class="po-tile po-search-item" href="{% url 'accounts:dyeing_inward_tracker' %}" data-search="dyeing inward inwards tracker">
-                <div class="po-ico-box">
-                  <svg class="po-ico" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6 7h12"></path>
-                    <path d="M4 12h16"></path>
-                    <path d="M8 17h8"></path>
-                  </svg>
-                </div>
-                <div>
-                  <div class="po-tile-title">Dyeing Inwards</div>
-                  <div class="po-tile-sub">Track dyed inward quantities.</div>
-                </div>
-              </a>
-            </div>
-          </div>
-
-          <div id="poEmptyState" class="po-empty">
-            No matching modules found.
-          </div>
-
+        <div id="poEmptyState" class="po-empty">
+          No matching modules found.
         </div>
+
       </div>
     </section>
   </div>
@@ -416,7 +645,7 @@
 <script>
   (function () {
     const input = document.getElementById("poSearch");
-    const items = Array.from(document.querySelectorAll(".po-search-item"));
+    const actions = Array.from(document.querySelectorAll(".po-action-search"));
     const stages = Array.from(document.querySelectorAll(".po-stage"));
     const emptyState = document.getElementById("poEmptyState");
 
@@ -424,7 +653,7 @@
       const q = (input?.value || "").toLowerCase().trim();
       let visibleCount = 0;
 
-      items.forEach((item) => {
+      actions.forEach((item) => {
         const text = (item.dataset.search || "").toLowerCase();
         const matched = !q || text.includes(q);
         item.style.display = matched ? "" : "none";
@@ -432,7 +661,7 @@
       });
 
       stages.forEach((stage) => {
-        const hasVisible = Array.from(stage.querySelectorAll(".po-search-item"))
+        const hasVisible = Array.from(stage.querySelectorAll(".po-action-search"))
           .some((item) => item.style.display !== "none");
         stage.style.display = hasVisible ? "" : "none";
       });

@@ -1,0 +1,14 @@
+{% load static %}
+{% extends "accounts/base.html" %}
+
+{% block title %}Locations{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/locations/list.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="lc-page">
+  {% include "accounts/locations/list_embed.html" with full_page=1 %}
+</div>
+{% endblock %}
