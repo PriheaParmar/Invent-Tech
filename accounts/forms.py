@@ -21,7 +21,12 @@ from .models import (
     Firm,
     MaterialShade,
     MaterialSubType,
-    MaterialType,
+    MaterialType,    
+    BOM,
+    BOMMaterialItem,
+    BOMJobberItem,
+    BOMProcessItem,
+    BOMExpenseItem,
     Vendor,
     MainCategory,
     PatternType,
@@ -1271,3 +1276,174 @@ class CatalogueForm(forms.ModelForm):
                 raise forms.ValidationError("This catalogue already exists.")
 
         return name
+    
+class BOMForm(forms.ModelForm):
+    class Meta:
+        model = BOM
+        fields = [
+            "sku_code",
+            "product_name",
+            "catalogue_name",
+            "brand",
+            "category",
+            "main_category",
+            "pattern_type",
+            "gender",
+            "size_type",
+            "sub_category",
+            "character_name",
+            "license_name",
+            "color_price",
+            "accessories_price",
+            "maintenance_price",
+            "selling_price",
+            "booked_price",
+            "available_stock",
+            "damage_percent",
+            "is_discontinued",
+            "product_image",
+            "size_chart_image",
+            "notes",
+        ]
+        widgets = {
+            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Short BOM note or costing remark"}),
+            "product_image": forms.ClearableFileInput(attrs={"accept": "image/*"}),
+            "size_chart_image": forms.ClearableFileInput(attrs={"accept": "image/*"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["brand"].queryset = Brand.objects.filter(owner=user).order_by("name") if user else Brand.objects.none()
+        self.fields["category"].queryset = Category.objects.filter(owner=user).order_by("name") if user else Category.objects.none()
+        self.fields["main_category"].queryset = MainCategory.objects.filter(owner=user).order_by("name") if user else MainCategory.objects.none()
+        self.fields["pattern_type"].queryset = PatternType.objects.filter(owner=user).order_by("name") if user else PatternType.objects.none()
+
+        for field_name in ["brand", "category", "main_category", "pattern_type"]:
+            self.fields[field_name].required = False
+            self.fields[field_name].empty_label = f"Select {self.fields[field_name].label}"
+
+        placeholders = {
+            "sku_code": "Enter production SKU",
+            "product_name": "Enter product name",
+            "catalogue_name": "Enter catalogue name",
+            "sub_category": "Enter sub category",
+            "character_name": "Enter character / collection name",
+            "license_name": "Enter licence / IP name",
+            "color_price": "0.00",
+            "accessories_price": "0.00",
+            "maintenance_price": "0.00",
+            "selling_price": "0.00",
+            "booked_price": "0.00",
+            "available_stock": "0.00",
+            "damage_percent": "0.00",
+        }
+
+        for field_name, placeholder in placeholders.items():
+            self.fields[field_name].widget.attrs.setdefault("placeholder", placeholder)
+
+        numeric_fields = [
+            "color_price",
+            "accessories_price",
+            "maintenance_price",
+            "selling_price",
+            "booked_price",
+            "available_stock",
+            "damage_percent",
+        ]
+        for field_name in numeric_fields:
+            self.fields[field_name].widget.attrs.update({"step": "0.01", "min": "0"})
+
+
+class BOMMaterialItemForm(forms.ModelForm):
+    class Meta:
+        model = BOMMaterialItem
+        fields = ["item_type", "material", "unit", "cost_per_uom", "average", "cost", "notes"]
+        widgets = {
+            "cost_per_uom": forms.NumberInput(attrs={"step": "0.01", "min": "0", "class": "js-bom-rate"}),
+            "average": forms.NumberInput(attrs={"step": "0.01", "min": "0", "class": "js-bom-average"}),
+            "cost": forms.NumberInput(attrs={"step": "0.01", "min": "0", "class": "js-bom-cost", "readonly": "readonly"}),
+            "notes": forms.TextInput(attrs={"placeholder": "Optional note"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["material"].queryset = Material.objects.select_related("material_type").order_by("name")
+        self.fields["unit"].queryset = MaterialUnit.objects.filter(owner=user).order_by("name") if user else MaterialUnit.objects.none()
+        self.fields["unit"].required = False
+        self.fields["unit"].empty_label = "UOM"
+
+
+class BOMJobberItemForm(forms.ModelForm):
+    class Meta:
+        model = BOMJobberItem
+        fields = ["jobber", "jobber_type", "price"]
+        widgets = {
+            "price": forms.NumberInput(attrs={"step": "0.01", "min": "0", "class": "js-bom-jobber-price"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["jobber"].queryset = Jobber.objects.filter(owner=user).order_by("name") if user else Jobber.objects.none()
+        self.fields["jobber_type"].queryset = JobberType.objects.filter(owner=user).order_by("name") if user else JobberType.objects.none()
+        self.fields["jobber"].required = False
+        self.fields["jobber_type"].required = False
+        self.fields["jobber"].empty_label = "Select jobber"
+        self.fields["jobber_type"].empty_label = "Select type"
+
+
+class BOMProcessItemForm(forms.ModelForm):
+    class Meta:
+        model = BOMProcessItem
+        fields = ["jobber_type", "price"]
+        widgets = {
+            "price": forms.NumberInput(attrs={"step": "0.01", "min": "0", "class": "js-bom-process-price"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["jobber_type"].queryset = JobberType.objects.filter(owner=user).order_by("name") if user else JobberType.objects.none()
+        self.fields["jobber_type"].empty_label = "Select jobber type"
+
+
+class BOMExpenseItemForm(forms.ModelForm):
+    class Meta:
+        model = BOMExpenseItem
+        fields = ["expense_name", "price"]
+        widgets = {
+            "expense_name": forms.TextInput(attrs={"placeholder": "Factory expense name"}),
+            "price": forms.NumberInput(attrs={"step": "0.01", "min": "0", "class": "js-bom-expense-price"}),
+        }
+
+
+BOMMaterialItemFormSet = inlineformset_factory(
+    BOM,
+    BOMMaterialItem,
+    form=BOMMaterialItemForm,
+    extra=2,
+    can_delete=True,
+)
+
+BOMJobberItemFormSet = inlineformset_factory(
+    BOM,
+    BOMJobberItem,
+    form=BOMJobberItemForm,
+    extra=1,
+    can_delete=True,
+)
+
+BOMProcessItemFormSet = inlineformset_factory(
+    BOM,
+    BOMProcessItem,
+    form=BOMProcessItemForm,
+    extra=1,
+    can_delete=True,
+)
+
+BOMExpenseItemFormSet = inlineformset_factory(
+    BOM,
+    BOMExpenseItem,
+    form=BOMExpenseItemForm,
+    extra=1,
+    can_delete=True,
+)

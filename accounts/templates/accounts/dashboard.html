@@ -347,6 +347,7 @@
         "Jobber Type",
         "Jobber",
         "Material Sub Type",
+            "BOM",
       ],
       Production: ["Techpack", "BOM", "Job Card Details", "Branch SKU"],
       Dyeing: ["Dyeing Master", "Greige Master", "Dyeing Other Charge Headers"],
@@ -484,6 +485,7 @@
       "Main Category": "{% url 'accounts:maincategory_list' %}",
       "Pattern Type": "{% url 'accounts:patterntype_list' %}",
       "Catalogue": "{% url 'accounts:catalogue_list' %}",
+      "BOM": "{% url 'accounts:bom_list' %}",
     };
 
     function tileHtml(u) {
@@ -565,7 +567,8 @@ function isMastersUrl(hrefOrAction) {
     ROUTES["Brand"],
     ROUTES["Category"],
     ROUTES["Main Category"],
-    ROUTES["Pattern Type"],
+    ROUTES["Main Category"],
+    ROUTES["BOM"],
   ]
     .filter(Boolean)
     .map((u) => new URL(u, window.location.origin).pathname.replace(/\/+$/, "") + "/");
@@ -1006,7 +1009,8 @@ if (existingPanel) {
             title === "Location" ||
             title === "Vendor" ||
             title === "Material Shades" ||
-            title === "Material Type"
+            title === "Material Type" ||
+            title === "BOM"
           ) {
             e.preventDefault();
             openMastersPanel(title, href);

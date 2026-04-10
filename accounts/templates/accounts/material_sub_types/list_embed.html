@@ -24,34 +24,34 @@
 
     <div class="jb-tools">
       <form class="jb-search" method="get" action="{% url 'accounts:materialsubtype_list' %}" data-embed-autosubmit-form="1">
-        {% if not full_page %}
-        <input type="hidden" name="embed" value="1">
-        {% endif %}
+  {% if not full_page %}
+  <input type="hidden" name="embed" value="1">
+  {% endif %}
 
-        <input
-          type="search"
-          name="q"
-          value="{{ q|default:'' }}"
-          placeholder="Search material sub type, description, or material type"
-          autocomplete="off"
-        >
+  <input
+    type="search"
+    name="q"
+    value="{{ q|default:'' }}"
+    placeholder="Search material sub type, description, or material type"
+    autocomplete="off"
+  >
 
-        <button class="jb-search-btn" type="submit">Search</button>
+  <button class="jb-search-btn" type="submit">Search</button>
 
-        <select name="kind" class="jb-search-btn" data-embed-autosubmit="1">
-          <option value="">All Kinds</option>
-          {% for value, label in kind_choices %}
-            <option value="{{ value }}" {% if selected_kind == value %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
+  <select name="kind" class="jb-search-btn" data-embed-autosubmit="1">
+    <option value="">All Kinds</option>
+    {% for value, label in kind_choices %}
+      <option value="{{ value }}" {% if selected_kind == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
 
-        <select name="type" class="jb-search-btn" data-embed-autosubmit="1">
-          <option value="">All Types</option>
-          {% for t in type_choices %}
-            <option value="{{ t.id }}" {% if selected_type == t.id|stringformat:'s' %}selected{% endif %}>{{ t.name }}</option>
-          {% endfor %}
-        </select>
-      </form>
+  <select name="type" class="jb-search-btn" data-embed-autosubmit="1">
+    <option value="">All Types</option>
+    {% for t in type_choices %}
+      <option value="{{ t.id }}" {% if selected_type == t.id|stringformat:'s' %}selected{% endif %}>{{ t.name }}</option>
+    {% endfor %}
+  </select>
+</form>
 
       <div class="jb-tool-actions">
         <a class="jb-add" href="{% url 'accounts:materialsubtype_add' %}{% if not full_page %}?embed=1{% endif %}">

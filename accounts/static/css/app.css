@@ -2092,8 +2092,9 @@ body.modal-open{
    MATERIAL FORM (LIKE SCREENSHOT)
    ========================= */
 .material-form-embed{
-  max-width: 520px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   padding: 10px 6px;
 }
 
@@ -2148,6 +2149,20 @@ body.modal-open{
   flex-wrap:wrap;
   margin: 6px 0 14px;
 }
+
+.material-form-embed .kind-radio-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.material-form-embed .kind-radio-card.small{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+}
+
 
 /* rows: label left, input right */
 .material-form-embed .mf-row{
@@ -2850,9 +2865,9 @@ body.modal-open{
   margin-bottom: 6px;
 }
 
-.material-form-embed input,
-.material-form-embed textarea,
-.material-form-embed select{
+.material-form-embed .mat-field input:not([type="radio"]):not([type="checkbox"]),
+.material-form-embed .mat-field textarea,
+.material-form-embed .mat-field select{
   width:100%;
   height:40px;
   padding:10px 12px;
@@ -2862,7 +2877,7 @@ body.modal-open{
   outline:none;
 }
 
-.material-form-embed textarea{
+.material-form-embed .mat-field textarea{
   min-height:96px;
   resize:vertical;
 }
@@ -3167,3 +3182,354 @@ body.modal-open{
   }
 }
 
+/* =========================
+   MATERIAL FORM COMPACT FIX
+========================= */
+.material-form-compact {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.material-form-compact .mf-panel {
+  padding: 16px;
+}
+
+.material-form-compact .mf-card {
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.material-form-compact .mf-card-head {
+  margin-bottom: 10px;
+}
+
+.material-form-compact .mf-card-title {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.material-form-compact .mat-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.material-form-compact .mat-field,
+.material-form-compact .mat-field * {
+  min-width: 0;
+}
+
+.material-form-compact .mat-field label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  opacity: 0.78;
+}
+
+.material-form-compact .mat-field input,
+.material-form-compact .mat-field select,
+.material-form-compact .mat-field textarea {
+  width: 100%;
+  max-width: 100%;
+  min-height: 38px;
+  padding: 9px 11px;
+}
+
+.material-form-compact .mat-field textarea {
+  min-height: 84px;
+}
+
+.material-form-compact .mat-field input[type="file"] {
+  padding: 7px 10px;
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.material-form-compact .mat-full {
+  grid-column: 1 / -1;
+}
+
+.material-form-compact .mf-preview-inline {
+  width: 100%;
+  height: 116px;
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.material-form-compact .mf-preview-inline img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.material-form-compact .mf-kind-summary-compact {
+  padding: 8px 10px;
+  margin-bottom: 12px;
+}
+
+.material-form-compact .mf-actions-bar {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.material-form-compact .mf-actions-bar .mf-btn {
+  min-width: 128px;
+}
+
+@media (max-width: 768px) {
+  .material-form-compact {
+    max-width: 100%;
+  }
+
+  .material-form-compact .mat-grid-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .material-form-compact .mf-actions-bar > * {
+    flex: 1;
+  }
+}
+
+
+/* =========================================================
+   MATERIAL FORM FINAL FIX (jobber-like compact layout)
+   Appended override to beat earlier duplicate material-form rules
+========================================================= */
+.material-form-embed.material-form-jobber{
+  width: min(720px, 100%) !important;
+  max-width: 720px !important;
+  margin: 0 auto !important;
+  padding: 10px 6px !important;
+}
+
+.mf-page .material-form-embed.material-form-jobber{
+  width: min(760px, 100%) !important;
+  max-width: 760px !important;
+}
+
+.material-form-embed.material-form-jobber,
+.material-form-embed.material-form-jobber *{
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.material-form-embed.material-form-jobber .mf-panel{
+  padding: 16px !important;
+  overflow: visible !important;
+}
+
+.material-form-embed.material-form-jobber .mf-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 12px !important;
+}
+
+.material-form-embed.material-form-jobber .mf-title{
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  line-height: 1.1;
+}
+
+.material-form-embed.material-form-jobber .mf-sub{
+  margin-top: 4px !important;
+  font-size: 12px !important;
+  opacity: .72;
+}
+
+.material-form-embed.material-form-jobber .mf-kind-summary-compact{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  margin-bottom: 12px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.material-form-embed.material-form-jobber .mf-card{
+  padding: 12px !important;
+  margin-bottom: 12px !important;
+  border: 1px solid rgba(15,23,42,.08) !important;
+  border-radius: 16px !important;
+  background: rgba(255,255,255,.78) !important;
+  box-shadow: 0 10px 24px rgba(15,23,42,.05) !important;
+}
+
+.material-form-embed.material-form-jobber .mf-card:last-of-type{
+  margin-bottom: 0 !important;
+}
+
+.material-form-embed.material-form-jobber .mf-card-head{
+  margin-bottom: 10px !important;
+}
+
+.material-form-embed.material-form-jobber .mf-card-title{
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  line-height: 1.2;
+}
+
+.material-form-embed.material-form-jobber .mf-card-sub{
+  margin-top: 3px !important;
+  font-size: 11px !important;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.material-form-embed.material-form-jobber .mat-grid-compact{
+  display:grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.material-form-embed.material-form-jobber .mat-full{
+  grid-column: 1 / -1 !important;
+}
+
+.material-form-embed.material-form-jobber .mat-field label{
+  display:block !important;
+  margin: 0 0 5px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: .02em;
+  opacity: .78;
+}
+
+.material-form-embed.material-form-jobber .mat-field input:not([type="radio"]):not([type="checkbox"]),
+.material-form-embed.material-form-jobber .mat-field select,
+.material-form-embed.material-form-jobber .mat-field textarea{
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  padding: 9px 11px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(15,23,42,.12) !important;
+  background: rgba(255,255,255,.94) !important;
+  outline: none !important;
+  font: inherit;
+  color: inherit;
+}
+
+.material-form-embed.material-form-jobber .mat-field textarea{
+  height: auto !important;
+  min-height: 84px !important;
+  resize: vertical !important;
+}
+
+.material-form-embed.material-form-jobber .mat-field input[type="file"]{
+  display:block !important;
+  width:100% !important;
+  max-width:100% !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.material-form-embed.material-form-jobber .mat-field input[type="file"]::file-selector-button{
+  margin-right: 10px;
+  border: 1px solid rgba(15,23,42,.12);
+  background: #fff;
+  border-radius: 10px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.material-form-embed.material-form-jobber .mat-field select{
+  appearance:none !important;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(15,23,42,.45) 50%),
+    linear-gradient(135deg, rgba(15,23,42,.45) 50%, transparent 50%) !important;
+  background-position: calc(100% - 16px) 16px, calc(100% - 11px) 16px !important;
+  background-size: 5px 5px, 5px 5px !important;
+  background-repeat:no-repeat !important;
+  padding-right: 32px !important;
+}
+
+.material-form-embed.material-form-jobber .mat-field input:focus,
+.material-form-embed.material-form-jobber .mat-field select:focus,
+.material-form-embed.material-form-jobber .mat-field textarea:focus{
+  border-color: rgba(238,61,133,.35) !important;
+  box-shadow: 0 0 0 4px rgba(238,61,133,.10) !important;
+  background: #fff !important;
+}
+
+.material-form-embed.material-form-jobber .field-error{
+  margin-top: 6px;
+  font-size: 12px;
+  color: #b42318;
+}
+
+.material-form-embed.material-form-jobber .mf-preview-inline{
+  width: 100% !important;
+  height: 112px !important;
+  margin: 0 !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(15,23,42,.10) !important;
+  background: rgba(15,23,42,.03) !important;
+  display:grid !important;
+  place-items:center !important;
+  overflow:hidden !important;
+}
+
+.material-form-embed.material-form-jobber .mf-preview-inline img{
+  width:100% !important;
+  height:100% !important;
+  display:block !important;
+  object-fit:cover !important;
+}
+
+.material-form-embed.material-form-jobber .mf-preview-ico{
+  width: 40px;
+  height: 40px;
+  stroke: rgba(15,23,42,.34);
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.material-form-embed.material-form-jobber .mf-actions-bar{
+  display:flex !important;
+  justify-content:flex-end !important;
+  gap:10px !important;
+  flex-wrap:wrap !important;
+  margin-top: 14px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid rgba(15,23,42,.08) !important;
+}
+
+.material-form-embed.material-form-jobber .mf-actions-bar .mf-btn{
+  min-width: 128px !important;
+}
+
+@media (max-width: 700px){
+  .material-form-embed.material-form-jobber{
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .material-form-embed.material-form-jobber .mat-grid-compact{
+    grid-template-columns: 1fr !important;
+  }
+
+  .material-form-embed.material-form-jobber .mf-actions-bar > *{
+    flex: 1 1 auto;
+  }
+}

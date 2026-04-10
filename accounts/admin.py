@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Jobber, JobberType, UserExtra, Party, Location, Brand, Catalogue
+from .models import (
+    Jobber, JobberType, UserExtra, Party, Location, Brand, Catalogue,
+    BOM, BOMMaterialItem, BOMJobberItem, BOMProcessItem, BOMExpenseItem
+)
 
 @admin.register(JobberType)
 class JobberTypeAdmin(admin.ModelAdmin):
@@ -41,3 +44,41 @@ class CatalogueAdmin(admin.ModelAdmin):
     search_fields = ("name", "wear_type", "description", "owner__username")
     list_filter = ("is_active", "owner", "wear_type")
     ordering = ("name",)
+    
+
+class BOMMaterialInline(admin.TabularInline):
+    model = BOMMaterialItem
+    extra = 0
+
+
+class BOMJobberInline(admin.TabularInline):
+    model = BOMJobberItem
+    extra = 0
+
+
+class BOMProcessInline(admin.TabularInline):
+    model = BOMProcessItem
+    extra = 0
+
+
+class BOMExpenseInline(admin.TabularInline):
+    model = BOMExpenseItem
+    extra = 0
+
+
+@admin.register(BOM)
+class BOMAdmin(admin.ModelAdmin):
+    list_display = (
+        "bom_code",
+        "sku_code",
+        "product_name",
+        "brand",
+        "category",
+        "available_stock",
+        "booked_price",
+        "estimated_total_cost",
+        "owner",
+    )
+    search_fields = ("bom_code", "sku_code", "product_name", "catalogue_name")
+    list_filter = ("owner", "is_discontinued", "gender", "size_type")
+    inlines = [BOMMaterialInline, BOMJobberInline, BOMProcessInline, BOMExpenseInline]

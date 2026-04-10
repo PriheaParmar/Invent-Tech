@@ -1,3 +1,4 @@
+from django.db import transaction
 import json
 from io import BytesIO
 from django import forms
@@ -39,7 +40,12 @@ from .forms import (
     JobberForm,
     JobberTypeForm,
     LocationForm,
-    CategoryForm,
+    CategoryForm,    
+    BOMForm,
+    BOMMaterialItemFormSet,
+    BOMJobberItemFormSet,
+    BOMProcessItemFormSet,
+    BOMExpenseItemFormSet,
     MaterialForm,
     MaterialShadeForm,
     MaterialSubTypeForm,
@@ -67,6 +73,8 @@ from .models import (
     GreigePOInwardItem,
     DyeingPurchaseOrder,
     DyeingPurchaseOrderItem,
+    BOM,
+    BOMMaterialItem,
     DyeingPOInward,
     Catalogue,
     DyeingPOInwardItem,
@@ -3810,6 +3818,220 @@ def catalogue_delete(request, pk: int):
     catalogue.delete()
 
     url = reverse("accounts:catalogue_list")
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+# ==========================
+# BOM (embed supported)
+# ==========================
+def _build_bom_formsets(request, instance=None):
+    bind = request.method == "POST"
+    data = request.POST if bind else None
+
+    material_formset = BOMMaterialItemFormSet(
+        data=data,
+        instance=instance,
+        prefix="materials",
+        form_kwargs={"user": request.user},
+    )
+
+    jobber_formset = BOMJobberItemFormSet(
+        data=data,
+        instance=instance,
+        prefix="jobbers",
+        form_kwargs={"user": request.user},
+    )
+
+    process_formset = BOMProcessItemFormSet(
+        data=data,
+        instance=instance,
+        prefix="processes",
+        form_kwargs={"user": request.user},
+    )
+
+    expense_formset = BOMExpenseItemFormSet(
+        data=data,
+        instance=instance,
+        prefix="expenses",
+    )
+
+    return material_formset, jobber_formset, process_formset, expense_formset
+
+
+def _bom_has_at_least_one_material(material_formset):
+    for form in material_formset.forms:
+        cleaned = getattr(form, "cleaned_data", None) or {}
+        if cleaned and not cleaned.get("DELETE") and cleaned.get("material"):
+            return True
+    return False
+
+
+@login_required
+def bom_list(request):
+    q = (request.GET.get("q") or "").strip()
+    status = (request.GET.get("status") or "").strip()
+
+    qs = (
+        BOM.objects.filter(owner=request.user)
+        .select_related("brand", "category", "main_category", "pattern_type")
+        .prefetch_related(
+            Prefetch(
+                "material_items",
+                queryset=BOMMaterialItem.objects.select_related("material", "unit").order_by("sort_order", "id"),
+            ),
+            "jobber_items__jobber",
+            "jobber_items__jobber_type",
+            "process_items__jobber_type",
+            "expense_items",
+        )
+        .order_by("-id")
+    )
+
+    if q:
+        qs = qs.filter(
+            Q(bom_code__icontains=q)
+            | Q(sku_code__icontains=q)
+            | Q(product_name__icontains=q)
+            | Q(catalogue_name__icontains=q)
+            | Q(sub_category__icontains=q)
+            | Q(character_name__icontains=q)
+            | Q(license_name__icontains=q)
+            | Q(brand__name__icontains=q)
+            | Q(category__name__icontains=q)
+            | Q(main_category__name__icontains=q)
+            | Q(material_items__material__name__icontains=q)
+        ).distinct()
+
+    if status == "active":
+        qs = qs.filter(is_discontinued=False)
+    elif status == "discontinued":
+        qs = qs.filter(is_discontinued=True)
+
+    ctx = {
+        "boms": qs,
+        "q": q,
+        "status": status,
+    }
+    tpl = "accounts/boms/list_embed.html" if _is_embed(request) else "accounts/boms/list.html"
+    return render(request, tpl, ctx)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def bom_create(request):
+    form = BOMForm(request.POST or None, request.FILES or None, user=request.user)
+    material_formset, jobber_formset, process_formset, expense_formset = _build_bom_formsets(request)
+
+    if request.method == "POST":
+        is_valid = (
+            form.is_valid()
+            and material_formset.is_valid()
+            and jobber_formset.is_valid()
+            and process_formset.is_valid()
+            and expense_formset.is_valid()
+        )
+
+        if is_valid and not _bom_has_at_least_one_material(material_formset):
+            material_formset._non_form_errors = material_formset.error_class(
+                ["Add at least one material / fabric / accessory row."]
+            )
+            is_valid = False
+
+        if is_valid:
+            with transaction.atomic():
+                bom = form.save(commit=False)
+                bom.owner = request.user
+                bom.save()
+
+                material_formset.instance = bom
+                jobber_formset.instance = bom
+                process_formset.instance = bom
+                expense_formset.instance = bom
+
+                material_formset.save()
+                jobber_formset.save()
+                process_formset.save()
+                expense_formset.save()
+
+            url = reverse("accounts:bom_list")
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+
+    tpl = "accounts/boms/form_embed.html" if _is_embed(request) else "accounts/boms/form.html"
+    return render(
+        request,
+        tpl,
+        {
+            "form": form,
+            "material_formset": material_formset,
+            "jobber_formset": jobber_formset,
+            "process_formset": process_formset,
+            "expense_formset": expense_formset,
+            "mode": "add",
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def bom_update(request, pk: int):
+    bom = get_object_or_404(BOM, pk=pk, owner=request.user)
+    form = BOMForm(request.POST or None, request.FILES or None, instance=bom, user=request.user)
+    material_formset, jobber_formset, process_formset, expense_formset = _build_bom_formsets(request, instance=bom)
+
+    if request.method == "POST":
+        is_valid = (
+            form.is_valid()
+            and material_formset.is_valid()
+            and jobber_formset.is_valid()
+            and process_formset.is_valid()
+            and expense_formset.is_valid()
+        )
+
+        if is_valid and not _bom_has_at_least_one_material(material_formset):
+            material_formset._non_form_errors = material_formset.error_class(
+                ["Add at least one material / fabric / accessory row."]
+            )
+            is_valid = False
+
+        if is_valid:
+            with transaction.atomic():
+                form.save()
+                material_formset.save()
+                jobber_formset.save()
+                process_formset.save()
+                expense_formset.save()
+
+            url = reverse("accounts:bom_list")
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+
+    tpl = "accounts/boms/form_embed.html" if _is_embed(request) else "accounts/boms/form.html"
+    return render(
+        request,
+        tpl,
+        {
+            "form": form,
+            "material_formset": material_formset,
+            "jobber_formset": jobber_formset,
+            "process_formset": process_formset,
+            "expense_formset": expense_formset,
+            "mode": "edit",
+            "bom": bom,
+        },
+    )
+
+
+@login_required
+@require_POST
+def bom_delete(request, pk: int):
+    bom = get_object_or_404(BOM, pk=pk, owner=request.user)
+    bom.delete()
+
+    url = reverse("accounts:bom_list")
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)

@@ -1055,3 +1055,231 @@ class Catalogue(OwnedModel):
 
     def __str__(self):
         return self.name
+    
+class BOM(OwnedModel):
+    class Gender(models.TextChoices):
+        MALE = "male", "Male"
+        FEMALE = "female", "Female"
+        UNISEX = "unisex", "Unisex"
+        KIDS = "kids", "Kids"
+
+    class SizeType(models.TextChoices):
+        CHARACTER = "character", "Character"
+        NUMERIC = "numeric", "Numeric"
+        ALPHA = "alpha", "Alpha"
+        FREE = "free", "Free Size"
+
+    bom_code = models.CharField(max_length=30, blank=True)
+    sku_code = models.CharField(max_length=100)
+    product_name = models.CharField(max_length=150, blank=True, default="")
+    catalogue_name = models.CharField(max_length=120, blank=True, default="")
+
+    brand = models.ForeignKey(
+        Brand,
+        on_delete=models.PROTECT,
+        related_name="boms",
+        null=True,
+        blank=True,
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.PROTECT,
+        related_name="boms",
+        null=True,
+        blank=True,
+    )
+    main_category = models.ForeignKey(
+        MainCategory,
+        on_delete=models.PROTECT,
+        related_name="boms",
+        null=True,
+        blank=True,
+    )
+    pattern_type = models.ForeignKey(
+        PatternType,
+        on_delete=models.PROTECT,
+        related_name="boms",
+        null=True,
+        blank=True,
+    )
+
+    gender = models.CharField(
+        max_length=20,
+        choices=Gender.choices,
+        default=Gender.UNISEX,
+        blank=True,
+    )
+    size_type = models.CharField(
+        max_length=20,
+        choices=SizeType.choices,
+        default=SizeType.CHARACTER,
+    )
+    sub_category = models.CharField(max_length=120, blank=True, default="")
+    character_name = models.CharField(max_length=120, blank=True, default="")
+    license_name = models.CharField(max_length=120, blank=True, default="")
+
+    color_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    accessories_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    maintenance_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    selling_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    booked_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    available_stock = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    damage_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+
+    is_discontinued = models.BooleanField(default=False)
+    product_image = models.ImageField(upload_to="bom/%Y/%m/", blank=True, null=True)
+    size_chart_image = models.ImageField(upload_to="bom/%Y/%m/", blank=True, null=True)
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-id"]
+        unique_together = [("owner", "bom_code"), ("owner", "sku_code")]
+
+    def save(self, *args, **kwargs):
+        if not self.bom_code and self.owner_id:
+            next_number = (BOM.objects.filter(owner=self.owner).count() or 0) + 1
+            self.bom_code = f"BOM-{next_number:04d}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.bom_code or self.sku_code
+
+    @property
+    def material_cost_total(self):
+        return self.material_items.aggregate(total=Sum("cost")).get("total") or Decimal("0")
+
+    @property
+    def jobber_cost_total(self):
+        return self.jobber_items.aggregate(total=Sum("price")).get("total") or Decimal("0")
+
+    @property
+    def process_cost_total(self):
+        return self.process_items.aggregate(total=Sum("price")).get("total") or Decimal("0")
+
+    @property
+    def expense_cost_total(self):
+        return self.expense_items.aggregate(total=Sum("price")).get("total") or Decimal("0")
+
+    @property
+    def overhead_total(self):
+        return (
+            (self.color_price or Decimal("0"))
+            + (self.accessories_price or Decimal("0"))
+            + (self.maintenance_price or Decimal("0"))
+        )
+
+    @property
+    def subtotal_cost(self):
+        return (
+            self.material_cost_total
+            + self.jobber_cost_total
+            + self.process_cost_total
+            + self.expense_cost_total
+            + self.overhead_total
+        )
+
+    @property
+    def damage_value(self):
+        subtotal = self.subtotal_cost or Decimal("0")
+        percent = self.damage_percent or Decimal("0")
+        return (subtotal * percent) / Decimal("100")
+
+    @property
+    def estimated_total_cost(self):
+        return self.subtotal_cost + self.damage_value
+
+
+class BOMMaterialItem(models.Model):
+    class ItemType(models.TextChoices):
+        RAW_FABRIC = "raw_fabric", "Raw Fabric"
+        ACCESSORY = "accessory", "Accessory"
+        TRIM = "trim", "Trim"
+        PACKING = "packing", "Packing"
+        OTHER = "other", "Other"
+
+    bom = models.ForeignKey(BOM, on_delete=models.CASCADE, related_name="material_items")
+    item_type = models.CharField(max_length=20, choices=ItemType.choices, default=ItemType.RAW_FABRIC)
+    material = models.ForeignKey(Material, on_delete=models.PROTECT, related_name="bom_material_items")
+    unit = models.ForeignKey(
+        MaterialUnit,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="bom_material_items",
+    )
+    cost_per_uom = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    average = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    notes = models.CharField(max_length=255, blank=True, default="")
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def save(self, *args, **kwargs):
+        self.cost = (self.cost_per_uom or Decimal("0")) * (self.average or Decimal("0"))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.bom} - {self.material}"
+
+
+class BOMJobberItem(models.Model):
+    bom = models.ForeignKey(BOM, on_delete=models.CASCADE, related_name="jobber_items")
+    jobber = models.ForeignKey(
+        Jobber,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="bom_jobber_items",
+    )
+    jobber_type = models.ForeignKey(
+        JobberType,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="bom_jobber_items",
+    )
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def save(self, *args, **kwargs):
+        if self.jobber and not self.jobber_type:
+            self.jobber_type = self.jobber.jobber_type
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.bom} - {self.jobber or self.jobber_type or 'Jobber'}"
+
+
+class BOMProcessItem(models.Model):
+    bom = models.ForeignKey(BOM, on_delete=models.CASCADE, related_name="process_items")
+    jobber_type = models.ForeignKey(
+        JobberType,
+        on_delete=models.PROTECT,
+        related_name="bom_process_items",
+    )
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return f"{self.bom} - {self.jobber_type}"
+
+
+class BOMExpenseItem(models.Model):
+    bom = models.ForeignKey(BOM, on_delete=models.CASCADE, related_name="expense_items")
+    expense_name = models.CharField(max_length=120)
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return f"{self.bom} - {self.expense_name}"

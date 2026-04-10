@@ -162,4 +162,10 @@ urlpatterns = [
     path("utilities/pattern-types/", views.patterntype_list_create, name="patterntype_list"),
     path("utilities/pattern-types/<int:pk>/edit/", views.patterntype_edit, name="patterntype_edit"),
     path("utilities/pattern-types/<int:pk>/delete/", views.patterntype_delete, name="patterntype_delete"),
+    
+        # BOM
+    path("utilities/bom/", views.bom_list, name="bom_list"),
+    path("utilities/bom/add/", views.bom_create, name="bom_add"),
+    path("utilities/bom/<int:pk>/edit/", views.bom_update, name="bom_edit"),
+    path("utilities/bom/<int:pk>/delete/", views.bom_delete, name="bom_delete"),
 ]

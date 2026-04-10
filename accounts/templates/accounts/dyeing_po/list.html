@@ -1,12 +1,9 @@
 {% extends "accounts/base_app.html" %}
-
 {% block title %}Dyeing PO - InventTech{% endblock %}
 {% block page_title %}PO / Dyeing{% endblock %}
 {% block page_subtitle %}Create and manage dyeing purchase orders{% endblock %}
 
 {% block content %}
-{% include 'accounts/po/_po_nav.html' with active_po_tab='dyeing' back_route='accounts:po_home' back_label='Back to PO Home' po_nav_title='Dyeing Purchase Orders' %}
-
 <style>
   .canvas{
     grid-template-columns:1fr !important;
@@ -28,7 +25,7 @@
     border:2px dashed rgb(0,0,0);
     border-radius:18px;
     box-shadow:0 12px 36px rgba(15,23,42,.08);
-    padding:18px;
+    padding:14px;
     width:100%;
     min-width:0;
   }
@@ -515,13 +512,7 @@
                 </div>
 
                 <span class="po-status {% if po.total_inward_qty and po.remaining_qty_total == 0 %}approved{% elif po.total_inward_qty %}partial{% else %}pending{% endif %}">
-                  {% if po.total_inward_qty and po.remaining_qty_total == 0 %}
-                    Completed
-                  {% elif po.total_inward_qty %}
-                    Partial Inward
-                  {% else %}
-                    Pending Inward
-                  {% endif %}
+                  {% if po.total_inward_qty and po.remaining_qty_total == 0 %}Completed{% elif po.total_inward_qty %}Partial Inward{% else %}Pending Inward{% endif %}
                 </span>
               </div>
 
@@ -580,7 +571,7 @@
                   <div class="po-box-title">Summary</div>
                   <div class="po-summary">
                     <div class="po-summary-box">
-                      <div class="po-summary-label">Total Weight</div>
+                      <div class="po-summary-label">Total Qty</div>
                       <div class="po-summary-value">{{ po.total_weight|default:"0.00" }}</div>
                     </div>
 

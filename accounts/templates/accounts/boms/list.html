@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}BOM - InventTech{% endblock %}
+{% block page_title %}Billing Of Material{% endblock %}
+{% block page_subtitle %}Production SKU costing, materials, jobbers and expenses{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/boms/list_embed.html" with full_page=True %}
+</div>
+{% endblock %}

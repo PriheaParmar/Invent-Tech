@@ -50,8 +50,7 @@
     </div>
     {% endif %}
 
-    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="jf-form mat-form" data-material-subtype-form="1">
-      {% csrf_token %}
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="jf-form mat-form" data-material-subtype-form="1"> {% csrf_token %}
       {% if not full_page %}
       <input type="hidden" name="embed" value="1">
       {% endif %}

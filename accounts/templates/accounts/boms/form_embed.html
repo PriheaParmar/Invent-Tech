@@ -1,0 +1,397 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/bom.css' %}?v=1">
+
+<div class="bom-embed" data-bom-form-root>
+  <section class="bom-panel">
+    <div class="bom-head">
+      <div>
+        <div class="bom-title">
+          {% if mode == "edit" %}Edit Billing Of Material{% else %}Create Billing Of Material{% endif %}
+        </div>
+        <div class="bom-sub">Build production SKU details, material costing, jobber cost, process mapping and expense rows.</div>
+      </div>
+
+      <div class="bom-head-actions">
+        <a class="bom-iconbtn"
+           href="{% url 'accounts:bom_list' %}{% if not full_page %}?embed=1{% endif %}"
+           aria-label="Back">←</a>
+
+        {% if not full_page %}
+        <button type="button" class="bom-iconbtn" data-embed-close aria-label="Close">✕</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <form method="post"
+          enctype="multipart/form-data"
+          action="{% if mode == 'edit' %}{% url 'accounts:bom_edit' bom.id %}{% else %}{% url 'accounts:bom_add' %}{% endif %}{% if not full_page %}?embed=1{% endif %}">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      {% if form.non_field_errors %}
+      <div class="bom-alert">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <section class="bom-block">
+        <div class="bom-block-headline">Production SKU Details (BOM)</div>
+        <div class="bom-grid bom-grid-4">
+          <div class="bom-field">
+            <label>SKU</label>
+            {{ form.sku_code }}
+            {{ form.sku_code.errors }}
+          </div>
+
+          <div class="bom-field bom-field--checkbox">
+            <label>Is Discontinue</label>
+            <div class="bom-check">{{ form.is_discontinued }}</div>
+          </div>
+
+          <div class="bom-field">
+            <label>Size Type</label>
+            {{ form.size_type }}
+            {{ form.size_type.errors }}
+          </div>
+
+          <div class="bom-field">
+            <label>Gender</label>
+            {{ form.gender }}
+            {{ form.gender.errors }}
+          </div>
+
+          <div class="bom-field">
+            <label>Catalogue Name</label>
+            {{ form.catalogue_name }}
+          </div>
+
+          <div class="bom-field">
+            <label>Brand Name</label>
+            {{ form.brand }}
+          </div>
+
+          <div class="bom-field">
+            <label>Category Name</label>
+            {{ form.category }}
+          </div>
+
+          <div class="bom-field">
+            <label>Main Category</label>
+            {{ form.main_category }}
+          </div>
+
+          <div class="bom-field">
+            <label>Sub Category</label>
+            {{ form.sub_category }}
+          </div>
+
+          <div class="bom-field">
+            <label>Pattern Type</label>
+            {{ form.pattern_type }}
+          </div>
+
+          <div class="bom-field">
+            <label>Character Name</label>
+            {{ form.character_name }}
+          </div>
+
+          <div class="bom-field">
+            <label>License Name</label>
+            {{ form.license_name }}
+          </div>
+
+          <div class="bom-field">
+            <label>Product Name</label>
+            {{ form.product_name }}
+          </div>
+
+          <div class="bom-field">
+            <label>Color / Drawcord / Tie Dye Price (₹)</label>
+            {{ form.color_price }}
+          </div>
+
+          <div class="bom-field">
+            <label>Accessories Price (₹)</label>
+            {{ form.accessories_price }}
+          </div>
+
+          <div class="bom-field">
+            <label>Maintenance Price (₹)</label>
+            {{ form.maintenance_price }}
+          </div>
+
+          <div class="bom-field">
+            <label>Selling Price (₹)</label>
+            {{ form.selling_price }}
+          </div>
+
+          <div class="bom-field">
+            <label>Booked Price (₹)</label>
+            {{ form.booked_price }}
+          </div>
+
+          <div class="bom-field">
+            <label>Available Stock</label>
+            {{ form.available_stock }}
+          </div>
+
+          <div class="bom-field">
+            <label>Damage (%)</label>
+            {{ form.damage_percent }}
+          </div>
+        </div>
+      </section>
+
+      <section class="bom-block">
+        <div class="bom-block-top">
+          <div class="bom-block-headline">Materials / Raw Fabric / Accessories</div>
+          <button type="button" class="bom-add-inline" data-form-add="materials">+ Add Row</button>
+        </div>
+
+        {{ material_formset.management_form }}
+
+        {% if material_formset.non_form_errors %}
+        <div class="bom-alert">{{ material_formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="bom-line-table">
+          <div class="bom-line-head bom-line-head--materials">
+            <div>Type</div>
+            <div>Materials</div>
+            <div>UOM</div>
+            <div>Cost / UOM</div>
+            <div>Average</div>
+            <div>Cost</div>
+            <div>Note</div>
+            <div></div>
+          </div>
+
+          <div data-form-container="materials">
+            {% for line_form in material_formset.forms %}
+            <div class="bom-line-row bom-line-row--materials">
+              {{ line_form.id }}
+              <div class="bom-hidden-delete">{{ line_form.DELETE }}</div>
+
+              <div>{{ line_form.item_type }}</div>
+              <div>{{ line_form.material }}</div>
+              <div>{{ line_form.unit }}</div>
+              <div>{{ line_form.cost_per_uom }}</div>
+              <div>{{ line_form.average }}</div>
+              <div>{{ line_form.cost }}</div>
+              <div>{{ line_form.notes }}</div>
+              <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <section class="bom-block">
+        <div class="bom-block-top">
+          <div class="bom-block-headline">Jobber Details</div>
+          <button type="button" class="bom-add-inline" data-form-add="jobbers">+ Add Row</button>
+        </div>
+
+        {{ jobber_formset.management_form }}
+
+        <div class="bom-line-table">
+          <div class="bom-line-head bom-line-head--jobbers">
+            <div>Jobber Name</div>
+            <div>Jobber Type</div>
+            <div>Jobber Price (₹)</div>
+            <div></div>
+          </div>
+
+          <div data-form-container="jobbers">
+            {% for line_form in jobber_formset.forms %}
+            <div class="bom-line-row bom-line-row--jobbers">
+              {{ line_form.id }}
+              <div class="bom-hidden-delete">{{ line_form.DELETE }}</div>
+
+              <div>{{ line_form.jobber }}</div>
+              <div>{{ line_form.jobber_type }}</div>
+              <div>{{ line_form.price }}</div>
+              <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <section class="bom-block">
+        <div class="bom-block-top">
+          <div class="bom-block-headline">Map Jobber Type Process</div>
+          <button type="button" class="bom-add-inline" data-form-add="processes">+ Add Row</button>
+        </div>
+
+        {{ process_formset.management_form }}
+
+        <div class="bom-line-table">
+          <div class="bom-line-head bom-line-head--processes">
+            <div>Jobber Type</div>
+            <div>Jobber Type Price (₹)</div>
+            <div></div>
+          </div>
+
+          <div data-form-container="processes">
+            {% for line_form in process_formset.forms %}
+            <div class="bom-line-row bom-line-row--processes">
+              {{ line_form.id }}
+              <div class="bom-hidden-delete">{{ line_form.DELETE }}</div>
+
+              <div>{{ line_form.jobber_type }}</div>
+              <div>{{ line_form.price }}</div>
+              <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <section class="bom-block">
+        <div class="bom-block-top">
+          <div class="bom-block-headline">Expense</div>
+          <button type="button" class="bom-add-inline" data-form-add="expenses">+ Add Row</button>
+        </div>
+
+        {{ expense_formset.management_form }}
+
+        <div class="bom-line-table">
+          <div class="bom-line-head bom-line-head--expenses">
+            <div>Factory Expense</div>
+            <div>Price (₹)</div>
+            <div></div>
+          </div>
+
+          <div data-form-container="expenses">
+            {% for line_form in expense_formset.forms %}
+            <div class="bom-line-row bom-line-row--expenses">
+              {{ line_form.id }}
+              <div class="bom-hidden-delete">{{ line_form.DELETE }}</div>
+
+              <div>{{ line_form.expense_name }}</div>
+              <div>{{ line_form.price }}</div>
+              <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <section class="bom-block">
+        <div class="bom-block-headline">Images & Notes</div>
+
+        <div class="bom-grid bom-grid-3">
+          <div class="bom-upload-card">
+            <div class="bom-upload-title">Product Image</div>
+            <div class="bom-upload-preview">
+              {% if bom and bom.product_image %}
+                <img src="{{ bom.product_image.url }}" alt="{{ bom.sku_code }}">
+              {% else %}
+                <div class="bom-upload-placeholder">No image</div>
+              {% endif %}
+            </div>
+            {{ form.product_image }}
+          </div>
+
+          <div class="bom-upload-card">
+            <div class="bom-upload-title">Size Chart Image</div>
+            <div class="bom-upload-preview">
+              {% if bom and bom.size_chart_image %}
+                <img src="{{ bom.size_chart_image.url }}" alt="{{ bom.sku_code }}">
+              {% else %}
+                <div class="bom-upload-placeholder">No image</div>
+              {% endif %}
+            </div>
+            {{ form.size_chart_image }}
+          </div>
+
+          <div class="bom-field bom-field--notes">
+            <label>Notes</label>
+            {{ form.notes }}
+          </div>
+        </div>
+      </section>
+
+      <section class="bom-summary">
+        <div class="bom-summary-card">
+          <div class="bom-summary-label">Material Total</div>
+          <div class="bom-summary-value" data-summary-materials>₹ 0.00</div>
+        </div>
+        <div class="bom-summary-card">
+          <div class="bom-summary-label">Jobber Total</div>
+          <div class="bom-summary-value" data-summary-jobbers>₹ 0.00</div>
+        </div>
+        <div class="bom-summary-card">
+          <div class="bom-summary-label">Process Total</div>
+          <div class="bom-summary-value" data-summary-processes>₹ 0.00</div>
+        </div>
+        <div class="bom-summary-card">
+          <div class="bom-summary-label">Expense Total</div>
+          <div class="bom-summary-value" data-summary-expenses>₹ 0.00</div>
+        </div>
+        <div class="bom-summary-card">
+          <div class="bom-summary-label">Overheads</div>
+          <div class="bom-summary-value" data-summary-overheads>₹ 0.00</div>
+        </div>
+        <div class="bom-summary-card bom-summary-card--highlight">
+          <div class="bom-summary-label">Estimated Final Cost</div>
+          <div class="bom-summary-value" data-summary-final>₹ 0.00</div>
+        </div>
+      </section>
+
+      <div class="bom-form-actions">
+        <button type="submit" class="bom-primary">
+          {% if mode == "edit" %}Update BOM{% else %}Save BOM{% endif %}
+        </button>
+        <a class="bom-secondary" href="{% url 'accounts:bom_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+
+  <template id="materials-empty-form">
+    <div class="bom-line-row bom-line-row--materials">
+      {{ material_formset.empty_form.id }}
+      <div class="bom-hidden-delete">{{ material_formset.empty_form.DELETE }}</div>
+      <div>{{ material_formset.empty_form.item_type }}</div>
+      <div>{{ material_formset.empty_form.material }}</div>
+      <div>{{ material_formset.empty_form.unit }}</div>
+      <div>{{ material_formset.empty_form.cost_per_uom }}</div>
+      <div>{{ material_formset.empty_form.average }}</div>
+      <div>{{ material_formset.empty_form.cost }}</div>
+      <div>{{ material_formset.empty_form.notes }}</div>
+      <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+    </div>
+  </template>
+
+  <template id="jobbers-empty-form">
+    <div class="bom-line-row bom-line-row--jobbers">
+      {{ jobber_formset.empty_form.id }}
+      <div class="bom-hidden-delete">{{ jobber_formset.empty_form.DELETE }}</div>
+      <div>{{ jobber_formset.empty_form.jobber }}</div>
+      <div>{{ jobber_formset.empty_form.jobber_type }}</div>
+      <div>{{ jobber_formset.empty_form.price }}</div>
+      <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+    </div>
+  </template>
+
+  <template id="processes-empty-form">
+    <div class="bom-line-row bom-line-row--processes">
+      {{ process_formset.empty_form.id }}
+      <div class="bom-hidden-delete">{{ process_formset.empty_form.DELETE }}</div>
+      <div>{{ process_formset.empty_form.jobber_type }}</div>
+      <div>{{ process_formset.empty_form.price }}</div>
+      <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+    </div>
+  </template>
+
+  <template id="expenses-empty-form">
+    <div class="bom-line-row bom-line-row--expenses">
+      {{ expense_formset.empty_form.id }}
+      <div class="bom-hidden-delete">{{ expense_formset.empty_form.DELETE }}</div>
+      <div>{{ expense_formset.empty_form.expense_name }}</div>
+      <div>{{ expense_formset.empty_form.price }}</div>
+      <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+    </div>
+  </template>
+</div>
