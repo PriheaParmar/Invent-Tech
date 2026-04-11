@@ -1,4 +1,5 @@
 {% extends "accounts/base_app.html" %}
+
 {% block content %}
-  {% include "accounts/materials/form_embed.html" %}
+  {% include "accounts/materials/form_embed.html" with full_page=1 %}
 {% endblock %}

@@ -437,6 +437,352 @@
   font-size: 0.82rem;
 }
 
+/* Compact BOM list only */
+.bom-list-shell {
+  padding: 10px 6px;
+}
+
+.bom-list-shell .bom-panel {
+  background: rgba(255, 255, 255, 0.72);
+  border: 2px dashed rgb(0, 0, 0);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+  padding: 18px;
+}
+
+.bom-list-shell .bom-head {
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.bom-list-shell .bom-title {
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #111827;
+}
+
+.bom-list-shell .bom-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0.72;
+  color: #0f172a;
+}
+
+.bom-list-shell .bom-head-actions {
+  gap: 10px;
+}
+
+.bom-list-shell .bom-iconbtn,
+.bom-list-shell .bom-list-add,
+.bom-list-shell .bom-list-search-btn,
+.bom-list-shell .bom-list-clear {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.bom-list-shell .bom-iconbtn {
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+  flex-shrink: 0;
+}
+
+.bom-list-shell .bom-iconbtn:hover {
+  background: #fff;
+  transform: translateY(-1px);
+  color: var(--orange);
+}
+
+.bom-list-shell .bom-list-ico,
+.bom-list-shell .bom-list-add-ico {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bom-list-shell .bom-list-add,
+.bom-list-shell .bom-list-search-btn,
+.bom-list-shell .bom-list-clear {
+  height: 38px;
+  padding: 0 14px;
+  font-weight: 700;
+}
+
+.bom-list-shell .bom-list-add {
+  background: var(--orange);
+  color: #fff;
+}
+
+.bom-list-shell .bom-list-add:hover {
+  background: #000;
+  color: #fff;
+}
+
+.bom-list-shell .bom-list-search-btn,
+.bom-list-shell .bom-list-clear {
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+}
+
+.bom-list-shell .bom-list-search-btn:hover,
+.bom-list-shell .bom-list-clear:hover {
+  background: #000;
+  color: #fff;
+}
+
+.bom-list-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.bom-list-search {
+  flex: 1;
+  min-width: min(340px, 100%);
+}
+
+.bom-list-search input[type="search"],
+.bom-list-filter select {
+  appearance: none;
+  box-sizing: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  color: inherit;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  height: 38px;
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.bom-list-search input[type="search"] {
+  width: 100%;
+  min-width: 220px;
+}
+
+.bom-list-filter select {
+  min-width: 160px;
+}
+
+.bom-list-search input[type="search"]:focus,
+.bom-list-filter select:focus {
+  border-color: rgba(238, 61, 133, 0.35);
+  box-shadow: 0 0 0 4px rgba(238, 61, 133, 0.1);
+  background: #fff;
+}
+
+.bom-list-shell .bom-tablewrap {
+  overflow: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.bom-list-shell .bom-table {
+  min-width: 980px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.bom-list-shell .bom-table thead th {
+  border-top: none;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  color: #0f172a;
+  padding: 11px 10px;
+}
+
+.bom-list-shell .bom-table td {
+  padding: 11px 10px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: none;
+  vertical-align: middle;
+}
+
+.bom-list-shell .bom-table tbody tr {
+  transition: background 0.18s ease;
+}
+
+.bom-list-shell .bom-table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.025);
+}
+
+.bom-list-shell .bom-cell-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.35;
+}
+
+.bom-list-shell .bom-cell-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.68);
+  line-height: 1.45;
+}
+
+.bom-list-index {
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.bom-list-inline-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.bom-list-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  background: rgba(15, 23, 42, 0.06);
+  color: #334155;
+}
+
+.bom-list-badge--active {
+  background: rgba(17, 138, 75, 0.1);
+  color: #118a4b;
+}
+
+.bom-list-badge--muted {
+  background: rgba(217, 45, 32, 0.1);
+  color: #b42318;
+}
+
+.bom-list-badges {
+  gap: 6px;
+}
+
+.bom-list-shell .bom-chip {
+  min-height: 24px;
+  padding: 0 9px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.bom-list-chip-more {
+  background: rgba(15, 23, 42, 0.06);
+  color: #334155;
+}
+
+.bom-list-cost {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bom-list-cost-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.bom-list-cost-row span {
+  color: rgba(15, 23, 42, 0.64);
+}
+
+.bom-list-cost-row strong {
+  color: #111827;
+  font-weight: 800;
+}
+
+.bom-list-cost-row--muted strong {
+  font-weight: 700;
+}
+
+.bom-list-thumb-cell {
+  text-align: center;
+}
+
+.bom-list-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+}
+
+.bom-list-thumb--empty {
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  padding: 4px;
+}
+
+.bom-list-shell .bom-actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  white-space: nowrap;
+  flex-direction: row;
+}
+
+.bom-list-shell .bom-actions form {
+  display: inline;
+  margin: 0;
+}
+
+.bom-list-shell .bom-link {
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--orange);
+}
+
+.bom-list-shell .bom-link:hover {
+  text-decoration: underline;
+}
+
+.bom-list-shell .bom-link-danger {
+  color: #d92d20;
+}
+
+.bom-list-shell .bom-link-danger:hover {
+  color: #b42318;
+}
+
+.bom-list-shell .bom-dot {
+  margin: 0 6px;
+  opacity: 0.45;
+}
+
+.bom-list-shell .bom-empty {
+  padding: 14px 12px;
+  opacity: 0.7;
+  text-align: center;
+}
+
 @media (max-width: 1200px) {
   .bom-grid-4,
   .bom-grid-3,
@@ -465,3 +811,506 @@
     border-radius: 18px;
   }
 }
+
+@media (max-width: 768px) {
+  .bom-list-tools {
+    align-items: stretch;
+  }
+
+  .bom-list-search,
+  .bom-list-filter,
+  .bom-list-shell .bom-head-actions {
+    width: 100%;
+  }
+
+  .bom-list-shell .bom-head-actions > * {
+    flex: 1;
+  }
+
+  .bom-list-filter select,
+  .bom-list-search input[type="search"] {
+    width: 100%;
+  }
+}
+
+/* =========================
+   Compact BOM form
+========================= */
+.bom-form-shell {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.bom-form-shell .bom-panel {
+  background: rgba(255, 255, 255, 0.72);
+  border: 2px dashed rgb(0, 0, 0);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+  padding: 18px;
+}
+
+.bom-form-shell .bom-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.bom-form-shell .bom-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bom-form-shell .bom-title {
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #111827;
+}
+
+.bom-form-shell .bom-sub {
+  font-size: 12px;
+  opacity: 0.72;
+  margin-top: 4px;
+  color: #0f172a;
+}
+
+.bom-form-shell .bom-iconbtn,
+.bom-form-shell .bom-primary,
+.bom-form-shell .bom-secondary,
+.bom-form-shell .bom-add-inline,
+.bom-form-shell .bom-remove-inline {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bom-form-shell .bom-iconbtn {
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+  flex-shrink: 0;
+}
+
+.bom-form-shell .bom-iconbtn:hover {
+  background: #fff;
+  transform: translateY(-1px);
+  color: var(--orange);
+}
+
+.bom-form-shell .bom-ico {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bom-form-shell .bom-primary,
+.bom-form-shell .bom-secondary,
+.bom-form-shell .bom-add-inline {
+  height: 38px;
+  padding: 0 14px;
+  font-weight: 700;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.bom-form-shell .bom-primary,
+.bom-form-shell .bom-add-inline {
+  background: var(--orange);
+  color: #fff;
+}
+
+.bom-form-shell .bom-primary:hover,
+.bom-form-shell .bom-add-inline:hover {
+  background: #000;
+  color: #fff;
+}
+
+.bom-form-shell .bom-secondary {
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+}
+
+.bom-form-shell .bom-secondary:hover {
+  background: #000;
+  color: #fff;
+}
+
+.bom-form-shell .bom-remove-inline {
+  width: 34px;
+  height: 34px;
+  background: #ffe4e6;
+  color: #d92d20;
+  border-color: rgba(217, 45, 32, 0.14);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.bom-form-shell .bom-remove-inline:hover {
+  background: #d92d20;
+  color: #fff;
+}
+
+.bom-form-shell .bom-form-main {
+  margin-top: 8px;
+}
+
+.bom-form-shell .bom-form-card {
+  margin-bottom: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.56);
+  padding: 14px;
+}
+
+.bom-form-shell .bom-form-card-head,
+.bom-form-shell .bom-block-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bom-form-shell .bom-block-headline {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.bom-form-shell .bom-form-note {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.bom-form-shell .bom-mini-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: #334155;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.bom-form-shell .bom-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.bom-form-shell .bom-form-grid--5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.bom-form-shell .bom-form-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.bom-form-shell .bom-form-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bom-form-shell .bom-form-grid-span-2 {
+  grid-column: span 2;
+}
+
+.bom-form-shell .bom-field label,
+.bom-form-shell .bom-upload-title,
+.bom-form-shell .bom-summary-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  opacity: 0.76;
+  margin: 0 0 6px;
+  color: #0f172a;
+}
+
+.bom-form-shell .bom-field input,
+.bom-form-shell .bom-field select,
+.bom-form-shell .bom-field textarea,
+.bom-form-shell .bom-line-row input,
+.bom-form-shell .bom-line-row select {
+  appearance: none;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  color: inherit;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  min-height: 40px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.bom-form-shell .bom-field input:focus,
+.bom-form-shell .bom-field select:focus,
+.bom-form-shell .bom-field textarea:focus,
+.bom-form-shell .bom-line-row input:focus,
+.bom-form-shell .bom-line-row select:focus {
+  border-color: rgba(238, 61, 133, 0.35);
+  box-shadow: 0 0 0 4px rgba(238, 61, 133, 0.1);
+  background: #fff;
+}
+
+.bom-form-shell .bom-field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.bom-form-shell .bom-field select,
+.bom-form-shell .bom-line-row select {
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(0,0,0,.45) 50%),
+    linear-gradient(135deg, rgba(0,0,0,.45) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 17px, calc(100% - 12px) 17px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+.bom-form-shell .bom-field-errors {
+  margin-top: 6px;
+}
+
+.bom-form-shell .bom-field-errors p {
+  margin: 0;
+  font-size: 12px;
+  color: #b42318;
+}
+
+.bom-form-shell .bom-alert {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(217, 45, 32, 0.08);
+  border: 1px solid rgba(217, 45, 32, 0.16);
+  color: #b42318;
+  font-size: 12px;
+}
+
+.bom-form-shell .bom-check-card {
+  padding: 12px 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.02);
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.bom-form-shell .bom-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bom-form-shell .bom-check input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 18px;
+  padding: 0 !important;
+  border-radius: 6px;
+  appearance: auto;
+  accent-color: var(--orange);
+}
+
+.bom-form-shell .bom-check-text {
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.68);
+}
+
+.bom-form-shell .bom-line-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bom-form-shell .bom-line-head,
+.bom-form-shell .bom-line-row {
+  display: grid;
+  gap: 10px;
+  align-items: center;
+}
+
+.bom-form-shell .bom-line-head {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 4px;
+}
+
+.bom-form-shell .bom-line-row {
+  padding: 10px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e5edf5;
+}
+
+.bom-form-shell .bom-line-row--materials,
+.bom-form-shell .bom-line-head--materials {
+  grid-template-columns: 120px 1.5fr 110px 120px 110px 120px 1fr 42px;
+}
+
+.bom-form-shell .bom-line-row--jobbers,
+.bom-form-shell .bom-line-head--jobbers {
+  grid-template-columns: 1.2fr 1fr 130px 42px;
+}
+
+.bom-form-shell .bom-line-row--processes,
+.bom-form-shell .bom-line-head--processes,
+.bom-form-shell .bom-line-row--expenses,
+.bom-form-shell .bom-line-head--expenses {
+  grid-template-columns: 1fr 140px 42px;
+}
+
+.bom-form-shell .bom-hidden-delete {
+  display: none;
+}
+
+.bom-form-shell .bom-upload-card {
+  border: 1px dashed #d7e0ea;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fafcff;
+}
+
+.bom-form-shell .bom-upload-preview {
+  height: 150px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.bom-form-shell .bom-upload-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bom-form-shell .bom-upload-placeholder {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bom-form-shell .bom-summary--compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.bom-form-shell .bom-summary-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.bom-form-shell .bom-summary-card--highlight {
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.bom-form-shell .bom-summary-value {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.bom-form-shell .bom-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1180px) {
+  .bom-form-shell .bom-form-grid--5,
+  .bom-form-shell .bom-form-grid--4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .bom-form-shell .bom-form-grid--5,
+  .bom-form-shell .bom-form-grid--4,
+  .bom-form-shell .bom-form-grid--3,
+  .bom-form-shell .bom-summary--compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bom-form-shell .bom-form-grid-span-2 {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .bom-form-shell .bom-panel {
+    padding: 16px;
+  }
+
+  .bom-form-shell .bom-head,
+  .bom-form-shell .bom-form-card-head,
+  .bom-form-shell .bom-block-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bom-form-shell .bom-form-grid--5,
+  .bom-form-shell .bom-form-grid--4,
+  .bom-form-shell .bom-form-grid--3,
+  .bom-form-shell .bom-summary--compact {
+    grid-template-columns: 1fr;
+  }
+
+  .bom-form-shell .bom-form-actions > * {
+    flex: 1;
+  }
+
+  .bom-form-shell .bom-line-head {
+    display: none;
+  }
+
+  .bom-form-shell .bom-line-row--materials,
+  .bom-form-shell .bom-line-row--jobbers,
+  .bom-form-shell .bom-line-row--processes,
+  .bom-form-shell .bom-line-row--expenses {
+    grid-template-columns: 1fr;
+  }
+
+  .bom-form-shell .bom-remove-inline {
+    width: 100%;
+  }
+}
+

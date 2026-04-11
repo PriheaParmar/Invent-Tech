@@ -152,12 +152,10 @@ urlpatterns = [
     path("utilities/catalogues/<int:pk>/edit/", views.catalogue_update, name="catalogue_edit"),
     path("utilities/catalogues/<int:pk>/delete/", views.catalogue_delete, name="catalogue_delete"),
 
-    # Optional backward-compatible aliases for old main-category naming
-    path("utilities/main-categories/", views.catalogue_list, name="maincategory_list"),
-    path("utilities/main-categories/add/", views.catalogue_create, name="maincategory_add"),
-    path("utilities/main-categories/<int:pk>/edit/", views.catalogue_update, name="maincategory_edit"),
-    path("utilities/main-categories/<int:pk>/delete/", views.catalogue_delete, name="maincategory_delete"),
-    
+    path("utilities/main-categories/", views.maincategory_list, name="maincategory_list"),
+    path("utilities/main-categories/add/", views.maincategory_create, name="maincategory_add"),
+    path("utilities/main-categories/<int:pk>/edit/", views.maincategory_edit, name="maincategory_edit"),
+    path("utilities/main-categories/<int:pk>/delete/", views.maincategory_delete, name="maincategory_delete"),
         # Pattern Types
     path("utilities/pattern-types/", views.patterntype_list_create, name="patterntype_list"),
     path("utilities/pattern-types/<int:pk>/edit/", views.patterntype_edit, name="patterntype_edit"),
@@ -168,4 +166,11 @@ urlpatterns = [
     path("utilities/bom/add/", views.bom_create, name="bom_add"),
     path("utilities/bom/<int:pk>/edit/", views.bom_update, name="bom_edit"),
     path("utilities/bom/<int:pk>/delete/", views.bom_delete, name="bom_delete"),
+    
+    
+    path("production/programs/", views.program_list, name="program_list"),
+    path("production/programs/add/", views.program_create, name="program_add"),
+    path("production/programs/<int:pk>/edit/", views.program_update, name="program_edit"),
+    path("production/programs/<int:pk>/delete/", views.program_delete, name="program_delete"),
+    path("production/programs/bom-summary/<int:bom_id>/", views.program_bom_summary, name="program_bom_summary"),
 ]

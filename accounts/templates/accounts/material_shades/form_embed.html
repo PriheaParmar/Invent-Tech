@@ -1,115 +1,88 @@
-<div class="jobbers-embed material-form-embed">
-  <div class="jb-panel">
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=1">
+
+<div class="jobbers-embed jobber-form-embed main-category-form-embed">
+  <section class="jb-panel">
     {% include "accounts/_messages_embed.html" %}
 
-    <div class="jb-head pt-head">
+    <div class="jb-head">
       <div>
-        <div class="jb-title pt-title">{% if mode == "edit" %}Edit Shade{% else %}Create Shade{% endif %}</div>
-        <div class="jb-sub pt-sub">Shade master</div>
+        <div class="jb-title">
+          {% if mode == "edit" %}Edit Main Category{% else %}Add Main Category{% endif %}
+        </div>
+        <div class="jb-sub">Used to group products into reusable top-level categories</div>
       </div>
 
-      <div class="jb-head-actions pt-head-actions">
-        <a class="jb-iconbtn jb-back pt-back" href="{% url 'accounts:materialshade_list' %}?embed=1">
-          <svg class="jb-back-ico pt-ico" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6"></path>
+      <div class="jf-head-actions">
+        <a
+          class="jb-iconbtn jb-back"
+          href="{% url 'accounts:maincategory_list' %}{% if not full_page %}?embed=1{% endif %}"
+          aria-label="Back"
+        >
+          <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
           </svg>
         </a>
 
-        <button type="button" class="jb-iconbtn pt-close" data-embed-close title="Close">
-          <svg class="jb-ico pt-ico" viewBox="0 0 24 24" aria-hidden="true">
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M18 6L6 18"></path>
             <path d="M6 6l12 12"></path>
           </svg>
         </button>
+        {% endif %}
       </div>
     </div>
 
-    <form method="post"
-          action="{% if mode == 'edit' %}{% url 'accounts:materialshade_edit' shade.id %}{% else %}{% url 'accounts:materialshade_add' %}{% endif %}?embed=1"
-          class="jf-form">
+    {% if mode == "add" %}
+      {% url "accounts:maincategory_add" as action_url %}
+    {% else %}
+      {% url "accounts:maincategory_edit" category.id as action_url %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="jb-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="jf-form">
       {% csrf_token %}
+      {% if not full_page %}
       <input type="hidden" name="embed" value="1">
+      {% endif %}
 
-      <div class="jf-grid mat-grid">
-        <div class="jf-field jf-full mat-field mat-full">
-          <label>Material Kind</label>
-          <div class="kind-radio-row">
-            {% for radio in form.material_kind %}
-              <label class="kind-radio-card small">
-                {{ radio.tag }}
-                <span class="kind-radio-content">
-                  <span class="kind-radio-top">
-                    <span class="kind-radio-dot"></span>
-                    <strong>{{ radio.choice_label }}</strong>
-                  </span>
-                </span>
-              </label>
-            {% endfor %}
-          </div>
-          {% if form.material_kind.errors %}
-            <div class="jb-field-errors">
-              <p>{{ form.material_kind.errors.0 }}</p>
-            </div>
-          {% endif %}
-        </div>
-
-        <div class="jf-field jf-full mat-field mat-full">
-          <label>Shade Name</label>
+      <div class="jf-grid">
+        <div class="jf-field jf-full">
+          <label for="{{ form.name.id_for_label }}">Main Category Name</label>
           {{ form.name }}
           {% if form.name.errors %}
-            <div class="jb-field-errors">
-              <p>{{ form.name.errors.0 }}</p>
-            </div>
+          <div class="jb-field-errors">
+            {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
           {% endif %}
         </div>
 
-        <div class="jf-field jf-full mat-field mat-full">
-          <label>Code</label>
-          {{ form.code }}
-          {% if form.code.errors %}
-            <div class="jb-field-errors">
-              <p>{{ form.code.errors.0 }}</p>
-            </div>
-          {% endif %}
-        </div>
-
-        <div class="jf-field jf-full mat-field mat-full">
-          <label>Notes</label>
-          {{ form.notes }}
-          {% if form.notes.errors %}
-            <div class="jb-field-errors">
-              <p>{{ form.notes.errors.0 }}</p>
-            </div>
+        <div class="jf-field jf-full">
+          <label for="{{ form.description.id_for_label }}">Description</label>
+          {{ form.description }}
+          {% if form.description.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.description.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
           {% endif %}
         </div>
       </div>
 
-      <div class="jf-footer mat-footer">
-        <button class="jb-add pt-add" type="submit">Save</button>
-        <button type="button" class="jb-secondary" data-embed-close>Cancel</button>
+      <div class="jf-footer">
+        <a class="jb-secondary" href="{% url 'accounts:maincategory_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="jb-add jb-save">
+          {% if mode == "edit" %}Update Main Category{% else %}Save Main Category{% endif %}
+        </button>
       </div>
     </form>
-  </div>
+  </section>
 </div>
-
-<script>
-(function(){
-  document.addEventListener("click", function(e){
-    const btn = e.target.closest("[data-embed-close]");
-    if(!btn) return;
-
-    const container =
-      document.getElementById("embedPanel") ||
-      document.getElementById("embedContainer") ||
-      document.querySelector(".embed-panel") ||
-      document.querySelector("[data-embed-panel]");
-
-    if (container) {
-      container.classList.remove("show");
-      container.style.display = "none";
-      return;
-    }
-    window.history.back();
-  });
-})();
-</script>

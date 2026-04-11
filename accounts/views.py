@@ -41,7 +41,10 @@ from .forms import (
     JobberTypeForm,
     LocationForm,
     CategoryForm,    
-    BOMForm,
+    BOMForm,    
+    ProgramForm,
+    ProgramJobberItemFormSet,
+    ProgramSizeDetailFormSet,
     BOMMaterialItemFormSet,
     BOMJobberItemFormSet,
     BOMProcessItemFormSet,
@@ -75,12 +78,18 @@ from .models import (
     DyeingPurchaseOrderItem,
     BOM,
     BOMMaterialItem,
+    BOMJobberItem,
+    BOMProcessItem,
+    BOMExpenseItem,
     DyeingPOInward,
     Catalogue,
     DyeingPOInwardItem,
     Jobber,
     JobberType,
-    Category,
+    Category,    
+    Program,
+    ProgramJobberItem,
+    ProgramSizeDetail,
     Location,
     Material,
     MaterialShade,
@@ -3587,35 +3596,59 @@ def _maincategory_list_url(request):
     return url
 
 
-class MainCategoryForm(forms.ModelForm):
-    class Meta:
-        model = MainCategory
-        fields = ["name"]
-        widgets = {
-            "name": forms.TextInput(attrs={
-                "placeholder": "Enter main category name",
-            }),
-        }
+@login_required
+def maincategory_list(request):
+    q = (request.GET.get("q") or "").strip()
 
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.user = user
+    qs = MainCategory.objects.filter(owner=request.user).order_by("name")
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) | Q(description__icontains=q)
+        )
 
-    def clean_name(self):
-        name = (self.cleaned_data.get("name") or "").strip()
-        if not name:
-            raise forms.ValidationError("Main category name is required.")
-
-        if self.user is not None:
-            qs = MainCategory.objects.filter(owner=self.user, name__iexact=name)
-            if self.instance.pk:
-                qs = qs.exclude(pk=self.instance.pk)
-            if qs.exists():
-                raise forms.ValidationError("This main category already exists.")
-
-        return name
+    template = (
+        "accounts/main_categories/list_embed.html"
+        if _is_embed(request)
+        else "accounts/main_categories/list.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "categories": qs,
+            "q": q,
+        },
+    )
 
 
+@login_required
+@require_http_methods(["GET", "POST"])
+def maincategory_create(request):
+    form = MainCategoryForm(request.POST or None, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _maincategory_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = (
+        "accounts/main_categories/form_embed.html"
+        if _is_embed(request)
+        else "accounts/main_categories/form.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "mode": "add",
+        },
+    )
 
 
 @login_required
@@ -3635,15 +3668,16 @@ def maincategory_edit(request, pk: int):
         return redirect(url)
 
     template = (
-        "accounts/main_categories/edit_embed.html"
+        "accounts/main_categories/form_embed.html"
         if _is_embed(request)
-        else "accounts/main_categories/edit.html"
+        else "accounts/main_categories/form.html"
     )
     return render(
         request,
         template,
         {
             "form": form,
+            "mode": "edit",
             "category": category,
         },
     )
@@ -3660,13 +3694,11 @@ def maincategory_delete(request, pk: int):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
 
-
 def _patterntype_list_url(request):
     url = reverse("accounts:patterntype_list")
     if _is_embed(request):
         url += "?embed=1"
     return url
-
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -3822,9 +3854,6 @@ def catalogue_delete(request, pk: int):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
 
-# ==========================
-# BOM (embed supported)
-# ==========================
 def _build_bom_formsets(request, instance=None):
     bind = request.method == "POST"
     data = request.POST if bind else None
@@ -4035,3 +4064,359 @@ def bom_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
+
+# ==========================
+# PROGRAMS
+# ==========================
+PROGRAM_DEFAULT_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"]
+
+
+def _program_list_url(request):
+    url = reverse("accounts:program_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
+def _program_queryset(user):
+    return (
+        Program.objects
+        .filter(owner=user)
+        .select_related(
+            "firm",
+            "bom",
+            "bom__brand",
+            "bom__category",
+            "bom__main_category",
+            "bom__pattern_type",
+        )
+        .prefetch_related(
+            Prefetch(
+                "jobber_items",
+                queryset=ProgramJobberItem.objects.select_related("jobber", "jobber_type").order_by("sort_order", "id"),
+            ),
+            Prefetch(
+                "size_details",
+                queryset=ProgramSizeDetail.objects.order_by("id"),
+            ),
+            Prefetch(
+                "bom__material_items",
+                queryset=BOMMaterialItem.objects.select_related("material", "unit").order_by("sort_order", "id"),
+            ),
+            Prefetch(
+                "bom__jobber_items",
+                queryset=BOMJobberItem.objects.select_related("jobber", "jobber_type").order_by("sort_order", "id"),
+            ),
+        )
+        .order_by("-program_date", "-id")
+    )
+
+
+def _build_program_formsets(request, instance=None):
+    bind = request.method == "POST"
+    data = request.POST if bind else None
+
+    jobber_formset = ProgramJobberItemFormSet(
+        data=data,
+        instance=instance,
+        prefix="jobbers",
+        form_kwargs={"user": request.user},
+    )
+
+    size_initial = None
+    if not bind and (instance is None or not instance.pk or not instance.size_details.exists()):
+        size_initial = [{"size": size} for size in PROGRAM_DEFAULT_SIZES]
+
+    size_formset = ProgramSizeDetailFormSet(
+        data=data,
+        instance=instance,
+        prefix="sizes",
+        initial=size_initial,
+    )
+
+    return jobber_formset, size_formset
+
+
+def _program_has_jobber_rows(formset):
+    for form in formset.forms:
+        cleaned = getattr(form, "cleaned_data", None) or {}
+        if cleaned and not cleaned.get("DELETE") and (cleaned.get("jobber") or cleaned.get("jobber_type")):
+            return True
+    return False
+
+
+def _program_has_size_rows(formset):
+    for form in formset.forms:
+        cleaned = getattr(form, "cleaned_data", None) or {}
+        if cleaned and not cleaned.get("DELETE") and cleaned.get("size"):
+            return True
+    return False
+
+
+def _seed_program_jobbers_from_bom(program):
+    if not program.bom_id or program.jobber_items.exists():
+        return
+
+    rows = []
+    for index, bom_jobber in enumerate(program.bom.jobber_items.all(), start=1):
+        rows.append(
+            ProgramJobberItem(
+                program=program,
+                jobber=bom_jobber.jobber,
+                jobber_type=bom_jobber.jobber_type,
+                jobber_price=bom_jobber.price or Decimal("0"),
+                issue_qty=Decimal("0"),
+                inward_qty=Decimal("0"),
+                sort_order=index,
+            )
+        )
+
+    if rows:
+        ProgramJobberItem.objects.bulk_create(rows)
+
+
+def _seed_program_sizes(program):
+    if program.size_details.exists():
+        return
+
+    ProgramSizeDetail.objects.bulk_create([
+        ProgramSizeDetail(
+            program=program,
+            size=size,
+            cq=Decimal("0"),
+            fq=Decimal("0"),
+            dq=Decimal("0"),
+            fq_dq=Decimal("0"),
+            tp=Decimal("0"),
+        )
+        for size in PROGRAM_DEFAULT_SIZES
+    ])
+
+
+@login_required
+def program_list(request):
+    q = (request.GET.get("q") or "").strip()
+    sku = (request.GET.get("sku") or "").strip()
+    from_date = (request.GET.get("from_date") or "").strip()
+    to_date = (request.GET.get("to_date") or "").strip()
+
+    qs = _program_queryset(request.user)
+
+    if from_date:
+        qs = qs.filter(program_date__gte=from_date)
+
+    if to_date:
+        qs = qs.filter(program_date__lte=to_date)
+
+    if q:
+        qs = qs.filter(
+            Q(program_no__icontains=q)
+            | Q(bom__sku_code__icontains=q)
+            | Q(bom__product_name__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        ).distinct()
+
+    if sku:
+        qs = qs.filter(
+            Q(bom__sku_code__icontains=sku)
+            | Q(bom__product_name__icontains=sku)
+        ).distinct()
+
+    month_groups = []
+    current_label = None
+
+    for program in qs:
+        label = program.program_date.strftime("%B %Y") if program.program_date else "Programs"
+
+        if label != current_label:
+            month_groups.append({
+                "label": label,
+                "items": [],
+            })
+            current_label = label
+
+        month_groups[-1]["items"].append(program)
+
+    template = "accounts/programs/list_embed.html" if _is_embed(request) else "accounts/programs/list.html"
+    return render(
+        request,
+        template,
+        {
+            "month_groups": month_groups,
+            "q": q,
+            "sku": sku,
+            "from_date": from_date,
+            "to_date": to_date,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def program_create(request):
+    form = ProgramForm(request.POST or None, user=request.user)
+    jobber_formset, size_formset = _build_program_formsets(request)
+
+    if request.method == "POST":
+        is_valid = form.is_valid() and jobber_formset.is_valid() and size_formset.is_valid()
+
+        if is_valid:
+            with transaction.atomic():
+                program = form.save(commit=False)
+                program.owner = request.user
+                program.save()
+
+                jobber_formset.instance = program
+                size_formset.instance = program
+
+                if _program_has_jobber_rows(jobber_formset):
+                    jobber_formset.save()
+                else:
+                    _seed_program_jobbers_from_bom(program)
+
+                if _program_has_size_rows(size_formset):
+                    size_formset.save()
+                else:
+                    _seed_program_sizes(program)
+
+            url = _program_list_url(request)
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+
+    template = "accounts/programs/form_embed.html" if _is_embed(request) else "accounts/programs/form.html"
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "jobber_formset": jobber_formset,
+            "size_formset": size_formset,
+            "mode": "add",
+            "program": None,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def program_update(request, pk: int):
+    program = get_object_or_404(_program_queryset(request.user), pk=pk)
+
+    form = ProgramForm(request.POST or None, instance=program, user=request.user)
+    jobber_formset, size_formset = _build_program_formsets(request, instance=program)
+
+    if request.method == "POST":
+        is_valid = form.is_valid() and jobber_formset.is_valid() and size_formset.is_valid()
+
+        if is_valid:
+            with transaction.atomic():
+                form.save()
+                jobber_formset.save()
+
+                if _program_has_size_rows(size_formset):
+                    size_formset.save()
+                elif not program.size_details.exists():
+                    _seed_program_sizes(program)
+
+            url = _program_list_url(request)
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+
+    if request.method == "GET":
+        if not program.jobber_items.exists():
+            _seed_program_jobbers_from_bom(program)
+            program = get_object_or_404(_program_queryset(request.user), pk=pk)
+            jobber_formset, size_formset = _build_program_formsets(request, instance=program)
+
+        if not program.size_details.exists():
+            _seed_program_sizes(program)
+            program = get_object_or_404(_program_queryset(request.user), pk=pk)
+            jobber_formset, size_formset = _build_program_formsets(request, instance=program)
+
+    template = "accounts/programs/form_embed.html" if _is_embed(request) else "accounts/programs/form.html"
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "jobber_formset": jobber_formset,
+            "size_formset": size_formset,
+            "mode": "edit",
+            "program": program,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def program_delete(request, pk: int):
+    program = get_object_or_404(Program, pk=pk, owner=request.user)
+
+    if request.method == "POST":
+        program.delete()
+        url = _program_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = "accounts/programs/confirm_delete.html" if _is_embed(request) else "accounts/programs/confirm_delete.html"
+    return render(
+        request,
+        template,
+        {
+            "program": program,
+        },
+    )
+
+
+@login_required
+def program_bom_summary(request, bom_id: int):
+    bom = get_object_or_404(
+        BOM.objects
+        .filter(owner=request.user)
+        .select_related("brand", "category", "main_category", "pattern_type")
+        .prefetch_related(
+            Prefetch(
+                "material_items",
+                queryset=BOMMaterialItem.objects.select_related("material", "unit").order_by("sort_order", "id"),
+            ),
+            Prefetch(
+                "jobber_items",
+                queryset=BOMJobberItem.objects.select_related("jobber", "jobber_type").order_by("sort_order", "id"),
+            ),
+        ),
+        pk=bom_id,
+    )
+
+    data = {
+        "sku_name": bom.display_sku_name,
+        "sku_code": bom.sku_code,
+        "product_name": bom.product_name,
+        "linked_fabric_names": bom.linked_fabric_names,
+        "linked_accessory_names": bom.linked_accessory_names,
+        "brand_name": bom.display_brand_name,
+        "gender": bom.get_gender_display(),
+        "main_category_name": bom.display_main_category_name,
+        "category_name": bom.display_category_name,
+        "sub_category_name": bom.sub_category,
+        "pattern_type_name": bom.display_pattern_type_name,
+        "license_name": bom.license_name,
+        "character_name": bom.character_name,
+        "mrp": str(bom.selling_price or Decimal("0")),
+        "color_drawcord_tie_dye_price": str(bom.color_price or Decimal("0")),
+        "accessories_price": str(bom.accessories_price or Decimal("0")),
+        "product_image_url": bom.product_image.url if bom.product_image else "",
+        "jobbers": [
+            {
+                "jobber_id": item.jobber_id,
+                "jobber_name": item.jobber.name if item.jobber else "",
+                "jobber_type_id": item.jobber_type_id,
+                "jobber_type_name": item.jobber_type.name if item.jobber_type else "",
+                "jobber_price": str(item.price or Decimal("0")),
+            }
+            for item in bom.jobber_items.all()
+        ],
+    }
+    return JsonResponse(data)

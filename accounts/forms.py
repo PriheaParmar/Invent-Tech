@@ -21,7 +21,7 @@ from .models import (
     Firm,
     MaterialShade,
     MaterialSubType,
-    MaterialType,    
+    MaterialType,
     BOM,
     BOMMaterialItem,
     BOMJobberItem,
@@ -38,9 +38,13 @@ from .models import (
     YarnPOInward,
     GreigePOInward,
     DyeingPurchaseOrder,
-    DyeingPOInward,ReadyPurchaseOrder,
+    DyeingPOInward,
+    ReadyPurchaseOrder,
     ReadyPOInward,
     MaterialUnit,
+    Program,
+    ProgramJobberItem,
+    ProgramSizeDetail,
 )
 
 # ============================================================
@@ -705,10 +709,14 @@ class MaterialSubTypeForm(forms.ModelForm):
 class MainCategoryForm(forms.ModelForm):
     class Meta:
         model = MainCategory
-        fields = ["name"]
+        fields = ["name", "description"]
         widgets = {
             "name": forms.TextInput(attrs={
                 "placeholder": "Enter main category name",
+            }),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Add short description or notes",
             }),
         }
 
@@ -729,7 +737,6 @@ class MainCategoryForm(forms.ModelForm):
                 raise forms.ValidationError("This main category already exists.")
 
         return name
-
 
 class PatternTypeForm(forms.ModelForm):
     class Meta:
@@ -1276,8 +1283,9 @@ class CatalogueForm(forms.ModelForm):
                 raise forms.ValidationError("This catalogue already exists.")
 
         return name
-    
 class BOMForm(forms.ModelForm):
+    catalogue_name = forms.ChoiceField(required=False)
+
     class Meta:
         model = BOM
         fields = [
@@ -1314,21 +1322,47 @@ class BOMForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["brand"].queryset = Brand.objects.filter(owner=user).order_by("name") if user else Brand.objects.none()
-        self.fields["category"].queryset = Category.objects.filter(owner=user).order_by("name") if user else Category.objects.none()
-        self.fields["main_category"].queryset = MainCategory.objects.filter(owner=user).order_by("name") if user else MainCategory.objects.none()
-        self.fields["pattern_type"].queryset = PatternType.objects.filter(owner=user).order_by("name") if user else PatternType.objects.none()
+        brand_qs = Brand.objects.filter(owner=user).order_by("name") if user else Brand.objects.none()
+        category_qs = Category.objects.filter(owner=user).order_by("name") if user else Category.objects.none()
+        main_category_qs = MainCategory.objects.filter(owner=user).order_by("name") if user else MainCategory.objects.none()
+        pattern_type_qs = PatternType.objects.filter(owner=user).order_by("name") if user else PatternType.objects.none()
+        catalogue_qs = Catalogue.objects.filter(owner=user).order_by("name") if user else Catalogue.objects.none()
 
-        for field_name in ["brand", "category", "main_category", "pattern_type"]:
+        self.fields["brand"].queryset = brand_qs
+        self.fields["category"].queryset = category_qs
+        self.fields["main_category"].queryset = main_category_qs
+        self.fields["pattern_type"].queryset = pattern_type_qs
+
+        current_catalogue = (self.initial.get("catalogue_name") or getattr(self.instance, "catalogue_name", "") or "").strip()
+        if self.is_bound:
+            current_catalogue = (self.data.get(self.add_prefix("catalogue_name")) or current_catalogue).strip()
+
+        catalogue_choices = [("", "Select Catalogue")]
+        catalogue_choices.extend((obj.name, obj.name) for obj in catalogue_qs)
+
+        existing_values = {value for value, _label in catalogue_choices}
+        if current_catalogue and current_catalogue not in existing_values:
+            catalogue_choices.append((current_catalogue, current_catalogue))
+
+        self.fields["catalogue_name"].choices = catalogue_choices
+        self.fields["catalogue_name"].label = "Catalogue"
+
+        empty_labels = {
+            "brand": "Select Brand",
+            "category": "Select Category",
+            "main_category": "Select Main Category",
+            "pattern_type": "Select Pattern Type",
+        }
+
+        for field_name, empty_label in empty_labels.items():
             self.fields[field_name].required = False
-            self.fields[field_name].empty_label = f"Select {self.fields[field_name].label}"
+            self.fields[field_name].empty_label = empty_label
 
         placeholders = {
-            "sku_code": "Enter production SKU",
+            "sku_code": "Enter SKU code",
             "product_name": "Enter product name",
-            "catalogue_name": "Enter catalogue name",
             "sub_category": "Enter sub category",
-            "character_name": "Enter character / collection name",
+            "character_name": "Enter character / collection",
             "license_name": "Enter licence / IP name",
             "color_price": "0.00",
             "accessories_price": "0.00",
@@ -1353,6 +1387,17 @@ class BOMForm(forms.ModelForm):
         ]
         for field_name in numeric_fields:
             self.fields[field_name].widget.attrs.update({"step": "0.01", "min": "0"})
+
+        for field_name in [
+            "catalogue_name",
+            "brand",
+            "category",
+            "main_category",
+            "pattern_type",
+            "gender",
+            "size_type",
+        ]:
+            self.fields[field_name].widget.attrs.setdefault("data-master-field", "1")
 
 
 class BOMMaterialItemForm(forms.ModelForm):
@@ -1445,5 +1490,159 @@ BOMExpenseItemFormSet = inlineformset_factory(
     BOMExpenseItem,
     form=BOMExpenseItemForm,
     extra=1,
+    can_delete=True,
+)
+
+
+# ============================================================
+# PROGRAM
+# ============================================================
+
+class ProgramForm(forms.ModelForm):
+    class Meta:
+        model = Program
+        fields = [
+            "program_no",
+            "program_date",
+            "bom",
+            "firm",
+            "total_qty",
+            "ratio",
+            "damage",
+        ]
+        widgets = {
+            "program_no": forms.TextInput(attrs={"placeholder": "Enter program number"}),
+            "program_date": forms.DateInput(attrs={"type": "date"}),
+            "total_qty": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Total Qty"}),
+            "ratio": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Ratio"}),
+            "damage": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Damage"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+        self.fields["bom"].queryset = (
+            BOM.objects.filter(owner=user).order_by("-id")
+            if user else BOM.objects.none()
+        )
+        self.fields["firm"].queryset = (
+            Firm.objects.filter(owner=user).order_by("firm_name")
+            if user else Firm.objects.none()
+        )
+
+        self.fields["bom"].empty_label = "Select SKU"
+        self.fields["firm"].empty_label = "Select firm"
+
+        self.fields["bom"].label_from_instance = (
+            lambda obj: f"{obj.sku_code} - {obj.product_name}" if obj.product_name else obj.sku_code
+        )
+
+        if not self.is_bound:
+            from django.utils import timezone
+            self.fields["program_date"].initial = timezone.localdate()
+
+            firm = self.fields["firm"].queryset.first()
+            if firm and not self.initial.get("firm"):
+                self.fields["firm"].initial = firm.pk
+
+    def clean_program_no(self):
+        value = (self.cleaned_data.get("program_no") or "").strip()
+        if not value:
+            raise forms.ValidationError("Program number is required.")
+
+        qs = Program.objects.all()
+        if self.user is not None:
+            qs = qs.filter(owner=self.user)
+
+        qs = qs.filter(program_no__iexact=value)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise forms.ValidationError("This program number already exists.")
+
+        return value
+
+    def clean_bom(self):
+        bom = self.cleaned_data.get("bom")
+        if bom and self.user is not None and bom.owner_id != self.user.id:
+            raise forms.ValidationError("Selected SKU is not available for this user.")
+        return bom
+
+    def clean_firm(self):
+        firm = self.cleaned_data.get("firm")
+        if firm and self.user is not None and firm.owner_id != self.user.id:
+            raise forms.ValidationError("Selected firm is not available for this user.")
+        return firm
+
+
+class ProgramJobberItemForm(forms.ModelForm):
+    class Meta:
+        model = ProgramJobberItem
+        fields = ["jobber", "jobber_type", "jobber_price", "issue_qty", "inward_qty"]
+        widgets = {
+            "jobber_price": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Jobber Price"}),
+            "issue_qty": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Issue"}),
+            "inward_qty": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Inward"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["jobber"].queryset = (
+            Jobber.objects.filter(owner=user, is_active=True).order_by("name")
+            if user else Jobber.objects.none()
+        )
+        self.fields["jobber_type"].queryset = (
+            JobberType.objects.filter(owner=user).order_by("name")
+            if user else JobberType.objects.none()
+        )
+
+        self.fields["jobber"].required = False
+        self.fields["jobber_type"].required = False
+        self.fields["jobber"].empty_label = "Select jobber"
+        self.fields["jobber_type"].empty_label = "Select jobber type"
+
+    def clean(self):
+        cleaned = super().clean()
+        jobber = cleaned.get("jobber")
+        jobber_type = cleaned.get("jobber_type")
+
+        if jobber and not jobber_type:
+            cleaned["jobber_type"] = jobber.jobber_type
+
+        return cleaned
+
+
+class ProgramSizeDetailForm(forms.ModelForm):
+    class Meta:
+        model = ProgramSizeDetail
+        fields = ["size", "cq", "fq", "dq", "fq_dq", "tp"]
+        widgets = {
+            "size": forms.Select(),
+            "cq": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "CQ"}),
+            "fq": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "FQ"}),
+            "dq": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "DQ"}),
+            "fq_dq": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "FQ-DQ"}),
+            "tp": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "TP"}),
+        }
+
+
+ProgramJobberItemFormSet = inlineformset_factory(
+    Program,
+    ProgramJobberItem,
+    form=ProgramJobberItemForm,
+    fields=["jobber", "jobber_type", "jobber_price", "issue_qty", "inward_qty"],
+    extra=1,
+    can_delete=True,
+)
+
+ProgramSizeDetailFormSet = inlineformset_factory(
+    Program,
+    ProgramSizeDetail,
+    form=ProgramSizeDetailForm,
+    fields=["size", "cq", "fq", "dq", "fq_dq", "tp"],
+    extra=9,
     can_delete=True,
 )

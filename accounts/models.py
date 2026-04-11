@@ -1,4 +1,3 @@
-
 from decimal import Decimal
 from django.conf import settings
 from django.db.models import Sum
@@ -1188,6 +1187,52 @@ class BOM(OwnedModel):
     def estimated_total_cost(self):
         return self.subtotal_cost + self.damage_value
 
+    @property
+    def linked_fabrics(self):
+        return self.material_items.filter(item_type=BOMMaterialItem.ItemType.RAW_FABRIC)
+
+    @property
+    def linked_accessories(self):
+        return self.material_items.filter(
+            item_type__in=[
+                BOMMaterialItem.ItemType.ACCESSORY,
+                BOMMaterialItem.ItemType.TRIM,
+                BOMMaterialItem.ItemType.PACKING,
+            ]
+        )
+
+    @property
+    def linked_fabric_names(self):
+        return ", ".join(
+            [item.material.name for item in self.linked_fabrics if item.material]
+        )
+
+    @property
+    def linked_accessory_names(self):
+        return ", ".join(
+            [item.material.name for item in self.linked_accessories if item.material]
+        )
+
+    @property
+    def display_sku_name(self):
+        return self.sku_code or self.product_name or self.bom_code
+
+    @property
+    def display_brand_name(self):
+        return self.brand.name if self.brand else ""
+
+    @property
+    def display_main_category_name(self):
+        return self.main_category.name if self.main_category else ""
+
+    @property
+    def display_category_name(self):
+        return self.category.name if self.category else ""
+
+    @property
+    def display_pattern_type_name(self):
+        return self.pattern_type.name if self.pattern_type else ""
+
 
 class BOMMaterialItem(models.Model):
     class ItemType(models.TextChoices):
@@ -1283,3 +1328,164 @@ class BOMExpenseItem(models.Model):
 
     def __str__(self):
         return f"{self.bom} - {self.expense_name}"
+
+
+class Program(OwnedModel):
+    program_no = models.CharField(max_length=30)
+    program_date = models.DateField(default=timezone.localdate)
+
+    bom = models.ForeignKey(
+        "BOM",
+        on_delete=models.PROTECT,
+        related_name="programs",
+    )
+
+    firm = models.ForeignKey(
+        "Firm",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="programs",
+    )
+
+    total_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    ratio = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    damage = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ["-program_date", "-id"]
+        unique_together = [("owner", "program_no")]
+
+    def __str__(self):
+        return self.program_no
+
+    @property
+    def sku_name(self):
+        return self.bom.display_sku_name if self.bom_id else ""
+
+    @property
+    def linked_fabric_names(self):
+        return self.bom.linked_fabric_names if self.bom_id else ""
+
+    @property
+    def linked_accessory_names(self):
+        return self.bom.linked_accessory_names if self.bom_id else ""
+
+    @property
+    def brand_name(self):
+        return self.bom.display_brand_name if self.bom_id else ""
+
+    @property
+    def gender(self):
+        return self.bom.get_gender_display() if self.bom_id else ""
+
+    @property
+    def main_category_name(self):
+        return self.bom.display_main_category_name if self.bom_id else ""
+
+    @property
+    def category_name(self):
+        return self.bom.display_category_name if self.bom_id else ""
+
+    @property
+    def sub_category_name(self):
+        return self.bom.sub_category if self.bom_id else ""
+
+    @property
+    def pattern_type_name(self):
+        return self.bom.display_pattern_type_name if self.bom_id else ""
+
+    @property
+    def license_name(self):
+        return self.bom.license_name if self.bom_id else ""
+
+    @property
+    def character_name(self):
+        return self.bom.character_name if self.bom_id else ""
+
+    @property
+    def mrp(self):
+        return self.bom.selling_price if self.bom_id else Decimal("0")
+
+    @property
+    def color_drawcord_tie_dye_price(self):
+        return self.bom.color_price if self.bom_id else Decimal("0")
+
+    @property
+    def accessories_price(self):
+        return self.bom.accessories_price if self.bom_id else Decimal("0")
+
+    @property
+    def product_image(self):
+        return self.bom.product_image if self.bom_id else None
+
+
+class ProgramJobberItem(models.Model):
+    program = models.ForeignKey(
+        "Program",
+        on_delete=models.CASCADE,
+        related_name="jobber_items",
+    )
+    jobber = models.ForeignKey(
+        "Jobber",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="program_jobber_items",
+    )
+    jobber_type = models.ForeignKey(
+        "JobberType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="program_jobber_items",
+    )
+    jobber_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    issue_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    inward_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def save(self, *args, **kwargs):
+        if self.jobber and not self.jobber_type:
+            self.jobber_type = self.jobber.jobber_type
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.program} - {self.jobber or self.jobber_type or 'Jobber'}"
+
+
+class ProgramSizeDetail(models.Model):
+    SIZE_CHOICES = [
+        ("XS", "XS"),
+        ("S", "S"),
+        ("M", "M"),
+        ("L", "L"),
+        ("XL", "XL"),
+        ("XXL", "XXL"),
+        ("3XL", "3XL"),
+        ("4XL", "4XL"),
+        ("5XL", "5XL"),
+    ]
+
+    program = models.ForeignKey(
+        "Program",
+        on_delete=models.CASCADE,
+        related_name="size_details",
+    )
+    size = models.CharField(max_length=10, choices=SIZE_CHOICES)
+
+    cq = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    fq = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    dq = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    fq_dq = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    tp = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ["id"]
+        unique_together = [("program", "size")]
+
+    def __str__(self):
+        return f"{self.program} - {self.size}"

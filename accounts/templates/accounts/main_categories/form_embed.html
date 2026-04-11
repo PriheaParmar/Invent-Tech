@@ -1,19 +1,24 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/brands.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=3">
 
-<div class="jobbers-embed jobber-form-embed brand-embed">
+<div class="jobbers-embed jobber-form-embed">
   <section class="jb-panel">
+    {% include "accounts/_messages_embed.html" %}
+
     <div class="jb-head">
       <div>
         <div class="jb-title">
-          {% if mode == "edit" %}Edit Brand{% else %}Add Brand{% endif %}
+          {% if mode == "edit" %}Edit Main Category{% else %}Add Main Category{% endif %}
         </div>
-        <div class="jb-sub">Store reusable brand names used across the business</div>
+        <div class="jb-sub">Create or update reusable main categories</div>
       </div>
 
       <div class="jf-head-actions">
-        <a class="jb-iconbtn jb-back" href="{% url 'accounts:brand_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+        <a
+          class="jb-iconbtn jb-back"
+          href="{% url 'accounts:maincategory_list' %}{% if not full_page %}?embed=1{% endif %}"
+          aria-label="Back"
+        >
           <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
             <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
           </svg>
@@ -31,9 +36,9 @@
     </div>
 
     {% if mode == "add" %}
-      {% url "accounts:brand_add" as action_url %}
+      {% url "accounts:maincategory_add" as action_url %}
     {% else %}
-      {% url "accounts:brand_edit" brand.id as action_url %}
+      {% url "accounts:maincategory_edit" category.id as action_url %}
     {% endif %}
 
     {% if form.non_field_errors %}
@@ -52,7 +57,7 @@
 
       <div class="jf-grid">
         <div class="jf-field jf-full">
-          <label for="{{ form.name.id_for_label }}">Brand Name</label>
+          <label for="{{ form.name.id_for_label }}">Main Category Name</label>
           {{ form.name }}
           {% if form.name.errors %}
           <div class="jb-field-errors">
@@ -70,24 +75,13 @@
           </div>
           {% endif %}
         </div>
-
-        <div class="jf-field jf-full jf-check">
-          <label for="{{ form.is_active.id_for_label }}">Active</label>
-          <div class="jf-check-row">
-            {{ form.is_active }}
-            <span class="jf-muted">Keep this brand available in the master list</span>
-          </div>
-          {% if form.is_active.errors %}
-          <div class="jb-field-errors">
-            {% for error in form.is_active.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
       </div>
 
       <div class="jf-footer">
-        <a class="jb-secondary" href="{% url 'accounts:brand_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
-        <button type="submit" class="jb-add jb-save">Save Brand</button>
+        <a class="jb-secondary" href="{% url 'accounts:maincategory_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="jb-add jb-save">
+          {% if mode == "edit" %}Update Main Category{% else %}Save Main Category{% endif %}
+        </button>
       </div>
     </form>
   </section>

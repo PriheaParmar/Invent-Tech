@@ -553,23 +553,22 @@ function isMastersUrl(hrefOrAction) {
   const path = (urlObj.pathname || "").replace(/\/+$/, "") + "/";
 
   const allowedRoutes = [
-    ROUTES["Jobber"],
-    ROUTES["Jobber Type"],
-    ROUTES["Material / Trim"],
-    ROUTES["Party"],
-    ROUTES["Vendor"],
-    ROUTES["Location"],
-    ROUTES["Material Shades"],
-    ROUTES["Material Shades"],
-    ROUTES["Catalogue"],
-    ROUTES["Material Type"],
-    ROUTES["Material Sub Type"],
-    ROUTES["Brand"],
-    ROUTES["Category"],
-    ROUTES["Main Category"],
-    ROUTES["Main Category"],
-    ROUTES["BOM"],
-  ]
+  ROUTES["Jobber"],
+  ROUTES["Jobber Type"],
+  ROUTES["Material / Trim"],
+  ROUTES["Party"],
+  ROUTES["Vendor"],
+  ROUTES["Location"],
+  ROUTES["Material Shades"],
+  ROUTES["Material Unit"],
+  ROUTES["Catalogue"],
+  ROUTES["Material Type"],
+  ROUTES["Material Sub Type"],
+  ROUTES["Brand"],
+  ROUTES["Category"],
+  ROUTES["Main Category"],
+  ROUTES["BOM"],
+]
     .filter(Boolean)
     .map((u) => new URL(u, window.location.origin).pathname.replace(/\/+$/, "") + "/");
 
@@ -1001,21 +1000,27 @@ if (existingPanel) {
           const href = tile.getAttribute("href") || "#";
 
           // Only these open embed for now
-          if (
-            title === "Jobber" ||
-            title === "Jobber Type" ||
-            title === "Material / Trim" ||
-            title === "Party" ||
-            title === "Location" ||
-            title === "Vendor" ||
-            title === "Material Shades" ||
-            title === "Material Type" ||
-            title === "BOM"
-          ) {
-            e.preventDefault();
-            openMastersPanel(title, href);
-            return;
-          }
+      if (
+        title === "Jobber" ||
+        title === "Jobber Type" ||
+        title === "Material / Trim" ||
+        title === "Party" ||
+        title === "Location" ||
+        title === "Vendor" ||
+        title === "Material Shades" ||
+        title === "Material Unit" ||
+        title === "Material Type" ||
+        title === "Material Sub Type" ||
+        title === "Catalogue" ||
+        title === "Pattern Type" ||
+        title === "Main Category" ||
+        title === "Category" ||
+        title === "BOM"
+      ) {
+        e.preventDefault();
+        openMastersPanel(title, href);
+        return;
+      } 
 
           // keep no navigation for others (your requirement)
           e.preventDefault();

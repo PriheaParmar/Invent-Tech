@@ -1,0 +1,24 @@
+.brand-embed .jb-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:28px;
+  padding:0 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  line-height:1;
+  border:1px solid transparent;
+}
+
+.brand-embed .jb-badge-active{
+  background:rgba(34,197,94,.10);
+  color:#15803d;
+  border-color:rgba(34,197,94,.18);
+}
+
+.brand-embed .jb-badge-inactive{
+  background:rgba(148,163,184,.12);
+  color:#475569;
+  border-color:rgba(148,163,184,.2);
+}

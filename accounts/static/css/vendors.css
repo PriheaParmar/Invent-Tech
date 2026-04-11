@@ -548,4 +548,175 @@
   .jobbers-embed.vendor-embed .jb-confirm-actions > *{
     flex:1;
   }
+}/* Compact master-list layout for Vendor + Catalogue inside Utilities */
+.jobbers-embed.vendor-embed.vendor-master-list .jb-head,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-head{
+  align-items:flex-start;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-head-actions,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-head-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-add-label,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-add-label{
+  padding:0 14px;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-add-label .jb-add-ico,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-add-label .jb-add-ico{
+  width:18px;
+  height:18px;
+  stroke:currentColor;
+  fill:none;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-master-toolbar,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-master-toolbar{
+  margin-bottom:14px;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-master-search,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-master-search{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:end;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-master-field,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-master-field{
+  min-width:0;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-master-field label,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-master-field label{
+  display:block;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.02em;
+  opacity:.75;
+  margin:0 0 6px;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-master-search input[type="search"],
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-master-search input[type="search"]{
+  width:100%;
+  min-width:0;
+  height:40px;
+  padding:10px 12px;
+  border-radius:12px;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-tablewrap,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-tablewrap{
+  margin-top:4px;
+  border-radius:14px;
+  border:1px solid rgba(0,0,0,.06);
+  background:rgba(255,255,255,.65);
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-table,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-table{
+  min-width:0;
+  border-collapse:collapse;
+  font-size:13px;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-table thead th,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-table thead th{
+  background:transparent;
+  border-bottom:none;
+  border-top:none;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  opacity:.7;
+  padding:11px 10px;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-table tbody td,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-table tbody td{
+  padding:11px 10px;
+  border-top:1px solid rgba(15,23,42,.08);
+  border-bottom:none;
+  vertical-align:middle;
+  font-size:13px;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-table tbody tr:hover,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-table tbody tr:hover{
+  background:rgba(0,0,0,.025);
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-primary,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-primary{
+  font-weight:800;
+  color:#111827;
+  line-height:1.35;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-meta,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-meta{
+  margin-top:3px;
+  font-size:12px;
+  color:rgba(15,23,42,.68);
+  line-height:1.4;
+}
+
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:78px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-badge-active{
+  background:rgba(18,183,106,.12);
+  color:#027a48;
+}
+
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-badge-inactive{
+  background:rgba(15,23,42,.08);
+  color:#475467;
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-link,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-link{
+  color:var(--orange);
+}
+
+.jobbers-embed.vendor-embed.vendor-master-list .jb-link:hover,
+.jobbers-embed.vendor-embed.catalogue-master-list .jb-link:hover{
+  color:var(--orange);
+  text-decoration:underline;
+}
+
+@media (max-width:768px){
+  .jobbers-embed.vendor-embed.vendor-master-list .jb-master-search,
+  .jobbers-embed.vendor-embed.catalogue-master-list .jb-master-search{
+    grid-template-columns:1fr;
+  }
+
+  .jobbers-embed.vendor-embed.vendor-master-list .jb-head-actions,
+  .jobbers-embed.vendor-embed.catalogue-master-list .jb-head-actions{
+    width:100%;
+    justify-content:space-between;
+  }
+
+  .jobbers-embed.vendor-embed.vendor-master-list .jb-add-label,
+  .jobbers-embed.vendor-embed.catalogue-master-list .jb-add-label{
+    flex:1;
+  }
 }

@@ -1,7 +1,7 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/vendors.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=2">
 
-<div class="jobbers-embed vendor-embed catalogue-embed">
+<div class="jobbers-embed">
   <section class="jb-panel">
     <div class="jb-head">
       <div>
@@ -62,17 +62,9 @@
             <td>{{ catalogue.name }}</td>
             <td>{{ catalogue.wear_type|default:"—" }}</td>
             <td>{{ catalogue.description|default:"—" }}</td>
-            <td>
-              {% if catalogue.is_active %}
-              <span class="jb-badge jb-badge-active">Active</span>
-              {% else %}
-              <span class="jb-badge jb-badge-inactive">Inactive</span>
-              {% endif %}
-            </td>
+            <td>{% if catalogue.is_active %}Active{% else %}Inactive{% endif %}</td>
             <td class="jb-actions">
-              <a class="jb-link" href="{% url 'accounts:catalogue_edit' catalogue.id %}{% if not full_page %}?embed=1{% endif %}">
-                Edit
-              </a>
+              <a class="jb-link" href="{% url 'accounts:catalogue_edit' catalogue.id %}{% if not full_page %}?embed=1{% endif %}">Edit</a>
               <span class="jb-dot">•</span>
               <form
                 method="post"

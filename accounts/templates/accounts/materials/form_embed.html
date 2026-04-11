@@ -1,17 +1,18 @@
 {% load static %}
-{% load static %}
 <link rel="stylesheet" href="{% static 'css/app.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=7">
 
 {% if mode == "edit" %}
   {% url "accounts:material_list" as back_url %}
+  {% url "accounts:material_edit" material.id as form_action %}
 {% else %}
   {% url "accounts:material_kind_picker" as back_url %}
+  {% url "accounts:material_create" as form_action %}
 {% endif %}
 
 <div class="{% if full_page %}mf-page{% endif %}">
   <div class="material-form-embed material-form-jobber">
-    <section class="mf-panel" >
+    <section class="mf-panel">
       <div class="mf-head">
         <div>
           <div class="mf-title">
@@ -38,7 +39,12 @@
         </div>
       </div>
 
-      <form method="post" enctype="multipart/form-data" class="mf-form">
+      <form
+        method="post"
+        action="{{ form_action }}{% if not full_page %}?embed=1{% endif %}{% if mode != 'edit' and selected_kind %}{% if not full_page %}&{% else %}?{% endif %}kind={{ selected_kind }}{% endif %}"
+        enctype="multipart/form-data"
+        class="mf-form"
+      >
         {% csrf_token %}
         {% if not full_page %}
         <input type="hidden" name="embed" value="1">

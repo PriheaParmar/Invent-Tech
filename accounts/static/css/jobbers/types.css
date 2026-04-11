@@ -59,3 +59,16 @@
 .jb-confirm-modal .jb-danger-btn{background:#d92d20;color:#fff;border-color:#d92d20;}
 .jb-confirm-modal .jb-danger-btn:hover{background:#b42318;border-color:#b42318;}
 @media (max-width:768px){.jobbers-embed .jb-inline-form{grid-template-columns:1fr;}}
+.mu-page-shell{
+  width: 100%;
+}
+
+.mu-page-shell .jobbers-embed{
+  width: 100%;
+  padding: 0;
+}
+
+.mu-page-shell .jb-panel{
+  width: 100%;
+  max-width: none;
+}

@@ -1,6 +1,4 @@
 {% load static %}
-
-{# Use the same CSS file your Jobber Type embed uses #}
 <link rel="stylesheet" href="{% static 'css/jobbers/types.css' %}?v=1">
 
 <div class="jobbers-embed jb-types-embed">
@@ -44,9 +42,7 @@
         {{ form.name }}
         {% if form.name.errors %}
         <div class="jb-field-errors">
-          {% for error in form.name.errors %}
-          <p>{{ error }}</p>
-          {% endfor %}
+          {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
         </div>
         {% endif %}
       </div>
