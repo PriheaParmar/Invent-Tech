@@ -486,6 +486,7 @@
       "Pattern Type": "{% url 'accounts:patterntype_list' %}",
       "Catalogue": "{% url 'accounts:catalogue_list' %}",
       "BOM": "{% url 'accounts:bom_list' %}",
+            "Expense": "{% url 'accounts:expense_list' %}",
     };
 
     function tileHtml(u) {
@@ -568,6 +569,7 @@ function isMastersUrl(hrefOrAction) {
   ROUTES["Category"],
   ROUTES["Main Category"],
   ROUTES["BOM"],
+  ROUTES["Expense"],
 ]
     .filter(Boolean)
     .map((u) => new URL(u, window.location.origin).pathname.replace(/\/+$/, "") + "/");
@@ -1015,7 +1017,9 @@ if (existingPanel) {
         title === "Pattern Type" ||
         title === "Main Category" ||
         title === "Category" ||
-        title === "BOM"
+        title === "BOM" ||
+
+            title === "Expense" 
       ) {
         e.preventDefault();
         openMastersPanel(title, href);

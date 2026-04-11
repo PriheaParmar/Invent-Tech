@@ -58,6 +58,7 @@ from .forms import (
     PatternTypeForm,
     VendorForm,
     CatalogueForm,
+    ExpenseForm,
     BrandForm,
     YarnPOInwardForm,
     YarnPOReviewForm,
@@ -85,6 +86,7 @@ from .models import (
     Catalogue,
     DyeingPOInwardItem,
     Jobber,
+    Expense,
     JobberType,
     Category,    
     Program,
@@ -1358,16 +1360,18 @@ def _next_yarn_inward_number() -> str:
     last = YarnPOInward.objects.order_by("-id").first()
     next_id = (last.id + 1) if last else 1
     return f"YIN-{next_id:04d}"
-
-
 def _attach_yarn_po_metrics(po):
     return po
 
+
 def _build_yarn_po_pdf_response(po):
     try:
+        from html import escape
+
         from reportlab.lib import colors
+        from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
         from reportlab.lib.pagesizes import A4
-        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
         from reportlab.lib.units import mm
         from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
     except ImportError:
@@ -1375,6 +1379,25 @@ def _build_yarn_po_pdf_response(po):
             "ReportLab is required for PDF generation. Install it with: pip install reportlab",
             status=500,
         )
+
+    def text_or_dash(value):
+        value = "" if value is None else str(value).strip()
+        return value if value else "-"
+
+    def html_text(value):
+        return escape(text_or_dash(value)).replace("\n", "<br/>")
+
+    def fmt_money(value):
+        try:
+            return f"₹{float(value or 0):,.2f}"
+        except Exception:
+            return f"₹{value or '0.00'}"
+
+    def fmt_qty(value):
+        try:
+            return f"{float(value or 0):,.2f}".rstrip("0").rstrip(".")
+        except Exception:
+            return text_or_dash(value)
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -1385,89 +1408,343 @@ def _build_yarn_po_pdf_response(po):
         topMargin=14 * mm,
         bottomMargin=14 * mm,
     )
+
     styles = getSampleStyleSheet()
+
+    base_style = ParagraphStyle(
+        "POBase",
+        parent=styles["BodyText"],
+        fontName="Helvetica",
+        fontSize=9.5,
+        leading=12,
+        textColor=colors.HexColor("#1f1f1f"),
+        spaceAfter=0,
+    )
+
+    firm_name_style = ParagraphStyle(
+        "POFirmName",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=24,
+        leading=28,
+        textColor=colors.black,
+        alignment=TA_LEFT,
+    )
+
+    title_style = ParagraphStyle(
+        "POTitle",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=11,
+        leading=14,
+        textColor=colors.HexColor("#444444"),
+        alignment=TA_LEFT,
+    )
+
+    meta_style = ParagraphStyle(
+        "POMeta",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=10,
+        leading=16,
+        alignment=TA_RIGHT,
+        textColor=colors.HexColor("#222222"),
+    )
+
+    label_style = ParagraphStyle(
+        "POLabel",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=10,
+        leading=12,
+        alignment=TA_LEFT,
+    )
+
+    block_text_style = ParagraphStyle(
+        "POBlockText",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=10,
+        leading=13,
+        alignment=TA_LEFT,
+    )
+
+    table_head_style = ParagraphStyle(
+        "POTableHead",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=10,
+        leading=12,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor("#2a2a2a"),
+    )
+
+    item_no_style = ParagraphStyle(
+        "POItemNo",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=9,
+        leading=11,
+        alignment=TA_CENTER,
+    )
+
+    desc_style = ParagraphStyle(
+        "PODesc",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=9,
+        leading=11,
+        alignment=TA_LEFT,
+    )
+
+    qty_style = ParagraphStyle(
+        "POQty",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=9,
+        leading=11,
+        alignment=TA_CENTER,
+    )
+
+    money_style = ParagraphStyle(
+        "POMoney",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=9,
+        leading=11,
+        alignment=TA_RIGHT,
+    )
+
+    total_label_style = ParagraphStyle(
+        "POTotalLabel",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=10,
+        leading=12,
+        alignment=TA_LEFT,
+    )
+
+    total_amount_style = ParagraphStyle(
+        "POTotalAmount",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=10,
+        leading=12,
+        alignment=TA_RIGHT,
+    )
+
+    notes_label_style = ParagraphStyle(
+        "PONotesLabel",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=10,
+        leading=12,
+        alignment=TA_LEFT,
+    )
+
+    footer_style = ParagraphStyle(
+        "POFooter",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8.5,
+        leading=11,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor("#4b5563"),
+    )
+
     story = []
 
-    story.append(Paragraph(f"Yarn Purchase Order - {po.system_number}", styles["Title"]))
-    story.append(Spacer(1, 8))
+    firm_name = po.firm.firm_name if po.firm else "YOUR FIRM NAME"
+    po_date = po.po_date.strftime("%d-%m-%Y") if po.po_date else "-"
+    order_number = po.po_number or po.system_number or "-"
 
-    meta_rows = [
-        ["System No", po.system_number],
-        ["PO Number", po.po_number or "-"],
-        ["PO Date", po.po_date.strftime("%d-%m-%Y") if po.po_date else "-"],
-        ["Cancel Date", po.cancel_date.strftime("%d-%m-%Y") if po.cancel_date else "-"],
-        ["Vendor", po.vendor.name if po.vendor else "-"],
-        ["Firm", po.firm.firm_name if po.firm else "-"],
-        ["Shipping Address", po.shipping_address or "-"],
-        ["Status", po.get_approval_status_display()],
+    header_table = Table(
+        [[
+            Paragraph(escape(firm_name), firm_name_style),
+            Paragraph(
+                f"<b>DATE</b>&nbsp;&nbsp;&nbsp;{escape(po_date)}<br/>"
+                f"<b>ORDER No</b>&nbsp;&nbsp;&nbsp;{escape(order_number)}",
+                meta_style,
+            ),
+        ]],
+        colWidths=[112 * mm, 64 * mm],
+    )
+    header_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 2))
+
+    story.append(Paragraph("YARN PURCHASE ORDER", title_style))
+    story.append(Spacer(1, 10))
+
+    vendor = po.vendor
+    info_rows = [
+        [Paragraph("NAME", label_style), Paragraph(html_text(vendor.name if vendor else "-"), block_text_style)],
+        [Paragraph("ADDRESS", label_style), Paragraph(html_text(vendor.address if vendor else "-"), block_text_style)],
+        [Paragraph("PHONE", label_style), Paragraph(html_text(vendor.phone if vendor else "-"), block_text_style)],
+        [Paragraph("E-MAIL", label_style), Paragraph(html_text(vendor.email if vendor else "-"), block_text_style)],
     ]
 
-    meta_table = Table(meta_rows, colWidths=[38 * mm, 130 * mm])
-    meta_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f8fafc")),
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
-        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("PADDING", (0, 0), (-1, -1), 6),
+    info_table = Table(info_rows, colWidths=[28 * mm, 148 * mm])
+    info_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.8, colors.HexColor("#222222")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
     ]))
-    story.append(meta_table)
+    story.append(info_table)
     story.append(Spacer(1, 12))
 
-    item_rows = [["Material", "Quantity", "UOM", "Rate", "Final Amount"]]
-    for item in po.items.all():
+    item_rows = [[
+        Paragraph("ITEM", table_head_style),
+        Paragraph("DESCRIPTION", table_head_style),
+        Paragraph("QTY", table_head_style),
+        Paragraph("PRICE", table_head_style),
+        Paragraph("AMOUNT", table_head_style),
+    ]]
+
+    po_items = list(po.items.all())
+
+    for index, item in enumerate(po_items, start=1):
+        material_name = "-"
+        if item.material_type:
+            material_name = item.material_type.name
+        elif item.material:
+            material_name = str(item.material)
+
+        detail_parts = []
+        if item.count:
+            detail_parts.append(f"Count: {item.count}")
+        if item.dia:
+            detail_parts.append(f"Dia: {item.dia}")
+        if item.gauge:
+            detail_parts.append(f"Gauge: {item.gauge}")
+        if item.gsm:
+            detail_parts.append(f"GSM: {item.gsm}")
+        if item.sl:
+            detail_parts.append(f"SL: {item.sl}")
+        if item.rolls:
+            detail_parts.append(f"Rolls: {item.rolls}")
+        if item.hsn_code:
+            detail_parts.append(f"HSN: {item.hsn_code}")
+        if item.remark:
+            detail_parts.append(f"Remark: {item.remark}")
+
+        desc_html = f"<b>{escape(text_or_dash(material_name))}</b>"
+        if detail_parts:
+            desc_html += "<br/>" + escape(" | ".join(detail_parts))
+
         item_rows.append([
-            item.material.name if item.material else "-",
-            str(item.quantity or "0.00"),
-            item.unit or "-",
-            f"₹{item.rate or '0.00'}",
-            f"₹{item.final_amount or '0.00'}",
+            Paragraph(str(index), item_no_style),
+            Paragraph(desc_html, desc_style),
+            Paragraph(f"{fmt_qty(item.quantity)} {escape(item.unit or '')}".strip(), qty_style),
+            Paragraph(fmt_money(item.rate), money_style),
+            Paragraph(fmt_money(item.final_amount), money_style),
         ])
 
-    items_table = Table(item_rows, colWidths=[70 * mm, 28 * mm, 22 * mm, 28 * mm, 35 * mm])
+    min_visual_rows = 8
+    blank_needed = max(0, min_visual_rows - len(po_items))
+    for _ in range(blank_needed):
+        item_rows.append([
+            Paragraph("", item_no_style),
+            Paragraph("", desc_style),
+            Paragraph("", qty_style),
+            Paragraph("", money_style),
+            Paragraph("", money_style),
+        ])
+
+    item_rows.append([
+        Paragraph("TOTAL", total_label_style),
+        "",
+        "",
+        "",
+        Paragraph(fmt_money(po.grand_total), total_amount_style),
+    ])
+
+    items_table = Table(
+        item_rows,
+        colWidths=[18 * mm, 76 * mm, 24 * mm, 27 * mm, 31 * mm],
+        repeatRows=1,
+    )
     items_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f3f4f6")),
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("PADDING", (0, 0), (-1, -1), 6),
+        ("GRID", (0, 0), (-1, -1), 0.8, colors.HexColor("#222222")),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f4dddd")),
+        ("BACKGROUND", (-1, -1), (-1, -1), colors.HexColor("#f7e6e6")),
+        ("SPAN", (0, -1), (3, -1)),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
     ]))
     story.append(items_table)
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 14))
 
-    summary_rows = [
-        ["Sub Total", f"₹{po.subtotal or '0.00'}"],
-        ["Discount (%)", str(po.discount_percent or '0')],
-        ["After Discount", f"₹{po.after_discount_value or '0.00'}"],
-        ["Others", f"₹{po.others or '0.00'}"],
-        ["CGST (%)", str(po.cgst_percent or '0')],
-        ["SGST (%)", str(po.sgst_percent or '0')],
-        ["Grand Total", f"₹{po.grand_total or '0.00'}"],
-    ]
-    summary_table = Table(summary_rows, colWidths=[48 * mm, 42 * mm], hAlign="RIGHT")
-    summary_table.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
-        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-        ("PADDING", (0, 0), (-1, -1), 6),
-    ]))
-    story.append(summary_table)
-
+    note_parts = []
     if po.remarks:
-        story.append(Spacer(1, 12))
-        story.append(Paragraph("Remarks", styles["Heading4"]))
-        story.append(Paragraph(po.remarks, styles["BodyText"]))
-
+        note_parts.append(f"<b>Remarks:</b> {html_text(po.remarks)}")
     if po.terms_conditions:
-        story.append(Spacer(1, 12))
-        story.append(Paragraph("Terms & Conditions", styles["Heading4"]))
-        story.append(Paragraph(po.terms_conditions.replace("\n", "<br/>"), styles["BodyText"]))
+        note_parts.append(f"<b>Terms:</b> {html_text(po.terms_conditions)}")
+    if po.shipping_address:
+        note_parts.append(f"<b>Shipping Address:</b> {html_text(po.shipping_address)}")
+    if po.cancel_date:
+        note_parts.append(f"<b>Cancel Date:</b> {escape(po.cancel_date.strftime('%d-%m-%Y'))}")
+
+    notes_html = "<br/><br/>".join(note_parts) if note_parts else "&nbsp;"
+
+    story.append(Paragraph("NOTES:", notes_label_style))
+    story.append(Spacer(1, 4))
+
+    notes_table = Table(
+        [[Paragraph(notes_html, block_text_style)]],
+        colWidths=[176 * mm],
+        rowHeights=[28 * mm],
+    )
+    notes_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f3dede")),
+        ("BOX", (0, 0), (-1, -1), 0, colors.white),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    story.append(notes_table)
+    story.append(Spacer(1, 14))
+
+    footer_lines = []
+    if po.firm:
+        footer_lines.append(f"<b>{escape(po.firm.firm_name)}</b>")
+        address_parts = [po.firm.address_line, po.firm.city, po.firm.state, po.firm.pincode]
+        clean_address = ", ".join([str(part).strip() for part in address_parts if str(part).strip()])
+        if clean_address:
+            footer_lines.append(escape(clean_address))
+
+        contact_bits = []
+        if po.firm.phone:
+            contact_bits.append(f"Phone: {escape(po.firm.phone)}")
+        if po.firm.email:
+            contact_bits.append(f"E-mail: {escape(po.firm.email)}")
+        if po.firm.website:
+            contact_bits.append(f"Web: {escape(po.firm.website)}")
+        if contact_bits:
+            footer_lines.append(escape(" | ".join(contact_bits)))
+
+    if footer_lines:
+        story.append(Paragraph("<br/>".join(footer_lines), footer_style))
 
     doc.build(story)
     buffer.seek(0)
 
     response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="{po.system_number}.pdf"'
+    response["Content-Disposition"] = f'attachment; filename="{po.system_number or "yarn_po"}.pdf"'
     return response
 
 
@@ -1729,6 +2006,7 @@ def yarnpo_inward(request, pk: int):
         },
     )
 
+
 @login_required
 def yarn_inward_tracker(request):
     q = (request.GET.get("q") or "").strip()
@@ -1779,13 +2057,13 @@ def yarn_inward_tracker(request):
             for inward_item in inward.items.all():
                 po_item = inward_item.po_item
                 inward_items.append({
-                "inward_item": inward_item,
-                "po_item": po_item,
-                "fabric_name": po_item.material.name if po_item and po_item.material else "Yarn Item",
-                "ordered_qty": po_item.quantity if po_item else 0,
-                "inward_qty": inward_item.quantity,
-                "unit": po_item.unit if po_item else "",
-            })
+                    "inward_item": inward_item,
+                    "po_item": po_item,
+                    "fabric_name": po_item.material.name if po_item and po_item.material else "Yarn Item",
+                    "ordered_qty": po_item.quantity if po_item else 0,
+                    "inward_qty": inward_item.quantity,
+                    "unit": po_item.unit if po_item else "",
+                })
 
             inward_entries.append({
                 "inward": inward,
@@ -1834,114 +2112,6 @@ def yarnpo_delete(request, pk: int):
     po = get_object_or_404(YarnPurchaseOrder, pk=pk, owner=request.user)
     po.delete()
     return redirect("accounts:yarnpo_list")
-
-def _build_yarn_po_pdf_response(po):
-    try:
-        from reportlab.lib import colors
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.styles import getSampleStyleSheet
-        from reportlab.lib.units import mm
-        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-    except ImportError:
-        return HttpResponse(
-            "ReportLab is required for PDF generation. Install it with: pip install reportlab",
-            status=500,
-        )
-
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=14 * mm,
-        leftMargin=14 * mm,
-        topMargin=14 * mm,
-        bottomMargin=14 * mm,
-    )
-
-    styles = getSampleStyleSheet()
-    story = []
-
-    story.append(Paragraph(f"Yarn Purchase Order - {po.system_number}", styles["Title"]))
-    story.append(Spacer(1, 8))
-
-    meta_rows = [
-        ["System No", po.system_number or "-"],
-        ["PO Number", po.po_number or "-"],
-        ["PO Date", po.po_date.strftime("%d-%m-%Y") if po.po_date else "-"],
-        ["Cancel Date", po.cancel_date.strftime("%d-%m-%Y") if po.cancel_date else "-"],
-        ["Vendor", po.vendor.name if po.vendor else "-"],
-        ["Firm", po.firm.firm_name if po.firm else "-"],
-        ["Shipping Address", po.shipping_address or "-"],
-        ["Status", po.get_approval_status_display() if hasattr(po, "get_approval_status_display") else "-"],
-    ]
-
-    meta_table = Table(meta_rows, colWidths=[40 * mm, 130 * mm])
-    meta_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f8fafc")),
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
-        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("PADDING", (0, 0), (-1, -1), 6),
-    ]))
-    story.append(meta_table)
-    story.append(Spacer(1, 12))
-
-    item_rows = [["Material", "Quantity", "UOM", "Rate", "Final Amount"]]
-    for item in po.items.all():
-        item_rows.append([
-            item.material_type.name if item.material_type else (item.material.name if item.material else "-"),
-            str(item.quantity or "0.00"),
-            item.unit or "-",
-            f"₹{item.rate or '0.00'}",
-            f"₹{item.final_amount or '0.00'}",
-        ])
-
-    items_table = Table(item_rows, colWidths=[72 * mm, 28 * mm, 22 * mm, 28 * mm, 35 * mm])
-    items_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f3f4f6")),
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("PADDING", (0, 0), (-1, -1), 6),
-    ]))
-    story.append(items_table)
-    story.append(Spacer(1, 12))
-
-    summary_rows = [
-        ["Sub Total", f"₹{po.subtotal or '0.00'}"],
-        ["Discount (%)", str(po.discount_percent or '0')],
-        ["After Discount", f"₹{po.after_discount_value or '0.00'}"],
-        ["Others", f"₹{po.others or '0.00'}"],
-        ["CGST (%)", str(po.cgst_percent or '0')],
-        ["SGST (%)", str(po.sgst_percent or '0')],
-        ["Grand Total", f"₹{po.grand_total or '0.00'}"],
-    ]
-    summary_table = Table(summary_rows, colWidths=[50 * mm, 42 * mm], hAlign="RIGHT")
-    summary_table.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#dbe4ee")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
-        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-        ("PADDING", (0, 0), (-1, -1), 6),
-    ]))
-    story.append(summary_table)
-
-    if po.remarks:
-        story.append(Spacer(1, 12))
-        story.append(Paragraph("Remarks", styles["Heading4"]))
-        story.append(Paragraph(po.remarks, styles["BodyText"]))
-
-    if po.terms_conditions:
-        story.append(Spacer(1, 12))
-        story.append(Paragraph("Terms & Conditions", styles["Heading4"]))
-        story.append(Paragraph(po.terms_conditions.replace("\n", "<br/>"), styles["BodyText"]))
-
-    doc.build(story)
-    buffer.seek(0)
-
-    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="{po.system_number}.pdf"'
-    return response
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -3511,7 +3681,93 @@ def _category_list_url(request):
         url += "?embed=1"
     return url
 
+def _expense_list_url(request):
+    url = reverse("accounts:expense_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
 
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def expense_list_create(request):
+    q = (request.GET.get("q") or "").strip()
+
+    expenses = Expense.objects.filter(owner=request.user).order_by("name")
+    if q:
+        expenses = expenses.filter(name__icontains=q)
+
+    if request.method == "POST":
+        form = ExpenseForm(request.POST, user=request.user)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
+
+            url = _expense_list_url(request)
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+    else:
+        form = ExpenseForm(user=request.user)
+
+    template = (
+        "accounts/expenses/list_embed.html"
+        if _is_embed(request)
+        else "accounts/expenses/list.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "expenses": expenses,
+            "form": form,
+            "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def expense_edit(request, pk: int):
+    expense = get_object_or_404(Expense, pk=pk, owner=request.user)
+    form = ExpenseForm(request.POST or None, instance=expense, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _expense_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = (
+        "accounts/expenses/edit_embed.html"
+        if _is_embed(request)
+        else "accounts/expenses/edit.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "expense": expense,
+        },
+    )
+
+
+@login_required
+@require_POST
+def expense_delete(request, pk: int):
+    expense = get_object_or_404(Expense, pk=pk, owner=request.user)
+    expense.delete()
+
+    url = _expense_list_url(request)
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
 # ==========================
 # CATEGORIES (embed supported)
 # ==========================

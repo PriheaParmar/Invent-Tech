@@ -1489,3 +1489,15 @@ class ProgramSizeDetail(models.Model):
 
     def __str__(self):
         return f"{self.program} - {self.size}"
+    
+    
+    
+class Expense(OwnedModel):
+    name = models.CharField(max_length=120)
+
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("owner", "name")]
+
+    def __str__(self):
+        return self.name

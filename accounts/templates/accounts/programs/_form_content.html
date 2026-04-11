@@ -1,0 +1,510 @@
+{% load static %}
+<div class="program-page">
+  <div class="program-shell">
+    <div class="program-topbar">
+      <div>
+        <h1 class="program-title">
+          {% if mode == "edit" %}Edit Program{% else %}Create Program{% endif %}
+        </h1>
+        <p class="program-subtitle">Program details, SKU details, jobber details, and size details</p>
+      </div>
+
+      <div class="program-top-actions">
+        <a href="{% url 'accounts:program_list' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="program-btn program-btn-light">Back</a>
+      </div>
+    </div>
+
+    <form
+      method="post"
+      enctype="multipart/form-data"
+      class="program-form"
+      data-program-form
+      data-bom-summary-template="{% url 'accounts:program_bom_summary' 0 %}"
+    >
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="program-alert">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <section class="program-card">
+        <div class="program-card-head">
+          <h2>Program Details</h2>
+        </div>
+
+        <div class="program-grid">
+          <div class="program-field">
+            <label for="{{ form.program_no.id_for_label }}">Program No</label>
+            {{ form.program_no }}
+            {{ form.program_no.errors }}
+          </div>
+
+          <div class="program-field">
+            <label for="{{ form.program_date.id_for_label }}">Program Date</label>
+            {{ form.program_date }}
+            {{ form.program_date.errors }}
+          </div>
+
+          <div class="program-field">
+            <label for="{{ form.bom.id_for_label }}">SKU</label>
+            {{ form.bom }}
+            {{ form.bom.errors }}
+          </div>
+
+          <div class="program-field">
+            <label for="{{ form.firm.id_for_label }}">Firm Name</label>
+            {{ form.firm }}
+            {{ form.firm.errors }}
+          </div>
+
+          <div class="program-field">
+            <label for="{{ form.total_qty.id_for_label }}">Total Qty</label>
+            {{ form.total_qty }}
+            {{ form.total_qty.errors }}
+          </div>
+
+          <div class="program-field">
+            <label for="{{ form.ratio.id_for_label }}">Ratio</label>
+            {{ form.ratio }}
+            {{ form.ratio.errors }}
+          </div>
+
+          <div class="program-field">
+            <label for="{{ form.damage.id_for_label }}">Damage</label>
+            {{ form.damage }}
+            {{ form.damage.errors }}
+          </div>
+        </div>
+      </section>
+
+      <section class="program-card">
+        <div class="program-card-head">
+          <h2>SKU Details</h2>
+        </div>
+
+        <div class="program-sku-layout">
+          <div class="program-sku-grid">
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">SKU Name</span>
+              <span class="program-readonly-value" data-summary-target="sku_name">
+                {% if program %}{{ program.sku_name }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Linked Fabric</span>
+              <span class="program-readonly-value" data-summary-target="linked_fabric_names">
+                {% if program %}{{ program.linked_fabric_names }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Linked Accessories</span>
+              <span class="program-readonly-value" data-summary-target="linked_accessory_names">
+                {% if program %}{{ program.linked_accessory_names }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Brand</span>
+              <span class="program-readonly-value" data-summary-target="brand_name">
+                {% if program %}{{ program.brand_name }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Gender</span>
+              <span class="program-readonly-value" data-summary-target="gender">
+                {% if program %}{{ program.gender }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Main Category</span>
+              <span class="program-readonly-value" data-summary-target="main_category_name">
+                {% if program %}{{ program.main_category_name }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Category</span>
+              <span class="program-readonly-value" data-summary-target="category_name">
+                {% if program %}{{ program.category_name }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Sub Category</span>
+              <span class="program-readonly-value" data-summary-target="sub_category_name">
+                {% if program %}{{ program.sub_category_name }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Pattern Type</span>
+              <span class="program-readonly-value" data-summary-target="pattern_type_name">
+                {% if program %}{{ program.pattern_type_name }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Licence Name</span>
+              <span class="program-readonly-value" data-summary-target="license_name">
+                {% if program %}{{ program.license_name }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Character Name</span>
+              <span class="program-readonly-value" data-summary-target="character_name">
+                {% if program %}{{ program.character_name }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">MRP</span>
+              <span class="program-readonly-value" data-summary-target="mrp">
+                {% if program %}{{ program.mrp }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Color / Drawcord / Tie Dye Price</span>
+              <span class="program-readonly-value" data-summary-target="color_drawcord_tie_dye_price">
+                {% if program %}{{ program.color_drawcord_tie_dye_price }}{% endif %}
+              </span>
+            </div>
+
+            <div class="program-readonly-box">
+              <span class="program-readonly-label">Accessories Price</span>
+              <span class="program-readonly-value" data-summary-target="accessories_price">
+                {% if program %}{{ program.accessories_price }}{% endif %}
+              </span>
+            </div>
+          </div>
+
+          <div class="program-image-box">
+            <div class="program-image-label">SKU Image</div>
+            <div class="program-image-preview">
+              <img
+                src="{% if program and program.product_image %}{{ program.product_image.url }}{% endif %}"
+                alt="SKU Preview"
+                data-summary-image
+                {% if not program or not program.product_image %}style="display:none;"{% endif %}
+              >
+              <div class="program-image-empty" data-summary-image-empty {% if program and program.product_image %}style="display:none;"{% endif %}>
+                No image
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="program-card">
+        <div class="program-card-head">
+          <h2>Jobber Details</h2>
+          <button type="button" class="program-btn program-btn-light" id="add-jobber-row">Add Row</button>
+        </div>
+
+        {{ jobber_formset.management_form }}
+
+        {% if jobber_formset.non_form_errors %}
+          <div class="program-alert">{{ jobber_formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="program-table-wrap">
+          <table class="program-table">
+            <thead>
+              <tr>
+                <th>Jobber Name</th>
+                <th>Jobber Type</th>
+                <th>Jobber Price</th>
+                <th>Issue Qty</th>
+                <th>Inward Qty</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody id="jobber-formset-body">
+              {% for subform in jobber_formset.forms %}
+                <tr class="jobber-form-row">
+                  {% for hidden in subform.hidden_fields %}{{ hidden }}{% endfor %}
+                  <td>
+                    {{ subform.jobber }}
+                    {{ subform.jobber.errors }}
+                  </td>
+                  <td>
+                    {{ subform.jobber_type }}
+                    {{ subform.jobber_type.errors }}
+                  </td>
+                  <td>
+                    {{ subform.jobber_price }}
+                    {{ subform.jobber_price.errors }}
+                  </td>
+                  <td>
+                    {{ subform.issue_qty }}
+                    {{ subform.issue_qty.errors }}
+                  </td>
+                  <td>
+                    {{ subform.inward_qty }}
+                    {{ subform.inward_qty.errors }}
+                  </td>
+                  <td class="program-delete-cell">
+                    {% if subform.DELETE %}
+                      {{ subform.DELETE }}
+                    {% else %}
+                      <button type="button" class="program-remove-row">Remove</button>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <template id="jobber-empty-form-template">
+          <tr class="jobber-form-row">
+            {% for hidden in jobber_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+            <td>{{ jobber_formset.empty_form.jobber }}</td>
+            <td>{{ jobber_formset.empty_form.jobber_type }}</td>
+            <td>{{ jobber_formset.empty_form.jobber_price }}</td>
+            <td>{{ jobber_formset.empty_form.issue_qty }}</td>
+            <td>{{ jobber_formset.empty_form.inward_qty }}</td>
+            <td class="program-delete-cell">
+              {% if jobber_formset.empty_form.DELETE %}
+                {{ jobber_formset.empty_form.DELETE }}
+              {% else %}
+                <button type="button" class="program-remove-row">Remove</button>
+              {% endif %}
+            </td>
+          </tr>
+        </template>
+      </section>
+
+      <section class="program-card">
+        <div class="program-card-head">
+          <h2>Size Details</h2>
+        </div>
+
+        {{ size_formset.management_form }}
+
+        {% if size_formset.non_form_errors %}
+          <div class="program-alert">{{ size_formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="program-table-wrap">
+          <table class="program-table program-size-table">
+            <thead>
+              <tr>
+                <th>Size</th>
+                <th>CQ</th>
+                <th>FQ</th>
+                <th>DQ</th>
+                <th>FQ-DQ</th>
+                <th>TP</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for subform in size_formset.forms %}
+                <tr>
+                  {% for hidden in subform.hidden_fields %}{{ hidden }}{% endfor %}
+                  <td>
+                    {{ subform.size }}
+                    {{ subform.size.errors }}
+                  </td>
+                  <td>
+                    {{ subform.cq }}
+                    {{ subform.cq.errors }}
+                  </td>
+                  <td>
+                    {{ subform.fq }}
+                    {{ subform.fq.errors }}
+                  </td>
+                  <td>
+                    {{ subform.dq }}
+                    {{ subform.dq.errors }}
+                  </td>
+                  <td>
+                    {{ subform.fq_dq }}
+                    {{ subform.fq_dq.errors }}
+                  </td>
+                  <td>
+                    {{ subform.tp }}
+                    {{ subform.tp.errors }}
+                  </td>
+                  <td class="program-delete-cell">
+                    {% if subform.DELETE %}{{ subform.DELETE }}{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="program-bottom-actions">
+        <a href="{% url 'accounts:program_list' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="program-btn program-btn-light">Cancel</a>
+        <button type="submit" class="program-btn program-btn-primary">
+          {% if mode == "edit" %}Update Program{% else %}Save Program{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  const formEl = document.querySelector("[data-program-form]");
+  if (!formEl) return;
+
+  const bomField = formEl.querySelector("#id_bom");
+  const summaryTemplate = formEl.getAttribute("data-bom-summary-template");
+  const jobberBody = document.getElementById("jobber-formset-body");
+  const totalFormsInput = document.getElementById("id_jobbers-TOTAL_FORMS");
+  const emptyTemplate = document.getElementById("jobber-empty-form-template");
+  const addJobberBtn = document.getElementById("add-jobber-row");
+
+  function setSummaryValue(key, value) {
+    const el = formEl.querySelector('[data-summary-target="' + key + '"]');
+    if (el) el.textContent = value || "";
+  }
+
+  function setSummaryImage(url) {
+    const img = formEl.querySelector("[data-summary-image]");
+    const empty = formEl.querySelector("[data-summary-image-empty]");
+    if (!img || !empty) return;
+
+    if (url) {
+      img.src = url;
+      img.style.display = "";
+      empty.style.display = "none";
+    } else {
+      img.removeAttribute("src");
+      img.style.display = "none";
+      empty.style.display = "";
+    }
+  }
+
+  function bindRemoveButtons(scope) {
+    scope.querySelectorAll(".program-remove-row").forEach((btn) => {
+      btn.onclick = function () {
+        const row = btn.closest("tr");
+        if (!row) return;
+        row.remove();
+        syncTotalForms();
+      };
+    });
+  }
+
+  function createJobberRow(index) {
+    const html = emptyTemplate.innerHTML.replace(/__prefix__/g, index);
+    const wrapper = document.createElement("tbody");
+    wrapper.innerHTML = html.trim();
+    return wrapper.firstElementChild;
+  }
+
+  function syncTotalForms() {
+    const rows = jobberBody.querySelectorAll("tr.jobber-form-row").length;
+    if (totalFormsInput) totalFormsInput.value = rows;
+  }
+
+  function addJobberRow(prefill) {
+    if (!emptyTemplate || !jobberBody || !totalFormsInput) return;
+    const index = parseInt(totalFormsInput.value || "0", 10);
+    const row = createJobberRow(index);
+    jobberBody.appendChild(row);
+    syncTotalForms();
+    bindRemoveButtons(row);
+
+    if (prefill) {
+      const jobberField = row.querySelector('[name="jobbers-' + index + '-jobber"]');
+      const jobberTypeField = row.querySelector('[name="jobbers-' + index + '-jobber_type"]');
+      const priceField = row.querySelector('[name="jobbers-' + index + '-jobber_price"]');
+      const issueField = row.querySelector('[name="jobbers-' + index + '-issue_qty"]');
+      const inwardField = row.querySelector('[name="jobbers-' + index + '-inward_qty"]');
+
+      if (jobberField && prefill.jobber_id) jobberField.value = prefill.jobber_id;
+      if (jobberTypeField && prefill.jobber_type_id) jobberTypeField.value = prefill.jobber_type_id;
+      if (priceField) priceField.value = prefill.jobber_price || "0";
+      if (issueField) issueField.value = "0";
+      if (inwardField) inwardField.value = "0";
+    }
+  }
+
+  function currentJobberRowsHaveData() {
+    const rows = Array.from(jobberBody.querySelectorAll("tr.jobber-form-row"));
+    return rows.some((row) => {
+      const selects = row.querySelectorAll("select");
+      const inputs = row.querySelectorAll('input[type="number"], input[type="text"]');
+      let hasData = false;
+
+      selects.forEach((el) => {
+        if (el.value) hasData = true;
+      });
+
+      inputs.forEach((el) => {
+        if (el.value && el.value !== "0" && el.value !== "0.00") hasData = true;
+      });
+
+      return hasData;
+    });
+  }
+
+  function fillSummary(data) {
+    setSummaryValue("sku_name", data.sku_name || "");
+    setSummaryValue("linked_fabric_names", data.linked_fabric_names || "");
+    setSummaryValue("linked_accessory_names", data.linked_accessory_names || "");
+    setSummaryValue("brand_name", data.brand_name || "");
+    setSummaryValue("gender", data.gender || "");
+    setSummaryValue("main_category_name", data.main_category_name || "");
+    setSummaryValue("category_name", data.category_name || "");
+    setSummaryValue("sub_category_name", data.sub_category_name || "");
+    setSummaryValue("pattern_type_name", data.pattern_type_name || "");
+    setSummaryValue("license_name", data.license_name || "");
+    setSummaryValue("character_name", data.character_name || "");
+    setSummaryValue("mrp", data.mrp || "");
+    setSummaryValue("color_drawcord_tie_dye_price", data.color_drawcord_tie_dye_price || "");
+    setSummaryValue("accessories_price", data.accessories_price || "");
+    setSummaryImage(data.product_image_url || "");
+
+    if (!currentJobberRowsHaveData() && Array.isArray(data.jobbers) && data.jobbers.length) {
+      jobberBody.innerHTML = "";
+      totalFormsInput.value = "0";
+      data.jobbers.forEach((item) => addJobberRow(item));
+      syncTotalForms();
+    }
+  }
+
+  async function fetchBomSummary() {
+    if (!bomField || !bomField.value || !summaryTemplate) return;
+    const url = summaryTemplate.replace("/0/", "/" + bomField.value + "/");
+
+    try {
+      const res = await fetch(url, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      fillSummary(data);
+    } catch (err) {
+      console.error("Failed to load BOM summary", err);
+    }
+  }
+
+  if (addJobberBtn) {
+    addJobberBtn.addEventListener("click", function () {
+      addJobberRow();
+    });
+  }
+
+  if (bomField) {
+    bomField.addEventListener("change", fetchBomSummary);
+    if (bomField.value) fetchBomSummary();
+  }
+
+  bindRemoveButtons(formEl);
+  syncTotalForms();
+})();
+</script>

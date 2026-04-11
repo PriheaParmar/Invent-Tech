@@ -173,4 +173,9 @@ urlpatterns = [
     path("production/programs/<int:pk>/edit/", views.program_update, name="program_edit"),
     path("production/programs/<int:pk>/delete/", views.program_delete, name="program_delete"),
     path("production/programs/bom-summary/<int:bom_id>/", views.program_bom_summary, name="program_bom_summary"),
+    
+    # Expenses
+    path("utilities/expenses/", views.expense_list_create, name="expense_list"),
+    path("utilities/expenses/<int:pk>/edit/", views.expense_edit, name="expense_edit"),
+    path("utilities/expenses/<int:pk>/delete/", views.expense_delete, name="expense_delete"),
 ]

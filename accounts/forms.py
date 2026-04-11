@@ -45,6 +45,8 @@ from .models import (
     Program,
     ProgramJobberItem,
     ProgramSizeDetail,
+    
+    Expense,
 )
 
 # ============================================================
@@ -1257,7 +1259,37 @@ class MaterialUnitForm(forms.ModelForm):
                 raise forms.ValidationError("This material unit already exists.")
 
         return name
-    
+
+
+class ExpenseForm(forms.ModelForm):
+    class Meta:
+        model = Expense
+        fields = ["name"]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "placeholder": "Enter expense name (e.g. Electricity, Rent)",
+            }),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_name(self):
+        name = (self.cleaned_data.get("name") or "").strip()
+        if not name:
+            raise forms.ValidationError("Expense name is required.")
+
+        if self.user is not None:
+            qs = Expense.objects.filter(owner=self.user, name__iexact=name)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("This expense already exists.")
+
+        return name
+
+
 class CatalogueForm(forms.ModelForm):
     class Meta:
         model = Catalogue

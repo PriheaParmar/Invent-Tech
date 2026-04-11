@@ -1,0 +1,18 @@
+{% extends "accounts/base_app.html" %}
+
+{% block content %}
+<div class="program-delete-wrap">
+  <div class="program-delete-card">
+    <h1>Delete Program</h1>
+    <p>Are you sure you want to delete <strong>{{ program.program_no }}</strong>?</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="program-bottom-actions">
+        <a href="{% url 'accounts:program_list' %}" class="program-btn program-btn-light">Cancel</a>
+        <button type="submit" class="program-btn program-btn-danger">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
