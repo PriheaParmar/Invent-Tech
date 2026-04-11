@@ -40,10 +40,20 @@
             {% for radio in form.material_kind %}
               <label class="kind-radio-card small">
                 {{ radio.tag }}
-                <span>{{ radio.choice_label }}</span>
+                <span class="kind-radio-content">
+                  <span class="kind-radio-top">
+                    <span class="kind-radio-dot"></span>
+                    <strong>{{ radio.choice_label }}</strong>
+                  </span>
+                </span>
               </label>
             {% endfor %}
           </div>
+          {% if form.material_kind.errors %}
+            <div class="jb-field-errors">
+              <p>{{ form.material_kind.errors.0 }}</p>
+            </div>
+          {% endif %}
         </div>
 
         <div class="jf-field jf-full mat-field mat-full">

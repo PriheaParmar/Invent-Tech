@@ -1,6 +1,7 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=6">
+{% load static %}
 <link rel="stylesheet" href="{% static 'css/app.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=7">
 
 {% if mode == "edit" %}
   {% url "accounts:material_list" as back_url %}
@@ -10,7 +11,7 @@
 
 <div class="{% if full_page %}mf-page{% endif %}">
   <div class="material-form-embed material-form-jobber">
-    <section class="mf-panel">
+    <section class="mf-panel" >
       <div class="mf-head">
         <div>
           <div class="mf-title">
@@ -55,8 +56,8 @@
         </div>
         {% endif %}
 
-        <div class="mf-kind-summary mf-kind-summary-compact">
-          <span class="mat-badge">{{ selected_kind|title }}</span>
+        <div class="mf-kind-summary" style="border: none; background: white; color: var(--orange); padding: 0;">
+          <span class="mat-badge" style=" font-size: 20px; padding: 0; text-align: center; font-weight: 500; margin: 0;">{{ selected_kind|title }}</span>
         </div>
 
         <div class="mf-card">
