@@ -1,5 +1,6 @@
 from django.db import transaction
 import json
+from .forms import DashboardProfileForm, FirmForm
 from io import BytesIO
 from django import forms
 from decimal import Decimal, InvalidOperation
@@ -114,6 +115,27 @@ from .models import (
     MaterialUnit,
 )
 
+def _first_form_error(form):
+    for field_name, errors in form.errors.items():
+        if errors:
+            label = field_name
+            try:
+                if field_name != "__all__":
+                    label = form.fields[field_name].label or field_name.replace("_", " ").title()
+            except Exception:
+                label = field_name.replace("_", " ").title()
+
+            return {
+                "field": field_name,
+                "label": label,
+                "message": str(errors[0]),
+            }
+
+    return {
+        "field": "",
+        "label": "",
+        "message": "Please check the form.",
+    }
 
 def _is_embed(request) -> bool:
     return (
@@ -204,7 +226,6 @@ def _can_review_yarn_po(user):
         or user.username.lower() == "admin"
     )
 
-
 @require_http_methods(["GET", "POST"])
 def signup_view(request):
     if request.user.is_authenticated:
@@ -214,6 +235,8 @@ def signup_view(request):
     form_data = {
         "username": "",
         "email": "",
+        "password": "",
+        "password2": "",
     }
 
     if request.method == "POST":
@@ -225,6 +248,8 @@ def signup_view(request):
         form_data.update({
             "username": username,
             "email": email,
+            "password": password,
+            "password2": password2,
         })
 
         if not username or not email or not password or not password2:
@@ -259,7 +284,6 @@ def signup_view(request):
             "form_data": form_data,
         },
     )
-
 
 @require_http_methods(["GET", "POST"])
 def login_view(request):
@@ -407,22 +431,32 @@ def developer_stats_view(request):
             "active_7d": active_7d,
         },
     )
-
-
 @login_required
 @require_POST
 def profile_save(request):
-    u = request.user
+    form = DashboardProfileForm(request.POST)
+    if not form.is_valid():
+        first_error = _first_form_error(form)
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": f"{first_error['label']}: {first_error['message']}" if first_error["label"] else first_error["message"],
+                "field": first_error["field"],
+                "errors": form.errors,
+            },
+            status=400,
+        )
 
-    u.first_name = request.POST.get("first_name", "").strip()
-    u.last_name = request.POST.get("last_name", "").strip()
-    u.email = request.POST.get("email", "").strip()
-    u.save()
+    u = request.user
+    u.first_name = form.cleaned_data["first_name"]
+    u.last_name = form.cleaned_data["last_name"]
+    u.email = form.cleaned_data["email"]
+    u.save(update_fields=["first_name", "last_name", "email"])
 
     extra, _ = UserExtra.objects.get_or_create(user=u)
-    extra.phone = request.POST.get("phone", "").strip()
-    extra.address = request.POST.get("address", "").strip()
-    extra.save()
+    extra.phone = form.cleaned_data["phone"]
+    extra.address = form.cleaned_data["address"]
+    extra.save(update_fields=["phone", "address"])
 
     return JsonResponse({"ok": True, "message": "Profile saved ✅"})
 
@@ -436,13 +470,23 @@ def jobber_list(request):
     qs = Jobber.objects.filter(owner=request.user).select_related("jobber_type")
 
     if q:
-        qs = qs.filter(
-            Q(name__icontains=q)
-            | Q(phone__icontains=q)
-            | Q(email__icontains=q)
-            | Q(role__icontains=q)
-            | Q(jobber_type__name__icontains=q)
-        )
+        search_terms = [term for term in q.split() if term]
+
+        for term in search_terms:
+            phone_term = "".join(ch for ch in term if ch.isdigit())
+            term_filter = (
+                Q(name__icontains=term)
+                | Q(phone__icontains=term)
+                | Q(email__icontains=term)
+                | Q(role__icontains=term)
+                | Q(jobber_type__name__icontains=term)
+                | Q(address__icontains=term)
+            )
+
+            if phone_term and phone_term != term:
+                term_filter |= Q(phone__icontains=phone_term)
+
+            qs = qs.filter(term_filter)
 
     qs = qs.order_by("name")
 
@@ -461,20 +505,7 @@ def jobber_list(request):
         "stats": stats,
     })
 
-@login_required
-@require_http_methods(["GET", "POST"])
-def jobber_delete(request, pk):
-    jobber = get_object_or_404(Jobber, pk=pk, owner=request.user)
 
-    if request.method == "POST":
-        jobber.delete()
-        url = reverse("accounts:jobber_list")
-        if _is_embed(request):
-            return JsonResponse({"ok": True, "url": url})
-        return redirect(url)
-
-    template = "accounts/jobbers/confirm_delete.html"
-    return render(request, template, {"jobber": jobber})
 @login_required
 @require_http_methods(["GET", "POST"])
 def jobber_create(request):
@@ -711,11 +742,6 @@ def material_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
-
-
-# ==========================
-# PARTIES (embed supported)
-# ==========================
 def _party_list_url(request):
     url = reverse("accounts:party_list")
     if _is_embed(request):
@@ -732,7 +758,6 @@ def party_list(request):
     if q:
         qs = qs.filter(
             Q(party_name__icontains=q)
-            | Q(full_name__icontains=q)
             | Q(phone_number__icontains=q)
             | Q(gst_number__icontains=q)
             | Q(pan_number__icontains=q)
@@ -820,7 +845,6 @@ def party_delete(request, pk):
             "party": party,
         },
     )
-
 # ==========================
 # LOCATIONS (embed supported)
 # ==========================
@@ -832,9 +856,11 @@ def location_list(request):
     if q:
         qs = qs.filter(
             Q(name__icontains=q)
+            | Q(address_line_1__icontains=q)
+            | Q(address_line_2__icontains=q)
+            | Q(landmark__icontains=q)
             | Q(city__icontains=q)
             | Q(state__icontains=q)
-            | Q(address__icontains=q)
             | Q(pincode__icontains=q)
         )
 
@@ -846,7 +872,7 @@ def location_list(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def location_create(request):
-    form = LocationForm(request.POST or None)
+    form = LocationForm(request.POST or None, user=request.user)
 
     if request.method == "POST":
         form.instance.owner = request.user
@@ -869,7 +895,7 @@ def location_create(request):
 @require_http_methods(["GET", "POST"])
 def location_update(request, pk: int):
     loc = get_object_or_404(Location, pk=pk, owner=request.user)
-    form = LocationForm(request.POST or None, instance=loc)
+    form = LocationForm(request.POST or None, instance=loc, user=request.user)
 
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -985,7 +1011,6 @@ def firm_view(request):
 # ==========================
 # MATERIAL SHADES (Utilities)
 # ==========================
-@login_required
 def materialshade_list(request):
     q = (request.GET.get("q") or "").strip()
     selected_kind = (request.GET.get("kind") or "").strip()
@@ -1000,6 +1025,7 @@ def materialshade_list(request):
             Q(name__icontains=q)
             | Q(code__icontains=q)
             | Q(notes__icontains=q)
+            | Q(material_kind__icontains=q)
         )
 
     ctx = {
@@ -1154,7 +1180,6 @@ def materialtype_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
-
 def _materialsubtype_list_url(request):
     url = reverse("accounts:materialsubtype_list")
     if _is_embed(request):
@@ -1166,7 +1191,6 @@ def _materialsubtype_list_url(request):
 def materialsubtype_list(request):
     q = (request.GET.get("q") or "").strip()
     selected_kind = (request.GET.get("kind") or "").strip()
-    selected_type = (request.GET.get("type") or "").strip()
 
     qs = (
         MaterialSubType.objects
@@ -1178,9 +1202,6 @@ def materialsubtype_list(request):
     if selected_kind:
         qs = qs.filter(material_kind=selected_kind)
 
-    if selected_type.isdigit():
-        qs = qs.filter(material_type_id=int(selected_type))
-
     if q:
         qs = qs.filter(
             Q(name__icontains=q)
@@ -1188,17 +1209,11 @@ def materialsubtype_list(request):
             | Q(material_type__name__icontains=q)
         )
 
-    type_choices = MaterialType.objects.filter(owner=request.user).order_by("name")
-    if selected_kind:
-        type_choices = type_choices.filter(material_kind=selected_kind)
-
     ctx = {
         "sub_types": qs,
         "q": q,
         "selected_kind": selected_kind,
-        "selected_type": selected_type,
         "kind_choices": Material.MATERIAL_KIND_CHOICES,
-        "type_choices": type_choices,
     }
     tpl = "accounts/material_sub_types/list_embed.html" if _is_embed(request) else "accounts/material_sub_types/list.html"
     return render(request, tpl, ctx)
@@ -1792,11 +1807,13 @@ def yarnpo_list(request):
     )
 
 
-def _bind_yarnpo_item_formset(request, instance=None):
+def _bind_yarnpo_item_formset(request, instance=None, user=None):
+    effective_user = user or request.user
+
     kwargs = {
         "instance": instance,
         "prefix": "items",
-        "form_kwargs": {"user": request.user},
+        "form_kwargs": {"user": effective_user},
     }
 
     if request.method == "POST":
@@ -1805,8 +1822,6 @@ def _bind_yarnpo_item_formset(request, instance=None):
         formset = YarnPurchaseOrderItemFormSet(**kwargs)
 
     return formset
-
-
 @login_required
 @require_http_methods(["GET", "POST"])
 def yarnpo_create(request):
@@ -1826,6 +1841,8 @@ def yarnpo_create(request):
 
         if default_firm:
             po.firm = default_firm
+
+        po.po_date = timezone.localdate()
 
         if not po.system_number:
             po.system_number = _next_yarn_po_number()
@@ -1847,18 +1864,21 @@ def yarnpo_create(request):
         "system_number_preview": po.system_number or _next_yarn_po_number(),
         "auto_firm_name": default_firm.firm_name if default_firm else "",
     })
-
+    
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def yarnpo_update(request, pk: int):
     po = get_object_or_404(
-        YarnPurchaseOrder.objects.select_related("vendor", "firm"),
+        YarnPurchaseOrder.objects.select_related("vendor", "firm", "owner"),
         pk=pk,
-        owner=request.user
     )
 
-    default_firm = Firm.objects.filter(owner=request.user).first()
+    if not _can_access_yarn_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Yarn PO.")
+
+    po_owner = po.owner
+    default_firm = Firm.objects.filter(owner=po_owner).first()
     display_firm = po.firm or default_firm
 
     if request.method == "GET" and display_firm and not po.firm:
@@ -1866,8 +1886,8 @@ def yarnpo_update(request, pk: int):
         if not po.shipping_address:
             po.shipping_address = _firm_address(display_firm)
 
-    form = YarnPurchaseOrderForm(request.POST or None, user=request.user, instance=po)
-    formset = _bind_yarnpo_item_formset(request, instance=po)
+    form = YarnPurchaseOrderForm(request.POST or None, user=po_owner, instance=po)
+    formset = _bind_yarnpo_item_formset(request, instance=po, user=po_owner)
 
     if request.method == "POST" and form.is_valid() and formset.is_valid():
         po = form.save(commit=False)
@@ -1892,8 +1912,7 @@ def yarnpo_update(request, pk: int):
         "system_number_preview": po.system_number,
         "auto_firm_name": display_firm.firm_name if display_firm else "",
     })
-
-
+    
 @login_required
 def yarnpo_pdf(request, pk: int):
     po = get_object_or_404(
@@ -2163,8 +2182,6 @@ def yarnpo_review(request, pk: int):
             "can_review_yarn_po": _can_review_yarn_po(request.user),
         },
     )
-
-# ============================================
 @login_required
 @require_POST
 def firm_save(request):
@@ -2172,40 +2189,21 @@ def firm_save(request):
     if firm is None:
         firm = Firm(owner=request.user)
 
-    firm_name = (request.POST.get("firm_name") or "").strip()
-    firm_type = (request.POST.get("firm_type") or "").strip()
+    form = FirmForm(request.POST, instance=firm)
+    if not form.is_valid():
+        first_error = _first_form_error(form)
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": f"{first_error['label']}: {first_error['message']}" if first_error["label"] else first_error["message"],
+                "field": first_error["field"],
+                "errors": form.errors,
+            },
+            status=400,
+        )
 
-    if not firm_name:
-        return JsonResponse({"ok": False, "message": "Firm Name is required."})
-    if not firm_type:
-        return JsonResponse({"ok": False, "message": "Firm Type is required."})
-
-    firm.firm_name = firm_name
-    firm.firm_type = firm_type
-
-    reg = (request.POST.get("registration_number") or "").strip()
-    if hasattr(firm, "registration_number"):
-        firm.registration_number = reg
-    elif hasattr(firm, "cin_number"):
-        firm.cin_number = reg
-
-    for key, model_field in [
-        ("gst_number", "gst_number"),
-        ("email", "email"),
-        ("phone", "phone"),
-        ("city", "city"),
-        ("state", "state"),
-        ("country", "country"),
-    ]:
-        if hasattr(firm, model_field):
-            setattr(firm, model_field, (request.POST.get(key) or "").strip())
-
-    addr = request.POST.get("address") or ""
-    if hasattr(firm, "address_line"):
-        firm.address_line = addr
-    elif hasattr(firm, "address"):
-        firm.address = addr
-
+    firm = form.save(commit=False)
+    firm.owner = request.user
     firm.save()
 
     created_at_display = ""
@@ -2218,8 +2216,6 @@ def firm_save(request):
         "firm_name": firm.firm_name,
         "created_at_display": created_at_display,
     })
-
-
 # =================================================================
 def _jobbertype_qs_for_user(request):
     qs = JobberType.objects.all()

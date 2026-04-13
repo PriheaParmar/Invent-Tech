@@ -262,11 +262,12 @@ class Party(models.Model):
 
 class Location(OwnedModel):
     name = models.CharField(max_length=120)
+    address_line_1 = models.CharField(max_length=255, blank=True, default="")
+    address_line_2 = models.CharField(max_length=255, blank=True, default="")
+    landmark = models.CharField(max_length=150, blank=True, default="")
     city = models.CharField(max_length=80, blank=True, default="")
     state = models.CharField(max_length=80, blank=True, default="")
-    address = models.TextField(blank=True, default="")
-    pincode = models.CharField(max_length=10, blank=True, default="")
-    is_active = models.BooleanField(default=True)
+    pincode = models.CharField(max_length=6, blank=True, default="")
 
     class Meta:
         ordering = ["name"]

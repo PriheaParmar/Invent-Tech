@@ -1,79 +1,793 @@
 {% extends "accounts/base_app.html" %}
 {% block title %}Ready Inward - InventTech{% endblock %}
 {% block page_title %}Ready Inward{% endblock %}
-{% block page_subtitle %}Create and manage inward entries against Ready PO{% endblock %}
+{% block page_subtitle %}Ready PO inward{% endblock %}
 
 {% block content %}
 <style>
-  .rin-grid{display:grid;gap:14px}.rin-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.rin-pill{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border-radius:999px;background:rgba(250,189,100,.14);color:#ef6c00;font-size:11px;font-weight:900}.rin-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.rin-field{display:flex;flex-direction:column;gap:6px}.rin-field label{font-size:12px;font-weight:700;color:#344054}.rin-field input,.rin-field textarea{width:100%;min-height:40px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff}.rin-field textarea{min-height:84px}.rin-block{border:1px solid rgba(15,23,42,.06);border-radius:14px;background:rgba(255,255,255,.55);padding:14px}.rin-table{width:100%;border-collapse:collapse}.rin-table th,.rin-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:12px;vertical-align:top}.rin-table thead th{border-top:none;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#667085}.rin-input{width:100%;min-height:36px;border:1px solid rgba(15,23,42,.1);border-radius:10px;padding:0 10px}.rin-err{font-size:11px;color:#b42318;font-weight:700;margin-top:4px}.rin-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;flex-wrap:wrap}@media (max-width:900px){.rin-fields{grid-template-columns:1fr}}
+  :root{
+    --blue:#1c6dd8;
+    --blue-soft:rgba(28,109,216,.10);
+    --blue-border:rgba(28,109,216,.14);
+    --text-main:#111827;
+    --text-soft:#667085;
+    --line:rgba(15,23,42,.08);
+    --bg-soft:#f8fbff;
+    --save:#ee3d85;
+  }
+
+  .canvas{
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
+  }
+
+  .flow-page{
+    width:100%;
+    min-width:0;
+  }
+
+  .flow-shell{
+    position:relative;
+    width:100%;
+    min-width:0;
+    padding:18px;
+    border-radius:24px;
+    border:2px dashed #000;
+    background:#fff;
+  }
+
+  .flow-form{
+    display:grid;
+    gap:16px;
+  }
+
+  .flow-head-card{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    padding:14px 8px;
+    border-radius:20px;
+  }
+
+  .flow-head-main{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    min-width:0;
+  }
+
+  .flow-head-icon{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+    flex:0 0 auto;
+    display:grid;
+    place-items:center;
+  }
+
+  .flow-head-icon svg{
+    width:34px;
+    height:34px;
+    display:block;
+  }
+
+  .flow-head-title{
+    margin:0;
+    font-size:24px;
+    font-weight:900;
+    line-height:1.05;
+    color:var(--text-main);
+    letter-spacing:-.02em;
+  }
+
+  .flow-head-subtitle{
+    margin-top:5px;
+    font-size:12px;
+    font-weight:500;
+    color:var(--text-soft);
+    line-height:1.45;
+  }
+
+  .flow-head-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .flow-btn,
+  .flow-btn-primary{
+    appearance:none;
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:11px;
+    min-height:38px;
+    padding:0 13px;
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    cursor:pointer;
+    transition:all .18s ease;
+    background:#fff;
+    color:var(--text-main);
+    white-space:nowrap;
+  }
+
+  .flow-btn:hover{
+    background:var(--bg-soft);
+    border-color:var(--blue-border);
+    color:var(--blue);
+  }
+
+  .flow-btn-primary{
+    border-color:transparent;
+    color:#fff;
+    background:var(--save);
+    box-shadow:0 10px 18px rgba(28,109,216,.12);
+  }
+
+  .flow-btn-primary:hover{
+    color:#fff;
+    background:#d63377;
+  }
+
+  .flow-pill{
+    display:inline-flex;
+    align-items:center;
+    min-height:38px;
+    padding:0 13px;
+    border-radius:999px;
+    background:rgba(238,61,133,.08);
+    color:var(--save);
+    border:1px solid rgba(238,61,133,.12);
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.02em;
+    white-space:nowrap;
+  }
+
+  .flow-top-grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:12px;
+  }
+
+  .flow-field{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    min-width:0;
+  }
+
+  .flow-field label{
+    font-size:10px;
+    font-weight:800;
+    color:var(--text-soft);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .flow-field input,
+  .flow-field textarea,
+  .flow-field select{
+    width:100%;
+    min-height:40px;
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:12px;
+    padding:8px 11px;
+    outline:none;
+    box-sizing:border-box;
+    background:#fff;
+    color:var(--text-main);
+    font:inherit;
+    transition:border-color .18s ease, box-shadow .18s ease;
+  }
+
+  .flow-field textarea{
+    min-height:78px;
+    resize:vertical;
+  }
+
+  .flow-field input:focus,
+  .flow-field textarea:focus,
+  .flow-field select:focus,
+  .flow-inline-input:focus{
+    border-color:rgba(28,109,216,.32);
+    box-shadow:0 0 0 3px rgba(28,109,216,.10);
+    background:#fff;
+  }
+
+  .flow-field.is-readonly input{
+    background:#f8fbff;
+    color:var(--text-main);
+    font-weight:500;
+  }
+
+  .flow-err{
+    color:#dc2626;
+    font-size:11px;
+    font-weight:700;
+  }
+
+  .flow-section{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 8px 20px rgba(15,23,42,.04);
+  }
+
+  .flow-section summary{
+    list-style:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    cursor:pointer;
+    user-select:none;
+    padding:14px 14px 13px;
+    background:#fff;
+  }
+
+  .flow-section summary::-webkit-details-marker{
+    display:none;
+  }
+
+  .flow-section-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+
+  .flow-section-dot{
+    width:10px;
+    height:10px;
+    border-radius:999px;
+    background:var(--blue);
+    box-shadow:0 0 0 5px rgba(28,109,216,.10);
+    flex:0 0 auto;
+  }
+
+  .flow-section-title{
+    font-size:14px;
+    font-weight:900;
+    color:var(--text-main);
+    line-height:1.2;
+    letter-spacing:-.01em;
+  }
+
+  .flow-section-meta{
+    font-size:11px;
+    font-weight:900;
+    color:var(--blue);
+    background:rgba(28,109,216,.08);
+    border:1px solid rgba(28,109,216,.12);
+    border-radius:999px;
+    padding:6px 10px;
+    white-space:nowrap;
+  }
+
+  .flow-section-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:0 0 auto;
+  }
+
+  .flow-caret-box{
+    width:25px;
+    height:25px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:8px;
+    background:var(--blue);
+    box-shadow:0 8px 16px rgba(28,109,216,.18);
+  }
+
+  .flow-caret{
+    width:8px;
+    height:8px;
+    border-right:2px solid #fff;
+    border-bottom:2px solid #fff;
+    transform:rotate(45deg);
+    transition:transform .18s ease;
+    margin-top:-2px;
+  }
+
+  .flow-section[open] .flow-caret{
+    transform:rotate(225deg);
+    margin-top:3px;
+  }
+
+  .flow-section-body{
+    display:grid;
+    gap:12px;
+    padding:5px 15px 15px;
+  }
+
+  .flow-overview-grid{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+    gap:10px;
+  }
+
+  .flow-soft-card{
+    border-radius:16px;
+    background:#fbfdff;
+    border:1px solid rgba(28,109,216,.08);
+    padding:12px 12px 11px;
+  }
+
+  .flow-soft-label{
+    font-size:10px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-soft);
+  }
+
+  .flow-soft-value{
+    margin-top:6px;
+    font-size:13px;
+    font-weight:500;
+    color:var(--text-main);
+    line-height:1.35;
+    word-break:break-word;
+  }
+
+  .flow-note-card{
+    border-radius:16px;
+    padding:12px 14px;
+    background:#f8fbff;
+    border:1px solid rgba(28,109,216,.10);
+  }
+
+  .flow-note-title{
+    font-size:10px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-soft);
+  }
+
+  .flow-note-value{
+    margin-top:5px;
+    font-size:12px;
+    font-weight:700;
+    color:var(--text-main);
+    line-height:1.5;
+    word-break:break-word;
+  }
+
+  .flow-table-wrap{
+    overflow:auto;
+    background:#fff;
+    border-radius:16px;
+    border:1px solid var(--line);
+  }
+
+  .flow-table,
+  .flow-mini-table,
+  .flow-history-table{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  .flow-table{
+    min-width:860px;
+  }
+
+  .flow-mini-table,
+  .flow-history-table{
+    min-width:720px;
+  }
+
+  .flow-table th,
+  .flow-table td,
+  .flow-mini-table th,
+  .flow-mini-table td,
+  .flow-history-table th,
+  .flow-history-table td{
+    padding:10px 10px;
+    border-bottom:1px solid rgba(15,23,42,.06);
+    text-align:left;
+    vertical-align:top;
+    font-size:12px;
+  }
+
+  .flow-table thead th,
+  .flow-mini-table thead th,
+  .flow-history-table thead th{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:#475467;
+    font-weight:900;
+    background:#eef5ff;
+    white-space:nowrap;
+  }
+
+  .flow-table tbody tr:hover,
+  .flow-mini-table tbody tr:hover,
+  .flow-history-table tbody tr:hover{
+    background:#fbfdff;
+  }
+
+  .flow-table tfoot td,
+  .flow-mini-table tfoot td{
+    background:#f8fbff;
+    font-weight:900;
+  }
+
+  .flow-material{
+    font-weight:900;
+    color:var(--text-main);
+    word-break:break-word;
+  }
+
+  .flow-inline-input{
+    width:100%;
+    min-height:36px;
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:10px;
+    padding:7px 9px;
+    outline:none;
+    box-sizing:border-box;
+    background:#fff;
+    color:var(--text-main);
+    font:inherit;
+  }
+
+  .flow-empty{
+    padding:14px;
+    text-align:center;
+    font-size:12px;
+    font-weight:700;
+    color:var(--text-soft);
+  }
+
+  .flow-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  @media (max-width: 1100px){
+    .flow-top-grid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    .flow-overview-grid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px){
+    .flow-shell{
+      padding:14px;
+      border-radius:18px;
+    }
+
+    .flow-head-card,
+    .flow-head-actions,
+    .flow-actions{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .flow-head-actions{
+      width:100%;
+      justify-content:stretch;
+    }
+
+    .flow-btn,
+    .flow-btn-primary,
+    .flow-pill{
+      width:100%;
+      justify-content:center;
+    }
+
+    .flow-top-grid,
+    .flow-overview-grid{
+      grid-template-columns:1fr;
+    }
+  }
 </style>
-<section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
-  <div class="jb-head"><div><div class="jb-title">Ready Inward</div><div class="jb-sub">Record inwarded ready fabric quantities for final stock handling.</div></div></div>
-  <div class="rin-grid" style="padding:18px;">
-    <div class="rin-head">
-      <div>
-        <div class="jb-title" style="font-size:17px;">{{ po.system_number }}</div>
-        <div class="jb-sub">Vendor: {{ po.vendor.name }}{% if po.source_dyeing_po %} · Source Dyeing: {{ po.source_dyeing_po.system_number }}{% endif %}</div>
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="flow-page">
+      <div class="flow-shell">
+        <form method="post" class="flow-form">
+          {% csrf_token %}
+
+          <div class="flow-head-card">
+            <div class="flow-head-main">
+              <div class="flow-head-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M7 4.75h7.8l3.45 3.45V18.5a1.75 1.75 0 0 1-1.75 1.75H7A1.75 1.75 0 0 1 5.25 18.5v-12A1.75 1.75 0 0 1 7 4.75Z" stroke="var(--blue)" stroke-width="1.8" stroke-linejoin="round"/>
+                  <path d="M14.8 4.9v3a1 1 0 0 0 1 1h3" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 10v5.2" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M9.8 13.1 12 15.3l2.2-2.2" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <h1 class="flow-head-title">Ready Inward</h1>
+                <div class="flow-head-subtitle">
+                  Add inward quantity against {{ po.system_number }}{% if po.vendor %} · {{ po.vendor.name }}{% endif %}{% if po.source_dyeing_po %} · Source Dyeing: {{ po.source_dyeing_po.system_number }}{% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-head-actions">
+              <div class="flow-pill">Remaining Qty: {{ po.remaining_qty_total|default:"0.00" }}</div>
+              <a class="flow-btn" href="{% url 'accounts:readypo_list' %}">Back</a>
+            </div>
+          </div>
+
+          <div class="flow-top-grid">
+            <div class="flow-field is-readonly">
+              <label>PO Number</label>
+              <input type="text" value="{{ po.system_number }}" readonly>
+            </div>
+
+            <div class="flow-field is-readonly">
+              <label>Ready Inward No</label>
+              <input type="text" value="Auto Generated" readonly>
+            </div>
+
+            <div class="flow-field">
+              <label for="{{ inward_form.inward_date.id_for_label }}">Date</label>
+              {{ inward_form.inward_date }}
+              {% for err in inward_form.inward_date.errors %}
+                <div class="flow-err">{{ err }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <details class="flow-section" open>
+            <summary>
+              <div class="flow-section-head">
+                <div class="flow-section-dot"></div>
+                <div class="flow-section-title">PO Details</div>
+              </div>
+              <div class="flow-section-right">
+                <div class="flow-section-meta">{{ po.items.count }} item{{ po.items.count|pluralize }}</div>
+                <span class="flow-caret-box">
+                  <span class="flow-caret"></span>
+                </span>
+              </div>
+            </summary>
+
+            <div class="flow-section-body">
+              <div class="flow-overview-grid">
+                <div class="flow-soft-card">
+                  <div class="flow-soft-label">Vendor</div>
+                  <div class="flow-soft-value">{{ po.vendor.name|default:"—" }}</div>
+                </div>
+
+                <div class="flow-soft-card">
+                  <div class="flow-soft-label">PO Date</div>
+                  <div class="flow-soft-value">{{ po.po_date|date:"d-m-Y"|default:"—" }}</div>
+                </div>
+
+                <div class="flow-soft-card">
+                  <div class="flow-soft-label">Firm</div>
+                  <div class="flow-soft-value">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
+                </div>
+
+                <div class="flow-soft-card">
+                  <div class="flow-soft-label">Ordered</div>
+                  <div class="flow-soft-value">{{ po.total_weight|default:"0.00" }}</div>
+                </div>
+
+                <div class="flow-soft-card">
+                  <div class="flow-soft-label">Received</div>
+                  <div class="flow-soft-value">{{ po.total_inward_qty|default:"0.00" }}</div>
+                </div>
+              </div>
+
+              {% if po.shipping_address %}
+                <div class="flow-note-card">
+                  <div class="flow-note-title">Shipping Address</div>
+                  <div class="flow-note-value">{{ po.shipping_address }}</div>
+                </div>
+              {% endif %}
+
+              <div class="flow-table-wrap">
+                <table class="flow-mini-table">
+                  <thead>
+                    <tr>
+                      <th>Fabric</th>
+                      <th>Unit</th>
+                      <th>Ordered</th>
+                      <th>Received</th>
+                      <th>Remaining</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in po.items.all %}
+                    <tr>
+                      <td>
+                        <div class="flow-material">{{ item.fabric_name|default:"Ready Item" }}</div>
+                      </td>
+                      <td>{{ item.unit|default:"—" }}</td>
+                      <td>{{ item.quantity|default:"0.00" }}</td>
+                      <td>{{ item.inward_qty_total|default:"0.00" }}</td>
+                      <td>{{ item.remaining_qty_total|default:"0.00" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="5" class="flow-empty">No items found.</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="flow-section" open>
+            <summary>
+              <div class="flow-section-head">
+                <div class="flow-section-dot"></div>
+                <div class="flow-section-title">Inward Details</div>
+              </div>
+              <div class="flow-section-right">
+                <span class="flow-caret-box">
+                  <span class="flow-caret"></span>
+                </span>
+              </div>
+            </summary>
+
+            <div class="flow-section-body">
+              <div class="flow-field">
+                <label for="{{ inward_form.notes.id_for_label }}">Notes</label>
+                {{ inward_form.notes }}
+                {% for err in inward_form.notes.errors %}
+                  <div class="flow-err">{{ err }}</div>
+                {% endfor %}
+                {% for err in inward_form.non_field_errors %}
+                  <div class="flow-err">{{ err }}</div>
+                {% endfor %}
+              </div>
+
+              <div class="flow-table-wrap">
+                <table class="flow-table">
+                  <thead>
+                    <tr>
+                      <th>Fabric</th>
+                      <th>Unit</th>
+                      <th>Ordered</th>
+                      <th>Received</th>
+                      <th>Remaining</th>
+                      <th>Inward Qty</th>
+                      <th>Remark</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for row in line_rows %}
+                    {% with item=row.item %}
+                    <tr>
+                      <td>
+                        <div class="flow-material">{{ item.fabric_name|default:"Ready Item" }}</div>
+                      </td>
+                      <td>{{ item.unit|default:"—" }}</td>
+                      <td>{{ item.quantity|default:"0.00" }}</td>
+                      <td>{{ item.inward_qty_total|default:"0.00" }}</td>
+                      <td>{{ item.remaining_qty_total|default:"0.00" }}</td>
+                      <td>
+                        <input
+                          class="flow-inline-input"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          name="qty_{{ item.id }}"
+                          value="{{ row.qty_value }}"
+                          placeholder="0.00"
+                        >
+                        {% if row.error %}
+                          <div class="flow-err" style="margin-top:6px;">{{ row.error }}</div>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <input
+                          class="flow-inline-input"
+                          type="text"
+                          name="remark_{{ item.id }}"
+                          value="{{ row.remark_value }}"
+                          placeholder="Remark"
+                        >
+                      </td>
+                    </tr>
+                    {% endwith %}
+                    {% empty %}
+                    <tr>
+                      <td colspan="7" class="flow-empty">No ready lines available for inward.</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="2">Totals</td>
+                      <td>{{ po.total_weight|default:"0.00" }}</td>
+                      <td>{{ po.total_inward_qty|default:"0.00" }}</td>
+                      <td colspan="3">Remaining: {{ po.remaining_qty_total|default:"0.00" }}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="flow-section" open>
+            <summary>
+              <div class="flow-section-head">
+                <div class="flow-section-dot"></div>
+                <div class="flow-section-title">Inward History</div>
+              </div>
+              <div class="flow-section-right">
+                <span class="flow-caret-box">
+                  <span class="flow-caret"></span>
+                </span>
+              </div>
+            </summary>
+
+            <div class="flow-section-body">
+              <div class="flow-table-wrap">
+                <table class="flow-history-table">
+                  <thead>
+                    <tr>
+                      <th>Fabric</th>
+                      <th>Order Qty</th>
+                      <th>Inward No</th>
+                      <th>Date</th>
+                      <th>Notes</th>
+                      <th>Received Qty</th>
+                      <th>Remark</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for inward in existing_inwards %}
+                      {% for inward_item in inward.items.all %}
+                      <tr>
+                        <td>{{ inward_item.po_item.fabric_name|default:"Ready Item" }}</td>
+                        <td>{{ inward_item.po_item.quantity|default:"0.00" }}</td>
+                        <td>{{ inward.inward_number }}</td>
+                        <td>{{ inward.inward_date|date:"d-m-Y" }}</td>
+                        <td>{{ inward.notes|default:"—" }}</td>
+                        <td>{{ inward_item.quantity }}</td>
+                        <td>{{ inward_item.remark|default:"—" }}</td>
+                      </tr>
+                      {% endfor %}
+                    {% empty %}
+                    <tr>
+                      <td colspan="7" class="flow-empty">No inward history.</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <div class="flow-actions">
+            <a class="flow-btn" href="{% url 'accounts:readypo_list' %}">Cancel</a>
+            <button type="submit" class="flow-btn-primary">Save Ready Inward</button>
+          </div>
+        </form>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <span class="rin-pill">Remaining: {{ po.remaining_qty_total|default:"0.00" }}</span>
-        <a class="jb-secondary" href="{% url 'accounts:readypo_list' %}">Back to Ready PO</a>
-      </div>
-    </div>
-
-    {% if inward_form.non_field_errors %}<div class="rin-err">{{ inward_form.non_field_errors }}</div>{% endif %}
-
-    <form method="post" class="rin-grid">
-      {% csrf_token %}
-      <div class="rin-fields">
-        <div class="rin-field"><label>Ready Inward No</label><input type="text" value="Auto Generated" disabled></div>
-        <div class="rin-field"><label>Date</label>{{ inward_form.inward_date }}</div>
-        <div class="rin-field"><label>Notes</label>{{ inward_form.notes }}</div>
-      </div>
-
-      <div class="rin-block">
-        <table class="rin-table">
-          <thead><tr><th>Fabric</th><th>Ordered</th><th>Already Inward</th><th>Remaining</th><th>Receive Now</th><th>Remark</th></tr></thead>
-          <tbody>
-            {% for row in line_rows %}
-            {% with item=row.item %}
-            <tr>
-              <td>{{ item.fabric_name }}{% if item.unit %}<br><span class="jb-sub">Unit: {{ item.unit }}</span>{% endif %}</td>
-              <td>{{ item.quantity }}</td>
-              <td>{{ item.inward_qty_total|default:"0.00" }}</td>
-              <td>{{ item.remaining_qty_total|default:"0.00" }}</td>
-              <td>
-                <input class="rin-input" type="number" step="0.01" min="0" name="qty_{{ item.id }}" value="{{ row.qty_value }}">
-                {% if row.error %}<div class="rin-err">{{ row.error }}</div>{% endif %}
-              </td>
-              <td><input class="rin-input" type="text" name="remark_{{ item.id }}" value="{{ row.remark_value }}"></td>
-            </tr>
-            {% endwith %}
-            {% empty %}
-            <tr><td colspan="6" class="jb-empty">No ready lines available for inward.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="rin-actions"><button type="submit" class="jb-add">Save Ready Inward</button></div>
-    </form>
-
-    <div class="rin-block">
-      <div class="jb-title" style="font-size:15px;margin-bottom:10px;">Previous Inward Entries</div>
-      <table class="rin-table">
-        <thead><tr><th>Inward No</th><th>Date</th><th>Fabric</th><th>Qty</th><th>Remark</th></tr></thead>
-        <tbody>
-          {% for inward in existing_inwards %}
-            {% for inward_item in inward.items.all %}
-            <tr><td>{{ inward.inward_number }}</td><td>{{ inward.inward_date|date:"d-m-Y" }}</td><td>{{ inward_item.po_item.fabric_name }}</td><td>{{ inward_item.quantity }}</td><td>{{ inward_item.remark|default:"—" }}</td></tr>
-            {% endfor %}
-          {% empty %}
-          <tr><td colspan="5" class="jb-empty">No inward entries yet.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
     </div>
   </div>
-</div></div></div></div></section>
+</section>
 {% endblock %}

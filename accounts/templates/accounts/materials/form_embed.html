@@ -10,6 +10,28 @@
   {% url "accounts:material_create" as form_action %}
 {% endif %}
 
+<style>
+  .material-form-embed .mf-btn-close {
+    color: #111 !important;
+    background: #fff !important;
+    border: 1px solid #111 !important;
+  }
+
+  .material-form-embed .mf-btn-close:hover,
+  .material-form-embed .mf-btn-close:focus {
+    color: #fff !important;
+    background: #111 !important;
+    border-color: #111 !important;
+  }
+
+  .material-form-embed .mf-btn-save,
+  .material-form-embed .mf-btn-save:hover,
+  .material-form-embed .mf-btn-save:focus,
+  .material-form-embed .mf-btn-save:active {
+    color: #fff !important;
+  }
+</style>
+
 <div class="{% if full_page %}mf-page{% endif %}">
   <div class="material-form-embed material-form-jobber">
     <section class="mf-panel">
@@ -44,6 +66,7 @@
         action="{{ form_action }}{% if not full_page %}?embed=1{% endif %}{% if mode != 'edit' and selected_kind %}{% if not full_page %}&{% else %}?{% endif %}kind={{ selected_kind }}{% endif %}"
         enctype="multipart/form-data"
         class="mf-form"
+        data-material-form="1"
       >
         {% csrf_token %}
         {% if not full_page %}
@@ -63,7 +86,7 @@
         {% endif %}
 
         <div class="mf-kind-summary" style="border: none; background: white; color: var(--orange); padding: 0;">
-          <span class="mat-badge" style=" font-size: 20px; padding: 0; text-align: center; font-weight: 500; margin: 0;">{{ selected_kind|title }}</span>
+          <span class="mat-badge" style="font-size: 20px; padding: 0; text-align: center; font-weight: 500; margin: 0;">{{ selected_kind|title }}</span>
         </div>
 
         <div class="mf-card">
@@ -282,11 +305,11 @@
         {% endif %}
 
         <div class="mf-actions mf-actions-bar">
-          <a class="mf-btn mf-btn-close" href="{{ back_url }}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
-          <button type="submit" class="mf-btn mf-btn-save">
-            {% if mode == "edit" %}Update Material{% else %}Save Material{% endif %}
-          </button>
-        </div>
+  <a class="mf-btn mf-btn-close" href="{{ back_url }}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+  <button type="submit" class="mf-btn mf-btn-save">
+    {% if mode == "edit" %}Update Material{% else %}Save Material{% endif %}
+  </button>
+</div>
       </form>
     </section>
 
@@ -302,7 +325,9 @@
       const subTypeSelect = form ? form.querySelector('[name="material_sub_type"]') : null;
       const initialPreview = preview ? preview.innerHTML : "";
 
-      if (fileInput && preview) {
+      if (fileInput && preview && !fileInput.dataset.previewBound) {
+        fileInput.dataset.previewBound = "1";
+
         fileInput.addEventListener("change", function () {
           const file = this.files && this.files[0];
 
@@ -312,6 +337,7 @@
           }
 
           if (file.type && !file.type.startsWith("image/")) {
+            preview.innerHTML = initialPreview;
             return;
           }
 
@@ -323,10 +349,12 @@
         });
       }
 
-      if (typeSelect && subTypeSelect) {
+      if (typeSelect && subTypeSelect && !subTypeSelect.dataset.filterBound) {
         const originalOptions = Array.from(subTypeSelect.options).map(function (option) {
           return option.cloneNode(true);
         });
+
+        subTypeSelect.dataset.filterBound = "1";
 
         function rebuildSubTypes() {
           const selectedTypeId = typeSelect.value || "";
@@ -359,11 +387,7 @@
             }
           });
 
-          if (hasCurrentValue) {
-            subTypeSelect.value = currentValue;
-          } else {
-            subTypeSelect.value = "";
-          }
+          subTypeSelect.value = hasCurrentValue ? currentValue : "";
         }
 
         rebuildSubTypes();

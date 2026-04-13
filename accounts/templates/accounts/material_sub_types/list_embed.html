@@ -45,12 +45,6 @@
     {% endfor %}
   </select>
 
-  <select name="type" class="jb-search-btn" data-embed-autosubmit="1">
-    <option value="">All Types</option>
-    {% for t in type_choices %}
-      <option value="{{ t.id }}" {% if selected_type == t.id|stringformat:'s' %}selected{% endif %}>{{ t.name }}</option>
-    {% endfor %}
-  </select>
 </form>
 
       <div class="jb-tool-actions">
@@ -87,8 +81,8 @@
               <form
                 method="post"
                 action="{% url 'accounts:materialsubtype_delete' st.id %}{% if not full_page %}?embed=1{% endif %}"
-                class="jb-inline-delete"
-                onsubmit="return confirm('Delete this material sub type?')"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="material sub type &quot;{{ st.name|escape }}&quot;"
               >
                 {% csrf_token %}
                 {% if not full_page %}
@@ -106,5 +100,6 @@
         </tbody>
       </table>
     </div>
+    {% include "accounts/jobbers/_delete_confirm_modal.html" %}
   </section>
 </div>

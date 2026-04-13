@@ -151,7 +151,8 @@
               <form
                 method="post"
                 action="{% url 'accounts:bom_delete' bom.id %}{% if not full_page %}?embed=1{% endif %}"
-                onsubmit="return confirm('Delete this BOM?');"
+                class="js-jb-delete-form"
+                data-delete-label="BOM &quot;{{ bom.bom_code|default:bom.product_name|default:'this item'|escape }}&quot;"
               >
                 {% csrf_token %}
                 {% if not full_page %}
@@ -169,5 +170,6 @@
         </tbody>
       </table>
     </div>
+    {% include "accounts/jobbers/_delete_confirm_modal.html" %}
   </section>
 </div>

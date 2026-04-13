@@ -4,7 +4,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django import forms
+from django.core.exceptions import ValidationError
 
+from django.db.models import Q
 import re
 
 from .models import (
@@ -56,13 +58,20 @@ from .models import (
 class JobberForm(forms.ModelForm):
     class Meta:
         model = Jobber
-        fields = ["name", "phone", "email", "role", "jobber_type", "address", "is_active"]
+        fields = ["name", "phone", "email", "role", "jobber_type", "address"]
         widgets = {
             "name": forms.TextInput(attrs={
                 "placeholder": "Enter full name",
             }),
             "phone": forms.TextInput(attrs={
-                "placeholder": "Enter phone number",
+            "placeholder": "Enter phone number",
+            "inputmode": "numeric",
+            "maxlength": "10",
+            "minlength": "10",
+            "pattern": r"\d{10}",
+            "autocomplete": "tel",
+            "title": "Phone number must be exactly 10 digits",
+            "oninput": "this.value=this.value.replace(/\\D/g,'').slice(0,10)",
             }),
             "email": forms.EmailInput(attrs={
                 "placeholder": "Enter email address",
@@ -73,7 +82,6 @@ class JobberForm(forms.ModelForm):
                 "rows": 4,
                 "placeholder": "Enter address",
             }),
-            "is_active": forms.CheckboxInput(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -81,6 +89,19 @@ class JobberForm(forms.ModelForm):
         self.fields["jobber_type"].required = False
         self.fields["jobber_type"].empty_label = "Select jobber type"
 
+    def clean_phone(self):
+        phone = (self.cleaned_data.get("phone") or "").strip()
+
+        if not phone:
+            return phone
+
+        if not phone.isdigit():
+            raise forms.ValidationError("Phone number must contain digits only.")
+
+        if len(phone) != 10:
+            raise forms.ValidationError("Phone number must be exactly 10 digits.")
+
+        return phone
 
 class JobberTypeForm(forms.ModelForm):
     class Meta:
@@ -193,8 +214,10 @@ class MaterialSubTypeSelect(forms.Select):
             option.setdefault("attrs", {})["data-kind"] = obj.material_kind or ""
             option.setdefault("attrs", {})["data-material-type"] = str(obj.material_type_id or "")
         return option
-    
 class MaterialForm(forms.Form):
+    MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+    ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+
     material_kind = forms.ChoiceField(
         choices=Material.MATERIAL_KIND_CHOICES,
         label="Material Kind",
@@ -252,6 +275,7 @@ class MaterialForm(forms.Form):
     def __init__(self, *args, instance=None, user=None, initial_kind=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.instance = instance
+        self.user = user
 
         kind = (
             (self.data.get("material_kind") or "").strip()
@@ -278,16 +302,19 @@ class MaterialForm(forms.Form):
             sub_type_qs = sub_type_qs.filter(material_kind=kind)
         sub_type_qs = sub_type_qs.select_related("material_type").order_by("material_type__name", "name")
 
+
         shade_qs = MaterialShade.objects.all()
         if user is not None:
             shade_qs = shade_qs.filter(owner=user)
         if kind:
-            shade_qs = shade_qs.filter(material_kind=kind)
+            shade_qs = shade_qs.filter(
+                Q(material_kind=kind) | Q(material_kind__isnull=True) | Q(material_kind="")
+            )
         shade_qs = shade_qs.order_by("name")
 
         self.fields["material_type"].queryset = type_qs
         self.fields["material_sub_type"].queryset = sub_type_qs
-        self.fields["material_shade"].queryset = shade_qs
+        self.fields["material_shade"].queryset = shade_qs   
 
         self.fields["material_type"].label_from_instance = lambda o: o.name
         self.fields["material_sub_type"].label_from_instance = lambda o: o.name
@@ -305,10 +332,12 @@ class MaterialForm(forms.Form):
 
         self.fields["name"].widget.attrs.update({
             "placeholder": "Enter material name",
+            "maxlength": "150",
         })
         self.fields["remarks"].widget.attrs.update({
             "rows": 4,
             "placeholder": "Add remarks if needed",
+            "maxlength": "500",
         })
         self.fields["image"].widget.attrs.update({
             "accept": "image/*",
@@ -316,22 +345,69 @@ class MaterialForm(forms.Form):
 
         self.fields["yarn_type"].widget.attrs.update({"placeholder": "Enter yarn type"})
         self.fields["yarn_subtype"].widget.attrs.update({"placeholder": "Enter yarn subtype"})
-        self.fields["count_denier"].widget.attrs.update({"placeholder": "Enter count / denier"})
-        self.fields["yarn_color"].widget.attrs.update({"placeholder": "Enter yarn color"})
+        self.fields["count_denier"].widget.attrs.update({
+            "placeholder": "Enter count / denier",
+            "maxlength": "40",
+        })
+        self.fields["yarn_color"].widget.attrs.update({
+            "placeholder": "Enter yarn color",
+            "maxlength": "60",
+        })
 
-        self.fields["fabric_type"].widget.attrs.update({"placeholder": "Enter fabric type"})
-        self.fields["gsm"].widget.attrs.update({"placeholder": "Enter GSM"})
-        self.fields["width"].widget.attrs.update({"placeholder": "Enter width"})
-        self.fields["construction"].widget.attrs.update({"placeholder": "Enter construction"})
+        self.fields["fabric_type"].widget.attrs.update({
+            "placeholder": "Enter fabric type",
+            "maxlength": "120",
+        })
+        self.fields["gsm"].widget.attrs.update({
+            "placeholder": "Enter GSM",
+            "min": "0",
+            "step": "0.01",
+            "inputmode": "decimal",
+        })
+        self.fields["width"].widget.attrs.update({
+            "placeholder": "Enter width",
+            "min": "0",
+            "step": "0.01",
+            "inputmode": "decimal",
+        })
+        self.fields["construction"].widget.attrs.update({
+            "placeholder": "Enter construction",
+            "maxlength": "120",
+        })
 
-        self.fields["base_fabric_type"].widget.attrs.update({"placeholder": "Enter base fabric type"})
-        self.fields["finished_gsm"].widget.attrs.update({"placeholder": "Enter GSM"})
-        self.fields["finished_width"].widget.attrs.update({"placeholder": "Enter width"})
-        self.fields["end_use"].widget.attrs.update({"placeholder": "Enter end use"})
+        self.fields["base_fabric_type"].widget.attrs.update({
+            "placeholder": "Enter base fabric type",
+            "maxlength": "120",
+        })
+        self.fields["finished_gsm"].widget.attrs.update({
+            "placeholder": "Enter GSM",
+            "min": "0",
+            "step": "0.01",
+            "inputmode": "decimal",
+        })
+        self.fields["finished_width"].widget.attrs.update({
+            "placeholder": "Enter width",
+            "min": "0",
+            "step": "0.01",
+            "inputmode": "decimal",
+        })
+        self.fields["end_use"].widget.attrs.update({
+            "placeholder": "Enter end use",
+            "maxlength": "120",
+        })
 
-        self.fields["trim_size"].widget.attrs.update({"placeholder": "Enter size"})
-        self.fields["trim_color"].widget.attrs.update({"placeholder": "Enter color"})
-        self.fields["brand"].widget.attrs.update({"placeholder": "Enter brand"})
+        self.fields["trim_size"].widget.attrs.update({
+            "placeholder": "Enter size",
+            "maxlength": "60",
+        })
+        self.fields["trim_color"].widget.attrs.update({
+            "placeholder": "Enter color",
+            "maxlength": "60",
+        })
+        self.fields["brand"].widget.attrs.update({
+            "placeholder": "Enter brand",
+            "maxlength": "80",
+        })
 
         if instance and not self.is_bound:
             self.initial.update({
@@ -381,25 +457,181 @@ class MaterialForm(forms.Form):
                         "brand": detail.brand,
                     })
 
+    def _clean_text_value(self, field_name, *, label, max_length=None, allow_chars_pattern=None):
+        value = (self.cleaned_data.get(field_name) or "").strip()
+        self.cleaned_data[field_name] = value
+
+        if not value:
+            return value
+
+        if max_length and len(value) > max_length:
+            raise ValidationError(f"{label} cannot be more than {max_length} characters.")
+
+        if allow_chars_pattern and not re.fullmatch(allow_chars_pattern, value):
+            raise ValidationError(f"Enter a valid {label.lower()}.")
+
+        return value
+
+    def _clean_positive_decimal(self, field_name, *, label):
+        value = self.cleaned_data.get(field_name)
+        if value in (None, ""):
+            return value
+        if value <= 0:
+            raise ValidationError(f"{label} must be greater than 0.")
+        return value
+
+    def clean_material_kind(self):
+        value = (self.cleaned_data.get("material_kind") or "").strip()
+        allowed_kinds = {choice[0] for choice in Material.MATERIAL_KIND_CHOICES}
+        if value not in allowed_kinds:
+            raise ValidationError("Select a valid material kind.")
+        return value
+
+    def clean_name(self):
+        value = self._clean_text_value(
+            "name",
+            label="Material Name",
+            max_length=150,
+            allow_chars_pattern=r".*[A-Za-z0-9].*",
+        )
+        if not value:
+            raise ValidationError("Material Name is required.")
+        if len(value) < 2:
+            raise ValidationError("Material Name must be at least 2 characters long.")
+        return value
+
+    def clean_remarks(self):
+        return self._clean_text_value("remarks", label="Remarks", max_length=500)
+
+    def clean_count_denier(self):
+        return self._clean_text_value(
+            "count_denier",
+            label="Count / Denier",
+            max_length=40,
+            allow_chars_pattern=r"[A-Za-z0-9\s./()_%+-]+",
+        )
+
+    def clean_yarn_color(self):
+        return self._clean_text_value(
+            "yarn_color",
+            label="Color",
+            max_length=60,
+            allow_chars_pattern=r"[A-Za-z0-9\s.,()/#&+-]+",
+        )
+
+    def clean_fabric_type(self):
+        return self._clean_text_value(
+            "fabric_type",
+            label="Fabric Type",
+            max_length=120,
+        )
+
+    def clean_construction(self):
+        return self._clean_text_value(
+            "construction",
+            label="Construction",
+            max_length=120,
+            allow_chars_pattern=r"[A-Za-z0-9\s.,()/%xX+-]+",
+        )
+
+    def clean_base_fabric_type(self):
+        return self._clean_text_value(
+            "base_fabric_type",
+            label="Base Fabric Type",
+            max_length=120,
+        )
+
+    def clean_end_use(self):
+        return self._clean_text_value(
+            "end_use",
+            label="End Use",
+            max_length=120,
+        )
+
+    def clean_trim_size(self):
+        return self._clean_text_value(
+            "trim_size",
+            label="Size",
+            max_length=60,
+            allow_chars_pattern=r"[A-Za-z0-9\s.,()/#xX+-]+",
+        )
+
+    def clean_trim_color(self):
+        return self._clean_text_value(
+            "trim_color",
+            label="Color",
+            max_length=60,
+            allow_chars_pattern=r"[A-Za-z0-9\s.,()/#&+-]+",
+        )
+
+    def clean_brand(self):
+        return self._clean_text_value(
+            "brand",
+            label="Brand",
+            max_length=80,
+        )
+
+    def clean_gsm(self):
+        return self._clean_positive_decimal("gsm", label="GSM")
+
+    def clean_width(self):
+        return self._clean_positive_decimal("width", label="Width")
+
+    def clean_finished_gsm(self):
+        return self._clean_positive_decimal("finished_gsm", label="GSM")
+
+    def clean_finished_width(self):
+        return self._clean_positive_decimal("finished_width", label="Width")
+
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+        if not image:
+            return image
+
+        file_name = (getattr(image, "name", "") or "").lower()
+        if file_name:
+            dot = file_name.rfind(".")
+            ext = file_name[dot:] if dot != -1 else ""
+            if ext not in self.ALLOWED_IMAGE_EXTENSIONS:
+                raise ValidationError("Upload a valid image file (JPG, JPEG, PNG, WEBP, or GIF).")
+
+        content_type = getattr(image, "content_type", "") or ""
+        if content_type and not content_type.startswith("image/"):
+            raise ValidationError("The selected file must be an image.")
+
+        if getattr(image, "size", 0) > self.MAX_IMAGE_SIZE:
+            raise ValidationError("Image size must be 5 MB or less.")
+
+        return image
+
     def clean(self):
         cd = super().clean()
         k = (cd.get("material_kind") or "").strip()
 
         mt = cd.get("material_type")
+        if self.user is not None and mt and mt.owner_id != self.user.id:
+            self.add_error("material_type", "Selected Material Type is not available for this user.")
         if k and mt and mt.material_kind != k:
             self.add_error("material_type", "Selected Material Type does not belong to selected Kind.")
 
         mst = cd.get("material_sub_type")
         if mst and not mt:
             self.add_error("material_type", "Select Material Type before choosing Material Sub Type.")
+        if self.user is not None and mst and mst.owner_id != self.user.id:
+            self.add_error("material_sub_type", "Selected Material Sub Type is not available for this user.")
         if k and mst and mst.material_kind != k:
             self.add_error("material_sub_type", "Selected Material Sub Type does not belong to selected Kind.")
         if mt and mst and mst.material_type_id != mt.id:
             self.add_error("material_sub_type", "Selected Material Sub Type does not belong to selected Material Type.")
 
+
         ms = cd.get("material_shade")
-        if k and ms and ms.material_kind != k:
+        if self.user is not None and ms and ms.owner_id != self.user.id:
+            self.add_error("material_shade", "Selected Material Shade is not available for this user.")
+        if k and ms and (ms.material_kind or "").strip() not in ("", k):
             self.add_error("material_shade", "Selected Material Shade does not belong to selected Kind.")
+        if k == "trim" and not mt:
+            self.add_error("material_type", "Please select a Material Type for trim materials.")
 
         return cd
 
@@ -478,8 +710,6 @@ class MaterialForm(forms.Form):
                 resolved_trim_type = selected_material_sub_type.name
             elif selected_material_type:
                 resolved_trim_type = selected_material_type.name
-            else:
-                resolved_trim_type = ""
 
             TrimDetail.objects.create(
                 material=material,
@@ -490,15 +720,16 @@ class MaterialForm(forms.Form):
             )
 
         return material
-
-
 # ============================================================
 # PARTY
 # ============================================================
 
-PAN_RE = re.compile(r"^[A-Z]{5}[0-9]{4}[A-Z]$")
-GST_RE = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
-PHONE_RE = re.compile(r"^[0-9]{10,15}$")
+PARTY_PAN_RE = re.compile(r"^[A-Z]{5}[0-9]{4}[A-Z]$")
+PARTY_GST_RE = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
+PARTY_TAN_RE = re.compile(r"^[A-Z]{4}[0-9]{5}[A-Z]$")
+PARTY_PHONE_RE = re.compile(r"^[0-9]{10,15}$")
+PARTY_ACCOUNT_RE = re.compile(r"^[0-9]{6,30}$")
+PARTY_IFSC_RE = re.compile(r"^[A-Z]{4}0[A-Z0-9]{6}$")
 
 
 class PartyForm(forms.ModelForm):
@@ -506,18 +737,74 @@ class PartyForm(forms.ModelForm):
         model = Party
         fields = "__all__"
         widgets = {
-            "party_name": forms.TextInput(attrs={"placeholder": "Enter party name"}),
-            "full_name": forms.TextInput(attrs={"placeholder": "Enter full name"}),
-            "address": forms.Textarea(attrs={"rows": 4, "placeholder": "Enter address"}),
-            "pan_number": forms.TextInput(attrs={"placeholder": "ABCDE1234F"}),
-            "gst_number": forms.TextInput(attrs={"placeholder": "27ABCDE1234F1Z5"}),
-            "tan_number": forms.TextInput(attrs={"placeholder": "Enter TAN number"}),
+            "party_name": forms.TextInput(attrs={
+                "placeholder": "Enter party name",
+                "maxlength": "150",
+            }),
+            "full_name": forms.TextInput(attrs={
+                "placeholder": "Enter full name",
+                "maxlength": "200",
+            }),
+            "address": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Enter address",
+            }),
+            "pan_number": forms.TextInput(attrs={
+            "placeholder": "ABCDE1234F",
+            "maxlength": "10",
+            "autocapitalize": "characters",
+            "spellcheck": "false",
+            "autocomplete": "off",
+            "data-mask-format": "AAAAA9999A",
+            }),
+            "gst_number": forms.TextInput(attrs={
+                "placeholder": "27ABCDE1234F1Z5",
+                "maxlength": "15",
+                "autocapitalize": "characters",
+                "spellcheck": "false",
+                "autocomplete": "off",
+                "data-mask-format": "99AAAAA9999AXZX",
+            }),
+            "tan_number": forms.TextInput(attrs={
+                "placeholder": "ABCD12345E",
+                "maxlength": "10",
+                "autocapitalize": "characters",
+                "spellcheck": "false",
+                "autocomplete": "off",
+                "data-mask-format": "AAAA99999A",
+            }),
             "state": forms.Select(),
-            "phone_number": forms.TextInput(attrs={"placeholder": "Enter phone number"}),
-            "email": forms.EmailInput(attrs={"placeholder": "Enter email"}),
-            "bank_name": forms.TextInput(attrs={"placeholder": "Enter bank name"}),
-            "account_number": forms.TextInput(attrs={"placeholder": "Enter account number"}),
-            "ifsc_code": forms.TextInput(attrs={"placeholder": "Enter IFSC code"}),
+            "phone_number": forms.TextInput(attrs={
+            "placeholder": "Enter phone number",
+            "inputmode": "numeric",
+            "maxlength": "15",
+            "autocomplete": "off",
+            "data-mask-format": "999999999999999",
+            }),
+            "email": forms.EmailInput(attrs={
+                "placeholder": "Enter email",
+                "autocomplete": "email",
+                "spellcheck": "false",
+            }),
+            "bank_name": forms.TextInput(attrs={
+                "placeholder": "Enter bank name",
+                "maxlength": "120",
+            }),
+            "account_number": forms.TextInput(attrs={
+            "placeholder": "Enter account number",
+            "inputmode": "numeric",
+            "maxlength": "30",
+            "autocomplete": "off",
+            "data-mask-format": "999999999999999999999999999999",
+            }),
+            "ifsc_code": forms.TextInput(attrs={
+                "placeholder": "SBIN0001234",
+                "maxlength": "11",
+                "autocapitalize": "characters",
+                "spellcheck": "false",
+                "autocomplete": "off",
+                "data-mask-format": "AAAA0XXXXXX",
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -527,42 +814,161 @@ class PartyForm(forms.ModelForm):
             existing_class = field.widget.attrs.get("class", "")
             field.widget.attrs["class"] = f"{existing_class} jf-input".strip()
 
+        self.fields["party_name"].required = True
+
         if "state" in self.fields:
             self.fields["state"].required = False
 
     def clean_party_name(self):
         v = (self.cleaned_data.get("party_name") or "").strip()
         if not v:
-            raise forms.ValidationError("Party Name is required.")
+            raise forms.ValidationError("Party name is required.")
         return v
+
+    def clean_full_name(self):
+        return (self.cleaned_data.get("full_name") or "").strip()
+
+    def clean_address(self):
+        return (self.cleaned_data.get("address") or "").strip()
 
     def clean_pan_number(self):
         v = (self.cleaned_data.get("pan_number") or "").strip().upper()
-        if v and not PAN_RE.match(v):
-            raise forms.ValidationError("Invalid PAN format. Example: ABCDE1234F")
+        if v and not PARTY_PAN_RE.match(v):
+            raise forms.ValidationError("Enter a valid PAN number, like ABCDE1234F.")
         return v
 
     def clean_gst_number(self):
         v = (self.cleaned_data.get("gst_number") or "").strip().upper()
-        if v and not GST_RE.match(v):
-            raise forms.ValidationError("Invalid GST format. Example: 27ABCDE1234F1Z5")
+        if v and not PARTY_GST_RE.match(v):
+            raise forms.ValidationError("Enter a valid GST number, like 27ABCDE1234F1Z5.")
+        return v
+
+    def clean_tan_number(self):
+        v = (self.cleaned_data.get("tan_number") or "").strip().upper()
+        if v and not PARTY_TAN_RE.match(v):
+            raise forms.ValidationError("Enter a valid TAN number, like ABCD12345E.")
         return v
 
     def clean_phone_number(self):
         v = (self.cleaned_data.get("phone_number") or "").strip()
-        if v and not PHONE_RE.match(v):
-            raise forms.ValidationError("Phone must be numeric (10–15 digits).")
+        if v and not PARTY_PHONE_RE.match(v):
+            raise forms.ValidationError("Phone number must contain only digits and be 10 to 15 digits long.")
         return v
 
+    def clean_email(self):
+        v = (self.cleaned_data.get("email") or "").strip().lower()
+        return v
+
+    def clean_bank_name(self):
+        return (self.cleaned_data.get("bank_name") or "").strip()
+
+    def clean_account_number(self):
+        v = (self.cleaned_data.get("account_number") or "").strip()
+        if v and not PARTY_ACCOUNT_RE.match(v):
+            raise forms.ValidationError("Account number must contain only digits and be 6 to 30 digits long.")
+        return v
+
+    def clean_ifsc_code(self):
+        v = (self.cleaned_data.get("ifsc_code") or "").strip().upper()
+        if v and not PARTY_IFSC_RE.match(v):
+            raise forms.ValidationError("Enter a valid IFSC code, like SBIN0001234.")
+        return v
 
 # ============================================================
 # LOCATION
 # ============================================================
-
 class LocationForm(forms.ModelForm):
     class Meta:
         model = Location
-        fields = ["name", "city", "state", "address", "pincode", "is_active"]
+        fields = [
+            "name",
+            "address_line_1",
+            "address_line_2",
+            "landmark",
+            "city",
+            "state",
+            "pincode",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "Enter location name"}),
+            "address_line_1": forms.TextInput(attrs={"placeholder": "Address line 1"}),
+            "address_line_2": forms.TextInput(attrs={"placeholder": "Address line 2 (optional)"}),
+            "landmark": forms.TextInput(attrs={"placeholder": "Landmark (optional)"}),
+            "city": forms.TextInput(attrs={"placeholder": "Enter city"}),
+            "state": forms.TextInput(attrs={"placeholder": "Enter state"}),
+            "pincode": forms.TextInput(attrs={
+                "placeholder": "6-digit pincode",
+                "inputmode": "numeric",
+                "maxlength": "6"
+            }),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def _clean_text(value):
+        return re.sub(r"\s+", " ", (value or "").strip())
+
+    def clean_name(self):
+        value = self._clean_text(self.cleaned_data.get("name"))
+        if not value:
+            raise forms.ValidationError("Location name is required.")
+
+        qs = Location.objects.all()
+        if self.user is not None:
+            qs = qs.filter(owner=self.user)
+        elif getattr(self.instance, "owner_id", None):
+            qs = qs.filter(owner=self.instance.owner)
+
+        qs = qs.filter(name__iexact=value)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise forms.ValidationError("A location with this name already exists.")
+        return value
+
+    def clean_address_line_1(self):
+        value = self._clean_text(self.cleaned_data.get("address_line_1"))
+        if not value:
+            raise forms.ValidationError("Address line 1 is required.")
+        return value
+
+    def clean_address_line_2(self):
+        return self._clean_text(self.cleaned_data.get("address_line_2"))
+
+    def clean_landmark(self):
+        return self._clean_text(self.cleaned_data.get("landmark"))
+
+    def clean_city(self):
+        value = self._clean_text(self.cleaned_data.get("city"))
+        if not value:
+            raise forms.ValidationError("City is required.")
+        if not re.fullmatch(r"[A-Za-z .'-]+", value):
+            raise forms.ValidationError(
+                "City can contain only letters, spaces, dots, apostrophes, and hyphens."
+            )
+        return value.title()
+
+    def clean_state(self):
+        value = self._clean_text(self.cleaned_data.get("state"))
+        if not value:
+            raise forms.ValidationError("State is required.")
+        if not re.fullmatch(r"[A-Za-z .'-]+", value):
+            raise forms.ValidationError(
+                "State can contain only letters, spaces, dots, apostrophes, and hyphens."
+            )
+        return value.title()
+
+    def clean_pincode(self):
+        value = re.sub(r"\D", "", self.cleaned_data.get("pincode") or "")
+        if not value:
+            raise forms.ValidationError("Pincode is required.")
+        if len(value) != 6:
+            raise forms.ValidationError("Pincode must be exactly 6 digits.")
+        return value
 
 
 class CategoryForm(forms.ModelForm):
@@ -618,12 +1024,24 @@ PHONE_RE = RegexValidator(
 )
 
 
-class FirmForm(forms.ModelForm):
-    gst_number = forms.CharField(required=False, validators=[GST_RE])
-    pan_number = forms.CharField(required=False, validators=[PAN_RE])
-    ifsc_code = forms.CharField(required=False, validators=[IFSC_RE])
-    phone = forms.CharField(required=False, validators=[PHONE_RE])
 
+
+FIRM_GST_RE = re.compile(r"^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
+FIRM_PAN_RE = re.compile(r"^[A-Z]{5}\d{4}[A-Z]$")
+FIRM_TAN_RE = re.compile(r"^[A-Z]{4}\d{5}[A-Z]$")
+FIRM_IFSC_RE = re.compile(r"^[A-Z]{4}0[A-Z0-9]{6}$")
+FIRM_PHONE_RE = re.compile(r"^\d{10}$")
+FIRM_PINCODE_RE = re.compile(r"^\d{6}$")
+FIRM_ACCOUNT_RE = re.compile(r"^\d{6,30}$")
+FIRM_CIN_RE = re.compile(r"^[A-Z][A-Z0-9]{20}$")
+FIRM_TEXT_RE = re.compile(r"^[A-Za-z][A-Za-z0-9&.,()'\/\-\s]{1,119}$")
+FIRM_PLACE_RE = re.compile(r"^[A-Za-z][A-Za-z.()'\/\-\s]{1,99}$")
+PROFILE_NAME_RE = re.compile(r"^[A-Za-z][A-Za-z.'\-\s]{0,79}$")
+
+
+def _compact_spaces(value):
+    return " ".join((value or "").strip().split())
+class FirmForm(forms.ModelForm):
     class Meta:
         model = Firm
         fields = [
@@ -633,20 +1051,197 @@ class FirmForm(forms.ModelForm):
             "gst_number", "pan_number", "tan_number", "cin_number",
             "bank_name", "account_holder_name", "account_number", "ifsc_code", "branch_name",
         ]
+        widgets = {
+            "firm_name": forms.TextInput(attrs={"placeholder": "Enter firm name", "maxlength": "180"}),
+            "firm_type": forms.Select(),
+            "address_line": forms.TextInput(attrs={"placeholder": "Address line", "maxlength": "255"}),
+            "city": forms.TextInput(attrs={"placeholder": "City", "maxlength": "100"}),
+            "state": forms.TextInput(attrs={"placeholder": "State", "maxlength": "100"}),
+            "pincode": forms.TextInput(attrs={"placeholder": "395003", "maxlength": "6", "inputmode": "numeric"}),
+            "phone": forms.TextInput(attrs={"placeholder": "9876543210", "maxlength": "10", "inputmode": "numeric"}),
+            "email": forms.EmailInput(attrs={"placeholder": "name@firm.com", "maxlength": "254"}),
+            "website": forms.URLInput(attrs={"placeholder": "https://example.com", "maxlength": "200"}),
+            "gst_number": forms.TextInput(attrs={"placeholder": "27ABCDE1234F1Z5", "maxlength": "15", "autocapitalize": "characters"}),
+            "pan_number": forms.TextInput(attrs={"placeholder": "ABCDE1234F", "maxlength": "10", "autocapitalize": "characters"}),
+            "tan_number": forms.TextInput(attrs={"placeholder": "ABCD12345E", "maxlength": "10", "autocapitalize": "characters"}),
+            "cin_number": forms.TextInput(attrs={"placeholder": "L17110MH1973PLC019786", "maxlength": "21", "autocapitalize": "characters"}),
+            "bank_name": forms.TextInput(attrs={"placeholder": "Bank name", "maxlength": "120"}),
+            "account_holder_name": forms.TextInput(attrs={"placeholder": "Account holder name", "maxlength": "120"}),
+            "account_number": forms.TextInput(attrs={"placeholder": "Account number", "maxlength": "30", "inputmode": "numeric"}),
+            "ifsc_code": forms.TextInput(attrs={"placeholder": "SBIN0001234", "maxlength": "11", "autocapitalize": "characters"}),
+            "branch_name": forms.TextInput(attrs={"placeholder": "Branch name", "maxlength": "120"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            existing_class = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = f"{existing_class} jf-input".strip()
+
+        self.fields["firm_name"].required = True
+        self.fields["firm_type"].required = True
+
+    def clean_firm_name(self):
+        value = _compact_spaces(self.cleaned_data.get("firm_name"))
+        if not value:
+            raise forms.ValidationError("Firm name is required.")
+        if len(value) < 2:
+            raise forms.ValidationError("Firm name must be at least 2 characters long.")
+        return value
+
+    def clean_address_line(self):
+        value = _compact_spaces(self.cleaned_data.get("address_line"))
+        if value and len(value) < 5:
+            raise forms.ValidationError("Address line must be at least 5 characters long.")
+        return value
+
+    def clean_city(self):
+        value = _compact_spaces(self.cleaned_data.get("city"))
+        if value and not FIRM_PLACE_RE.match(value):
+            raise forms.ValidationError("Enter a valid city name.")
+        return value
+
+    def clean_state(self):
+        value = _compact_spaces(self.cleaned_data.get("state"))
+        if value and not FIRM_PLACE_RE.match(value):
+            raise forms.ValidationError("Enter a valid state name.")
+        return value
+
+    def clean_pincode(self):
+        value = (self.cleaned_data.get("pincode") or "").strip()
+        if value and not FIRM_PINCODE_RE.match(value):
+            raise forms.ValidationError("Pincode must be exactly 6 digits.")
+        return value
+
+    def clean_phone(self):
+        value = (self.cleaned_data.get("phone") or "").strip()
+        if value and not FIRM_PHONE_RE.match(value):
+            raise forms.ValidationError("Phone number must be exactly 10 digits.")
+        return value
+
+    def clean_email(self):
+        return (self.cleaned_data.get("email") or "").strip().lower()
+
+    def clean_website(self):
+        return (self.cleaned_data.get("website") or "").strip()
+
+    def clean_gst_number(self):
+        value = (self.cleaned_data.get("gst_number") or "").strip().upper()
+        if value and not FIRM_GST_RE.match(value):
+            raise forms.ValidationError("Enter a valid GST number, like 27ABCDE1234F1Z5.")
+        return value
+
+    def clean_pan_number(self):
+        value = (self.cleaned_data.get("pan_number") or "").strip().upper()
+        if value and not FIRM_PAN_RE.match(value):
+            raise forms.ValidationError("Enter a valid PAN number, like ABCDE1234F.")
+        return value
+
+    def clean_tan_number(self):
+        value = (self.cleaned_data.get("tan_number") or "").strip().upper()
+        if value and not FIRM_TAN_RE.match(value):
+            raise forms.ValidationError("Enter a valid TAN number, like ABCD12345E.")
+        return value
+
+    def clean_cin_number(self):
+        value = (self.cleaned_data.get("cin_number") or "").strip().upper()
+        if value and not FIRM_CIN_RE.match(value):
+            raise forms.ValidationError("Enter a valid CIN number with 21 characters.")
+        return value
+
+    def clean_bank_name(self):
+        value = _compact_spaces(self.cleaned_data.get("bank_name"))
+        if value and not FIRM_TEXT_RE.match(value):
+            raise forms.ValidationError("Enter a valid bank name.")
+        return value
+
+    def clean_account_holder_name(self):
+        value = _compact_spaces(self.cleaned_data.get("account_holder_name"))
+        if value and not FIRM_TEXT_RE.match(value):
+            raise forms.ValidationError("Enter a valid account holder name.")
+        return value
+
+    def clean_account_number(self):
+        value = (self.cleaned_data.get("account_number") or "").strip()
+        if value and not FIRM_ACCOUNT_RE.match(value):
+            raise forms.ValidationError("Account number must contain only digits and be 6 to 30 digits long.")
+        return value
+
+    def clean_ifsc_code(self):
+        value = (self.cleaned_data.get("ifsc_code") or "").strip().upper()
+        if value and not FIRM_IFSC_RE.match(value):
+            raise forms.ValidationError("Enter a valid IFSC code, like SBIN0001234.")
+        return value
+
+    def clean_branch_name(self):
+        value = _compact_spaces(self.cleaned_data.get("branch_name"))
+        if value and not FIRM_TEXT_RE.match(value):
+            raise forms.ValidationError("Enter a valid branch name.")
+        return value
+
+    def clean(self):
+        cleaned = super().clean()
+        address_line = cleaned.get("address_line") or ""
+        city = cleaned.get("city") or ""
+        state = cleaned.get("state") or ""
+        pincode = cleaned.get("pincode") or ""
+
+        if any([city, state, pincode]) and not address_line:
+            self.add_error("address_line", "Address line is required when city, state, or pincode is filled.")
+
+        return cleaned
 
 
+class DashboardProfileForm(forms.Form):
+    first_name = forms.CharField(required=False, max_length=150)
+    last_name = forms.CharField(required=False, max_length=150)
+    email = forms.EmailField(required=False, max_length=254)
+    phone = forms.CharField(required=False, max_length=10)
+    address = forms.CharField(required=False, max_length=500)
+
+    def clean_first_name(self):
+        value = _compact_spaces(self.cleaned_data.get("first_name"))
+        if value and not PROFILE_NAME_RE.match(value):
+            raise forms.ValidationError("First name should contain letters only.")
+        return value
+
+    def clean_last_name(self):
+        value = _compact_spaces(self.cleaned_data.get("last_name"))
+        if value and not PROFILE_NAME_RE.match(value):
+            raise forms.ValidationError("Last name should contain letters only.")
+        return value
+
+    def clean_email(self):
+        return (self.cleaned_data.get("email") or "").strip().lower()
+
+    def clean_phone(self):
+        value = (self.cleaned_data.get("phone") or "").strip()
+        if value and not FIRM_PHONE_RE.match(value):
+            raise forms.ValidationError("Mobile number must be exactly 10 digits.")
+        return value
+
+    def clean_address(self):
+        value = _compact_spaces(self.cleaned_data.get("address"))
+        if value and len(value) < 5:
+            raise forms.ValidationError("Address must be at least 5 characters long.")
+        return value
 # ============================================================
 # UTILITIES: MATERIAL SHADE / MATERIAL TYPE
 # ============================================================
-
 class MaterialShadeForm(forms.ModelForm):
     class Meta:
         model = MaterialShade
         fields = ["material_kind", "name", "code", "notes"]
         widgets = {
-            "material_kind": forms.RadioSelect(choices=Material.MATERIAL_KIND_CHOICES),
+            "material_kind": forms.RadioSelect(
+                choices=[("", "All")] + list(Material.MATERIAL_KIND_CHOICES)
+            ),
             "notes": forms.Textarea(attrs={"rows": 3}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["material_kind"].required = False
 
 
 class MaterialTypeForm(forms.ModelForm):
@@ -794,7 +1389,6 @@ class VendorForm(forms.ModelForm):
 # ============================================================
 # YARN PURCHASE ORDER
 # ============================================================
-
 class YarnPurchaseOrderForm(forms.ModelForm):
     class Meta:
         model = YarnPurchaseOrder
@@ -814,8 +1408,11 @@ class YarnPurchaseOrderForm(forms.ModelForm):
         ]
         widgets = {
             "po_number": forms.TextInput(attrs={"placeholder": "Vendor / internal PO number"}),
-            "po_date": forms.DateInput(attrs={"type": "date"}),
-            "cancel_date": forms.DateInput(attrs={"type": "date"}),
+            "po_date": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={"type": "date", "readonly": "readonly"}
+            ),
+            "cancel_date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
             "shipping_address": forms.Textarea(attrs={"rows": 2, "placeholder": "Delivery or shipping address"}),
             "remarks": forms.Textarea(attrs={"rows": 2, "placeholder": "Short note for this PO"}),
             "terms_conditions": forms.Textarea(attrs={"rows": 3, "placeholder": "Payment, delivery, packing, or other terms"}),
@@ -844,7 +1441,9 @@ class YarnPurchaseOrderForm(forms.ModelForm):
 
         if not self.is_bound:
             from django.utils import timezone
-            self.fields["po_date"].initial = timezone.localdate()
+            today = timezone.localdate()
+            self.initial["po_date"] = today
+            self.fields["po_date"].initial = today
             self.fields["discount_percent"].initial = 0
             self.fields["others"].initial = 0
             self.fields["cgst_percent"].initial = 2.5

@@ -1,3 +1,7 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=3">
+
 <div class="jobbers-embed parties-embed">
   <div class="jb-panel">
     {% include "accounts/_messages_embed.html" %}
@@ -9,7 +13,6 @@
       </div>
 
       <div class="jb-head-actions pt-head-actions">
-        
         <button type="button" class="jb-iconbtn pt-close" data-embed-close title="Close">
           <svg class="jb-ico pt-ico" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M18 6L6 18"></path>
@@ -25,8 +28,8 @@
 
         <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search material type...">
 
-        
         <button class="jb-search-btn" type="submit">Search</button>
+
         <select name="kind" class="jb-search-btn" onchange="this.form.submit()">
           <option value="">All Kinds</option>
           {% for value, label in kind_choices %}
@@ -35,10 +38,13 @@
             </option>
           {% endfor %}
         </select>
-        <a class="jb-add pt-add mat-ico" href="{% url 'accounts:materialtype_add' %}?embed=1"><svg class="jb-add-ico mat-ico" viewBox="0 0 24 24" aria-hidden="true">
+
+        <a class="jb-add pt-add mat-ico" href="{% url 'accounts:materialtype_add' %}?embed=1">
+          <svg class="jb-add-ico mat-ico" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 5v14"></path>
             <path d="M5 12h14"></path>
-          </svg> </a>
+          </svg>
+        </a>
       </form>
     </div>
 
@@ -61,10 +67,16 @@
               <td class="jb-actions pt-actions">
                 <a class="jb-link pt-link" href="{% url 'accounts:materialtype_edit' t.id %}?embed=1">Edit</a>
                 <span class="jb-dot pt-dot">•</span>
-                <form method="post" action="{% url 'accounts:materialtype_delete' t.id %}" class="jb-inline-delete" style="display:inline;">
+                <form
+                  method="post"
+                  action="{% url 'accounts:materialtype_delete' t.id %}?embed=1"
+                  class="jb-inline-delete js-jb-delete-form"
+                  style="display:inline;"
+                  data-delete-label="material type &quot;{{ t.name|escape }}&quot;"
+                >
                   {% csrf_token %}
                   <input type="hidden" name="embed" value="1">
-                  <button class="jb-link jb-link-button jb-link-danger pt-link danger" type="submit" onclick="return confirm('Delete this type?')">Delete</button>
+                  <button class="jb-link jb-link-button jb-link-danger pt-link danger" type="submit">Delete</button>
                 </form>
               </td>
             </tr>
@@ -76,5 +88,7 @@
         </tbody>
       </table>
     </div>
+
+    {% include "accounts/jobbers/_delete_confirm_modal.html" %}
   </div>
 </div>

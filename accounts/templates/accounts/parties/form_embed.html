@@ -58,14 +58,6 @@
           {% endif %}
         </div>
 
-        <div class="jf-field">
-          <label for="{{ form.full_name.id_for_label }}">Full Name</label>
-          {{ form.full_name }}
-          {% if form.full_name.errors %}
-          <div class="jb-field-errors">{% for error in form.full_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
-          {% endif %}
-        </div>
-
         <div class="jf-field jf-full">
           <label for="{{ form.address.id_for_label }}">Address</label>
           {{ form.address }}
@@ -153,4 +145,69 @@
       </div>
     </form>
   </section>
+  <script>
+(function () {
+  function sanitizeByFormat(value, format) {
+    const raw = (value || "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+
+    const tokenMatchers = {
+      "A": ch => /[A-Z]/.test(ch),
+      "9": ch => /[0-9]/.test(ch),
+      "X": ch => /[A-Z0-9]/.test(ch),
+    };
+
+    let out = "";
+    let rawIndex = 0;
+
+    for (let i = 0; i < format.length; i++) {
+      const token = format[i];
+      const matcher = tokenMatchers[token];
+
+      if (matcher) {
+        while (rawIndex < raw.length && !matcher(raw[rawIndex])) {
+          rawIndex++;
+        }
+
+        if (rawIndex >= raw.length) {
+          break;
+        }
+
+        out += raw[rawIndex];
+        rawIndex++;
+      } else {
+        out += token;
+
+        if (rawIndex < raw.length && raw[rawIndex] === token) {
+          rawIndex++;
+        }
+      }
+    }
+
+    return out;
+  }
+
+  function bindMaskedInput(input) {
+    if (!input) return;
+
+    const format = input.getAttribute("data-mask-format");
+    if (!format) return;
+
+    const applyMask = () => {
+      input.value = sanitizeByFormat(input.value, format);
+    };
+
+    input.addEventListener("input", applyMask);
+    input.addEventListener("blur", applyMask);
+    input.addEventListener("paste", function () {
+      setTimeout(applyMask, 0);
+    });
+
+    applyMask();
+  }
+
+  document.querySelectorAll("[data-mask-format]").forEach(bindMaskedInput);
+})();
+</script>
 </div>

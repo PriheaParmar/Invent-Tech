@@ -49,69 +49,76 @@
       {% endif %}
 
       <div class="lf-grid">
-        <div class="lf-field">
-          <label for="{{ form.name.id_for_label }}">Name</label>
-          {{ form.name }}
-          {% if form.name.errors %}
-          <div class="lc-field-errors">
-            {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
+  <div class="lf-field">
+    <label for="{{ form.name.id_for_label }}">Location Name</label>
+    {{ form.name }}
+    {% if form.name.errors %}
+    <div class="lc-field-errors">
+      {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
-        <div class="lf-field">
-          <label for="{{ form.city.id_for_label }}">City</label>
-          {{ form.city }}
-          {% if form.city.errors %}
-          <div class="lc-field-errors">
-            {% for error in form.city.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
+  <div class="lf-field">
+    <label for="{{ form.address_line_1.id_for_label }}">Address Line 1</label>
+    {{ form.address_line_1 }}
+    {% if form.address_line_1.errors %}
+    <div class="lc-field-errors">
+      {% for error in form.address_line_1.errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
-        <div class="lf-field">
-          <label for="{{ form.state.id_for_label }}">State</label>
-          {{ form.state }}
-          {% if form.state.errors %}
-          <div class="lc-field-errors">
-            {% for error in form.state.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
+  <div class="lf-field">
+    <label for="{{ form.address_line_2.id_for_label }}">Address Line 2</label>
+    {{ form.address_line_2 }}
+    {% if form.address_line_2.errors %}
+    <div class="lc-field-errors">
+      {% for error in form.address_line_2.errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
-        <div class="lf-field">
-          <label for="{{ form.pincode.id_for_label }}">Pincode</label>
-          {{ form.pincode }}
-          {% if form.pincode.errors %}
-          <div class="lc-field-errors">
-            {% for error in form.pincode.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
+  <div class="lf-field">
+    <label for="{{ form.landmark.id_for_label }}">Landmark</label>
+    {{ form.landmark }}
+    {% if form.landmark.errors %}
+    <div class="lc-field-errors">
+      {% for error in form.landmark.errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
-        <div class="lf-field lf-full">
-          <label for="{{ form.address.id_for_label }}">Address</label>
-          {{ form.address }}
-          {% if form.address.errors %}
-          <div class="lc-field-errors">
-            {% for error in form.address.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
+  <div class="lf-field">
+    <label for="{{ form.city.id_for_label }}">City</label>
+    {{ form.city }}
+    {% if form.city.errors %}
+    <div class="lc-field-errors">
+      {% for error in form.city.errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
-        <div class="lf-field lf-full lf-check">
-          <label for="{{ form.is_active.id_for_label }}">Active</label>
-          <div class="lf-check-row">
-            {{ form.is_active }}
-            <span class="lf-muted">Use this location for active stock storage</span>
-          </div>
-          {% if form.is_active.errors %}
-          <div class="lc-field-errors">
-            {% for error in form.is_active.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
-      </div>
+  <div class="lf-field">
+    <label for="{{ form.state.id_for_label }}">State</label>
+    {{ form.state }}
+    {% if form.state.errors %}
+    <div class="lc-field-errors">
+      {% for error in form.state.errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="lf-field">
+    <label for="{{ form.pincode.id_for_label }}">Pincode</label>
+    {{ form.pincode }}
+    {% if form.pincode.errors %}
+    <div class="lc-field-errors">
+      {% for error in form.pincode.errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
 
       <div class="lf-footer">
         <a class="lc-secondary" href="{% url 'accounts:location_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>

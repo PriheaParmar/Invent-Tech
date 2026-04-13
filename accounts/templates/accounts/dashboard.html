@@ -347,7 +347,7 @@
         "Jobber Type",
         "Jobber",
         "Material Sub Type",
-            "BOM",
+        "BOM",
       ],
       Production: ["Techpack", "BOM", "Job Card Details", "Branch SKU"],
       Dyeing: ["Dyeing Master", "Greige Master", "Dyeing Other Charge Headers"],
@@ -374,7 +374,6 @@
       return idx === -1 ? 999 : idx;
     }
 
-    // KEEP YOUR ICON FUNCTION (unchanged style)
     function iconSvg(name) {
       const icons = {
         settings: `
@@ -418,13 +417,10 @@
 </svg>`
       };
 
-
       return icons[name] || icons.settings;
     }
 
-    // ✅ COMPLETE UTILITIES LIST (so rows don’t break)
     const UTILITIES = [
-      // Masters
       { title: "Material / Trim", tag: "Masters", key: "material trim", icon: "material" },
       { title: "Material Type", tag: "Masters", key: "material type" },
       { title: "Material Shades", tag: "Masters", key: "shade shades" },
@@ -441,26 +437,18 @@
       { title: "Jobber Type", tag: "Masters", key: "jobber type", icon: "jobberType" },
       { title: "Jobber", tag: "Masters", key: "jobber", icon: "jobber" },
       { title: "Material Sub Type", tag: "Masters", key: "material sub type type linking" },
-
-      // Production
       { title: "Techpack", tag: "Production", key: "techpack" },
       { title: "BOM", tag: "Production", key: "bom" },
       { title: "Job Card Details", tag: "Production", key: "job card" },
       { title: "Branch SKU", tag: "Production", key: "branch sku" },
-
-      // Dyeing
       { title: "Dyeing Master", tag: "Dyeing", key: "dyeing" },
       { title: "Greige Master", tag: "Dyeing", key: "greige" },
       { title: "Dyeing Other Charge Headers", tag: "Dyeing", key: "other charge headers" },
-
-      // Design
       { title: "Catalogue", tag: "Design", key: "catalogue" },
       { title: "Pattern Type", tag: "Design", key: "pattern type" },
       { title: "Designer", tag: "Design", key: "designer" },
       { title: "Season", tag: "Design", key: "season" },
       { title: "Theme", tag: "Design", key: "theme" },
-
-      // Admin / Inventory / Dispatch / Accounts / Uploads
       { title: "Jobber Bulk Changes", tag: "Admin", key: "jobber bulk changes" },
       { title: "Inward Type", tag: "Inventory", key: "inward type grn" },
       { title: "Terms & Condition", tag: "Dispatch", key: "terms condition" },
@@ -468,7 +456,6 @@
       { title: "Material Bulk Upload", tag: "Uploads", key: "material bulk upload" },
     ];
 
-    // ROUTES (keep your names)
     const ROUTES = {
       "Jobber": "{% url 'accounts:jobber_list' %}",
       "Jobber Type": "{% url 'accounts:jobbertype_list' %}",
@@ -486,7 +473,7 @@
       "Pattern Type": "{% url 'accounts:patterntype_list' %}",
       "Catalogue": "{% url 'accounts:catalogue_list' %}",
       "BOM": "{% url 'accounts:bom_list' %}",
-            "Expense": "{% url 'accounts:expense_list' %}",
+      "Expense": "{% url 'accounts:expense_list' %}",
     };
 
     function tileHtml(u) {
@@ -501,7 +488,6 @@
     `;
     }
 
-    // ✅ groupHtml now supports SPAN to prevent cramping
     function groupHtml(tag, items, span) {
       const label = TAG_LABEL[tag] || tag.toUpperCase();
 
@@ -528,10 +514,9 @@
     `;
     }
 
-    // remembers currently opened embed page
     let LAST_MASTERS_URL = null;
     let MASTERS_REQUEST_SEQ = 0;
-    // resolve embed URL against LAST_MASTERS_URL so ?page=2 / relative links work
+
     function withEmbed(url) {
       const base = LAST_MASTERS_URL || window.location.origin;
       const u = new URL(url, base);
@@ -539,271 +524,208 @@
       return u.toString();
     }
 
-function isMastersUrl(hrefOrAction) {
-  if (!hrefOrAction) return false;
+    function isMastersUrl(hrefOrAction) {
+      if (!hrefOrAction) return false;
 
-  const base = LAST_MASTERS_URL || window.location.origin;
+      const base = LAST_MASTERS_URL || window.location.origin;
 
-  let urlObj;
-  try {
-    urlObj = new URL(hrefOrAction, base);
-  } catch {
-    return false;
-  }
+      let urlObj;
+      try {
+        urlObj = new URL(hrefOrAction, base);
+      } catch {
+        return false;
+      }
 
-  const path = (urlObj.pathname || "").replace(/\/+$/, "") + "/";
+      const path = (urlObj.pathname || "").replace(/\/+$/, "") + "/";
 
-  const allowedRoutes = [
-  ROUTES["Jobber"],
-  ROUTES["Jobber Type"],
-  ROUTES["Material / Trim"],
-  ROUTES["Party"],
-  ROUTES["Vendor"],
-  ROUTES["Location"],
-  ROUTES["Material Shades"],
-  ROUTES["Material Unit"],
-  ROUTES["Catalogue"],
-  ROUTES["Material Type"],
-  ROUTES["Material Sub Type"],
-  ROUTES["Brand"],
-  ROUTES["Category"],
-  ROUTES["Main Category"],
-  ROUTES["BOM"],
-  ROUTES["Expense"],
-]
-    .filter(Boolean)
-    .map((u) => new URL(u, window.location.origin).pathname.replace(/\/+$/, "") + "/");
+      const allowedRoutes = [
+        ROUTES["Jobber"],
+        ROUTES["Jobber Type"],
+        ROUTES["Material / Trim"],
+        ROUTES["Party"],
+        ROUTES["Vendor"],
+        ROUTES["Location"],
+        ROUTES["Material Shades"],
+        ROUTES["Material Unit"],
+        ROUTES["Catalogue"],
+        ROUTES["Material Type"],
+        ROUTES["Material Sub Type"],
+        ROUTES["Brand"],
+        ROUTES["Category"],
+        ROUTES["Main Category"],
+        ROUTES["BOM"],
+        ROUTES["Expense"],
+      ]
+        .filter(Boolean)
+        .map((u) => new URL(u, window.location.origin).pathname.replace(/\/+$/, "") + "/");
 
-  const prefixes = [
-    "/master/jobbers/",
-    "/master/jobber-types/",
-    "/master/materials/",
-    "/master/parties/",
-    "/master/vendors/",
-    "/master/locations/",
-    "/master/material-shades/",
-    "/master/material-types/",
-    "/master/brand/",
-    "/master/pattern/",
-    ...allowedRoutes,
-  ];
+      const prefixes = [
+        "/master/jobbers/",
+        "/master/jobber-types/",
+        "/master/materials/",
+        "/master/parties/",
+        "/master/vendors/",
+        "/master/locations/",
+        "/master/material-shades/",
+        "/master/material-types/",
+        "/master/brand/",
+        "/master/pattern/",
+        ...allowedRoutes,
+      ];
 
-  return prefixes.some((p) => path.startsWith(p));
-}
+      return prefixes.some((p) => path.startsWith(p));
+    }
 
     function bootUtilities() {
       const container = document.getElementById("utilSections");
       const input = document.getElementById("utilSearch");
       if (!container || !input) return;
 
-      // Close handler from embedded pages
-      // Close handler from embedded pages
       container.addEventListener("click", (e) => {
-  const closeBtn = e.target.closest("[data-embed-close]");
-  if (!closeBtn) return;
+        const closeBtn = e.target.closest("[data-embed-close]");
+        if (!closeBtn) return;
 
-  e.preventDefault();
-  e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
 
-  const panel = container.querySelector("#mastersEmbedPanel");
-  const mount = container.querySelector("#mastersEmbedMount");
-  if (!panel || !mount) return;
+        const panel = container.querySelector("#mastersEmbedPanel");
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!panel || !mount) return;
 
-  MASTERS_REQUEST_SEQ += 1;
-  LAST_MASTERS_URL = null;
+        MASTERS_REQUEST_SEQ += 1;
+        LAST_MASTERS_URL = null;
 
-  panel.style.display = "none";
-  panel.style.pointerEvents = "none";
-  mount.classList.remove("is-loading");
-  mount.innerHTML = "";
-});
+        panel.style.display = "none";
+        panel.style.pointerEvents = "none";
+        mount.classList.remove("is-loading");
+        mount.innerHTML = "";
+      });
 
       // ==========================
       // MATERIALS ONLY: initEmbedMount
-      // - Step1: only 4 options, nothing else visible
-      // - Step2: show only selected type fields
-      // - Disable hidden fields to prevent browser blocking save
-      // - Image preview
+      // - works with current embedded material form
+      // - fixes real-time image preview
+      // - keeps material subtype filtering
       // ==========================
-      function initEmbedMount(mount, contextUrl) {
-        if (!mount) return;
+     
+function initEmbedMount(mount, contextUrl) {
+  if (!mount) return;
 
-        // ===== MATERIALS LIST FILTER (stay inside embed) =====
-        const materialsList = mount.querySelector(".materials-embed"); // CHANGED
-        if (materialsList) { // CHANGED
-          const listForm = materialsList.querySelector("form.mat-search"); // CHANGED
-          const selects = listForm ? listForm.querySelectorAll('select[name="type"]') : null; // CHANGED
-          const typeSelect = (selects && selects.length) ? selects[selects.length - 1] : null; // CHANGED (handles nested/duplicate selects safely)
-          if (listForm && typeSelect && !typeSelect.dataset.bound) { // CHANGED
-            typeSelect.dataset.bound = "1"; // CHANGED
-            typeSelect.removeAttribute("onchange"); // CHANGED (prevents inline this.form.submit() which bypasses submit event)
-            typeSelect.onchange = null; // CHANGED
-            typeSelect.addEventListener("change", () => { // CHANGED
-              if (typeof listForm.requestSubmit === "function") { // CHANGED
-                listForm.requestSubmit(); // CHANGED (fires submit event so embed submit handler intercepts)
-              } else { // CHANGED
-                listForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); // CHANGED (fallback)
-              }
-            }); // CHANGED
-          }
+  // ===== MATERIALS LIST FILTER (stay inside embed) =====
+  const materialsList = mount.querySelector(".materials-embed");
+  if (materialsList) {
+    const listForm = materialsList.querySelector("form.mat-search");
+    const selects = listForm ? listForm.querySelectorAll('select[name="type"]') : null;
+    const typeSelect = (selects && selects.length) ? selects[selects.length - 1] : null;
+
+    if (listForm && typeSelect && !typeSelect.dataset.bound) {
+      typeSelect.dataset.bound = "1";
+      typeSelect.removeAttribute("onchange");
+      typeSelect.onchange = null;
+      typeSelect.addEventListener("change", () => {
+        if (typeof listForm.requestSubmit === "function") {
+          listForm.requestSubmit();
+        } else {
+          listForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
         }
-        // ===== END MATERIALS LIST FILTER FIX =====
+      });
+    }
+  }
 
-        const formWrap = mount.querySelector("[data-material-form]");
-        if (!formWrap) return;
+  const formWrap =
+    mount.querySelector("[data-material-form]") ||
+    mount.querySelector(".material-form-embed") ||
+    mount.querySelector(".mf-form");
 
-        const step2 = formWrap.querySelector("[data-step2]");
-        if (!step2) return;
+  if (!formWrap) return;
 
-        const ALLOWED_TYPES = new Set(["yarn", "greige", "finished", "trim"]);
+  const formEl = formWrap.matches("form") ? formWrap : formWrap.querySelector(".mf-form");
+  if (!formEl) return;
 
-        const hasErrors = !!formWrap.querySelector(".mat-errors, .errorlist, [aria-invalid='true']");
-        const ctx = String(contextUrl || "");
-        const isAdd = ctx.includes("/master/materials/add");
-        const isEdit = ctx.includes("/edit/");
+  const preview = mount.querySelector("#matPreview");
+  if (preview) {
+    preview.dataset.initialPreview = preview.innerHTML;
+  }
 
-        const typeEl = formWrap.querySelector('[name="material_kind"]');
+  // Real-time image preview for dynamically injected embed content
+  if (!mount.dataset.previewDelegated) {
+    mount.dataset.previewDelegated = "1";
 
-        function ensureOnly4Options_Select(selectEl) {
-          if (!selectEl) return;
+    mount.addEventListener("change", function (e) {
+      const input = e.target;
+      if (!input || input.name !== "image") return;
 
-          // hide everything except allowed 4
-          Array.from(selectEl.options).forEach((opt) => {
-            const v = (opt.value || "").trim();
-            if (!ALLOWED_TYPES.has(v)) opt.hidden = true;
-          });
+      const previewBox = mount.querySelector("#matPreview");
+      if (!previewBox) return;
 
-          // ensure hidden placeholder exists so Step2 stays hidden until user selects
-          let placeholder = selectEl.querySelector('option[value=""]');
-          if (!placeholder) {
-            placeholder = document.createElement("option");
-            placeholder.value = "";
-            placeholder.textContent = "Select";
-            placeholder.disabled = true;
-            placeholder.hidden = true; // not visible -> still only 4 visible options
-            selectEl.insertBefore(placeholder, selectEl.firstChild);
-          } else {
-            placeholder.disabled = true;
-            placeholder.hidden = true;
-          }
+      const initialPreview = previewBox.dataset.initialPreview || "";
+      const file = input.files && input.files[0];
 
-          // On add screen (fresh), force no selection
-          if (isAdd && !isEdit && !hasErrors) {
-            placeholder.selected = true;
-            selectEl.value = "";
-          }
-        }
-
-        function ensureOnly4Options_Radios() {
-          const radios = Array.from(formWrap.querySelectorAll('input[type="radio"][name="material_kind"]'));
-          if (!radios.length) return;
-
-          radios.forEach((r) => {
-            if (!ALLOWED_TYPES.has((r.value || "").trim())) {
-              // hide radio + its label container if possible
-              const wrap = r.closest("label") || r.parentElement;
-              if (wrap) wrap.style.display = "none";
-              r.checked = false;
-            }
-          });
-
-          // On add screen (fresh), force none checked
-          if (isAdd && !isEdit && !hasErrors) {
-            radios.forEach((r) => { r.checked = false; });
-          }
-        }
-
-        // Disable/enable helpers to prevent hidden required fields blocking submit
-        function primeReqState(el) {
-          if (el.dataset.reqInit === undefined) {
-            el.dataset.reqInit = el.required ? "1" : "0";
-          }
-        }
-
-        function setEnabled(root, enabled) {
-          const ctrls = root.querySelectorAll("input, select, textarea, button");
-          ctrls.forEach((el) => {
-            // never disable material_kind control itself
-            if (el.name === "material_kind") return;
-
-            if (el.matches("input, select, textarea")) {
-              primeReqState(el);
-              if (!enabled) el.required = false;
-              else el.required = (el.dataset.reqInit === "1");
-            }
-
-            el.disabled = !enabled;
-          });
-        }
-
-        const sections = Array.from(formWrap.querySelectorAll(".mf-section[data-type]"));
-
-        function detectValue() {
-          const el = formWrap.querySelector('[name="material_kind"]');
-          if (!el) return "";
-
-          if (el.tagName === "SELECT") return (el.value || "").trim();
-
-          const checked = formWrap.querySelector('[name="material_kind"]:checked');
-          return checked ? (checked.value || "").trim() : "";
-        }
-
-        function showType(val) {
-          const v = (val || "").trim();
-          const ok = ALLOWED_TYPES.has(v);
-
-          if (!ok) {
-            step2.style.display = "none";
-            // disable everything in step2 so required fields don't block submit
-            setEnabled(step2, false);
-            sections.forEach((s) => { s.style.display = "none"; });
-            return;
-          }
-
-          step2.style.display = "block";
-          // enable step2 common controls first
-          setEnabled(step2, true);
-
-          sections.forEach((s) => {
-            const active = (s.dataset.type === v);
-            s.style.display = active ? "block" : "none";
-            // critical: disable controls in hidden sections
-            setEnabled(s, active);
-          });
-        }
-
-        // 1) enforce ONLY 4 options visible (Materials only)
-        if (typeEl && typeEl.tagName === "SELECT") ensureOnly4Options_Select(typeEl);
-        else ensureOnly4Options_Radios();
-
-        // 2) bind change
-        formWrap.addEventListener("change", (e) => {
-          if (e.target && e.target.name === "material_kind") {
-            showType(detectValue());
-          }
-        });
-
-        // 3) initial state: Step2 hidden until selection (unless edit / errors)
-        showType(detectValue());
-
-        // 4) image preview (Materials only)
-        const fileInput = formWrap.querySelector('input[type="file"]');
-        const preview = formWrap.querySelector("#matPreview");
-        if (fileInput && preview && !fileInput.dataset.bound) {
-          fileInput.dataset.bound = "1";
-          fileInput.addEventListener("change", () => {
-            const file = fileInput.files && fileInput.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              preview.innerHTML = `<img src="${ev.target.result}" alt="preview">`;
-            };
-            reader.readAsDataURL(file);
-          });
-        }
+      if (!file) {
+        previewBox.innerHTML = initialPreview;
+        return;
       }
 
-      // open embed + init materials logic after load
+      if (file.type && !file.type.startsWith("image/")) {
+        previewBox.innerHTML = initialPreview;
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        previewBox.innerHTML = `<img src="${ev.target.result}" alt="preview">`;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const typeSelect = formEl.querySelector('[name="material_type"]');
+  const subTypeSelect = formEl.querySelector('[name="material_sub_type"]');
+
+  if (typeSelect && subTypeSelect && !subTypeSelect.dataset.filterBound) {
+    const originalOptions = Array.from(subTypeSelect.options).map((option) => option.cloneNode(true));
+    subTypeSelect.dataset.filterBound = "1";
+
+    function rebuildSubTypes() {
+      const selectedTypeId = typeSelect.value || "";
+      const currentValue = subTypeSelect.value || "";
+
+      subTypeSelect.innerHTML = "";
+
+      if (!selectedTypeId) {
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Select Material Type first";
+        subTypeSelect.appendChild(placeholder);
+        subTypeSelect.disabled = true;
+        return;
+      }
+
+      subTypeSelect.disabled = false;
+      let hasCurrentValue = false;
+
+      originalOptions.forEach((option) => {
+        const optionValue = option.value || "";
+        const optionTypeId = option.getAttribute("data-material-type") || "";
+
+        if (!optionValue || optionTypeId === selectedTypeId) {
+          const clone = option.cloneNode(true);
+          if (clone.value === currentValue) {
+            hasCurrentValue = true;
+          }
+          subTypeSelect.appendChild(clone);
+        }
+      });
+
+      subTypeSelect.value = hasCurrentValue ? currentValue : "";
+    }
+
+    rebuildSubTypes();
+    typeSelect.addEventListener("change", rebuildSubTypes);
+  }
+}
+
+
       async function openMastersPanel(title, url) {
         const panel = container.querySelector("#mastersEmbedPanel");
         const mount = container.querySelector("#mastersEmbedMount");
@@ -842,7 +764,6 @@ function isMastersUrl(hrefOrAction) {
         }
       }
 
-      // delegate clicks inside embed (pagination, links)
       container.addEventListener("click", (e) => {
         const panel = container.querySelector("#mastersEmbedPanel");
         const mount = container.querySelector("#mastersEmbedMount");
@@ -878,103 +799,98 @@ function isMastersUrl(hrefOrAction) {
         }
       });
 
-     container.addEventListener("submit", async (e) => {
-  const form = e.target.closest("form");
-  if (!form) return;
+      container.addEventListener("submit", async (e) => {
+        const form = e.target.closest("form");
+        if (!form) return;
 
-  // Jobber delete confirmation
-  if (form.matches(".js-jb-delete-form")) {
-    if (form.dataset.confirmed === "1") {
-      delete form.dataset.confirmed;
-    } else {
-      e.preventDefault();
-      openJobberDeleteModal(container, form);
-      return;
-    }
-  }
+        if (form.matches(".js-jb-delete-form")) {
+          if (form.dataset.confirmed === "1") {
+            delete form.dataset.confirmed;
+          } else {
+            e.preventDefault();
+            openJobberDeleteModal(container, form);
+            return;
+          }
+        }
 
-  // Materials-only: allow empty action by resolving to LAST_MASTERS_URL
-  const isMaterialsForm =
-    !!form.closest(".material-form-embed") ||
-    !!form.closest(".materials-embed") ||
-    !!form.querySelector("[data-material-form]") ||
-    !!form.closest("[data-material-form]");
+        const isMaterialsForm =
+          !!form.closest(".material-form-embed") ||
+          !!form.closest(".materials-embed") ||
+          !!form.querySelector("[data-material-form]") ||
+          !!form.closest("[data-material-form]");
 
-  const actionAttr = (form.getAttribute("action") || "").trim();
-  const resolvedAction = (isMaterialsForm && !actionAttr)
-    ? (LAST_MASTERS_URL || window.location.href)
-    : (actionAttr || "");
+        const actionAttr = (form.getAttribute("action") || "").trim();
+        const resolvedAction = (isMaterialsForm && !actionAttr)
+          ? (LAST_MASTERS_URL || window.location.href)
+          : (actionAttr || "");
 
-  if (!isMastersUrl(resolvedAction)) return;
+        if (!isMastersUrl(resolvedAction)) return;
 
-  e.preventDefault();
+        e.preventDefault();
 
-  const mount = container.querySelector("#mastersEmbedMount");
-  if (!mount) return;
+        const mount = container.querySelector("#mastersEmbedMount");
+        if (!mount) return;
 
-  const method = (form.getAttribute("method") || "GET").toUpperCase();
+        const method = (form.getAttribute("method") || "GET").toUpperCase();
 
-  if (method === "GET") {
-    const params = new URLSearchParams(new FormData(form));
-    const baseUrl = resolvedAction.split("?")[0];
-    openMastersPanel("Masters", baseUrl + "?" + params.toString());
-    return;
-  }
+        if (method === "GET") {
+          const params = new URLSearchParams(new FormData(form));
+          const baseUrl = resolvedAction.split("?")[0];
+          openMastersPanel("Masters", baseUrl + "?" + params.toString());
+          return;
+        }
 
-  const fd = new FormData(form);
-  const res = await fetch(withEmbed(resolvedAction), {
-    method,
-    body: fd,
-    headers: { "X-Requested-With": "XMLHttpRequest" },
-    credentials: "same-origin",
-  });
-
-  const ct = (res.headers.get("content-type") || "").toLowerCase();
-
-  if (ct.includes("application/json")) {
-    const data = await res.json();
-    if (data.ok && data.url) {
-      openMastersPanel("Masters", data.url);
-      return;
-    }
-  }
-
-  mount.innerHTML = await res.text();
-  initEmbedMount(mount, resolvedAction);
-});
-
-    function render(query) {
-      const q = (query || "").toLowerCase().trim();
-
-      const filtered = UTILITIES.filter((u) => {
-        if (!q) return true;
-        const hay = `${u.title} ${u.tag} ${u.key}`.toLowerCase();
-        return hay.includes(q);
-      });
-
-      // Group
-      const groups = {};
-      for (const u of filtered) (groups[u.tag] ||= []).push(u);
-
-      // Sort inside group
-      Object.keys(groups).forEach((tag) => {
-        groups[tag].sort((a, b) => {
-          const pa = getPriority(tag, a.title);
-          const pb = getPriority(tag, b.title);
-          if (pa !== pb) return pa - pb;
-          return a.title.localeCompare(b.title);
+        const fd = new FormData(form);
+        const res = await fetch(withEmbed(resolvedAction), {
+          method,
+          body: fd,
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
         });
+
+        const ct = (res.headers.get("content-type") || "").toLowerCase();
+
+        if (ct.includes("application/json")) {
+          const data = await res.json();
+          if (data.ok && data.url) {
+            openMastersPanel("Masters", data.url);
+            return;
+          }
+        }
+
+        mount.innerHTML = await res.text();
+        initEmbedMount(mount, resolvedAction);
       });
 
-      // Build rows STRICTLY (keep structure even if empty => NO CRAM)
-      const buildRow = (rowSpec, rowClass) => {
-        const html = rowSpec.map(({ tag, span }) => groupHtml(tag, groups[tag] || [], span)).join("");
-        return `<div class="util-row ${rowClass}">${html}</div>`;
-      };
+      function render(query) {
+        const q = (query || "").toLowerCase().trim();
 
-      const existingPanel = container.querySelector("#mastersEmbedPanel");
+        const filtered = UTILITIES.filter((u) => {
+          if (!q) return true;
+          const hay = `${u.title} ${u.tag} ${u.key}`.toLowerCase();
+          return hay.includes(q);
+        });
 
-container.innerHTML = `
+        const groups = {};
+        for (const u of filtered) (groups[u.tag] ||= []).push(u);
+
+        Object.keys(groups).forEach((tag) => {
+          groups[tag].sort((a, b) => {
+            const pa = getPriority(tag, a.title);
+            const pb = getPriority(tag, b.title);
+            if (pa !== pb) return pa - pb;
+            return a.title.localeCompare(b.title);
+          });
+        });
+
+        const buildRow = (rowSpec, rowClass) => {
+          const html = rowSpec.map(({ tag, span }) => groupHtml(tag, groups[tag] || [], span)).join("");
+          return `<div class="util-row ${rowClass}">${html}</div>`;
+        };
+
+        const existingPanel = container.querySelector("#mastersEmbedPanel");
+
+        container.innerHTML = `
   <div class="util-layout">
     ${buildRow(ROW_LAYOUT.row1, "util-row-1")}
     ${buildRow(ROW_LAYOUT.row2, "util-row-2")}
@@ -983,65 +899,61 @@ container.innerHTML = `
   </div>
 `;
 
-if (existingPanel) {
-  const mastersGroup = container.querySelector('.util-group[data-tag="Masters"]');
-  if (mastersGroup) {
-    const groupGrid = mastersGroup.querySelector(".util-group-grid");
-    if (groupGrid) {
-      mastersGroup.insertBefore(existingPanel, groupGrid);
-    } else {
-      mastersGroup.appendChild(existingPanel);
-    }
-  }
-}
+        if (existingPanel) {
+          const mastersGroup = container.querySelector('.util-group[data-tag="Masters"]');
+          if (mastersGroup) {
+            const groupGrid = mastersGroup.querySelector(".util-group-grid");
+            if (groupGrid) {
+              mastersGroup.insertBefore(existingPanel, groupGrid);
+            } else {
+              mastersGroup.appendChild(existingPanel);
+            }
+          }
+        }
 
-      // Tile clicks
-      container.querySelectorAll(".util-tile").forEach((tile) => {
-        tile.addEventListener("click", (e) => {
-          const title = tile.dataset.title || "";
-          const href = tile.getAttribute("href") || "#";
+        container.querySelectorAll(".util-tile").forEach((tile) => {
+          tile.addEventListener("click", (e) => {
+            const title = tile.dataset.title || "";
+            const href = tile.getAttribute("href") || "#";
 
-          // Only these open embed for now
-      if (
-        title === "Jobber" ||
-        title === "Jobber Type" ||
-        title === "Material / Trim" ||
-        title === "Party" ||
-        title === "Location" ||
-        title === "Vendor" ||
-        title === "Material Shades" ||
-        title === "Material Unit" ||
-        title === "Material Type" ||
-        title === "Material Sub Type" ||
-        title === "Catalogue" ||
-        title === "Pattern Type" ||
-        title === "Main Category" ||
-        title === "Category" ||
-        title === "BOM" ||
+            if (
+              title === "Jobber" ||
+              title === "Jobber Type" ||
+              title === "Material / Trim" ||
+              title === "Party" ||
+              title === "Location" ||
+              title === "Vendor" ||
+              title === "Material Shades" ||
+              title === "Material Unit" ||
+              title === "Material Type" ||
+              title === "Material Sub Type" ||
+              title === "Catalogue" ||
+              title === "Pattern Type" ||
+              title === "Main Category" ||
+              title === "Category" ||
+              title === "BOM" ||
+              title === "Expense"
+            ) {
+              e.preventDefault();
+              openMastersPanel(title, href);
+              return;
+            }
 
-            title === "Expense" 
-      ) {
-        e.preventDefault();
-        openMastersPanel(title, href);
-        return;
-      } 
-
-          // keep no navigation for others (your requirement)
-          e.preventDefault();
+            e.preventDefault();
+          });
         });
-      });
-    }
+      }
 
-    render("");
-    input.addEventListener("input", () => render(input.value));
-  }
+      render("");
+      input.addEventListener("input", () => render(input.value));
+    }
 
     if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootUtilities);
-  } else {
-    bootUtilities();
-  }
-  }) ();
+      document.addEventListener("DOMContentLoaded", bootUtilities);
+    } else {
+      bootUtilities();
+    }
+  })();
 
   function getJobberDeleteModal(container) {
     const mount = container.querySelector("#mastersEmbedMount");

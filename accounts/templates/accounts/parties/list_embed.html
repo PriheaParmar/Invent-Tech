@@ -28,7 +28,7 @@
           type="search"
           name="q"
           value="{{ q }}"
-          placeholder="Search party name, full name, phone, GST, PAN or email"
+          placeholder="Search party name, phone, GST, PAN or email"
           autocomplete="off"
           aria-label="Search parties"
         >
@@ -50,7 +50,6 @@
         <thead>
           <tr>
             <th>Party Name</th>
-            <th>Full Name</th>
             <th>Phone</th>
             <th>GST Number</th>
             <th>Email</th>
@@ -61,7 +60,6 @@
           {% for p in parties %}
           <tr>
             <td>{{ p.party_name|default:"—" }}</td>
-            <td>{{ p.full_name|default:"—" }}</td>
             <td>{{ p.phone_number|default:"—" }}</td>
             <td>{{ p.gst_number|default:"—" }}</td>
             <td>{{ p.email|default:"—" }}</td>
@@ -77,7 +75,7 @@
           </tr>
           {% empty %}
           <tr>
-            <td colspan="6" class="jb-empty">No parties found.</td>
+            <td colspan="5" class="jb-empty">No parties found.</td>
           </tr>
           {% endfor %}
         </tbody>

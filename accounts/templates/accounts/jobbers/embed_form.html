@@ -79,15 +79,16 @@
           {% endif %}
         </div>
 
-        <div class="jf-field">
-          <label for="{{ form.phone.id_for_label }}">Phone</label>
-          {{ form.phone }}
-          {% if form.phone.errors %}
-          <div class="jb-field-errors">
-            {% for error in form.phone.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
+<div class="jf-field">
+  <label for="{{ form.phone.id_for_label }}">Phone</label>
+  {{ form.phone }}
+  <div class="jf-muted">Digits only, exactly 10 digits.</div>
+  {% if form.phone.errors %}
+  <div class="jb-field-errors">
+    {% for error in form.phone.errors %}<p>{{ error }}</p>{% endfor %}
+  </div>
+  {% endif %}
+</div>
 
         <div class="jf-field jf-full">
           <label for="{{ form.email.id_for_label }}">Email</label>
@@ -109,18 +110,6 @@
           {% endif %}
         </div>
 
-        <div class="jf-field jf-full jf-check">
-          <label for="{{ form.is_active.id_for_label }}">Active</label>
-          <div class="jf-check-row">
-            {{ form.is_active }}
-            <span class="jf-muted">Enable or disable this jobber</span>
-          </div>
-          {% if form.is_active.errors %}
-          <div class="jb-field-errors">
-            {% for error in form.is_active.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
       </div>
 
       <div class="jf-footer">

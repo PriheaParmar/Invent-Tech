@@ -72,6 +72,7 @@
               name="password"
               type="password"
               placeholder="Create a password"
+              value="{{ form_data.password|default:'' }}"
               required
             >
             <button class="pw-btn" type="button" onclick="togglePw('pw1', this)">Show</button>
@@ -87,6 +88,7 @@
               name="password2"
               type="password"
               placeholder="Confirm password"
+              value="{{ form_data.password2|default:'' }}"
               required
             >
             <button class="pw-btn" type="button" onclick="togglePw('pw2', this)">Show</button>

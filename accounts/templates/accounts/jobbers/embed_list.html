@@ -19,12 +19,12 @@
     </div>
 
     <div class="jb-tools">
-      <form class="jb-search" method="get" action="{% url 'accounts:jobber_list' %}">
+      <form class="jb-search" method="get" action="{% url 'accounts:jobber_list' %}" id="jobberSearchForm">
         {% if not full_page %}
         <input type="hidden" name="embed" value="1">
         {% endif %}
-        <input type="search" name="q" value="{{ q }}" placeholder="Search name, email, phone, role or type"
-          autocomplete="off" aria-label="Search jobbers">
+        <input type="search" name="q" value="{{ q }}" placeholder="Search name, phone, email, role, type or address"
+  autocomplete="off" aria-label="Search jobbers" id="jobberSearchInput">
         <button class="jb-search-btn" type="submit">Search</button>
       </form>
 
@@ -84,5 +84,22 @@
     
 {% include "accounts/jobbers/_delete_confirm_modal.html" %}
   </section>
+  <script>
+  (function () {
+    const form = document.getElementById("jobberSearchForm");
+    const input = document.getElementById("jobberSearchInput");
+
+    if (!form || !input) return;
+
+    let timer = null;
+
+    input.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        form.submit();
+      }, 300);
+    });
+  })();
+</script>
 </div>
 

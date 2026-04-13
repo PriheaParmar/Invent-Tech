@@ -1,29 +1,206 @@
-/* Shared jobber page shell */
-.jobbers-embed{padding:10px 6px;}
-.jb-page{width:min(1120px,100%);margin:28px auto;}
-.jb-page .jobbers-embed{padding:0;}
-.jb-panel{background:rgba(255,255,255,.72);border:2px dashed rgb(0,0,0);border-radius:18px;box-shadow:0 12px 36px rgba(15,23,42,.08);padding:18px;}
-.jobbers-embed .jb-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
-.jobbers-embed .jb-head-actions,.jobbers-embed .jf-head-actions{display:flex;align-items:center;gap:10px;}
-.jobbers-embed .jb-title{font-size:18px;font-weight:900;line-height:1.1;}
-.jobbers-embed .jb-sub{font-size:12px;opacity:.72;margin-top:4px;}
-.jobbers-embed .jb-iconbtn,.jobbers-embed .jb-search-btn,.jobbers-embed .jb-add,.jobbers-embed .jb-secondary,.jobbers-embed .jb-danger-btn{appearance:none;border:1px solid rgba(0,0,0,.10);border-radius:12px;text-decoration:none;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease;}
-.jobbers-embed .jb-iconbtn{width:38px;height:38px;background:rgba(255,255,255,.85);color:#000;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
-.jobbers-embed .jb-ico{width:18px;height:18px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.jobbers-embed .jb-back-ico{width:18px;height:18px;fill:currentColor;stroke:none;}
-.jobbers-embed .jb-iconbtn:hover{background:#fff;transform:translateY(-1px);}
-.jobbers-embed .jb-close:hover,.jobbers-embed .jb-back:hover{color:var(--orange);}
-.jobbers-embed .jb-errors,.jobbers-embed .jb-field-errors{margin-top:6px;}
-.jobbers-embed .jb-errors{margin-bottom:12px;padding:10px 12px;border-radius:12px;background:rgba(217,45,32,.08);border:1px solid rgba(217,45,32,.16);color:#b42318;font-size:12px;}
-.jobbers-embed .jb-field-errors p{margin:0;font-size:12px;color:#b42318;}
-.jobbers-embed .jb-secondary,.jobbers-embed .jb-search-btn,.jobbers-embed .jb-add,.jobbers-embed .jb-danger-btn{height:38px;padding:0 14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;}
-.jobbers-embed .jb-search-btn,.jobbers-embed .jb-secondary{background:rgba(255,255,255,.85);color:#000;}
-.jobbers-embed .jb-search-btn:hover,.jobbers-embed .jb-secondary:hover{background:#000;color:#fff;}
-.jobbers-embed .jb-add{background:var(--orange);color:#fff;}
-.jobbers-embed .jb-add:hover{background:#000;color:#fff;}
-.jobbers-embed .jb-danger-btn{background:#d92d20;color:#fff;border-color:#d92d20;}
-.jobbers-embed .jb-danger-btn:hover{background:#b42318;border-color:#b42318;}
+.jb-confirm-modal[hidden] {
+  display: none;
+}
 
-.jobbers-embed .jb-confirm-copy{margin:0 0 14px;font-size:14px;line-height:1.5;}
-.jobbers-embed .jb-confirm-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;}
-@media (max-width:768px){.jobbers-embed .jb-confirm-actions{width:100%;}.jobbers-embed .jb-confirm-actions > *{flex:1;}}
+.jb-confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+}
+
+.jb-confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.38);
+}
+
+.jb-confirm-card {
+  position: relative;
+  width: min(92vw, 420px);
+  margin: 10vh auto 0;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+  padding: 26px 22px 22px;
+  animation: jbModalIn 0.16s ease-out;
+  text-align: center;
+}
+
+@keyframes jbModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.jb-confirm-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  padding: 0;
+  line-height: 1;
+}
+
+.jb-confirm-close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.jb-confirm-close svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.jb-confirm-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-right: 0;
+}
+
+.jb-confirm-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fef2f2;
+  color: #dc2626;
+  flex-shrink: 0;
+  margin: 0 auto;
+}
+
+.jb-confirm-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.jb-confirm-copy {
+  min-width: 0;
+  text-align: center;
+}
+
+.jb-confirm-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.jb-confirm-text {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #6b7280;
+  text-align: center;
+}
+
+.jb-confirm-body {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.jb-confirm-label {
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-weight: 600;
+  line-height: 1.4;
+  word-break: break-word;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.jb-confirm-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.jb-secondary,
+.jb-danger-btn {
+  min-width: 112px;
+  height: 42px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.jb-secondary {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.jb-secondary:hover {
+  background: #f9fafb;
+}
+
+.jb-danger-btn {
+  border: 0;
+  background: #dc2626;
+  color: #fff;
+}
+
+.jb-danger-btn:hover {
+  background: #b91c1c;
+}
+
+@media (max-width: 640px) {
+  .jb-confirm-card {
+    width: min(94vw, 420px);
+    margin-top: 8vh;
+    padding: 18px;
+  }
+
+  .jb-confirm-actions {
+    flex-direction: column-reverse;
+    justify-content: center;
+    align-items: stretch;
+  }
+
+  .jb-secondary,
+  .jb-danger-btn {
+    width: 100%;
+  }
+}

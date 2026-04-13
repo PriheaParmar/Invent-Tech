@@ -1,2 +1,15 @@
 {% extends "accounts/base_app.html" %}
-{% block content %}{% include "accounts/material_shades/list_embed.html" %}{% endblock %}
+
+{% block title %}Material Shades - InventTech{% endblock %}
+
+{% block page_title %}Material Shades{% endblock %}
+
+{% block page_subtitle %}
+Manage reusable material shades. Shades marked as All are available across every material type.
+{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/material_shades/list_embed.html" with full_page=True %}
+</div>
+{% endblock %}

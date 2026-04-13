@@ -5,8 +5,8 @@ def firm_and_role_context(request):
         return {}
 
     current_firm = Firm.objects.filter(owner=request.user).first()
+    current_user_extra = UserExtra.objects.filter(user=request.user).first()
 
-    # choices pulled from model fields (config-based)
     firm_type_choices = []
     try:
         firm_type_choices = Firm._meta.get_field("firm_type").choices
@@ -23,6 +23,7 @@ def firm_and_role_context(request):
 
     return {
         "current_firm": current_firm,
+        "current_user_extra": current_user_extra,
         "FIRM_TYPE_CHOICES": firm_type_choices,
         "ROLE_CHOICES": role_choices,
         "CURRENT_ROLE": current_role,

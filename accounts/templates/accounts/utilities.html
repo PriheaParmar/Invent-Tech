@@ -832,6 +832,7 @@
     bindEmbedAutosubmit(mount);
     bindMaterialSubtypeForm(mount);
   }
+  
   function openJobberDeleteModal(form) {
     const modal = getJobberDeleteModal();
     const label = form.getAttribute("data-delete-label") || "this item";
@@ -845,22 +846,73 @@
     }
 
     const text = modal.querySelector("#jbConfirmText");
+    const labelNode = modal.querySelector("#jbConfirmLabel");
     if (text) {
-      text.textContent = `Are you sure you want to delete ${label}? This action cannot be undone.`;
+      text.textContent = "This record will be permanently removed from your utilities list.";
+    }
+    if (labelNode) {
+      labelNode.textContent = label;
     }
 
     modal._pendingForm = form;
+    modal._previousActiveElement = document.activeElement;
+
     modal.hidden = false;
+    modal.classList.remove("is-closing");
     document.body.classList.add("jb-modal-open");
+
+    window.requestAnimationFrame(function () {
+      modal.classList.add("is-open");
+
+      const confirmBtn = modal.querySelector("#jbConfirmDeleteBtn");
+      if (confirmBtn) confirmBtn.focus();
+    });
   }
 
   function closeJobberDeleteModal() {
     const modal = getJobberDeleteModal();
     if (!modal) return;
-    modal.hidden = true;
-    modal._pendingForm = null;
-    document.body.classList.remove("jb-modal-open");
+
+    const finishClose = function () {
+      modal.hidden = true;
+      modal.classList.remove("is-open", "is-closing");
+      modal._pendingForm = null;
+      document.body.classList.remove("jb-modal-open");
+
+      const previous = modal._previousActiveElement;
+      modal._previousActiveElement = null;
+      if (previous && typeof previous.focus === "function") {
+        previous.focus();
+      }
+    };
+
+    if (!modal.classList.contains("is-open")) {
+      finishClose();
+      return;
+    }
+
+    modal.classList.remove("is-open");
+    modal.classList.add("is-closing");
+
+    const card = modal.querySelector(".jb-confirm-card");
+    const backdrop = modal.querySelector(".jb-confirm-backdrop");
+    let finished = false;
+
+    const done = function () {
+      if (finished) return;
+      finished = true;
+      finishClose();
+    };
+
+    if (card) {
+      card.addEventListener("transitionend", done, { once: true });
+    } else if (backdrop) {
+      backdrop.addEventListener("transitionend", done, { once: true });
+    }
+
+    window.setTimeout(done, 260);
   }
+
 
   function bootUtilities() {
     const container = document.getElementById("utilSections");
