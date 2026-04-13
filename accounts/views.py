@@ -1,12 +1,14 @@
 from django.db import transaction
 import json
-from .forms import DashboardProfileForm, FirmForm
+import logging
 from io import BytesIO
 from django import forms
 from decimal import Decimal, InvalidOperation
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.db.models import Q, Prefetch, Sum
+
+logger = logging.getLogger(__name__)
 from .forms import ReadyPurchaseOrderForm
 from .models import ReadyPurchaseOrder
 from datetime import timedelta
@@ -387,22 +389,7 @@ def utilities_view(request):
     )
 
 
-@login_required
-def users_list_view(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = User.objects.select_related("userextra").all().order_by("-date_joined")
 
-    if q:
-        qs = qs.filter(
-            Q(username__icontains=q)
-            | Q(email__icontains=q)
-            | Q(first_name__icontains=q)
-            | Q(last_name__icontains=q)
-            | Q(userextra__phone__icontains=q)
-            | Q(userextra__designation__icontains=q)
-        )
-
-    return render(request, "accounts/users_list.html", {"users": qs, "q": q})
 
 
 @login_required
@@ -1381,13 +1368,17 @@ def _attach_yarn_po_metrics(po):
 
 def _build_yarn_po_pdf_response(po):
     try:
+        import os
+        from pathlib import Path
         from html import escape
 
+        from django.conf import settings
         from reportlab.lib import colors
         from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
         from reportlab.lib.units import mm
+        from reportlab.lib.utils import ImageReader
         from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
     except ImportError:
         return HttpResponse(
@@ -1395,18 +1386,25 @@ def _build_yarn_po_pdf_response(po):
             status=500,
         )
 
+    brand_pink = colors.HexColor("#ED2F8C")
+    brand_orange = colors.HexColor("#F6A33B")
+    brand_blue = colors.HexColor("#1976F3")
+    brand_navy = colors.HexColor("#0F172A")
+    ink = colors.HexColor("#1F2937")
+    muted = colors.HexColor("#667085")
+    border = colors.HexColor("#D0D5DD")
+    soft_bg = colors.HexColor("#F8FAFC")
+    white = colors.white
+
     def text_or_dash(value):
         value = "" if value is None else str(value).strip()
         return value if value else "-"
 
-    def html_text(value):
-        return escape(text_or_dash(value)).replace("\n", "<br/>")
-
     def fmt_money(value):
         try:
-            return f"₹{float(value or 0):,.2f}"
+            return f"{float(value or 0):,.2f}"
         except Exception:
-            return f"₹{value or '0.00'}"
+            return f"{value or '0.00'}"
 
     def fmt_qty(value):
         try:
@@ -1414,218 +1412,424 @@ def _build_yarn_po_pdf_response(po):
         except Exception:
             return text_or_dash(value)
 
+    def line_if(label, value):
+        value = "" if value is None else str(value).strip()
+        if not value:
+            return ""
+        return f"<b>{escape(label)}:</b> {escape(value)}"
+
+    def join_parts(*parts):
+        clean = [str(p).strip() for p in parts if str(p).strip()]
+        return ", ".join(clean)
+
+    def resolve_logo_path():
+        if po.firm and getattr(po.firm, "logo", None):
+            try:
+                logo_path = po.firm.logo.path
+                if logo_path and os.path.exists(logo_path):
+                    return logo_path
+            except Exception:
+                pass
+
+        fallback = Path(settings.BASE_DIR) / "Logo.jpeg"
+        if fallback.exists():
+            return str(fallback)
+
+        return None
+
+    logo_path = resolve_logo_path()
+
+    def draw_branding(canvas, doc):
+        page_w, page_h = A4
+        canvas.saveState()
+
+        canvas.setStrokeColor(colors.HexColor("#E4E7EC"))
+        canvas.setLineWidth(0.8)
+        canvas.roundRect(8 * mm, 8 * mm, page_w - 16 * mm, page_h - 16 * mm, 4 * mm, stroke=1, fill=0)
+
+        usable_w = page_w - 16 * mm
+        stripe_w = usable_w / 3.0
+        stripe_y = page_h - 13 * mm
+        stripe_h = 4.5 * mm
+
+        canvas.setFillColor(brand_pink)
+        canvas.rect(8 * mm, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+
+        canvas.setFillColor(brand_orange)
+        canvas.rect(8 * mm + stripe_w, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+
+        canvas.setFillColor(brand_blue)
+        canvas.rect(8 * mm + 2 * stripe_w, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+
+        if logo_path:
+            try:
+                img = ImageReader(logo_path)
+                iw, ih = img.getSize()
+                draw_w = 26 * mm
+                draw_h = draw_w * (ih / float(iw)) if iw and ih else 26 * mm
+                x = (page_w - draw_w) / 2.0
+                y = 10 * mm
+
+                try:
+                    canvas.setFillAlpha(0.10)
+                    canvas.setStrokeAlpha(0.10)
+                except Exception:
+                    pass
+
+                canvas.drawImage(
+                    img,
+                    x,
+                    y,
+                    width=draw_w,
+                    height=draw_h,
+                    preserveAspectRatio=True,
+                    mask="auto",
+                )
+            except Exception:
+                pass
+
+        canvas.restoreState()
+
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        rightMargin=14 * mm,
-        leftMargin=14 * mm,
-        topMargin=14 * mm,
-        bottomMargin=14 * mm,
+        leftMargin=10 * mm,
+        rightMargin=10 * mm,
+        topMargin=16 * mm,
+        bottomMargin=16 * mm,
     )
 
     styles = getSampleStyleSheet()
 
     base_style = ParagraphStyle(
-        "POBase",
+        "YPOBase",
         parent=styles["BodyText"],
         fontName="Helvetica",
-        fontSize=9.5,
-        leading=12,
-        textColor=colors.HexColor("#1f1f1f"),
+        fontSize=8.5,
+        leading=10.5,
+        textColor=ink,
         spaceAfter=0,
     )
 
-    firm_name_style = ParagraphStyle(
-        "POFirmName",
-        parent=base_style,
-        fontName="Helvetica-Bold",
-        fontSize=24,
-        leading=28,
-        textColor=colors.black,
-        alignment=TA_LEFT,
-    )
-
-    title_style = ParagraphStyle(
-        "POTitle",
-        parent=base_style,
-        fontName="Helvetica-Bold",
-        fontSize=11,
-        leading=14,
-        textColor=colors.HexColor("#444444"),
-        alignment=TA_LEFT,
-    )
-
-    meta_style = ParagraphStyle(
-        "POMeta",
+    header_left_style = ParagraphStyle(
+        "YPOHeaderLeft",
         parent=base_style,
         fontName="Helvetica",
-        fontSize=10,
+        fontSize=8.4,
+        leading=10.4,
+        textColor=white,
+        alignment=TA_LEFT,
+    )
+
+    header_title_style = ParagraphStyle(
+        "YPOHeaderTitle",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=14,
         leading=16,
+        textColor=brand_navy,
         alignment=TA_RIGHT,
-        textColor=colors.HexColor("#222222"),
     )
 
-    label_style = ParagraphStyle(
-        "POLabel",
+    header_meta_style = ParagraphStyle(
+        "YPOHeaderMeta",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8.3,
+        leading=10.2,
+        textColor=ink,
+        alignment=TA_RIGHT,
+    )
+
+    section_head_left = ParagraphStyle(
+        "YPOSectionHeadLeft",
         parent=base_style,
         fontName="Helvetica-Bold",
-        fontSize=10,
-        leading=12,
+        fontSize=8,
+        leading=10,
+        textColor=white,
         alignment=TA_LEFT,
     )
 
-    block_text_style = ParagraphStyle(
-        "POBlockText",
+    section_value_style = ParagraphStyle(
+        "YPOSectionValue",
         parent=base_style,
         fontName="Helvetica",
-        fontSize=10,
-        leading=13,
+        fontSize=8.2,
+        leading=10.2,
+        textColor=ink,
         alignment=TA_LEFT,
     )
 
     table_head_style = ParagraphStyle(
-        "POTableHead",
+        "YPOTableHead",
         parent=base_style,
         fontName="Helvetica-Bold",
-        fontSize=10,
-        leading=12,
-        alignment=TA_CENTER,
-        textColor=colors.HexColor("#2a2a2a"),
-    )
-
-    item_no_style = ParagraphStyle(
-        "POItemNo",
-        parent=base_style,
-        fontName="Helvetica",
-        fontSize=9,
-        leading=11,
+        fontSize=7.8,
+        leading=9.5,
+        textColor=white,
         alignment=TA_CENTER,
     )
 
-    desc_style = ParagraphStyle(
-        "PODesc",
+    item_center_style = ParagraphStyle(
+        "YPOItemCenter",
         parent=base_style,
         fontName="Helvetica",
-        fontSize=9,
-        leading=11,
+        fontSize=8,
+        leading=9.6,
+        alignment=TA_CENTER,
+    )
+
+    item_desc_style = ParagraphStyle(
+        "YPOItemDesc",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8,
+        leading=9.6,
         alignment=TA_LEFT,
-    )
-
-    qty_style = ParagraphStyle(
-        "POQty",
-        parent=base_style,
-        fontName="Helvetica",
-        fontSize=9,
-        leading=11,
-        alignment=TA_CENTER,
     )
 
     money_style = ParagraphStyle(
-        "POMoney",
+        "YPOMoney",
         parent=base_style,
         fontName="Helvetica",
-        fontSize=9,
-        leading=11,
+        fontSize=8,
+        leading=9.6,
         alignment=TA_RIGHT,
+    )
+
+    block_title_style = ParagraphStyle(
+        "YPOBlockTitle",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=8.4,
+        leading=10.5,
+        textColor=brand_navy,
+        alignment=TA_LEFT,
+    )
+
+    block_text_style = ParagraphStyle(
+        "YPOBlockText",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8.1,
+        leading=10.1,
+        textColor=ink,
+        alignment=TA_LEFT,
+    )
+
+    sign_style = ParagraphStyle(
+        "YPOSign",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=10,
+        textColor=ink,
+        alignment=TA_LEFT,
     )
 
     total_label_style = ParagraphStyle(
-        "POTotalLabel",
+        "YPOTotalLabel",
         parent=base_style,
         fontName="Helvetica-Bold",
-        fontSize=10,
-        leading=12,
+        fontSize=8.2,
+        leading=10.2,
+        textColor=ink,
         alignment=TA_LEFT,
     )
 
-    total_amount_style = ParagraphStyle(
-        "POTotalAmount",
+    total_value_style = ParagraphStyle(
+        "YPOTotalValue",
         parent=base_style,
         fontName="Helvetica-Bold",
-        fontSize=10,
-        leading=12,
+        fontSize=8.2,
+        leading=10.2,
+        textColor=ink,
         alignment=TA_RIGHT,
     )
 
-    notes_label_style = ParagraphStyle(
-        "PONotesLabel",
+    footer_note_style = ParagraphStyle(
+        "YPOFooterNote",
         parent=base_style,
         fontName="Helvetica-Bold",
-        fontSize=10,
-        leading=12,
-        alignment=TA_LEFT,
-    )
-
-    footer_style = ParagraphStyle(
-        "POFooter",
-        parent=base_style,
-        fontName="Helvetica",
-        fontSize=8.5,
-        leading=11,
+        fontSize=7.6,
+        leading=9.2,
+        textColor=muted,
         alignment=TA_CENTER,
-        textColor=colors.HexColor("#4b5563"),
     )
 
     story = []
 
-    firm_name = po.firm.firm_name if po.firm else "YOUR FIRM NAME"
-    po_date = po.po_date.strftime("%d-%m-%Y") if po.po_date else "-"
+    firm = po.firm
+    vendor = po.vendor
+    po_items = list(po.items.all())
+
+    firm_name = text_or_dash(firm.firm_name if firm else "InventTech")
+    firm_type = ""
+    if firm:
+        try:
+            firm_type = firm.get_firm_type_display()
+        except Exception:
+            firm_type = text_or_dash(getattr(firm, "firm_type", ""))
+
+    firm_address = join_parts(
+        getattr(firm, "address_line", ""),
+        getattr(firm, "city", ""),
+        getattr(firm, "state", ""),
+        getattr(firm, "pincode", ""),
+    )
+
+    firm_contact_line = " | ".join([
+        part for part in [
+            line_if("Phone", getattr(firm, "phone", "")),
+            line_if("Email", getattr(firm, "email", "")),
+            line_if("GSTIN", getattr(firm, "gst_number", "")),
+        ] if part
+    ])
+
+    firm_stat_line = " | ".join([
+        part for part in [
+            line_if("PAN", getattr(firm, "pan_number", "")),
+            line_if("TAN", getattr(firm, "tan_number", "")),
+            line_if("CIN", getattr(firm, "cin_number", "")),
+        ] if part
+    ])
+
     order_number = po.po_number or po.system_number or "-"
+    po_date = po.po_date.strftime("%d-%m-%Y") if po.po_date else "-"
+    cancel_date = po.cancel_date.strftime("%d-%m-%Y") if po.cancel_date else "-"
+    approval_label = getattr(po, "get_approval_status_display", lambda: text_or_dash(po.approval_status))()
+
+    firm_header_html = f"<font size='13'><b>{escape(firm_name)}</b></font>"
+    if firm_type and firm_type != "-":
+        firm_header_html += f"<br/>{escape(firm_type)}"
+    if firm_address:
+        firm_header_html += f"<br/>{escape(firm_address)}"
+    if firm_contact_line:
+        firm_header_html += f"<br/>{firm_contact_line}"
+    if firm_stat_line:
+        firm_header_html += f"<br/>{firm_stat_line}"
+
+    po_meta_html = (
+        f"<b>YARN PURCHASE ORDER</b><br/>"
+        f"<b>PO No:</b> {escape(order_number)}<br/>"
+        f"<b>PO Date:</b> {escape(po_date)}<br/>"
+        f"<b>System No:</b> {escape(text_or_dash(po.system_number))}<br/>"
+        f"<b>Status:</b> {escape(text_or_dash(approval_label))}"
+    )
+    if cancel_date != "-":
+        po_meta_html += f"<br/><b>Cancel Date:</b> {escape(cancel_date)}"
 
     header_table = Table(
         [[
-            Paragraph(escape(firm_name), firm_name_style),
-            Paragraph(
-                f"<b>DATE</b>&nbsp;&nbsp;&nbsp;{escape(po_date)}<br/>"
-                f"<b>ORDER No</b>&nbsp;&nbsp;&nbsp;{escape(order_number)}",
-                meta_style,
+            Paragraph(firm_header_html, header_left_style),
+            Table(
+                [[
+                    Paragraph("<b>YARN PURCHASE ORDER</b>", header_title_style),
+                ], [
+                    Paragraph(
+                        f"<b>PO No:</b> {escape(order_number)}<br/>"
+                        f"<b>PO Date:</b> {escape(po_date)}<br/>"
+                        f"<b>System No:</b> {escape(text_or_dash(po.system_number))}<br/>"
+                        f"<b>Status:</b> {escape(text_or_dash(approval_label))}"
+                        + (f"<br/><b>Cancel Date:</b> {escape(cancel_date)}" if cancel_date != "-" else ""),
+                        header_meta_style,
+                    )
+                ]],
+                colWidths=[66 * mm],
             ),
         ]],
-        colWidths=[112 * mm, 64 * mm],
+        colWidths=[124 * mm, 66 * mm],
     )
     header_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), brand_navy),
+        ("BACKGROUND", (1, 0), (1, 0), colors.HexColor("#F5F8FF")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 0),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-        ("TOPPADDING", (0, 0), (-1, -1), 0),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        ("LEFTPADDING", (0, 0), (0, 0), 9),
+        ("RIGHTPADDING", (0, 0), (0, 0), 9),
+        ("TOPPADDING", (0, 0), (0, 0), 9),
+        ("BOTTOMPADDING", (0, 0), (0, 0), 9),
+        ("LEFTPADDING", (1, 0), (1, 0), 0),
+        ("RIGHTPADDING", (1, 0), (1, 0), 0),
+        ("TOPPADDING", (1, 0), (1, 0), 0),
+        ("BOTTOMPADDING", (1, 0), (1, 0), 0),
+    ]))
+    header_table._argW[1] = 66 * mm
+    inner_header = header_table._cellvalues[0][1]
+    inner_header.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F5F8FF")),
+        ("BOX", (0, 0), (-1, -1), 0.9, brand_blue),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
     ]))
     story.append(header_table)
-    story.append(Spacer(1, 2))
+    story.append(Spacer(1, 6))
 
-    story.append(Paragraph("YARN PURCHASE ORDER", title_style))
-    story.append(Spacer(1, 10))
-
-    vendor = po.vendor
-    info_rows = [
-        [Paragraph("NAME", label_style), Paragraph(html_text(vendor.name if vendor else "-"), block_text_style)],
-        [Paragraph("ADDRESS", label_style), Paragraph(html_text(vendor.address if vendor else "-"), block_text_style)],
-        [Paragraph("PHONE", label_style), Paragraph(html_text(vendor.phone if vendor else "-"), block_text_style)],
-        [Paragraph("E-MAIL", label_style), Paragraph(html_text(vendor.email if vendor else "-"), block_text_style)],
+    vendor_html = f"<b>{escape(text_or_dash(vendor.name if vendor else ''))}</b>"
+    vendor_lines = [
+        line_if("Contact", vendor.contact_person if vendor else ""),
+        line_if("Phone", vendor.phone if vendor else ""),
+        line_if("Email", vendor.email if vendor else ""),
+        line_if("GSTIN", vendor.gst_number if vendor else ""),
+        line_if("Address", vendor.address if vendor else ""),
     ]
+    vendor_body = "<br/>".join([line for line in vendor_lines if line])
+    if vendor_body:
+        vendor_html += "<br/>" + vendor_body
 
-    info_table = Table(info_rows, colWidths=[28 * mm, 148 * mm])
-    info_table.setStyle(TableStyle([
-        ("GRID", (0, 0), (-1, -1), 0.8, colors.HexColor("#222222")),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 6),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+    bill_to_html = f"<b>{escape(text_or_dash(firm_name if firm else ''))}</b>"
+    bill_lines = [
+        line_if("Address", firm_address),
+        line_if("Phone", getattr(firm, "phone", "")),
+        line_if("Email", getattr(firm, "email", "")),
+        line_if("GSTIN", getattr(firm, "gst_number", "")),
+        line_if("Ship To", po.shipping_address),
+    ]
+    bill_body = "<br/>".join([line for line in bill_lines if line])
+    if bill_body:
+        bill_to_html += "<br/>" + bill_body
+
+    party_table = Table(
+        [
+            [
+                Paragraph("VENDOR", section_head_left),
+                Paragraph("BILL TO", section_head_left),
+            ],
+            [
+                Paragraph(vendor_html, section_value_style),
+                Paragraph(bill_to_html, section_value_style),
+            ],
+        ],
+        colWidths=[95 * mm, 95 * mm],
+    )
+    party_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), brand_orange),
+        ("BACKGROUND", (1, 0), (1, 0), brand_blue),
+        ("TEXTCOLOR", (0, 0), (-1, 0), white),
+        ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#FBFCFE")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.7, border),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
         ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
     ]))
-    story.append(info_table)
-    story.append(Spacer(1, 12))
+    story.append(party_table)
+    story.append(Spacer(1, 7))
 
     item_rows = [[
-        Paragraph("ITEM", table_head_style),
-        Paragraph("DESCRIPTION", table_head_style),
-        Paragraph("QTY", table_head_style),
-        Paragraph("PRICE", table_head_style),
-        Paragraph("AMOUNT", table_head_style),
+        Paragraph("Sr No", table_head_style),
+        Paragraph("Description", table_head_style),
+        Paragraph("Unit", table_head_style),
+        Paragraph("Qty", table_head_style),
+        Paragraph("Price (Rs.)", table_head_style),
+        Paragraph("Amount (Rs.)", table_head_style),
     ]]
-
-    po_items = list(po.items.all())
 
     for index, item in enumerate(po_items, start=1):
         material_name = "-"
@@ -1634,133 +1838,187 @@ def _build_yarn_po_pdf_response(po):
         elif item.material:
             material_name = str(item.material)
 
-        detail_parts = []
+        details = []
         if item.count:
-            detail_parts.append(f"Count: {item.count}")
+            details.append(f"Count: {item.count}")
         if item.dia:
-            detail_parts.append(f"Dia: {item.dia}")
+            details.append(f"Dia: {item.dia}")
         if item.gauge:
-            detail_parts.append(f"Gauge: {item.gauge}")
+            details.append(f"Gauge: {item.gauge}")
         if item.gsm:
-            detail_parts.append(f"GSM: {item.gsm}")
+            details.append(f"GSM: {item.gsm}")
         if item.sl:
-            detail_parts.append(f"SL: {item.sl}")
+            details.append(f"SL: {item.sl}")
         if item.rolls:
-            detail_parts.append(f"Rolls: {item.rolls}")
+            details.append(f"Rolls: {item.rolls}")
         if item.hsn_code:
-            detail_parts.append(f"HSN: {item.hsn_code}")
+            details.append(f"HSN: {item.hsn_code}")
         if item.remark:
-            detail_parts.append(f"Remark: {item.remark}")
+            details.append(f"Remark: {item.remark}")
 
-        desc_html = f"<b>{escape(text_or_dash(material_name))}</b>"
-        if detail_parts:
-            desc_html += "<br/>" + escape(" | ".join(detail_parts))
+        description_html = f"<b>{escape(text_or_dash(material_name))}</b>"
+        if details:
+            description_html += "<br/>" + escape(" | ".join(details))
 
         item_rows.append([
-            Paragraph(str(index), item_no_style),
-            Paragraph(desc_html, desc_style),
-            Paragraph(f"{fmt_qty(item.quantity)} {escape(item.unit or '')}".strip(), qty_style),
-            Paragraph(fmt_money(item.rate), money_style),
-            Paragraph(fmt_money(item.final_amount), money_style),
+            Paragraph(str(index), item_center_style),
+            Paragraph(description_html, item_desc_style),
+            Paragraph(escape(text_or_dash(item.unit)), item_center_style),
+            Paragraph(escape(fmt_qty(item.quantity)), item_center_style),
+            Paragraph(escape(fmt_money(item.rate)), money_style),
+            Paragraph(escape(fmt_money(item.final_amount)), money_style),
         ])
 
-    min_visual_rows = 8
-    blank_needed = max(0, min_visual_rows - len(po_items))
-    for _ in range(blank_needed):
+    min_visual_rows = 5
+    for _ in range(max(0, min_visual_rows - len(po_items))):
         item_rows.append([
-            Paragraph("", item_no_style),
-            Paragraph("", desc_style),
-            Paragraph("", qty_style),
+            Paragraph("", item_center_style),
+            Paragraph("", item_desc_style),
+            Paragraph("", item_center_style),
+            Paragraph("", item_center_style),
             Paragraph("", money_style),
             Paragraph("", money_style),
         ])
-
-    item_rows.append([
-        Paragraph("TOTAL", total_label_style),
-        "",
-        "",
-        "",
-        Paragraph(fmt_money(po.grand_total), total_amount_style),
-    ])
 
     items_table = Table(
         item_rows,
-        colWidths=[18 * mm, 76 * mm, 24 * mm, 27 * mm, 31 * mm],
+        colWidths=[13 * mm, 86 * mm, 18 * mm, 18 * mm, 26 * mm, 29 * mm],
         repeatRows=1,
     )
-    items_table.setStyle(TableStyle([
-        ("GRID", (0, 0), (-1, -1), 0.8, colors.HexColor("#222222")),
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f4dddd")),
-        ("BACKGROUND", (-1, -1), (-1, -1), colors.HexColor("#f7e6e6")),
-        ("SPAN", (0, -1), (3, -1)),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 5),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-        ("TOPPADDING", (0, 0), (-1, -1), 7),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
-    ]))
-    story.append(items_table)
-    story.append(Spacer(1, 14))
-
-    note_parts = []
-    if po.remarks:
-        note_parts.append(f"<b>Remarks:</b> {html_text(po.remarks)}")
-    if po.terms_conditions:
-        note_parts.append(f"<b>Terms:</b> {html_text(po.terms_conditions)}")
-    if po.shipping_address:
-        note_parts.append(f"<b>Shipping Address:</b> {html_text(po.shipping_address)}")
-    if po.cancel_date:
-        note_parts.append(f"<b>Cancel Date:</b> {escape(po.cancel_date.strftime('%d-%m-%Y'))}")
-
-    notes_html = "<br/><br/>".join(note_parts) if note_parts else "&nbsp;"
-
-    story.append(Paragraph("NOTES:", notes_label_style))
-    story.append(Spacer(1, 4))
-
-    notes_table = Table(
-        [[Paragraph(notes_html, block_text_style)]],
-        colWidths=[176 * mm],
-        rowHeights=[28 * mm],
-    )
-    notes_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f3dede")),
-        ("BOX", (0, 0), (-1, -1), 0, colors.white),
+    items_table_style = TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), brand_navy),
+        ("TEXTCOLOR", (0, 0), (-1, 0), white),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.55, border),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-        ("TOPPADDING", (0, 0), (-1, -1), 8),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ])
+
+    for row_index in range(1, len(item_rows)):
+        if row_index % 2 == 0:
+            items_table_style.add("BACKGROUND", (0, row_index), (-1, row_index), colors.HexColor("#F9FAFB"))
+
+    items_table.setStyle(items_table_style)
+    story.append(items_table)
+    story.append(Spacer(1, 8))
+
+    notes_parts = []
+    if po.remarks:
+        notes_parts.append(f"<font color='#0F172A'><b>Remarks</b></font><br/>{escape(po.remarks).replace(chr(10), '<br/>')}")
+    if po.terms_conditions:
+        notes_parts.append(f"<font color='#0F172A'><b>Terms &amp; Conditions</b></font><br/>{escape(po.terms_conditions).replace(chr(10), '<br/>')}")
+    if po.shipping_address:
+        notes_parts.append(f"<font color='#0F172A'><b>Shipping Address</b></font><br/>{escape(po.shipping_address).replace(chr(10), '<br/>')}")
+
+    if not notes_parts:
+        notes_parts.append("<font color='#0F172A'><b>Notes</b></font><br/>Standard terms and conditions apply.")
+
+    notes_html = "<br/><br/>".join(notes_parts)
+
+    signature_table = Table(
+        [[
+            Paragraph("<b>AUTHORISED SIGNATORY</b><br/><br/>_________________________", sign_style),
+            Paragraph(f"<b>DATE</b><br/><br/>{escape(po_date)}", sign_style),
+        ]],
+        colWidths=[68 * mm, 30 * mm],
+    )
+    signature_table.setStyle(TableStyle([
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ]))
-    story.append(notes_table)
-    story.append(Spacer(1, 14))
 
-    footer_lines = []
-    if po.firm:
-        footer_lines.append(f"<b>{escape(po.firm.firm_name)}</b>")
-        address_parts = [po.firm.address_line, po.firm.city, po.firm.state, po.firm.pincode]
-        clean_address = ", ".join([str(part).strip() for part in address_parts if str(part).strip()])
-        if clean_address:
-            footer_lines.append(escape(clean_address))
+    left_block = Table(
+        [
+            [Paragraph("NOTES / TERMS", block_title_style)],
+            [Paragraph(notes_html, block_text_style)],
+            [signature_table],
+        ],
+        colWidths=[102 * mm],
+    )
+    left_block.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), colors.HexColor("#FDF2F8")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.6, border),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
 
-        contact_bits = []
-        if po.firm.phone:
-            contact_bits.append(f"Phone: {escape(po.firm.phone)}")
-        if po.firm.email:
-            contact_bits.append(f"E-mail: {escape(po.firm.email)}")
-        if po.firm.website:
-            contact_bits.append(f"Web: {escape(po.firm.website)}")
-        if contact_bits:
-            footer_lines.append(escape(" | ".join(contact_bits)))
+    discount_amount = Decimal(po.subtotal or 0) - Decimal(po.after_discount_value or 0)
+    if discount_amount < 0:
+        discount_amount = Decimal("0")
 
-    if footer_lines:
-        story.append(Paragraph("<br/>".join(footer_lines), footer_style))
+    taxable_amount = Decimal(po.after_discount_value or 0) + Decimal(po.others or 0)
+    cgst_amount = taxable_amount * Decimal(po.cgst_percent or 0) / Decimal("100")
+    sgst_amount = taxable_amount * Decimal(po.sgst_percent or 0) / Decimal("100")
 
-    doc.build(story)
+    totals_rows = [
+        [Paragraph("Sub Total", total_label_style), Paragraph(escape(fmt_money(po.subtotal)), total_value_style)],
+        [Paragraph("Discount Amount", total_label_style), Paragraph(escape(fmt_money(discount_amount)), total_value_style)],
+        [Paragraph("After Discount Amount", total_label_style), Paragraph(escape(fmt_money(po.after_discount_value)), total_value_style)],
+        [Paragraph("Other Charges", total_label_style), Paragraph(escape(fmt_money(po.others)), total_value_style)],
+        [Paragraph(f"CGST ({fmt_qty(po.cgst_percent)}%)", total_label_style), Paragraph(escape(fmt_money(cgst_amount)), total_value_style)],
+        [Paragraph(f"SGST ({fmt_qty(po.sgst_percent)}%)", total_label_style), Paragraph(escape(fmt_money(sgst_amount)), total_value_style)],
+        [Paragraph("Total Amount", total_label_style), Paragraph(escape(fmt_money(po.grand_total)), total_value_style)],
+    ]
+
+    totals_table = Table(totals_rows, colWidths=[49 * mm, 39 * mm])
+    totals_table_style = TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.6, border),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EFF6FF")),
+        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#FFF7ED")),
+    ])
+    for row_index in range(1, len(totals_rows) - 1):
+        if row_index % 2 == 1:
+            totals_table_style.add("BACKGROUND", (0, row_index), (-1, row_index), soft_bg)
+    totals_table.setStyle(totals_table_style)
+
+    lower_table = Table([[left_block, totals_table]], colWidths=[102 * mm, 88 * mm])
+    lower_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    story.append(lower_table)
+    story.append(Spacer(1, 8))
+
+    footer_table = Table(
+        [[Paragraph("THIS PO IS COMPUTER GENERATED, HENCE SIGNATURE IS NOT REQUIRED", footer_note_style)]],
+        colWidths=[190 * mm],
+    )
+    footer_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F8FAFC")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ]))
+    story.append(footer_table)
+
+    doc.build(story, onFirstPage=draw_branding, onLaterPages=draw_branding)
     buffer.seek(0)
 
     response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{po.system_number or "yarn_po"}.pdf"'
     return response
+
 
 
 @login_required
@@ -1824,6 +2082,8 @@ def _bind_yarnpo_item_formset(request, instance=None, user=None):
     return formset
 @login_required
 @require_http_methods(["GET", "POST"])
+@login_required
+@require_http_methods(["GET", "POST"])
 def yarnpo_create(request):
     default_firm = Firm.objects.filter(owner=request.user).first()
 
@@ -1836,25 +2096,30 @@ def yarnpo_create(request):
     form = YarnPurchaseOrderForm(request.POST or None, user=request.user, instance=po)
     formset = _bind_yarnpo_item_formset(request, instance=po)
 
-    if request.method == "POST" and form.is_valid() and formset.is_valid():
-        po = form.save(commit=False)
+    if request.method == "POST":
+        if form.is_valid() and formset.is_valid():
+            po = form.save(commit=False)
 
-        if default_firm:
-            po.firm = default_firm
+            if default_firm:
+                po.firm = default_firm
 
-        po.po_date = timezone.localdate()
+            po.po_date = timezone.localdate()
 
-        if not po.system_number:
-            po.system_number = _next_yarn_po_number()
+            if not po.system_number:
+                po.system_number = _next_yarn_po_number()
 
-        if po.firm and not po.shipping_address:
-            po.shipping_address = _firm_address(po.firm)
+            if po.firm and not po.shipping_address:
+                po.shipping_address = _firm_address(po.firm)
 
-        po.save()
-        formset.instance = po
-        formset.save()
-        _recalculate_yarn_po(po)
-        return redirect("accounts:yarnpo_list")
+            po.save()
+            formset.instance = po
+            formset.save()
+            _recalculate_yarn_po(po)
+
+            messages.success(request, f"Yarn PO {po.system_number} saved successfully.")
+            return redirect("accounts:yarnpo_list")
+
+        form.add_error(None, "Yarn PO was not saved. Please fix the highlighted fields and try again.")
 
     return render(request, "accounts/yarn_po/form.html", {
         "form": form,
@@ -1864,7 +2129,7 @@ def yarnpo_create(request):
         "system_number_preview": po.system_number or _next_yarn_po_number(),
         "auto_firm_name": default_firm.firm_name if default_firm else "",
     })
-    
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -1889,20 +2154,25 @@ def yarnpo_update(request, pk: int):
     form = YarnPurchaseOrderForm(request.POST or None, user=po_owner, instance=po)
     formset = _bind_yarnpo_item_formset(request, instance=po, user=po_owner)
 
-    if request.method == "POST" and form.is_valid() and formset.is_valid():
-        po = form.save(commit=False)
+    if request.method == "POST":
+        if form.is_valid() and formset.is_valid():
+            po = form.save(commit=False)
 
-        if default_firm:
-            po.firm = default_firm
+            if default_firm:
+                po.firm = default_firm
 
-        if po.firm and not po.shipping_address:
-            po.shipping_address = _firm_address(po.firm)
+            if po.firm and not po.shipping_address:
+                po.shipping_address = _firm_address(po.firm)
 
-        po.save()
-        formset.instance = po
-        formset.save()
-        _recalculate_yarn_po(po)
-        return redirect("accounts:yarnpo_list")
+            po.save()
+            formset.instance = po
+            formset.save()
+            _recalculate_yarn_po(po)
+
+            messages.success(request, f"Yarn PO {po.system_number} updated successfully.")
+            return redirect("accounts:yarnpo_list")
+
+        form.add_error(None, "Yarn PO was not updated. Please fix the highlighted fields and try again.")
 
     return render(request, "accounts/yarn_po/form.html", {
         "form": form,
@@ -1913,13 +2183,166 @@ def yarnpo_update(request, pk: int):
         "auto_firm_name": display_firm.firm_name if display_firm else "",
     })
     
+def _build_simple_yarn_po_pdf_response(po):
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import mm
+        from reportlab.pdfgen import canvas
+    except ImportError:
+        return HttpResponse(
+            "ReportLab is required for PDF generation. Install it with: pip install reportlab",
+            status=500,
+        )
+
+    def safe_text(value):
+        value = "" if value is None else str(value).strip()
+        return value if value else "-"
+
+    def qty_text(value):
+        try:
+            return f"{float(value or 0):,.2f}".rstrip("0").rstrip(".")
+        except Exception:
+            return safe_text(value)
+
+    def money_text(value):
+        try:
+            return f"{float(value or 0):,.2f}"
+        except Exception:
+            return safe_text(value)
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    left = 15 * mm
+    top = height - 18 * mm
+    line_gap = 5.5 * mm
+
+    def draw_line(label, value, y, bold=False):
+        pdf.setFont("Helvetica-Bold" if bold else "Helvetica", 9)
+        pdf.drawString(left, y, f"{label}: {safe_text(value)}")
+
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(left, top, safe_text(po.firm.firm_name if po.firm else "InventTech"))
+
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawRightString(width - 15 * mm, top, "YARN PURCHASE ORDER")
+
+    y = top - 9 * mm
+    draw_line("PO No", po.po_number or po.system_number, y)
+    draw_line("PO Date", po.po_date.strftime("%d-%m-%Y") if po.po_date else "-", y - line_gap)
+    draw_line("System No", po.system_number, y - (2 * line_gap))
+    draw_line("Status", po.get_approval_status_display(), y - (3 * line_gap))
+
+    y -= 28 * mm
+
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(left, y, "Vendor")
+    pdf.drawString(width / 2, y, "Bill To")
+
+    y -= 6 * mm
+    pdf.setFont("Helvetica", 9)
+    vendor_lines = [
+        safe_text(po.vendor.name if po.vendor else ""),
+        f"Phone: {safe_text(po.vendor.phone if po.vendor else '')}",
+        f"Email: {safe_text(po.vendor.email if po.vendor else '')}",
+        f"GSTIN: {safe_text(po.vendor.gst_number if po.vendor else '')}",
+        f"Address: {safe_text(po.vendor.address if po.vendor else '')}",
+    ]
+    bill_lines = [
+        safe_text(po.firm.firm_name if po.firm else ""),
+        f"Phone: {safe_text(getattr(po.firm, 'phone', ''))}",
+        f"Email: {safe_text(getattr(po.firm, 'email', ''))}",
+        f"GSTIN: {safe_text(getattr(po.firm, 'gst_number', ''))}",
+        f"Ship To: {safe_text(po.shipping_address)}",
+    ]
+
+    for idx in range(max(len(vendor_lines), len(bill_lines))):
+        vendor_text = vendor_lines[idx] if idx < len(vendor_lines) else ""
+        bill_text = bill_lines[idx] if idx < len(bill_lines) else ""
+        pdf.drawString(left, y, vendor_text)
+        pdf.drawString(width / 2, y, bill_text)
+        y -= 5 * mm
+
+    y -= 3 * mm
+
+    pdf.setFont("Helvetica-Bold", 9)
+    pdf.drawString(left, y, "Sr")
+    pdf.drawString(left + 12 * mm, y, "Description")
+    pdf.drawString(left + 98 * mm, y, "Unit")
+    pdf.drawRightString(left + 128 * mm, y, "Qty")
+    pdf.drawRightString(left + 158 * mm, y, "Price")
+    pdf.drawRightString(width - 15 * mm, y, "Amount")
+
+    y -= 4 * mm
+    pdf.line(left, y, width - 15 * mm, y)
+    y -= 6 * mm
+
+    items = list(po.items.all())
+    for index, item in enumerate(items, start=1):
+        if y < 45 * mm:
+            pdf.showPage()
+            y = height - 20 * mm
+
+        item_name = "-"
+        if item.material_type:
+            item_name = item.material_type.name
+        elif item.material:
+            item_name = str(item.material)
+
+        detail_bits = []
+        if item.count:
+            detail_bits.append(f"Count: {item.count}")
+        if item.dia:
+            detail_bits.append(f"Dia: {item.dia}")
+        if item.gauge:
+            detail_bits.append(f"Gauge: {item.gauge}")
+        if item.gsm:
+            detail_bits.append(f"GSM: {item.gsm}")
+        if item.rolls:
+            detail_bits.append(f"Rolls: {item.rolls}")
+        if item.hsn_code:
+            detail_bits.append(f"HSN: {item.hsn_code}")
+
+        desc = safe_text(item_name)
+        if detail_bits:
+            desc += " | " + " | ".join(detail_bits)
+
+        pdf.setFont("Helvetica", 8.5)
+        pdf.drawString(left, y, str(index))
+        pdf.drawString(left + 12 * mm, y, desc[:70])
+        pdf.drawString(left + 98 * mm, y, safe_text(item.unit))
+        pdf.drawRightString(left + 128 * mm, y, qty_text(item.quantity))
+        pdf.drawRightString(left + 158 * mm, y, money_text(item.rate))
+        pdf.drawRightString(width - 15 * mm, y, money_text(item.final_amount))
+        y -= 6 * mm
+
+    y -= 4 * mm
+    pdf.line(left, y, width - 15 * mm, y)
+    y -= 8 * mm
+
+    pdf.setFont("Helvetica-Bold", 9)
+    pdf.drawRightString(left + 158 * mm, y, "Total Amount")
+    pdf.drawRightString(width - 15 * mm, y, money_text(po.grand_total))
+
+    y -= 12 * mm
+    pdf.setFont("Helvetica", 8.5)
+    pdf.drawString(left, y, "THIS PO IS COMPUTER GENERATED, HENCE SIGNATURE IS NOT REQUIRED")
+
+    pdf.save()
+    buffer.seek(0)
+
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    return response
+
+
 @login_required
 def yarnpo_pdf(request, pk: int):
     po = get_object_or_404(
         YarnPurchaseOrder.objects
         .select_related("vendor", "firm", "owner")
         .prefetch_related(
-            Prefetch("items", queryset=YarnPurchaseOrderItem.objects.select_related("material"))
+            Prefetch("items", queryset=YarnPurchaseOrderItem.objects.select_related("material", "material_type"))
         ),
         pk=pk,
     )
@@ -1927,7 +2350,24 @@ def yarnpo_pdf(request, pk: int):
     if not _can_access_yarn_po(request.user, po):
         raise PermissionDenied("You do not have access to this PO.")
 
-    return _build_yarn_po_pdf_response(po)
+    try:
+        response = _build_yarn_po_pdf_response(po)
+    except Exception:
+        logger.exception("Branded Yarn PO PDF generation failed for PO id=%s system_no=%s", po.pk, po.system_number)
+        response = _build_simple_yarn_po_pdf_response(po)
+
+    if response.status_code == 200 and response.get("Content-Type", "").startswith("application/pdf"):
+        filename = f'{po.system_number or "yarn_po"}.pdf'
+        disposition = "attachment" if request.GET.get("download") == "1" else "inline"
+        response["Content-Disposition"] = f'{disposition}; filename="{filename}"'
+        response["Cache-Control"] = "no-store"
+        response["X-Content-Type-Options"] = "nosniff"
+        try:
+            response["Content-Length"] = str(len(response.content))
+        except Exception:
+            pass
+
+    return response
 
 
 @login_required
@@ -1943,7 +2383,7 @@ def yarnpo_inward(request, pk: int):
             ),
             Prefetch(
                 "inwards",
-                queryset=YarnPOInward.objects.prefetch_related("items__po_item__material"),
+                queryset=YarnPOInward.objects.select_related("vendor").prefetch_related("items__po_item__material"),
             ),
         ),
         pk=pk,
@@ -1955,7 +2395,7 @@ def yarnpo_inward(request, pk: int):
     po = _attach_yarn_po_metrics(po)
     item_errors = {}
     line_inputs = {}
-    inward_form = YarnPOInwardForm(request.POST or None)
+    inward_form = YarnPOInwardForm(request.POST or None, user=request.user)
 
     if request.method == "POST" and inward_form.is_valid():
         line_payload = []
@@ -2008,7 +2448,8 @@ def yarnpo_inward(request, pk: int):
                     )
                 )
             YarnPOInwardItem.objects.bulk_create(bulk_rows)
-            return redirect("accounts:yarnpo_inward", pk=po.pk)
+            tracker_url = reverse("accounts:yarn_inward_tracker")
+            return redirect(f"{tracker_url}?inward={inward.pk}")
 
     existing_inwards = po.inwards.all().order_by("-inward_date", "-id")
 
@@ -2029,6 +2470,7 @@ def yarnpo_inward(request, pk: int):
 @login_required
 def yarn_inward_tracker(request):
     q = (request.GET.get("q") or "").strip()
+    target_inward_id = (request.GET.get("inward") or "").strip()
 
     qs = (
         YarnPurchaseOrder.objects
@@ -2040,7 +2482,7 @@ def yarn_inward_tracker(request):
             ),
             Prefetch(
                 "inwards",
-                queryset=YarnPOInward.objects.prefetch_related("items__po_item__material"),
+                queryset=YarnPOInward.objects.select_related("vendor").prefetch_related("items__po_item__material"),
             ),
             Prefetch(
                 "greige_pos",
@@ -2087,6 +2529,7 @@ def yarn_inward_tracker(request):
             inward_entries.append({
                 "inward": inward,
                 "items": inward_items,
+                "is_target": str(inward.id) == target_inward_id,
             })
 
         greige_items = []
@@ -2108,6 +2551,7 @@ def yarn_inward_tracker(request):
         {
             "rows": rows,
             "q": q,
+            "target_inward_id": target_inward_id,
         },
     )
 
@@ -2575,6 +3019,7 @@ def greigepo_create(request, yarn_po_id=None):
             "form": form,
             "mode": "add",
             "po_obj": None,
+            "system_number_preview": _next_greige_po_number(),
             "source_yarn_po": source_yarn_po,
             "source_inwards": source_inwards,
             "existing_po": existing_po,
@@ -2611,6 +3056,7 @@ def greigepo_update(request, pk: int):
             "form": form,
             "mode": "edit",
             "po_obj": po,
+            "system_number_preview": po.system_number,
             "source_yarn_po": po.source_yarn_po,
             "source_inwards": list(po.source_yarn_po.inwards.all()) if po.source_yarn_po else [],
             "existing_po": None,

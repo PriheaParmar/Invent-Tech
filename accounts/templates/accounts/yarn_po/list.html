@@ -383,6 +383,13 @@
     text-decoration:underline;
   }
 
+  .jb-link-disabled,
+  .jb-link-disabled:hover{
+    color:#98a2b3;
+    cursor:not-allowed;
+    text-decoration:none;
+  }
+
   .jb-link-danger{
     color:#d92d20;
   }
@@ -406,6 +413,81 @@
     margin:0;
   }
 
+  .pdf-menu{
+    position:relative;
+    display:inline-flex;
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .pdf-menu-trigger{
+    appearance:none;
+    background:none;
+    border:none;
+    padding:0;
+    margin:0;
+    cursor:pointer;
+    font:inherit;
+    font-weight:700;
+    color:var(--orange);
+    min-height:28px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .pdf-menu-trigger:hover{
+    text-decoration:underline;
+  }
+
+  .pdf-menu-caret{
+    font-size:10px;
+    line-height:1;
+    transform:translateY(1px);
+  }
+
+  .pdf-menu-dropdown{
+    position:absolute;
+    top:100%;
+    left:0;
+    min-width:128px;
+    display:none;
+    flex-direction:column;
+    gap:2px;
+    padding:6px;
+    margin-top:4px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:12px;
+    box-shadow:0 10px 28px rgba(15,23,42,.14);
+    z-index:20;
+  }
+
+  .pdf-menu:hover .pdf-menu-dropdown,
+  .pdf-menu:focus-within .pdf-menu-dropdown{
+    display:flex;
+  }
+
+  .pdf-menu-item{
+    display:flex;
+    align-items:center;
+    min-height:34px;
+    padding:0 10px;
+    border-radius:8px;
+    text-decoration:none;
+    color:#111827;
+    font-size:13px;
+    font-weight:700;
+    background:transparent;
+    transition:background .16s ease,color .16s ease;
+  }
+
+  .pdf-menu-item:hover{
+    background:rgba(0,0,0,.05);
+    color:var(--orange);
+    text-decoration:none;
+  }
+
   .jb-empty{
     padding:14px 12px;
     opacity:.7;
@@ -427,6 +509,11 @@
       flex-direction:row;
       flex-wrap:wrap;
       gap:10px 14px;
+    }
+
+    .pdf-menu-dropdown{
+      left:auto;
+      right:0;
     }
   }
 
@@ -459,6 +546,13 @@
     .yarnpo-actions{
       flex-direction:column;
       gap:6px;
+    }
+
+    .pdf-menu-dropdown{
+      position:static;
+      margin-top:2px;
+      width:100%;
+      box-shadow:none;
     }
   }
 </style>
@@ -623,8 +717,27 @@
                       <a class="jb-link" href="{% url 'accounts:yarnpo_review' po.id %}">Review</a>
                     {% endif %}
 
-                    <a class="jb-link" href="{% url 'accounts:yarnpo_pdf' po.id %}" target="_blank">PDF</a>
-                    <a class="jb-link" href="{% url 'accounts:yarnpo_inward' po.id %}">Inward</a>
+                    <div class="pdf-menu">
+                      <button type="button" class="pdf-menu-trigger">
+                        PDF
+                        <span class="pdf-menu-caret">▾</span>
+                      </button>
+                      <div class="pdf-menu-dropdown">
+                        <a class="pdf-menu-item" href="{% url 'accounts:yarnpo_pdf' po.id %}" target="_blank" rel="noopener">
+                          View
+                        </a>
+                        <a class="pdf-menu-item" href="{% url 'accounts:yarnpo_pdf' po.id %}?download=1">
+                          Download
+                        </a>
+                      </div>
+                    </div>
+
+                    {% if po.approval_status == 'approved' %}
+                      <a class="jb-link" href="{% url 'accounts:yarnpo_inward' po.id %}">Inward</a>
+                    {% else %}
+                      <span class="jb-link jb-link-disabled" title="Admin approval required before inward">Inward</span>
+                    {% endif %}
+
                     <a class="jb-link" href="{% url 'accounts:yarnpo_edit' po.id %}">Edit</a>
 
                     <form method="post" action="{% url 'accounts:yarnpo_delete' po.id %}" class="jb-inline-delete">

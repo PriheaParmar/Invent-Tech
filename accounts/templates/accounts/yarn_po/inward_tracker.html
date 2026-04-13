@@ -605,4 +605,670 @@
     </div>
   </div>
 </section>
+{% endblock %}{% extends "accounts/base_app.html" %}
+{% block title %}Yarn Inwards - InventTech<script>
+  (function(){
+    var targetId = "{{ target_inward_id|default:'' }}";
+    if (!targetId) return;
+    var el = document.getElementById("yarn-inward-" + targetId);
+    if (!el) return;
+    window.setTimeout(function(){
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+  })();
+</script>
+{% endblock %}
+{% block page_title %}PO / Yarn Inwards<script>
+  (function(){
+    var targetId = "{{ target_inward_id|default:'' }}";
+    if (!targetId) return;
+    var el = document.getElementById("yarn-inward-" + targetId);
+    if (!el) return;
+    window.setTimeout(function(){
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+  })();
+</script>
+{% endblock %}
+{% block page_subtitle %}Track inwarded Yarn POs and start Greige PO generation<script>
+  (function(){
+    var targetId = "{{ target_inward_id|default:'' }}";
+    if (!targetId) return;
+    var el = document.getElementById("yarn-inward-" + targetId);
+    if (!el) return;
+    window.setTimeout(function(){
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+  })();
+</script>
+{% endblock %}
+
+{% block content %}
+<style>
+  .canvas{
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
+  }
+
+  .yit-page{
+    width:100%;
+    min-width:0;
+  }
+
+  .jobbers-embed{
+    padding:10px 6px;
+  }
+
+  .jb-panel{
+    background:rgba(255,255,255,.72);
+    border:2px dashed rgb(0,0,0);
+    border-radius:18px;
+    box-shadow:0 12px 36px rgba(15,23,42,.08);
+    padding:14px;
+    width:100%;
+    min-width:0;
+  }
+
+  .jb-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+
+  .jb-title{
+    font-size:18px;
+    font-weight:900;
+    line-height:1.1;
+    color:#111827;
+  }
+
+  .jb-sub{
+    font-size:12px;
+    opacity:.72;
+    margin-top:4px;
+    color:#475467;
+  }
+
+  .jb-tools{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+
+  .jb-search{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:1 1 320px;
+    min-width:0;
+  }
+
+  .jb-search input[type="search"]{
+    appearance:none;
+    width:100%;
+    box-sizing:border-box;
+    border:1px solid rgba(0,0,0,.10);
+    background:rgba(255,255,255,.92);
+    color:inherit;
+    outline:none;
+    transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    min-width:0;
+    height:38px;
+    padding:0 12px;
+    border-radius:999px;
+  }
+
+  .jb-search input[type="search"]:focus{
+    border-color:rgba(238,61,133,.35);
+    box-shadow:0 0 0 4px rgba(238,61,133,.10);
+    background:#fff;
+  }
+
+  .jb-search-btn,
+  .jb-add,
+  .jb-secondary{
+    appearance:none;
+    border:1px solid rgba(0,0,0,.10);
+    border-radius:12px;
+    text-decoration:none;
+    cursor:pointer;
+    transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+    height:38px;
+    padding:0 14px;
+    font-weight:700;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    white-space:nowrap;
+  }
+
+  .jb-search-btn,
+  .jb-secondary{
+    background:rgba(255,255,255,.85);
+    color:#000;
+  }
+
+  .jb-search-btn:hover,
+  .jb-secondary:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .jb-add{
+    background:var(--orange);
+    color:#fff;
+    border-color:transparent;
+  }
+
+  .jb-add:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .jb-tool-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .yit-list{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    width:100%;
+    min-width:0;
+  }
+
+  .yit-card{
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:14px;
+    background:rgba(255,255,255,.55);
+    padding:12px;
+    width:100%;
+    min-width:0;
+  }
+
+  .yit-card-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+  }
+
+  .yit-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    background:rgba(250,189,100,.16);
+    color:var(--orange);
+    font-size:11px;
+    font-weight:900;
+    margin-bottom:6px;
+  }
+
+  .yit-po-no{
+    font-size:14px;
+    font-weight:900;
+    color:#111827;
+    line-height:1.25;
+    word-break:break-word;
+  }
+
+  .yit-po-sub{
+    margin-top:4px;
+    font-size:11px;
+    color:#667085;
+    font-weight:700;
+    line-height:1.45;
+  }
+
+  .yit-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+
+  .yit-status.started{
+    background:rgba(16,185,129,.10);
+    color:#047857;
+  }
+
+  .yit-status.not-started{
+    background:rgba(250,189,100,.16);
+    color:#b76c00;
+  }
+
+  .yit-grid{
+    display:grid;
+    grid-template-columns:1fr 1.2fr 1fr auto;
+    gap:12px;
+    align-items:start;
+    width:100%;
+    min-width:0;
+  }
+
+  .yit-box{
+    min-width:0;
+  }
+
+  .yit-box-title{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:6px;
+  }
+
+  .yit-meta{
+    display:grid;
+    grid-template-columns:78px 1fr;
+    gap:5px 6px;
+    font-size:11px;
+    min-width:0;
+  }
+
+  .yit-meta .k{
+    color:#667085;
+    font-weight:800;
+  }
+
+  .yit-meta .v{
+    color:#111827;
+    font-weight:800;
+    min-width:0;
+    word-break:break-word;
+  }
+
+  .yit-inward-list{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    min-width:0;
+  }
+
+  .yit-inward-card{
+    padding:8px 10px;
+    border-radius:12px;
+    background:rgba(0,0,0,.03);
+    min-width:0;
+    border:1px solid transparent;
+    transition:border-color .18s ease, background .18s ease, box-shadow .18s ease;
+  }
+
+  .yit-inward-card.is-target{
+    border-color:rgba(238,61,133,.24);
+    background:rgba(238,61,133,.06);
+    box-shadow:0 0 0 3px rgba(238,61,133,.10);
+  }
+
+  .yit-inward-no{
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#667085;
+    margin-bottom:6px;
+  }
+
+  .yit-inward-item{
+    font-size:12px;
+    color:#111827;
+    font-weight:800;
+    line-height:1.4;
+    padding-top:5px;
+    margin-top:5px;
+    border-top:1px dashed rgba(15,23,42,.10);
+  }
+
+  .yit-inward-item:first-child{
+    border-top:none;
+    margin-top:0;
+    padding-top:0;
+  }
+
+  .yit-inward-sub{
+    margin-top:2px;
+    font-size:10px;
+    color:#667085;
+    font-weight:700;
+  }
+
+  .yit-greige-box{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+  }
+
+  .yit-summary-box{
+    padding:8px 10px;
+    border-radius:12px;
+    background:rgba(0,0,0,.03);
+  }
+
+  .yit-summary-label{
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:4px;
+  }
+
+  .yit-summary-value{
+    font-size:13px;
+    font-weight:900;
+    color:#111827;
+    word-break:break-word;
+  }
+
+  .yit-summary-sub{
+    margin-top:4px;
+    font-size:10px;
+    color:#667085;
+    line-height:1.45;
+    font-weight:700;
+    word-break:break-word;
+  }
+
+  .yit-actions-col{
+    min-width:110px;
+  }
+
+  .yit-actions-title{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:6px;
+  }
+
+  .yit-actions{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .jb-link{
+    font-weight:700;
+    text-decoration:none;
+    color:var(--orange);
+    display:inline-flex;
+    align-items:center;
+    justify-content:flex-start;
+    min-height:28px;
+  }
+
+  .jb-link:hover{
+    text-decoration:underline;
+  }
+
+  .jb-empty{
+    padding:14px 12px;
+    opacity:.7;
+    text-align:center;
+    font-weight:700;
+  }
+
+  @media (max-width: 1280px){
+    .yit-grid{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .yit-actions-col{
+      grid-column:1 / -1;
+      min-width:0;
+    }
+
+    .yit-actions{
+      flex-direction:row;
+      flex-wrap:wrap;
+      gap:10px 14px;
+    }
+  }
+
+  @media (max-width: 768px){
+    .jb-tools{
+      align-items:stretch;
+    }
+
+    .jb-search{
+      flex:1 1 100%;
+    }
+
+    .jb-tool-actions{
+      width:100%;
+    }
+
+    .jb-tool-actions > *{
+      flex:1 1 auto;
+    }
+
+    .yit-card-top{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+
+    .yit-grid{
+      grid-template-columns:1fr;
+    }
+
+    .yit-actions{
+      flex-direction:column;
+      gap:6px;
+    }
+  }
+</style>
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="yit-page">
+      <div class="jobbers-embed">
+        <div class="jb-panel">
+
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">Yarn Inwards</div>
+              <div class="jb-sub">Track inwarded Yarn POs and greige progress.</div>
+            </div>
+          </div>
+
+          <div class="jb-tools">
+            <form class="jb-search" method="get">
+              <input
+                type="search"
+                name="q"
+                value="{{ q|default:'' }}"
+                placeholder="Search by yarn PO, vendor, firm..."
+              >
+              <button class="jb-search-btn" type="submit">Search</button>
+            </form>
+
+            <div class="jb-tool-actions">
+              <a class="jb-add" href="{% url 'accounts:yarnpo_list' %}">
+                Back to Yarn PO
+              </a>
+            </div>
+          </div>
+
+          <div class="yit-list">
+            {% for row in rows %}
+            <div class="yit-card">
+              <div class="yit-card-top">
+                <div>
+                  <div class="yit-badge">{{ row.po.system_number }}</div>
+                  <div class="yit-po-no">{{ row.po.po_number|default:"No PO Number" }}</div>
+                  <div class="yit-po-sub">
+                    {{ row.po.po_date|date:"d-m-Y" }}
+                    {% if row.po.vendor %} · {{ row.po.vendor.name }}{% endif %}
+                    {% if row.po.firm %} · {{ row.po.firm.firm_name }}{% endif %}
+                  </div>
+                </div>
+
+                <span class="yit-status {% if row.greige_started %}started{% else %}not-started{% endif %}">
+                  {% if row.greige_started %}Greige Started{% else %}Not Started{% endif %}
+                </span>
+              </div>
+
+              <div class="yit-grid">
+                <div class="yit-box">
+                  <div class="yit-box-title">PO Details</div>
+                  <div class="yit-meta">
+                    {% if row.po.po_number %}
+                      <div class="k">PO No</div>
+                      <div class="v">{{ row.po.po_number }}</div>
+                    {% endif %}
+
+                    <div class="k">Date</div>
+                    <div class="v">{{ row.po.po_date|date:"d-m-Y" }}</div>
+
+                    <div class="k">Vendor</div>
+                    <div class="v">{{ row.po.vendor.name }}</div>
+
+                    {% if row.po.firm %}
+                      <div class="k">Firm</div>
+                      <div class="v">{{ row.po.firm.firm_name }}</div>
+                    {% endif %}
+
+                    <div class="k">Total</div>
+                    <div class="v">{{ row.po.total_weight|default:"0.00" }}</div>
+
+                    <div class="k">Inward</div>
+                    <div class="v">{{ row.po.total_inward_qty|default:"0.00" }}</div>
+
+                    <div class="k">Available</div>
+                    <div class="v">{{ row.po.remaining_qty_total|default:"0.00" }}</div>
+                  </div>
+                </div>
+
+                <div class="yit-box">
+                  <div class="yit-box-title">Inward Details</div>
+
+                  {% if row.inward_entries %}
+                    <div class="yit-inward-list">
+                      {% for inward_block in row.inward_entries %}
+                        <div
+                          class="yit-inward-card {% if inward_block.is_target %}is-target{% endif %}"
+                          id="yarn-inward-{{ inward_block.inward.id }}"
+                        >
+                          <div class="yit-inward-no">{{ inward_block.inward.inward_number }}</div>
+                          <div class="yit-inward-sub" style="margin-bottom:8px;">
+                            Vendor: {% if inward_block.inward.vendor %}{{ inward_block.inward.vendor.name }}{% else %}—{% endif %}
+                            {% if inward_block.inward.inward_date %} · Date: {{ inward_block.inward.inward_date|date:"d-m-Y" }}{% endif %}
+                          </div>
+
+                          {% for item in inward_block.items %}
+                            <div class="yit-inward-item">
+                              {{ item.fabric_name }}
+                              <div class="yit-inward-sub">
+                                Received: {{ item.inward_qty }}{% if item.unit %} {{ item.unit }}{% endif %}
+                              </div>
+                            </div>
+                          {% endfor %}
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="yit-summary-box">
+                      <div class="yit-summary-sub">No inward entries found.</div>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="yit-box">
+                  <div class="yit-box-title">Greige Status</div>
+
+                  <div class="yit-greige-box">
+                    {% if row.greige_started %}
+                      <div class="yit-summary-box">
+                        <div class="yit-summary-label">Greige PO</div>
+                        <div class="yit-summary-value">{{ row.greige_po.system_number }}</div>
+                        <div class="yit-summary-sub">
+                          Date: {{ row.greige_po.po_date|date:"d-m-Y" }}
+                        </div>
+                      </div>
+
+                      <div class="yit-summary-box">
+                        <div class="yit-summary-label">Items</div>
+                        <div class="yit-summary-value">{{ row.greige_items|length }}</div>
+                        <div class="yit-summary-sub">
+                          Greige PO has been generated for this yarn inward.
+                        </div>
+                      </div>
+                    {% else %}
+                      <div class="yit-summary-box">
+                        <div class="yit-summary-label">Status</div>
+                        <div class="yit-summary-value">Pending</div>
+                        <div class="yit-summary-sub">
+                          No Greige PO has been generated yet.
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="yit-actions-col">
+                  <div class="yit-actions-title">Actions</div>
+                  <div class="yit-actions">
+                    {% if not row.greige_started %}
+                      <form method="post" action="{% url 'accounts:generate_greige_po_from_yarn' row.po.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="jb-add" style="height:32px; padding:0 12px; border-radius:10px; font-size:12px;">
+                          Generate Greige PO
+                        </button>
+                      </form>
+                    {% else %}
+                      <a class="jb-link" href="{% url 'accounts:greigepo_list' %}">
+                        View Greige PO
+                      </a>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="jb-empty">
+              No inwarded Yarn POs found yet.
+            </div>
+            {% endfor %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+  (function(){
+    var targetId = "{{ target_inward_id|default:'' }}";
+    if (!targetId) return;
+    var el = document.getElementById("yarn-inward-" + targetId);
+    if (!el) return;
+    window.setTimeout(function(){
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+  })();
+</script>
 {% endblock %}

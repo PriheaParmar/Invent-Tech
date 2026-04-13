@@ -769,25 +769,9 @@ function initEmbedMount(mount, contextUrl) {
         const mount = container.querySelector("#mastersEmbedMount");
         if (!panel || !mount || panel.style.display === "none") return;
 
-        if (e.target.closest("[data-jb-close]")) {
-          e.preventDefault();
-          closeJobberDeleteModal(container);
-          return;
-        }
+        
 
-        if (e.target.closest("#jbConfirmDeleteBtn")) {
-          e.preventDefault();
-
-          const modal = getJobberDeleteModal(container);
-          const form = modal && modal._pendingForm ? modal._pendingForm : null;
-
-          if (form) {
-            closeJobberDeleteModal(container);
-            form.dataset.confirmed = "1";
-            form.requestSubmit();
-          }
-          return;
-        }
+        
 
         const a = e.target.closest("a");
         if (!a) return;
@@ -803,15 +787,7 @@ function initEmbedMount(mount, contextUrl) {
         const form = e.target.closest("form");
         if (!form) return;
 
-        if (form.matches(".js-jb-delete-form")) {
-          if (form.dataset.confirmed === "1") {
-            delete form.dataset.confirmed;
-          } else {
-            e.preventDefault();
-            openJobberDeleteModal(container, form);
-            return;
-          }
-        }
+        
 
         const isMaterialsForm =
           !!form.closest(".material-form-embed") ||

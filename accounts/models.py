@@ -575,6 +575,13 @@ class YarnPOInward(OwnedModel):
         on_delete=models.CASCADE,
         related_name="inwards",
     )
+    vendor = models.ForeignKey(
+        "Vendor",
+        on_delete=models.SET_NULL,
+        related_name="yarn_inwards",
+        null=True,
+        blank=True,
+    )
     inward_number = models.CharField(max_length=30, unique=True)
     inward_date = models.DateField(default=timezone.localdate)
     notes = models.TextField(blank=True, default="")

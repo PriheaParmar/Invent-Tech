@@ -1,113 +1,811 @@
 {% extends "accounts/base_app.html" %}
 {% block title %}{% if mode == 'edit' %}Edit Greige PO{% else %}Create Greige PO{% endif %} - InventTech{% endblock %}
-{% block page_title %}PO / Greige / {% if mode == 'edit' %}Edit{% else %}Create{% endif %}{% endblock %}
-{% block page_subtitle %}Follow the Yarn flow pattern and create the greige middle layer{% endblock %}
+{% block page_title %}{% if mode == 'edit' %}Edit Greige PO{% else %}Create Greige PO{% endif %}{% endblock %}
+{% block page_subtitle %}Create and manage greige purchase orders{% endblock %}
 
 {% block content %}
-
 <style>
-  .gpf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}
-  .gpf-field{display:flex;flex-direction:column;gap:6px}
-  .gpf-field label{font-size:12px;font-weight:700;color:rgba(15,23,42,.72)}
-  .gpf-field input,.gpf-field select,.gpf-field textarea{width:100%;min-height:42px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff;font:inherit}
-  .gpf-field textarea{min-height:84px;resize:vertical}
-  .gpf-span-2{grid-column:span 2}.gpf-span-3{grid-column:span 3}
-  .gpf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}
-  .gpf-block{margin-top:16px;border:1px solid rgba(15,23,42,.08);border-radius:18px;background:rgba(255,255,255,.72);overflow:hidden}
-  .gpf-block summary{cursor:pointer;list-style:none;padding:16px 18px;font-weight:800}
-  .gpf-block-body{padding:0 18px 18px;border-top:1px solid rgba(15,23,42,.08)}
-  .gpf-mini-table{width:100%;border-collapse:collapse}.gpf-mini-table th,.gpf-mini-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:13px;vertical-align:top}
-  .gpf-errors{margin:0 18px 18px;padding:12px 14px;border-radius:12px;background:rgba(239,68,68,.08);color:#991b1b;font-size:13px}
-  @media (max-width:1100px){.gpf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gpf-span-3{grid-column:span 2}}
-  @media (max-width:760px){.gpf-grid{grid-template-columns:1fr}.gpf-span-2,.gpf-span-3{grid-column:span 1}}
+  :root{
+    --pink: rgba(238, 61, 133, 1);
+    --pink-soft: rgba(238, 61, 133, .08);
+    --pink-border: rgba(238, 61, 133, .16);
+
+    --ink:#0f172a;
+    --muted:#667085;
+    --line:rgba(15,23,42,.08);
+    --line-soft:rgba(15,23,42,.06);
+    --panel:#ffffff;
+    --panel-soft:#fafbfc;
+    --panel-muted:#f6f8fb;
+    --shadow:0 16px 42px rgba(15,23,42,.05);
+    --shadow-soft:0 8px 20px rgba(15,23,42,.04);
+    --danger:#dc2626;
+  }
+
+  .canvas{
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
+  }
+
+  .yp-page{
+    width:100%;
+    min-width:0;
+  }
+
+  .jobbers-embed{
+    padding:10px 6px;
+  }
+
+  .yp-shell{
+    width:100%;
+    min-width:0;
+    padding:14px;
+    border-radius:18px;
+    background:rgba(255,255,255,.72);
+    border:2px dashed black;
+    box-shadow:0 12px 36px rgba(15,23,42,.08);
+  }
+
+  .yp-form{
+    display:grid;
+    gap:14px;
+  }
+
+  .yp-headbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    padding:0;
+    border-radius:0;
+    background:transparent;
+  }
+
+  .yp-head-main{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+  }
+
+  .yp-head-icon{
+    width:42px;
+    height:42px;
+    flex:0 0 auto;
+    border-radius:12px;
+    display:grid;
+    place-items:center;
+  }
+
+  .yp-head-icon svg{
+    width:32px;
+    height:32px;
+    display:block;
+  }
+
+  .yp-head-copy{
+    min-width:0;
+  }
+
+  .yp-title{
+    font-size:20px;
+    font-weight:950;
+    line-height:1.05;
+    letter-spacing:-.02em;
+    color:var(--ink);
+  }
+
+  .yp-subtitle{
+    margin-top:3px;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:700;
+    line-height:1.4;
+  }
+
+  .yp-head-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .yp-btn,
+  .yp-btn-primary,
+  .yp-btn-secondary{
+    appearance:none;
+    border:1px solid rgba(15,23,42,.10);
+    min-height:36px;
+    padding:0 13px;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+    cursor:pointer;
+    transition:all .18s ease;
+    white-space:nowrap;
+  }
+
+  .yp-btn,
+  .yp-btn-secondary{
+    background:#fff;
+    color:var(--ink);
+  }
+
+  .yp-btn:hover,
+  .yp-btn-secondary:hover{
+    background:var(--panel-muted);
+    border-color:rgba(15,23,42,.16);
+  }
+
+  .yp-btn-primary{
+    color:#fff;
+    border-color:var(--pink);
+    background:var(--pink);
+    box-shadow:0 8px 16px rgba(238,61,133,.14);
+  }
+
+  .yp-btn-primary:hover{
+    color:#fff;
+    background:#d92f74;
+    border-color:#d92f74;
+  }
+
+  .yp-errors{
+    padding:10px 12px;
+    border-radius:12px;
+    background:rgba(239,68,68,.08);
+    border:1px solid rgba(239,68,68,.16);
+    font-weight:800;
+    color:#991b1b;
+    font-size:12px;
+  }
+
+  .yp-chipbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .yp-chip{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:160px;
+    padding:10px 12px;
+    border-radius:14px;
+    background:#fff;
+    border:1px solid var(--line);
+    box-shadow:var(--shadow-soft);
+  }
+
+  .yp-chip.highlight{
+    border-color:var(--pink-border);
+    background:#fff;
+  }
+
+  .yp-chip-label{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:900;
+    color:var(--muted);
+  }
+
+  .yp-chip-value{
+    font-size:15px;
+    font-weight:900;
+    line-height:1.15;
+    color:var(--ink);
+    word-break:break-word;
+  }
+
+  .yp-layout{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 320px;
+    gap:12px;
+    align-items:start;
+  }
+
+  .yp-main,
+  .yp-side{
+    min-width:0;
+    display:grid;
+    gap:12px;
+  }
+
+  .yp-panel,
+  .yp-summary,
+  .yp-card{
+    border:1px solid var(--line);
+    border-radius:18px;
+    background:var(--panel);
+    box-shadow:var(--shadow-soft);
+    overflow:hidden;
+  }
+
+  .yp-panel-head,
+  .yp-lines-head,
+  .yp-card-head,
+  .yp-summary-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    padding:12px 12px 0;
+  }
+
+  .yp-panel-kicker{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--pink);
+    font-weight:900;
+  }
+
+  .yp-panel-title{
+    margin-top:2px;
+    font-size:15px;
+    font-weight:900;
+    line-height:1.1;
+    color:var(--ink);
+  }
+
+  .yp-panel-sub{
+    margin-top:3px;
+    font-size:10px;
+    font-weight:700;
+    color:var(--muted);
+  }
+
+  .yp-panel-body,
+  .yp-summary-body,
+  .yp-card-body{
+    padding:12px;
+  }
+
+  .yp-grid{
+    display:grid;
+    gap:10px;
+  }
+
+  .yp-header-grid{
+    grid-template-columns:1.15fr .9fr .9fr .9fr;
+  }
+
+  .yp-field{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    min-width:0;
+  }
+
+  .yp-field.span-2{
+    grid-column:span 2;
+  }
+
+  .yp-field.span-4{
+    grid-column:span 4;
+  }
+
+  .yp-field label{
+    font-size:10px;
+    font-weight:800;
+    color:#344054;
+  }
+
+  .yp-field input,
+  .yp-field select,
+  .yp-field textarea{
+    width:100%;
+    box-sizing:border-box;
+    min-height:36px;
+    padding:7px 10px;
+    border-radius:10px;
+    border:1px solid rgba(15,23,42,.10);
+    background:#fff;
+    outline:none;
+    color:var(--ink);
+    font:inherit;
+    font-size:12px;
+    appearance:none;
+    transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+
+  .yp-field textarea{
+    min-height:74px;
+    resize:vertical;
+  }
+
+  .yp-field input:focus,
+  .yp-field select:focus,
+  .yp-field textarea:focus{
+    border-color:rgba(238,61,133,.28);
+    box-shadow:0 0 0 4px rgba(238,61,133,.08);
+    background:#fff;
+  }
+
+  .yp-field input[readonly],
+  .yp-field input[disabled],
+  .yp-field select[disabled],
+  .yp-field textarea[disabled]{
+    background:#f8fafc;
+    color:#475467;
+  }
+
+  .yp-help{
+    margin-top:3px;
+    font-size:10px;
+    font-weight:700;
+    color:var(--muted);
+  }
+
+  .yp-errorlist{
+    margin:2px 0 0;
+    padding:0;
+    list-style:none;
+    color:#b42318;
+    font-size:11px;
+    font-weight:800;
+  }
+
+  .yp-lines-table{
+    width:100%;
+    min-width:720px;
+    border-collapse:collapse;
+  }
+
+  .yp-lines-wrap{
+    overflow:auto;
+    border-top:1px solid var(--line);
+  }
+
+  .yp-lines-table th,
+  .yp-lines-table td{
+    padding:10px 10px;
+    border-bottom:1px solid var(--line-soft);
+    text-align:left;
+    vertical-align:top;
+    font-size:12px;
+  }
+
+  .yp-lines-table th{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#475467;
+    font-weight:900;
+    background:#fafbfc;
+    white-space:nowrap;
+  }
+
+  .yp-lines-name{
+    font-weight:900;
+    color:var(--ink);
+  }
+
+  .yp-lines-sub{
+    margin-top:3px;
+    font-size:10px;
+    color:var(--muted);
+    font-weight:700;
+    line-height:1.45;
+  }
+
+  .yp-summary-list{
+    display:grid;
+    gap:8px;
+  }
+
+  .yp-summary-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:12px;
+    background:#fafbfc;
+    border:1px solid var(--line-soft);
+  }
+
+  .yp-summary-k{
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+  }
+
+  .yp-summary-v{
+    font-size:12px;
+    font-weight:900;
+    color:var(--ink);
+    text-align:right;
+    word-break:break-word;
+  }
+
+  .yp-note{
+    padding:10px 12px;
+    border-radius:12px;
+    background:#fff7ed;
+    border:1px solid #fed7aa;
+    color:#9a3412;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  @media (max-width: 1080px){
+    .yp-layout{
+      grid-template-columns:1fr;
+    }
+
+    .yp-header-grid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    .yp-field.span-4{
+      grid-column:span 2;
+    }
+  }
+
+  @media (max-width: 720px){
+    .yp-headbar{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .yp-head-actions{
+      width:100%;
+    }
+
+    .yp-head-actions > *{
+      flex:1 1 auto;
+    }
+
+    .yp-header-grid{
+      grid-template-columns:1fr;
+    }
+
+    .yp-field.span-2,
+    .yp-field.span-4{
+      grid-column:span 1;
+    }
+  }
 </style>
+
 <section class="page-section is-active">
   <div class="canvas">
-    <div class="jb-page">
+    <div class="yp-page">
       <div class="jobbers-embed">
-        <div class="jb-panel">
-          <div class="jb-head">
-            <div>
-              <div class="jb-title">{% if mode == 'edit' %}Edit Greige PO{% else %}Purchase Order for Greige Fabric{% endif %}</div>
-              <div class="jb-sub">Create Greige PO from Yarn inward data and continue it into Greige inward and Dyeing PO.</div>
-            </div>
-          </div>
-
-          {% if form.non_field_errors %}
-          <div class="gpf-errors">{{ form.non_field_errors }}</div>
-          {% endif %}
-          {% if existing_po and mode != 'edit' %}
-          <div class="gpf-errors">Greige PO already exists for this Yarn PO. <a href="{% url 'accounts:greigepo_detail' existing_po.id %}">Open existing Greige PO</a></div>
-          {% endif %}
-
-          <form method="post">
+        <div class="yp-shell">
+          <form method="post" class="yp-form">
             {% csrf_token %}
-            <div style="padding:18px;">
-              <div class="gpf-grid">
-                <div class="gpf-field"><label>Greige PO No</label><input type="text" value="{% if po_obj %}{{ po_obj.system_number }}{% else %}Auto Generated{% endif %}" disabled></div>
-                <div class="gpf-field"><label>Internal PO Number</label>{{ form.internal_po_number }}</div>
-                <div class="gpf-field"><label>Source Yarn PO</label>{{ form.source_yarn_po }}{{ form.source_yarn_po.errors }}</div>
-                <div class="gpf-field"><label>PO Number</label>{{ form.po_number }}</div>
-                <div class="gpf-field"><label>Date</label>{{ form.po_date }}</div>
-                <div class="gpf-field"><label>Available Qty</label>{{ form.available_qty }}</div>
-                <div class="gpf-field"><label>Vendor</label>{{ form.vendor }}</div>
-                <div class="gpf-field"><label>Firm</label>{{ form.firm }}</div>
-                <div class="gpf-field"><label>Cancel Date</label>{{ form.cancel_date }}</div>
-                <div class="gpf-field"><label>Director</label>{{ form.director }}</div>
-                <div class="gpf-field"><label>Validity Period</label>{{ form.validity_period }}</div>
-                <div class="gpf-field"><label>Delivery Period</label>{{ form.delivery_period }}</div>
-                <div class="gpf-field gpf-span-2"><label>Shipping Address</label>{{ form.shipping_address }}</div>
-                <div class="gpf-field gpf-span-2"><label>Address</label>{{ form.address }}</div>
-                <div class="gpf-field"><label>Expected Delivery Date</label>{{ form.expected_delivery_date }}</div>
-                <div class="gpf-field gpf-span-2"><label>Delivery Schedule</label>{{ form.delivery_schedule }}</div>
-                <div class="gpf-field gpf-span-3"><label>Remarks</label>{{ form.remarks }}</div>
+
+            <div class="yp-headbar">
+              <div class="yp-head-main">
+                <div class="yp-head-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M6.75 4.75h7.5l3 3v11.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 5.25 19.25v-13a1.5 1.5 0 0 1 1.5-1.5Z" stroke="var(--pink)" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M14.25 4.9v2.6a1 1 0 0 0 1 1h2.6" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8.5 12h7" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8.5 15.5h5.5" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
+
+                <div class="yp-head-copy">
+                  <div class="yp-title">{% if mode == 'edit' %}Edit Greige PO{% else %}Create Greige PO{% endif %}</div>
+                  <div class="yp-subtitle">Generate Greige PO from Yarn inward and continue the process to Greige inward and Dyeing PO.</div>
+                </div>
               </div>
-              <div class="gpf-actions">
-                <a class="jb-secondary" href="{% url 'accounts:greigepo_list' %}">Back to Greige PO</a>
-                <button type="submit" class="jb-add">Save Greige PO</button>
+
+              <div class="yp-head-actions">
+                <a class="yp-btn-secondary" href="{% url 'accounts:greigepo_list' %}">Back to Greige PO</a>
+                <button type="submit" class="yp-btn-primary">Save Greige PO</button>
+              </div>
+            </div>
+
+            {% if form.non_field_errors %}
+              <div class="yp-errors">
+                {% for err in form.non_field_errors %}
+                  <div>{{ err }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if existing_po and mode != 'edit' %}
+              <div class="yp-errors">
+                Greige PO already exists for this Yarn PO.
+                <a href="{% url 'accounts:greigepo_detail' existing_po.id %}">Open existing Greige PO</a>
+              </div>
+            {% endif %}
+
+            <div class="yp-chipbar">
+              <div class="yp-chip highlight">
+                <div class="yp-chip-label">Greige PO Number</div>
+                <div class="yp-chip-value">{{ system_number_preview }}</div>
+              </div>
+
+              {% if source_yarn_po %}
+              <div class="yp-chip">
+                <div class="yp-chip-label">Source Yarn PO</div>
+                <div class="yp-chip-value">{{ source_yarn_po.system_number }}</div>
+              </div>
+              {% endif %}
+
+              <div class="yp-chip">
+                <div class="yp-chip-label">Mode</div>
+                <div class="yp-chip-value">{% if mode == 'edit' %}Edit{% else %}Create{% endif %}</div>
+              </div>
+            </div>
+
+            <div class="yp-layout">
+              <div class="yp-main">
+                <div class="yp-panel">
+                  <div class="yp-panel-head">
+                    <div>
+                      <div class="yp-panel-kicker">Header</div>
+                      <div class="yp-panel-title">Greige PO details</div>
+                      <div class="yp-panel-sub">Fill the basic purchase order information.</div>
+                    </div>
+                  </div>
+
+                  <div class="yp-panel-body">
+                    <div class="yp-grid yp-header-grid">
+                      <div class="yp-field">
+                        <label>Greige PO No</label>
+                        <input type="text" value="{{ system_number_preview }}" readonly>
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.internal_po_number.id_for_label }}">Internal PO Number</label>
+                        {{ form.internal_po_number }}
+                        {{ form.internal_po_number.errors }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.source_yarn_po.id_for_label }}">Source Yarn PO</label>
+                        {{ form.source_yarn_po }}
+                        {{ form.source_yarn_po.errors }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.po_number.id_for_label }}">PO Number</label>
+                        {{ form.po_number }}
+                        {{ form.po_number.errors }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.po_date.id_for_label }}">Date</label>
+                        {{ form.po_date }}
+                        {{ form.po_date.errors }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.available_qty.id_for_label }}">Available Qty</label>
+                        {{ form.available_qty }}
+                        {{ form.available_qty.errors }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.vendor.id_for_label }}">Vendor</label>
+                        {{ form.vendor }}
+                        {{ form.vendor.errors }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.firm.id_for_label }}">Firm</label>
+                        {{ form.firm }}
+                        {{ form.firm.errors }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.cancel_date.id_for_label }}">Cancel Date</label>
+                        {{ form.cancel_date }}
+                        {{ form.cancel_date.errors }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.validity_period.id_for_label }}">Validity Period</label>
+                        {{ form.validity_period }}
+                        {{ form.validity_period.errors }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.delivery_period.id_for_label }}">Delivery Period</label>
+                        {{ form.delivery_period }}
+                        {{ form.delivery_period.errors }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.expected_delivery_date.id_for_label }}">Expected Delivery Date</label>
+                        {{ form.expected_delivery_date }}
+                        {{ form.expected_delivery_date.errors }}
+                      </div>
+
+                      <div class="yp-field span-2">
+                        <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
+                        {{ form.shipping_address }}
+                        {{ form.shipping_address.errors }}
+                      </div>
+
+                      <div class="yp-field span-2">
+                        <label for="{{ form.delivery_schedule.id_for_label }}">Delivery Schedule</label>
+                        {{ form.delivery_schedule }}
+                        {{ form.delivery_schedule.errors }}
+                      </div>
+
+                      <div class="yp-field span-4">
+                        <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+                        {{ form.remarks }}
+                        {{ form.remarks.errors }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="yp-panel">
+                  <div class="yp-panel-head">
+                    <div>
+                      <div class="yp-panel-kicker">Source</div>
+                      <div class="yp-panel-title">Source Yarn PO details</div>
+                      <div class="yp-panel-sub">Reference details pulled from the linked Yarn PO.</div>
+                    </div>
+                  </div>
+
+                  <div class="yp-panel-body">
+                    {% if source_yarn_po %}
+                    <div class="yp-grid" style="grid-template-columns:repeat(3, minmax(0, 1fr));">
+                      <div class="yp-field">
+                        <label>Yarn PO</label>
+                        <input type="text" value="{{ source_yarn_po.system_number }}" readonly>
+                      </div>
+                      <div class="yp-field">
+                        <label>Vendor</label>
+                        <input type="text" value="{{ source_yarn_po.vendor.name }}" readonly>
+                      </div>
+                      <div class="yp-field">
+                        <label>Firm</label>
+                        <input type="text" value="{% if source_yarn_po.firm %}{{ source_yarn_po.firm.firm_name }}{% else %}—{% endif %}" readonly>
+                      </div>
+                      <div class="yp-field">
+                        <label>PO No</label>
+                        <input type="text" value="{{ source_yarn_po.po_number|default:'—' }}" readonly>
+                      </div>
+                      <div class="yp-field">
+                        <label>Total Ordered</label>
+                        <input type="text" value="{{ source_yarn_po.total_weight|default:'0.00' }}" readonly>
+                      </div>
+                      <div class="yp-field">
+                        <label>Total Inward</label>
+                        <input type="text" value="{{ source_yarn_po.total_inward_qty|default:'0.00' }}" readonly>
+                      </div>
+                    </div>
+                    {% else %}
+                      <div class="yp-note">Choose a source Yarn PO to see linked inward information.</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="yp-panel">
+                  <div class="yp-panel-head">
+                    <div>
+                      <div class="yp-panel-kicker">Source inward</div>
+                      <div class="yp-panel-title">Source Yarn inward rows</div>
+                      <div class="yp-panel-sub">These inward quantities will be used to generate Greige PO items.</div>
+                    </div>
+                  </div>
+
+                  <div class="yp-lines-wrap">
+                    {% if source_inwards %}
+                    <table class="yp-lines-table">
+                      <thead>
+                        <tr>
+                          <th>Inward No</th>
+                          <th>Date</th>
+                          <th>Item</th>
+                          <th>Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for inward in source_inwards %}
+                          {% for inward_item in inward.items.all %}
+                          <tr>
+                            <td>{{ inward.inward_number }}</td>
+                            <td>{{ inward.inward_date|date:"d-m-Y" }}</td>
+                            <td>
+                              <div class="yp-lines-name">
+                                {% if inward_item.po_item.material_type %}
+                                  {{ inward_item.po_item.material_type.name }}
+                                {% elif inward_item.po_item.material %}
+                                  {{ inward_item.po_item.material.name }}
+                                {% else %}
+                                  Yarn Item
+                                {% endif %}
+                              </div>
+                            </td>
+                            <td>{{ inward_item.quantity }}</td>
+                          </tr>
+                          {% endfor %}
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                    {% else %}
+                      <div class="yp-panel-body">
+                        <div class="yp-note">No Yarn inward data found yet.</div>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="yp-side">
+                <div class="yp-summary">
+                  <div class="yp-summary-head">
+                    <div>
+                      <div class="yp-panel-kicker">Summary</div>
+                      <div class="yp-panel-title">Quick overview</div>
+                    </div>
+                  </div>
+
+                  <div class="yp-summary-body">
+                    <div class="yp-summary-list">
+                      <div class="yp-summary-row">
+                        <div class="yp-summary-k">Greige PO No</div>
+                        <div class="yp-summary-v">{{ system_number_preview }}</div>
+                      </div>
+
+                      <div class="yp-summary-row">
+                        <div class="yp-summary-k">Source Yarn PO</div>
+                        <div class="yp-summary-v">{% if source_yarn_po %}{{ source_yarn_po.system_number }}{% else %}—{% endif %}</div>
+                      </div>
+
+                      <div class="yp-summary-row">
+                        <div class="yp-summary-k">Available Qty</div>
+                        <div class="yp-summary-v">{{ form.available_qty.value|default:"0.00" }}</div>
+                      </div>
+
+                      <div class="yp-summary-row">
+                        <div class="yp-summary-k">Vendor</div>
+                        <div class="yp-summary-v">
+                          {% if source_yarn_po and source_yarn_po.vendor %}
+                            {{ source_yarn_po.vendor.name }}
+                          {% else %}
+                            Select vendor
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="yp-summary-row">
+                        <div class="yp-summary-k">Flow</div>
+                        <div class="yp-summary-v">Yarn → Greige → Inward → Dyeing</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {% if existing_po and mode != 'edit' %}
+                <div class="yp-card">
+                  <div class="yp-card-head">
+                    <div>
+                      <div class="yp-panel-kicker">Existing record</div>
+                      <div class="yp-panel-title">Greige PO already exists</div>
+                    </div>
+                  </div>
+                  <div class="yp-card-body">
+                    <div class="yp-note">
+                      A Greige PO already exists for this source Yarn PO.
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
               </div>
             </div>
           </form>
-
-          <details class="gpf-block" open>
-            <summary>Source Yarn PO Details</summary>
-            <div class="gpf-block-body">
-              {% if source_yarn_po %}
-              <table class="gpf-mini-table">
-                <tr><th>Yarn PO</th><td>{{ source_yarn_po.system_number }}</td><th>Vendor</th><td>{{ source_yarn_po.vendor.name }}</td></tr>
-                <tr><th>PO No</th><td>{{ source_yarn_po.po_number|default:"—" }}</td><th>Firm</th><td>{% if source_yarn_po.firm %}{{ source_yarn_po.firm.firm_name }}{% else %}—{% endif %}</td></tr>
-                <tr><th>Total Ordered</th><td>{{ source_yarn_po.total_weight|default:"0.00" }}</td><th>Total Inward</th><td>{{ source_yarn_po.total_inward_qty|default:"0.00" }}</td></tr>
-              </table>
-              {% else %}
-              <div class="jb-empty">Choose a source Yarn PO to see linked inward information.</div>
-              {% endif %}
-            </div>
-          </details>
-
-          <details class="gpf-block" open>
-            <summary>Source Yarn Inwards</summary>
-            <div class="gpf-block-body">
-              {% if source_inwards %}
-              <table class="gpf-mini-table">
-                <thead><tr><th>Inward No</th><th>Date</th><th>Item</th><th>Qty</th></tr></thead>
-                <tbody>
-                  {% for inward in source_inwards %}
-                    {% for inward_item in inward.items.all %}
-                    <tr>
-                      <td>{{ inward.inward_number }}</td>
-                      <td>{{ inward.inward_date|date:"d-m-Y" }}</td>
-                      <td>{% if inward_item.po_item.material_type %}{{ inward_item.po_item.material_type.name }}{% elif inward_item.po_item.material %}{{ inward_item.po_item.material.name }}{% else %}Yarn Item{% endif %}</td>
-                      <td>{{ inward_item.quantity }}</td>
-                    </tr>
-                    {% endfor %}
-                  {% endfor %}
-                </tbody>
-              </table>
-              {% else %}
-              <div class="jb-empty">No Yarn inward data found yet.</div>
-              {% endif %}
-            </div>
-          </details>
         </div>
       </div>
     </div>

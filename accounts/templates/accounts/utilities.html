@@ -39,6 +39,8 @@
           <div id="mastersEmbedMount"></div>
         </div>
 
+        {% include "accounts/jobbers/_delete_confirm_modal.html" with modal_id="jbUtilitiesDeleteConfirm" %}
+
         <div id="utilSections" class="util-sections"></div>
 
         <div class="tiny-note" style="margin-top:10px;">
@@ -737,11 +739,7 @@
     mount.innerHTML = "";
   }
 
-  function getJobberDeleteModal() {
-    const mount = document.getElementById("mastersEmbedMount");
-    if (!mount) return null;
-    return mount.querySelector("#jbDeleteConfirm");
-  }
+
 
     function submitEmbedForm(form) {
     if (!form) return;
@@ -833,85 +831,8 @@
     bindMaterialSubtypeForm(mount);
   }
   
-  function openJobberDeleteModal(form) {
-    const modal = getJobberDeleteModal();
-    const label = form.getAttribute("data-delete-label") || "this item";
+  
 
-    if (!modal) {
-      if (window.confirm(`Are you sure you want to delete ${label}? This action cannot be undone.`)) {
-        form.dataset.confirmed = "1";
-        form.requestSubmit();
-      }
-      return;
-    }
-
-    const text = modal.querySelector("#jbConfirmText");
-    const labelNode = modal.querySelector("#jbConfirmLabel");
-    if (text) {
-      text.textContent = "This record will be permanently removed from your utilities list.";
-    }
-    if (labelNode) {
-      labelNode.textContent = label;
-    }
-
-    modal._pendingForm = form;
-    modal._previousActiveElement = document.activeElement;
-
-    modal.hidden = false;
-    modal.classList.remove("is-closing");
-    document.body.classList.add("jb-modal-open");
-
-    window.requestAnimationFrame(function () {
-      modal.classList.add("is-open");
-
-      const confirmBtn = modal.querySelector("#jbConfirmDeleteBtn");
-      if (confirmBtn) confirmBtn.focus();
-    });
-  }
-
-  function closeJobberDeleteModal() {
-    const modal = getJobberDeleteModal();
-    if (!modal) return;
-
-    const finishClose = function () {
-      modal.hidden = true;
-      modal.classList.remove("is-open", "is-closing");
-      modal._pendingForm = null;
-      document.body.classList.remove("jb-modal-open");
-
-      const previous = modal._previousActiveElement;
-      modal._previousActiveElement = null;
-      if (previous && typeof previous.focus === "function") {
-        previous.focus();
-      }
-    };
-
-    if (!modal.classList.contains("is-open")) {
-      finishClose();
-      return;
-    }
-
-    modal.classList.remove("is-open");
-    modal.classList.add("is-closing");
-
-    const card = modal.querySelector(".jb-confirm-card");
-    const backdrop = modal.querySelector(".jb-confirm-backdrop");
-    let finished = false;
-
-    const done = function () {
-      if (finished) return;
-      finished = true;
-      finishClose();
-    };
-
-    if (card) {
-      card.addEventListener("transitionend", done, { once: true });
-    } else if (backdrop) {
-      backdrop.addEventListener("transitionend", done, { once: true });
-    }
-
-    window.setTimeout(done, 260);
-  }
 
 
   function bootUtilities() {
@@ -930,25 +851,9 @@
     });
 
     utilitiesRoot.addEventListener("click", function (e) {
-      if (e.target.closest("[data-jb-close]")) {
-        e.preventDefault();
-        closeJobberDeleteModal();
-        return;
-      }
+      
 
-      if (e.target.closest("#jbConfirmDeleteBtn")) {
-        e.preventDefault();
-
-        const modal = getJobberDeleteModal();
-        const form = modal && modal._pendingForm ? modal._pendingForm : null;
-
-        if (form) {
-          closeJobberDeleteModal();
-          form.dataset.confirmed = "1";
-          form.requestSubmit();
-        }
-        return;
-      }
+      
 
       const closeBtn = e.target.closest("[data-embed-close]");
       if (closeBtn) {
@@ -989,15 +894,7 @@
       const form = e.target.closest("form");
       if (!form) return;
 
-      if (form.matches(".js-jb-delete-form")) {
-        if (form.dataset.confirmed === "1") {
-          delete form.dataset.confirmed;
-        } else {
-          e.preventDefault();
-          openJobberDeleteModal(form);
-          return;
-        }
-      }
+      
 
       const action = form.getAttribute("action") || window.location.href;
       const isMastersForm = isMastersUrl(action) || form.querySelector('input[name="embed"][value="1"]');

@@ -1475,12 +1475,21 @@ class YarnPOReviewForm(forms.Form):
 class YarnPOInwardForm(forms.ModelForm):
     class Meta:
         model = YarnPOInward
-        fields = ["inward_date", "notes"]
+        fields = ["vendor", "inward_date", "notes"]
         widgets = {
             "inward_date": forms.DateInput(attrs={"type": "date"}),
             "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
         }
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["vendor"].required = True
+        self.fields["vendor"].queryset = (
+            Vendor.objects.filter(owner=user, is_active=True).order_by("name")
+            if user is not None else Vendor.objects.none()
+        )
+        self.fields["vendor"].empty_label = "Select inward vendor"
+        
 class YarnPurchaseOrderItemForm(forms.ModelForm):
     UNIT_CHOICES = [
         ("", "Select unit"),
@@ -1557,9 +1566,7 @@ class GreigePurchaseOrderForm(forms.ModelForm):
             "delivery_period",
             "expected_delivery_date",
             "cancel_date",
-            "director",
             "validity_period",
-            "address",
             "delivery_schedule",
             "remarks",
         ]
@@ -1568,7 +1575,6 @@ class GreigePurchaseOrderForm(forms.ModelForm):
             "expected_delivery_date": forms.DateInput(attrs={"type": "date"}),
             "cancel_date": forms.DateInput(attrs={"type": "date"}),
             "remarks": forms.Textarea(attrs={"rows": 3}),
-            "address": forms.Textarea(attrs={"rows": 3}),
         }
 
     def __init__(self, *args, user=None, source_yarn_po=None, lock_source=False, **kwargs):

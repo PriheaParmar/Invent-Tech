@@ -155,7 +155,7 @@
 
   .yarn-top-grid{
     display:grid;
-    grid-template-columns:repeat(3, minmax(0, 1fr));
+    grid-template-columns:repeat(4, minmax(0, 1fr));
     gap:12px;
   }
 
@@ -402,7 +402,7 @@
 
   .yarn-mini-table,
   .yarn-history-table{
-    min-width:720px;
+    min-width:820px;
   }
 
   .yarn-table th,
@@ -567,6 +567,14 @@
             <div class="yarn-field is-readonly">
               <label>Yarn Inward No</label>
               <input type="text" value="{{ next_inward_number_preview|default:'Auto' }}" readonly>
+            </div>
+
+            <div class="yarn-field">
+              <label for="{{ inward_form.vendor.id_for_label }}">Inward Vendor</label>
+              {{ inward_form.vendor }}
+              {% for err in inward_form.vendor.errors %}
+                <div class="yarn-err">{{ err }}</div>
+              {% endfor %}
             </div>
 
             <div class="yarn-field">
@@ -797,6 +805,7 @@
                       <th>Order Qty</th>
                       <th>Inward No</th>
                       <th>Date</th>
+                      <th>Vendor</th>
                       <th>Notes</th>
                       <th>Received Qty</th>
                       <th>Remark</th>
@@ -818,6 +827,7 @@
                         <td>{{ row.po_item.quantity|default:"0.00" }}</td>
                         <td>{{ inward.inward_number }}</td>
                         <td>{{ inward.inward_date|date:"d-m-Y" }}</td>
+                        <td>{% if inward.vendor %}{{ inward.vendor.name }}{% else %}—{% endif %}</td>
                         <td>{{ inward.notes|default:"—" }}</td>
                         <td>{{ row.quantity }}</td>
                         <td>{{ row.remark|default:"—" }}</td>
@@ -825,7 +835,7 @@
                       {% endfor %}
                     {% empty %}
                     <tr>
-                      <td colspan="7" class="yarn-empty">No inward history.</td>
+                      <td colspan="8" class="yarn-empty">No inward history.</td>
                     </tr>
                     {% endfor %}
                   </tbody>

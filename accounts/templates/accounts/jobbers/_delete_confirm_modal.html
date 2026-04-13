@@ -1,9 +1,5 @@
 <div class="jb-confirm-modal" id="jbDeleteConfirm" hidden>
-  <div
-    class="jb-confirm-backdrop"
-    data-jb-close
-    onclick="event.preventDefault();event.stopPropagation();var m=this.closest('.jb-confirm-modal');if(!m)return false;m.hidden=true;m.classList.remove('is-open','is-closing');document.body.classList.remove('jb-modal-open');m._pendingForm=null;var p=m._previousActiveElement;m._previousActiveElement=null;if(p&&typeof p.focus==='function'){p.focus();}return false;"
-  ></div>
+  <div class="jb-confirm-backdrop" data-jb-close></div>
 
   <div
     class="jb-confirm-card"
@@ -12,13 +8,7 @@
     aria-labelledby="jbConfirmTitle"
     aria-describedby="jbConfirmText jbConfirmNote"
   >
-    <button
-      type="button"
-      class="jb-confirm-close"
-      data-jb-close
-      aria-label="Close"
-      onclick="event.preventDefault();event.stopPropagation();var m=this.closest('.jb-confirm-modal');if(!m)return false;m.hidden=true;m.classList.remove('is-open','is-closing');document.body.classList.remove('jb-modal-open');m._pendingForm=null;var p=m._previousActiveElement;m._previousActiveElement=null;if(p&&typeof p.focus==='function'){p.focus();}return false;"
-    >
+    <button type="button" class="jb-confirm-close" data-jb-close aria-label="Close">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
           d="M18 6L6 18"
@@ -88,7 +78,7 @@
       <div class="jb-confirm-header-copy">
         <div class="jb-confirm-title" id="jbConfirmTitle">Delete item?</div>
         <div class="jb-confirm-text" id="jbConfirmText">
-          This record will be permanently removed from your utilities list.
+          This record will be permanently removed.
         </div>
       </div>
     </div>
@@ -103,23 +93,8 @@
     </div>
 
     <div class="jb-confirm-actions">
-      <button
-        type="button"
-        class="jb-secondary"
-        data-jb-close
-        onclick="event.preventDefault();event.stopPropagation();var m=this.closest('.jb-confirm-modal');if(!m)return false;m.hidden=true;m.classList.remove('is-open','is-closing');document.body.classList.remove('jb-modal-open');m._pendingForm=null;var p=m._previousActiveElement;m._previousActiveElement=null;if(p&&typeof p.focus==='function'){p.focus();}return false;"
-      >
-        Cancel
-      </button>
-
-      <button
-        type="button"
-        class="jb-danger-btn"
-        id="jbConfirmDeleteBtn"
-        onclick="event.preventDefault();event.stopPropagation();var m=this.closest('.jb-confirm-modal');if(!m)return false;var f=m._pendingForm||null;var p=m._previousActiveElement;m.hidden=true;m.classList.remove('is-open','is-closing');document.body.classList.remove('jb-modal-open');m._pendingForm=null;m._previousActiveElement=null;if(p&&typeof p.focus==='function'){p.focus();}if(f){f.dataset.confirmed='1';if(typeof f.requestSubmit==='function'){f.requestSubmit();}else{f.submit();}}return false;"
-      >
-        Delete
-      </button>
+      <button type="button" class="jb-secondary" data-jb-close>Cancel</button>
+      <button type="button" class="jb-danger-btn" id="jbConfirmDeleteBtn">Delete</button>
     </div>
   </div>
 </div>
