@@ -94,7 +94,7 @@ urlpatterns = [
     path("po/yarn/<int:pk>/review/", views.yarnpo_review, name="yarnpo_review"),
     path("po/yarn/<int:pk>/pdf/", views.yarnpo_pdf, name="yarnpo_pdf"),
     path("po/yarn/<int:pk>/inward/", views.yarnpo_inward, name="yarnpo_inward"),
-    path("po/yarn/inwards/<int:pk>/edit/", views.yarn_inward_update, name="yarn_inward_edit"),  
+    path("po/yarn/inwards/<int:pk>/edit/", views.yarn_inward_update, name="yarn_inward_edit"),
     path("po/yarn/inwards/", views.yarn_inward_tracker, name="yarn_inward_tracker"),
     path("po/yarn/<int:pk>/generate-greige/", views.generate_greige_po_from_yarn, name="generate_greige_po_from_yarn"),
 
@@ -105,7 +105,9 @@ urlpatterns = [
     path("po/greige/<int:pk>/", views.greigepo_detail, name="greigepo_detail"),
     path("po/greige/<int:pk>/edit/", views.greigepo_update, name="greigepo_edit"),
     path("po/greige/<int:pk>/delete/", views.greigepo_delete, name="greigepo_delete"),
+    path("po/greige/<int:pk>/review/", views.greigepo_review, name="greigepo_review"),
     path("po/greige/<int:pk>/inward/", views.greigepo_inward, name="greigepo_inward"),
+    path("po/greige/inwards/<int:pk>/edit/", views.greige_inward_edit, name="greige_inward_edit"),
     path("po/greige/inwards/", views.greige_inward_tracker, name="greige_inward_tracker"),
     path("po/greige/<int:pk>/generate-dyeing/", views.generate_dyeing_po_from_greige, name="generate_dyeing_po_from_greige"),
 
@@ -117,6 +119,7 @@ urlpatterns = [
     path("po/dyeing/<int:pk>/edit/", views.dyeingpo_update, name="dyeingpo_edit"),
     path("po/dyeing/<int:pk>/delete/", views.dyeingpo_delete, name="dyeingpo_delete"),
     path("po/dyeing/<int:pk>/inward/", views.dyeingpo_inward, name="dyeingpo_inward"),
+    path("po/dyeing/inwards/<int:pk>/edit/", views.dyeing_inward_edit, name="dyeing_inward_edit"),
     path("po/dyeing/inwards/", views.dyeing_inward_tracker, name="dyeing_inward_tracker"),
     path("po/dyeing/<int:pk>/generate-ready/", views.generate_ready_po_from_dyeing, name="generate_ready_po_from_dyeing"),
 
@@ -128,6 +131,7 @@ urlpatterns = [
     path("po/ready/<int:pk>/edit/", views.readypo_update, name="readypo_edit"),
     path("po/ready/<int:pk>/delete/", views.readypo_delete, name="readypo_delete"),
     path("po/ready/<int:pk>/inward/", views.readypo_inward, name="readypo_inward"),
+    path("po/ready/inwards/<int:pk>/edit/", views.ready_inward_edit, name="ready_inward_edit"),
     path("po/ready/inwards/", views.ready_inward_tracker, name="ready_inward_tracker"),
 
     # Brands
@@ -153,54 +157,60 @@ urlpatterns = [
     path("utilities/catalogues/<int:pk>/edit/", views.catalogue_update, name="catalogue_edit"),
     path("utilities/catalogues/<int:pk>/delete/", views.catalogue_delete, name="catalogue_delete"),
 
+    # Main Categories
     path("utilities/main-categories/", views.maincategory_list, name="maincategory_list"),
     path("utilities/main-categories/add/", views.maincategory_create, name="maincategory_add"),
     path("utilities/main-categories/<int:pk>/edit/", views.maincategory_edit, name="maincategory_edit"),
     path("utilities/main-categories/<int:pk>/delete/", views.maincategory_delete, name="maincategory_delete"),
-        # Pattern Types
+
+    # Pattern Types
     path("utilities/pattern-types/", views.patterntype_list_create, name="patterntype_list"),
     path("utilities/pattern-types/<int:pk>/edit/", views.patterntype_edit, name="patterntype_edit"),
     path("utilities/pattern-types/<int:pk>/delete/", views.patterntype_delete, name="patterntype_delete"),
-    
-        # BOM
+
+    # BOM
     path("utilities/bom/", views.bom_list, name="bom_list"),
     path("utilities/bom/add/", views.bom_create, name="bom_add"),
     path("utilities/bom/<int:pk>/edit/", views.bom_update, name="bom_edit"),
     path("utilities/bom/<int:pk>/delete/", views.bom_delete, name="bom_delete"),
-    
-    
+
+    # Programs
     path("production/programs/", views.program_list, name="program_list"),
     path("production/programs/add/", views.program_create, name="program_add"),
     path("production/programs/<int:pk>/edit/", views.program_update, name="program_edit"),
     path("production/programs/<int:pk>/delete/", views.program_delete, name="program_delete"),
     path("production/programs/bom-summary/<int:bom_id>/", views.program_bom_summary, name="program_bom_summary"),
-    
+
     # Expenses
     path("utilities/expenses/", views.expense_list_create, name="expense_list"),
     path("utilities/expenses/<int:pk>/edit/", views.expense_edit, name="expense_edit"),
     path("utilities/expenses/<int:pk>/delete/", views.expense_delete, name="expense_delete"),
-    
+
     # Clients
     path("master/clients/", views.client_list, name="client_list"),
     path("master/clients/add/", views.client_create, name="client_add"),
     path("master/clients/<int:pk>/edit/", views.client_update, name="client_edit"),
     path("master/clients/<int:pk>/delete/", views.client_delete, name="client_delete"),
-    
+
+    # Terms & Conditions
     path("utilities/terms-conditions/", views.termscondition_list, name="termscondition_list"),
     path("utilities/terms-conditions/add/", views.termscondition_create, name="termscondition_add"),
     path("utilities/terms-conditions/<int:pk>/edit/", views.termscondition_update, name="termscondition_edit"),
     path("utilities/terms-conditions/<int:pk>/delete/", views.termscondition_delete, name="termscondition_delete"),
+
     # Dyeing Other Charges
     path("utilities/dyeing-other-charges/", views.dyeing_other_charge_list, name="dyeing_other_charge_list"),
-path("utilities/dyeing-other-charges/add/", views.dyeing_other_charge_create, name="dyeing_other_charge_add"),
-path("utilities/dyeing-other-charges/<int:pk>/edit/", views.dyeing_other_charge_edit, name="dyeing_other_charge_edit"),
-path("utilities/dyeing-other-charges/<int:pk>/delete/", views.dyeing_other_charge_delete, name="dyeing_other_charge_delete"),
-# Inward Types
+    path("utilities/dyeing-other-charges/add/", views.dyeing_other_charge_create, name="dyeing_other_charge_add"),
+    path("utilities/dyeing-other-charges/<int:pk>/edit/", views.dyeing_other_charge_edit, name="dyeing_other_charge_edit"),
+    path("utilities/dyeing-other-charges/<int:pk>/delete/", views.dyeing_other_charge_delete, name="dyeing_other_charge_delete"),
+
+    # Inward Types
     path("utilities/inward-types/", views.inwardtype_list, name="inwardtype_list"),
     path("utilities/inward-types/add/", views.inwardtype_create, name="inwardtype_add"),
     path("utilities/inward-types/<int:pk>/edit/", views.inwardtype_edit, name="inwardtype_edit"),
     path("utilities/inward-types/<int:pk>/delete/", views.inwardtype_delete, name="inwardtype_delete"),
-    path("po/greige/<int:pk>/review/", views.greigepo_review, name="greigepo_review"),
+
+    # Sub Categories
     path("utilities/sub-categories/", views.subcategory_list, name="subcategory_list"),
     path("utilities/sub-categories/add/", views.subcategory_create, name="subcategory_add"),
     path("utilities/sub-categories/<int:pk>/edit/", views.subcategory_edit, name="subcategory_edit"),

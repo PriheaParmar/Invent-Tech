@@ -1,5 +1,5 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/bom.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'css/bom.css' %}?v=6">
 
 <style>
   .bom-accordion-item > summary { list-style: none; }
@@ -8,6 +8,24 @@
   .bom-accordion-item[open] .bom-accordion-body { display: block; }
   .bom-accordion-item[open] .bom-accordion-chevron { transform: rotate(180deg); }
   .bom-hidden-inline { display: none; }
+  .bom-hidden-delete { display: none; }
+
+  .bom-inline-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+  }
+  .bom-add-inline--round{
+    min-width:34px;
+    width:34px;
+    height:34px;
+    border-radius:999px;
+    padding:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
 </style>
 
 <div class="bom-embed bom-form-shell" data-bom-form-root>
@@ -15,7 +33,7 @@
     <div class="bom-head">
       <div>
         <div class="bom-title">{% if mode == "edit" %}Edit BOM{% else %}Create BOM{% endif %}</div>
-        <div class="bom-sub">Modern BOM form with accordion sections, utility-linked masters, materials, accessories, process mapping, jobber pricing and multiple images.</div>
+        <div class="bom-sub">Production SKU details, utility-linked masters, process mapping, jobber details, expenses, and multiple images.</div>
       </div>
 
       <div class="bom-head-actions">
@@ -64,7 +82,7 @@
           <summary class="bom-accordion-head">
             <div class="bom-accordion-head-main">
               <div class="bom-accordion-title">Production SKU Details</div>
-              <div class="bom-accordion-sub">SKU, size type, material rows and accessories rows.</div>
+              <div class="bom-accordion-sub">SKU, size type, materials and accessories like your reference layout.</div>
             </div>
             <span class="bom-accordion-tag">SKU</span>
             <span class="bom-accordion-chevron" aria-hidden="true">
@@ -74,12 +92,14 @@
 
           <div class="bom-accordion-body">
             <div class="bom-form-card bom-form-card--accordion">
-              <div class="bom-grid bom-form-grid bom-form-grid--4">
+              <div class="bom-grid bom-form-grid bom-form-grid--3">
                 <div class="bom-field">
                   <label for="{{ form.sku_code.id_for_label }}">SKU</label>
                   {{ form.sku_code }}
                   {% if form.sku_code.errors %}
-                  <div class="bom-field-errors">{% for error in form.sku_code.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  <div class="bom-field-errors">
+                    {% for error in form.sku_code.errors %}<p>{{ error }}</p>{% endfor %}
+                  </div>
                   {% endif %}
                 </div>
 
@@ -87,20 +107,23 @@
                   <label for="{{ form.size_type.id_for_label }}">Size Type</label>
                   {{ form.size_type }}
                   {% if form.size_type.errors %}
-                  <div class="bom-field-errors">{% for error in form.size_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  <div class="bom-field-errors">
+                    {% for error in form.size_type.errors %}<p>{{ error }}</p>{% endfor %}
+                  </div>
                   {% endif %}
                 </div>
 
-                <div class="bom-field bom-field--checkbox bom-form-grid-span-2">
-                  <label for="{{ form.is_discontinued.id_for_label }}">Status</label>
+                <div class="bom-field bom-field--checkbox">
+                  <label for="{{ form.is_discontinued.id_for_label }}">Is Discontinue</label>
                   <div class="bom-check bom-check-card">
                     <div class="bom-check-row">
                       {{ form.is_discontinued }}
-                      <span class="bom-check-text">Mark this BOM as discontinued</span>
                     </div>
                   </div>
                   {% if form.is_discontinued.errors %}
-                  <div class="bom-field-errors">{% for error in form.is_discontinued.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  <div class="bom-field-errors">
+                    {% for error in form.is_discontinued.errors %}<p>{{ error }}</p>{% endfor %}
+                  </div>
                   {% endif %}
                 </div>
               </div>
@@ -110,9 +133,8 @@
               <div class="bom-block-top">
                 <div>
                   <div class="bom-block-headline">Materials</div>
-                  <div class="bom-form-note">Add one or more material rows from Material / Trim. Unit reflects from Utilities.</div>
+                  <div class="bom-form-note">Material rows reflect from Material / Trim master. You can add more rows.</div>
                 </div>
-                <button type="button" class="bom-add-inline" data-form-add="materials">Add Material</button>
               </div>
 
               {{ materials_formset.management_form }}
@@ -127,12 +149,12 @@
 
               <div class="bom-line-table bom-line-table--accordion">
                 <div class="bom-line-head bom-line-head--materials">
-                  <div>Material</div>
-                  <div>Unit</div>
-                  <div>Cost / Unit</div>
-                  <div>Avg</div>
+                  <div>Materials</div>
+                  <div>UOM</div>
+                  <div>Cost Per UOM</div>
+                  <div>Average</div>
                   <div>Cost</div>
-                  <div>Remove</div>
+                  <div></div>
                 </div>
 
                 <div data-form-container="materials">
@@ -141,12 +163,48 @@
                     {{ line_form.id }}
                     <div class="bom-hidden-delete">{{ line_form.DELETE }}</div>
                     <div class="bom-hidden-inline">{{ line_form.item_type }}{{ line_form.notes }}</div>
-                    <div>{{ line_form.material }}</div>
-                    <div>{{ line_form.unit }}</div>
-                    <div>{{ line_form.cost_per_uom }}</div>
-                    <div>{{ line_form.average }}</div>
-                    <div>{{ line_form.cost }}</div>
-                    <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+
+                    <div>
+                      {{ line_form.material }}
+                      {% if line_form.material.errors %}
+                      <div class="bom-field-errors">{% for error in line_form.material.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </div>
+
+                    <div>
+                      {{ line_form.unit }}
+                      {% if line_form.unit.errors %}
+                      <div class="bom-field-errors">{% for error in line_form.unit.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </div>
+
+                    <div>
+                      {{ line_form.cost_per_uom }}
+                      {% if line_form.cost_per_uom.errors %}
+                      <div class="bom-field-errors">{% for error in line_form.cost_per_uom.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </div>
+
+                    <div>
+                      {{ line_form.average }}
+                      {% if line_form.average.errors %}
+                      <div class="bom-field-errors">{% for error in line_form.average.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </div>
+
+                    <div>
+                      {{ line_form.cost }}
+                      {% if line_form.cost.errors %}
+                      <div class="bom-field-errors">{% for error in line_form.cost.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </div>
+
+                    <div class="bom-inline-actions">
+                      <button type="button" class="bom-remove-inline" data-form-remove>−</button>
+                      {% if forloop.last %}
+                      <button type="button" class="bom-add-inline bom-add-inline--round" data-form-add="materials">+</button>
+                      {% endif %}
+                    </div>
                   </div>
                   {% endfor %}
                 </div>
@@ -157,9 +215,8 @@
               <div class="bom-block-top">
                 <div>
                   <div class="bom-block-headline">Accessories</div>
-                  <div class="bom-form-note">Add one or more accessory rows from Material / Trim. Unit reflects from Utilities.</div>
+                  <div class="bom-form-note">For now this is ready with the same structure. Later you can connect it to your separate accessories utility.</div>
                 </div>
-                <button type="button" class="bom-add-inline" data-form-add="accessories">Add Accessory</button>
               </div>
 
               {{ accessories_formset.management_form }}
@@ -174,12 +231,12 @@
 
               <div class="bom-line-table bom-line-table--accordion">
                 <div class="bom-line-head bom-line-head--materials">
-                  <div>Accessory</div>
-                  <div>Unit</div>
-                  <div>Cost / Unit</div>
-                  <div>Avg</div>
+                  <div>Accessories</div>
+                  <div>UOM</div>
+                  <div>Cost Per UOM</div>
+                  <div>Average</div>
                   <div>Cost</div>
-                  <div>Remove</div>
+                  <div></div>
                 </div>
 
                 <div data-form-container="accessories">
@@ -188,12 +245,48 @@
                     {{ line_form.id }}
                     <div class="bom-hidden-delete">{{ line_form.DELETE }}</div>
                     <div class="bom-hidden-inline">{{ line_form.item_type }}{{ line_form.notes }}</div>
-                    <div>{{ line_form.material }}</div>
-                    <div>{{ line_form.unit }}</div>
-                    <div>{{ line_form.cost_per_uom }}</div>
-                    <div>{{ line_form.average }}</div>
-                    <div>{{ line_form.cost }}</div>
-                    <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+
+                    <div>
+                      {{ line_form.material }}
+                      {% if line_form.material.errors %}
+                      <div class="bom-field-errors">{% for error in line_form.material.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </div>
+
+                    <div>
+                      {{ line_form.unit }}
+                      {% if line_form.unit.errors %}
+                      <div class="bom-field-errors">{% for error in line_form.unit.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </div>
+
+                    <div>
+                      {{ line_form.cost_per_uom }}
+                      {% if line_form.cost_per_uom.errors %}
+                      <div class="bom-field-errors">{% for error in line_form.cost_per_uom.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </div>
+
+                    <div>
+                      {{ line_form.average }}
+                      {% if line_form.average.errors %}
+                      <div class="bom-field-errors">{% for error in line_form.average.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </div>
+
+                    <div>
+                      {{ line_form.cost }}
+                      {% if line_form.cost.errors %}
+                      <div class="bom-field-errors">{% for error in line_form.cost.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </div>
+
+                    <div class="bom-inline-actions">
+                      <button type="button" class="bom-remove-inline" data-form-remove>−</button>
+                      {% if forloop.last %}
+                      <button type="button" class="bom-add-inline bom-add-inline--round" data-form-add="accessories">+</button>
+                      {% endif %}
+                    </div>
                   </div>
                   {% endfor %}
                 </div>
@@ -206,7 +299,7 @@
           <summary class="bom-accordion-head">
             <div class="bom-accordion-head-main">
               <div class="bom-accordion-title">Other Details</div>
-              <div class="bom-accordion-sub">Utility-linked masters, pricing inputs, product name and image upload.</div>
+              <div class="bom-accordion-sub">Utility-linked masters, pricing, product name and images.</div>
             </div>
             <span class="bom-accordion-tag">Details</span>
             <span class="bom-accordion-chevron" aria-hidden="true">
@@ -343,7 +436,7 @@
               <div class="bom-block-top">
                 <div>
                   <div class="bom-block-headline">Photo Upload</div>
-                  <div class="bom-form-note">Keep one primary product image, one size chart and add multiple gallery images.</div>
+                  <div class="bom-form-note">Primary image, size chart, and additional gallery images.</div>
                 </div>
                 <button type="button" class="bom-add-inline" data-form-add="images">Add Image</button>
               </div>
@@ -351,7 +444,7 @@
               <div class="bom-grid bom-form-grid bom-form-grid--3">
                 <div class="bom-upload-card">
                   <div class="bom-upload-title">Primary Product Image</div>
-                  <div class="bom-upload-preview">
+                  <div class="bom-upload-preview" data-preview-box>
                     {% if bom and bom.product_image %}
                     <img src="{{ bom.product_image.url }}" alt="{{ bom.sku_code }}">
                     {% else %}
@@ -363,7 +456,7 @@
 
                 <div class="bom-upload-card">
                   <div class="bom-upload-title">Size Chart Image</div>
-                  <div class="bom-upload-preview">
+                  <div class="bom-upload-preview" data-preview-box>
                     {% if bom and bom.size_chart_image %}
                     <img src="{{ bom.size_chart_image.url }}" alt="{{ bom.sku_code }}">
                     {% else %}
@@ -628,7 +721,10 @@
       <div>{{ materials_formset.empty_form.cost_per_uom }}</div>
       <div>{{ materials_formset.empty_form.average }}</div>
       <div>{{ materials_formset.empty_form.cost }}</div>
-      <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
+      <div class="bom-inline-actions">
+        <button type="button" class="bom-remove-inline" data-form-remove>−</button>
+        <button type="button" class="bom-add-inline bom-add-inline--round" data-form-add="materials">+</button>
+      </div>
     </div>
   </template>
 
@@ -642,6 +738,19 @@
       <div>{{ accessories_formset.empty_form.cost_per_uom }}</div>
       <div>{{ accessories_formset.empty_form.average }}</div>
       <div>{{ accessories_formset.empty_form.cost }}</div>
+      <div class="bom-inline-actions">
+        <button type="button" class="bom-remove-inline" data-form-remove>−</button>
+        <button type="button" class="bom-add-inline bom-add-inline--round" data-form-add="accessories">+</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="processes-empty-form">
+    <div class="bom-line-row bom-line-row--processes">
+      {{ process_formset.empty_form.id }}
+      <div class="bom-hidden-delete">{{ process_formset.empty_form.DELETE }}</div>
+      <div>{{ process_formset.empty_form.jobber_type }}</div>
+      <div>{{ process_formset.empty_form.price }}</div>
       <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
     </div>
   </template>
@@ -653,16 +762,6 @@
       <div>{{ jobber_formset.empty_form.jobber }}</div>
       <div>{{ jobber_formset.empty_form.jobber_type }}</div>
       <div>{{ jobber_formset.empty_form.price }}</div>
-      <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
-    </div>
-  </template>
-
-  <template id="processes-empty-form">
-    <div class="bom-line-row bom-line-row--processes">
-      {{ process_formset.empty_form.id }}
-      <div class="bom-hidden-delete">{{ process_formset.empty_form.DELETE }}</div>
-      <div>{{ process_formset.empty_form.jobber_type }}</div>
-      <div>{{ process_formset.empty_form.price }}</div>
       <div><button type="button" class="bom-remove-inline" data-form-remove>−</button></div>
     </div>
   </template>
@@ -688,3 +787,202 @@
     </div>
   </template>
 </div>
+
+<script>
+(function () {
+  const root = document.querySelector("[data-bom-form-root]");
+  if (!root) return;
+
+  function parseNum(value) {
+    const n = parseFloat(value || "0");
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function formatMoney(value) {
+    return "₹ " + parseNum(value).toFixed(2);
+  }
+
+  function setTotal(selector, value) {
+    const el = root.querySelector(selector);
+    if (el) el.textContent = formatMoney(value);
+  }
+
+  function recalcProductionSkuRows() {
+    root.querySelectorAll(".bom-line-row").forEach((row) => {
+      const cpu = row.querySelector(".js-bom-cost-per-uom");
+      const avg = row.querySelector(".js-bom-average");
+      const cost = row.querySelector(".js-bom-cost");
+
+      if (cpu && avg && cost) {
+        const total = parseNum(cpu.value) * parseNum(avg.value);
+        cost.value = total.toFixed(2);
+      }
+    });
+  }
+
+  function processMap() {
+    const map = {};
+    root.querySelectorAll('[data-form-container="processes"] .bom-line-row').forEach((row) => {
+      const typeEl = row.querySelector('[data-process-jobber-type]');
+      const priceEl = row.querySelector('[data-process-price]');
+      if (typeEl && priceEl && typeEl.value) {
+        map[typeEl.value] = parseNum(priceEl.value);
+      }
+    });
+    return map;
+  }
+
+  function syncJobberPrices() {
+    const map = processMap();
+    root.querySelectorAll('[data-form-container="jobbers"] .bom-line-row').forEach((row) => {
+      const typeEl = row.querySelector('[data-jobber-type-field]');
+      const priceEl = row.querySelector('[data-jobber-price-field]');
+      if (typeEl && priceEl && typeEl.value && map[typeEl.value] !== undefined && !priceEl.dataset.userEdited) {
+        priceEl.value = map[typeEl.value].toFixed(2);
+      }
+    });
+  }
+
+  function updateSummary() {
+    recalcProductionSkuRows();
+    syncJobberPrices();
+
+    let materials = 0;
+    let accessories = 0;
+    let jobbers = 0;
+    let processes = 0;
+    let expenses = 0;
+
+    root.querySelectorAll('[data-form-container="materials"] .js-bom-cost').forEach((el) => {
+      if (el.closest(".bom-line-row")?.style.display !== "none") {
+        materials += parseNum(el.value);
+      }
+    });
+
+    root.querySelectorAll('[data-form-container="accessories"] .js-bom-cost').forEach((el) => {
+      if (el.closest(".bom-line-row")?.style.display !== "none") {
+        accessories += parseNum(el.value);
+      }
+    });
+
+    root.querySelectorAll('[data-form-container="jobbers"] .js-bom-jobber-price').forEach((el) => {
+      if (el.closest(".bom-line-row")?.style.display !== "none") {
+        jobbers += parseNum(el.value);
+      }
+    });
+
+    root.querySelectorAll('[data-form-container="processes"] .js-bom-process-price').forEach((el) => {
+      if (el.closest(".bom-line-row")?.style.display !== "none") {
+        processes += parseNum(el.value);
+      }
+    });
+
+    root.querySelectorAll('[data-form-container="expenses"] .js-bom-expense-price').forEach((el) => {
+      if (el.closest(".bom-line-row")?.style.display !== "none") {
+        expenses += parseNum(el.value);
+      }
+    });
+
+    const overheads =
+      parseNum(root.querySelector('[name="color_price"]')?.value) +
+      parseNum(root.querySelector('[name="accessories_price"]')?.value) +
+      parseNum(root.querySelector('[name="maintenance_price"]')?.value);
+
+    const damagePercent = parseNum(root.querySelector('[name="damage_percent"]')?.value);
+    const base = materials + accessories + jobbers + processes + expenses + overheads;
+    const finalPrice = base + (base * damagePercent / 100);
+
+    setTotal("[data-summary-materials]", materials);
+    setTotal("[data-summary-accessories]", accessories);
+    setTotal("[data-summary-jobbers]", jobbers);
+    setTotal("[data-summary-processes]", processes);
+    setTotal("[data-summary-expenses]", expenses);
+    setTotal("[data-summary-overheads]", overheads);
+    setTotal("[data-summary-final]", finalPrice);
+  }
+
+  function bindRemoveButtons(scope) {
+    scope.querySelectorAll("[data-form-remove]").forEach((btn) => {
+      if (btn.dataset.bound === "1") return;
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", function () {
+        const row = btn.closest(".bom-line-row");
+        if (!row) return;
+        const del = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+        if (del) {
+          del.checked = true;
+          row.style.display = "none";
+        } else {
+          row.remove();
+        }
+        updateSummary();
+      });
+    });
+  }
+
+  function addForm(prefix) {
+    const container = root.querySelector(`[data-form-container="${prefix}"]`);
+    const totalInput = root.querySelector(`[name="${prefix}-TOTAL_FORMS"]`);
+    const template = root.querySelector(`#${prefix}-empty-form`);
+    if (!container || !totalInput || !template) return;
+
+    const index = parseInt(totalInput.value, 10) || 0;
+    const html = template.innerHTML.replace(/__prefix__/g, index);
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html.trim();
+    const row = wrapper.firstElementChild;
+    container.appendChild(row);
+    totalInput.value = index + 1;
+
+    bindRemoveButtons(row);
+    bindInputs(row);
+    updateSummary();
+  }
+
+  function bindInputs(scope) {
+    scope.querySelectorAll("input, select, textarea").forEach((el) => {
+      if (el.dataset.boundInput === "1") return;
+      el.dataset.boundInput = "1";
+
+      el.addEventListener("input", function () {
+        if (el.classList.contains("js-bom-jobber-price")) {
+          el.dataset.userEdited = "1";
+        }
+        updateSummary();
+      });
+
+      el.addEventListener("change", function () {
+        updateSummary();
+      });
+    });
+
+    scope.querySelectorAll('input[type="file"]').forEach((input) => {
+      if (input.dataset.boundPreview === "1") return;
+      input.dataset.boundPreview = "1";
+
+      input.addEventListener("change", function () {
+        const file = input.files && input.files[0];
+        const card = input.closest(".bom-upload-card");
+        const preview = card ? card.querySelector("[data-preview-box]") : null;
+        if (!file || !preview) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  }
+
+  root.querySelectorAll("[data-form-add]").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      addForm(btn.getAttribute("data-form-add"));
+    });
+  });
+
+  bindRemoveButtons(root);
+  bindInputs(root);
+  updateSummary();
+})();
+</script>

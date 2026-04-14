@@ -2833,32 +2833,6 @@ def generate_greige_po_from_yarn(request, pk: int):
 
 @login_required
 @require_POST
-def generate_greige_po_from_yarn(request, pk: int):
-    yarn_po = get_object_or_404(
-        YarnPurchaseOrder.objects.select_related("owner"),
-        pk=pk,
-    )
-
-    if not _can_access_yarn_po(request.user, yarn_po):
-        raise PermissionDenied("You do not have access to this Yarn PO.")
-
-    inward_id = (request.POST.get("inward_id") or "").strip()
-    if not inward_id:
-        return redirect("accounts:yarn_inward_tracker")
-
-    yarn_inward = get_object_or_404(
-        YarnPOInward.objects.select_related("po"),
-        pk=inward_id,
-        po=yarn_po,
-    )
-
-    return redirect(
-        f"{reverse('accounts:greigepo_add_from_yarn', kwargs={'yarn_po_id': pk})}?inward={yarn_inward.pk}"
-    )
-
-
-@login_required
-@require_POST
 def yarnpo_delete(request, pk: int):
     po = get_object_or_404(YarnPurchaseOrder, pk=pk, owner=request.user)
     po.delete()
@@ -3117,12 +3091,13 @@ def _ready_po_queryset():
         )
         .order_by("-id")
     )
-def _selected_yarn_inward_total(source_yarn_inward):
-    if source_yarn_inward is None:
-        return Decimal("0")
-    return source_yarn_inward.items.aggregate(total=Sum("quantity")).get("total") or Decimal("0")
 
-def _sync_greige_po_items_from_source(greige_po, source_inward=None):
+def _sync_greige_po_items_from_source(
+    greige_po,
+    source_inward=None,
+    greige_material_map=None,
+    greige_unit_map=None,
+):
     yarn_po = (
         _greige_source_queryset()
         .filter(pk=greige_po.source_yarn_po_id)
@@ -3130,6 +3105,9 @@ def _sync_greige_po_items_from_source(greige_po, source_inward=None):
     )
     if yarn_po is None:
         return Decimal("0")
+
+    greige_material_map = greige_material_map or {}
+    greige_unit_map = greige_unit_map or {}
 
     item_rows = []
     total_weight = Decimal("0")
@@ -3142,19 +3120,28 @@ def _sync_greige_po_items_from_source(greige_po, source_inward=None):
             if yarn_item is None or inward_qty <= 0:
                 continue
 
-            yarn_name = (
+            source_yarn_name = (
                 yarn_item.material_type.name
                 if yarn_item.material_type
                 else (yarn_item.material.name if yarn_item.material else "Yarn Item")
             )
 
+            selected_greige_material = greige_material_map.get(yarn_item.id)
+            fabric_name = (
+                selected_greige_material.name
+                if selected_greige_material is not None
+                else source_yarn_name
+            )
+
+            unit_name = greige_unit_map.get(yarn_item.id) or yarn_item.unit or ""
+
             item_rows.append(
                 GreigePurchaseOrderItem(
                     po=greige_po,
                     source_yarn_po_item=yarn_item,
-                    fabric_name=yarn_name,
-                    yarn_name=yarn_name,
-                    unit=yarn_item.unit or "",
+                    fabric_name=fabric_name,
+                    yarn_name=source_yarn_name,
+                    unit=unit_name,
                     quantity=inward_qty,
                     remark=f"Generated from Yarn inward {source_inward.inward_number}",
                 )
@@ -3166,7 +3153,7 @@ def _sync_greige_po_items_from_source(greige_po, source_inward=None):
             if inward_qty <= 0:
                 continue
 
-            yarn_name = (
+            source_yarn_name = (
                 yarn_item.material_type.name
                 if yarn_item.material_type
                 else (yarn_item.material.name if yarn_item.material else "Yarn Item")
@@ -3176,8 +3163,8 @@ def _sync_greige_po_items_from_source(greige_po, source_inward=None):
                 GreigePurchaseOrderItem(
                     po=greige_po,
                     source_yarn_po_item=yarn_item,
-                    fabric_name=yarn_name,
-                    yarn_name=yarn_name,
+                    fabric_name=source_yarn_name,
+                    yarn_name=source_yarn_name,
                     unit=yarn_item.unit or "",
                     quantity=inward_qty,
                     remark=f"Generated from Yarn inward of {yarn_po.system_number}",
@@ -3189,17 +3176,8 @@ def _sync_greige_po_items_from_source(greige_po, source_inward=None):
     if item_rows:
         GreigePurchaseOrderItem.objects.bulk_create(item_rows)
 
-    update_fields = ["updated_at"]
-
-    if hasattr(greige_po, "available_qty"):
-        greige_po.available_qty = total_weight
-        update_fields.append("available_qty")
-
-    if hasattr(greige_po, "total_weight"):
-        greige_po.total_weight = total_weight
-        update_fields.append("total_weight")
-
-    greige_po.save(update_fields=update_fields)
+    greige_po.available_qty = total_weight
+    greige_po.save(update_fields=["available_qty", "updated_at"])
     return total_weight
 
 
@@ -3445,7 +3423,7 @@ def greigepo_list(request):
             | Q(po_number__icontains=q)
             | Q(vendor__name__icontains=q)
             | Q(source_yarn_po__system_number__icontains=q)
-            | Q(firm__firm_name__icontains=q)
+            | Q(source_yarn_po__firm__firm_name__icontains=q)
         ).distinct()
 
     return render(
@@ -3454,13 +3432,16 @@ def greigepo_list(request):
         {
             "orders": qs,
             "q": q,
+            "can_review_greige_po": _can_review_yarn_po(request.user),
         },
     )
+    
 @login_required
 @require_http_methods(["GET", "POST"])
 def greigepo_create(request, yarn_po_id=None):
     source_yarn_po = None
     selected_source_inward = None
+    row_errors = {}
 
     if yarn_po_id is not None:
         source_yarn_po = get_object_or_404(_greige_source_queryset(), pk=yarn_po_id)
@@ -3488,7 +3469,15 @@ def greigepo_create(request, yarn_po_id=None):
                 raise PermissionDenied("You do not have access to this Yarn PO.")
 
             if selected_source_inward is not None:
-                if selected_source_inward.po_id != selected_source.id:
+                greige_material_map, greige_unit_map, row_errors = _extract_greige_material_selection(
+                    request,
+                    selected_source_inward,
+                    selected_source.owner,
+                )
+
+                if row_errors:
+                    form.add_error(None, "Select valid greige type and unit for all inward rows.")
+                elif selected_source_inward.po_id != selected_source.id:
                     form.add_error(None, "Selected Yarn inward does not belong to the chosen Yarn PO.")
                 elif selected_source_inward.generated_greige_pos.exists():
                     form.add_error(None, "Greige PO already exists for this Yarn inward.")
@@ -3503,7 +3492,12 @@ def greigepo_create(request, yarn_po_id=None):
                         greige_po.shipping_address = _firm_address(selected_source.firm)
 
                     greige_po.save()
-                    _sync_greige_po_items_from_source(greige_po, source_inward=selected_source_inward)
+                    _sync_greige_po_items_from_source(
+                        greige_po,
+                        source_inward=selected_source_inward,
+                        greige_material_map=greige_material_map,
+                        greige_unit_map=greige_unit_map,
+                    )
                     messages.success(request, f"Greige PO {greige_po.system_number} saved successfully.")
                     return redirect("accounts:greigepo_inward", pk=greige_po.pk)
             else:
@@ -3531,13 +3525,9 @@ def greigepo_create(request, yarn_po_id=None):
                 "po_date": timezone.localdate(),
                 "available_qty": _selected_yarn_inward_total(selected_source_inward) if selected_source_inward else (source_yarn_po.total_inward_qty or Decimal("0")),
                 "vendor": source_yarn_po.vendor_id,
-                "firm": source_yarn_po.firm_id if source_yarn_po.firm else None,
+                
                 "shipping_address": _firm_address(source_yarn_po.firm) if source_yarn_po.firm else "",
-                "remarks": (
-                    f"Generated from Yarn inward {selected_source_inward.inward_number}"
-                    if selected_source_inward else
-                    f"Generated from Yarn PO {source_yarn_po.system_number}"
-                ),
+                
             }
 
         form = GreigePurchaseOrderForm(
@@ -3557,6 +3547,7 @@ def greigepo_create(request, yarn_po_id=None):
         effective_owner,
         submitted_data=request.POST if request.method == "POST" else None,
         existing_po=existing_po,
+        row_errors=row_errors,
     )
 
     terms_condition_options = _greige_terms_condition_options(effective_owner)
@@ -3604,7 +3595,7 @@ def greigepo_update(request, pk: int):
     po = get_object_or_404(_greige_po_queryset(), pk=pk)
     if not _can_access_greige_po(request.user, po):
         raise PermissionDenied("You do not have access to this Greige PO.")
-
+    
     form = GreigePurchaseOrderForm(
         request.POST or None,
         user=request.user,
@@ -3614,21 +3605,44 @@ def greigepo_update(request, pk: int):
     )
 
     if request.method == "POST" and form.is_valid():
-        po = form.save(commit=False)
-        if not po.shipping_address and po.source_yarn_po and po.source_yarn_po.firm:
-            po.shipping_address = _firm_address(po.source_yarn_po.firm)
-        po.save()
-        messages.success(request, f"Greige PO {po.system_number} updated successfully.")
-        return redirect("accounts:greigepo_inward", pk=po.pk)
+        greige_material_map = {}
+        greige_unit_map = {}
+
+        if po.source_yarn_inward is not None:
+            greige_material_map, greige_unit_map, row_errors = _extract_greige_material_selection(
+                request,
+                po.source_yarn_inward,
+                po.owner,
+            )
+            if row_errors:
+                form.add_error(None, "Select valid greige type and unit for all inward rows.")
+
+        if not form.errors:
+            po = form.save(commit=False)
+            if not po.shipping_address and po.source_yarn_po and po.source_yarn_po.firm:
+                po.shipping_address = _firm_address(po.source_yarn_po.firm)
+            po.save()
+
+            if po.source_yarn_inward is not None:
+                _sync_greige_po_items_from_source(
+                    po,
+                    source_inward=po.source_yarn_inward,
+                    greige_material_map=greige_material_map,
+                    greige_unit_map=greige_unit_map,
+                )
+
+            messages.success(request, f"Greige PO {po.system_number} updated successfully.")
+            return redirect("accounts:greigepo_inward", pk=po.pk)
 
     source_inwards = [po.source_yarn_inward] if po.source_yarn_inward else (list(po.source_yarn_po.inwards.all()) if po.source_yarn_po else [])
     effective_owner = po.owner
-
+    row_errors = {}
     greige_rows, greige_material_options, unit_options = _build_greige_material_rows(
         po.source_yarn_inward,
         effective_owner,
         submitted_data=request.POST if request.method == "POST" else None,
         existing_po=po,
+        row_errors=row_errors,
     )
 
     terms_condition_options = _greige_terms_condition_options(effective_owner)
@@ -3799,7 +3813,7 @@ def greige_inward_tracker(request):
             | Q(po_number__icontains=q)
             | Q(vendor__name__icontains=q)
             | Q(source_yarn_po__system_number__icontains=q)
-            | Q(firm__firm_name__icontains=q)
+            | Q(source_yarn_po__firm__firm_name__icontains=q)
         ).distinct()
 
     rows = []
@@ -3974,8 +3988,8 @@ def dyeingpo_create(request, greige_po_id=None):
                 "po_date": timezone.localdate(),
                 "available_qty": _selected_greige_inward_total(selected_source_inward) if selected_source_inward else (source_greige_po.total_inward_qty or Decimal("0")),
                 "vendor": source_greige_po.vendor_id,
-                "firm": source_greige_po.firm_id if source_greige_po.firm else None,
-                "shipping_address": _firm_address(source_greige_po.firm) if source_greige_po.firm else "",
+                "firm": source_greige_po.source_yarn_po.firm_id if source_greige_po.source_yarn_po and source_greige_po.source_yarn_po.firm else None,
+                "shipping_address": _firm_address(source_greige_po.source_yarn_po.firm) if source_greige_po.source_yarn_po and source_greige_po.source_yarn_po.firm else "",
                 "remarks": (
                     f"Generated from Greige inward {selected_source_inward.inward_number}"
                     if selected_source_inward else
@@ -5397,7 +5411,14 @@ def _build_bom_formsets(request, instance=None):
         queryset=image_queryset,
     )
 
-    return materials_formset, accessories_formset, jobber_formset, process_formset, expense_formset, image_formset
+    return (
+        materials_formset,
+        accessories_formset,
+        jobber_formset,
+        process_formset,
+        expense_formset,
+        image_formset,
+    )
 
 
 def _save_bom_material_formset(formset, bom, forced_item_type):

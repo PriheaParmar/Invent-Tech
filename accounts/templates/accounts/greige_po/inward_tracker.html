@@ -4,72 +4,729 @@
 {% block page_subtitle %}Track inwarded Greige POs and start Dyeing PO generation{% endblock %}
 
 {% block content %}
-
 <style>
-  .git-tools{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}.git-search{display:flex;gap:10px;flex:1 1 320px}.git-search input{width:100%;height:38px;border:1px solid rgba(0,0,0,.1);border-radius:999px;padding:0 12px;background:#fff}.git-table{width:100%;border-collapse:collapse}.git-table th,.git-table td{padding:14px 12px;border-top:1px solid rgba(15,23,42,.08);text-align:left;vertical-align:top}.git-table thead th{border-top:none;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#667085}.git-card{display:grid;gap:8px}.git-pill{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(250,189,100,.16);color:var(--orange);font-size:11px;font-weight:900}.git-mini{display:grid;gap:8px}.git-mini-card{border:1px solid rgba(15,23,42,.08);border-radius:12px;padding:10px;background:rgba(255,255,255,.72)}.git-mini-card.target{border-color:rgba(59,130,246,.45);box-shadow:0 0 0 3px rgba(59,130,246,.10)}.git-mini-title{font-size:12px;font-weight:800;color:#111827}.git-mini-sub{font-size:12px;color:#667085;margin-top:3px}.git-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-start}.git-empty{text-align:center;padding:24px 12px;color:#667085}.git-inline-form{margin:0}.git-link-btn{appearance:none;border:none;background:none;padding:0;font:inherit;font-weight:700;color:var(--orange);cursor:pointer}.git-link-btn:hover{text-decoration:underline}.git-status-green{background:rgba(16,185,129,.12);color:#047857}.git-status-blue{background:rgba(59,130,246,.12);color:#1d4ed8}@media (max-width:980px){.git-wrap{overflow:auto;}.git-table{min-width:980px}}
+  .canvas{
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
+  }
+
+  .git-page{
+    width:100%;
+    min-width:0;
+  }
+
+  .jobbers-embed{
+    padding:10px 6px;
+  }
+
+  .jb-panel{
+    background:rgba(255,255,255,.72);
+    border:2px dashed rgb(0,0,0);
+    border-radius:18px;
+    box-shadow:0 12px 36px rgba(15,23,42,.08);
+    padding:14px;
+    width:100%;
+    min-width:0;
+  }
+
+  .jb-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+
+  .jb-title{
+    font-size:18px;
+    font-weight:900;
+    line-height:1.1;
+    color:#111827;
+  }
+
+  .jb-sub{
+    font-size:12px;
+    opacity:.72;
+    margin-top:4px;
+    color:#475467;
+  }
+
+  .jb-tools{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+
+  .jb-search{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:1 1 320px;
+    min-width:0;
+  }
+
+  .jb-search input[type="search"]{
+    appearance:none;
+    width:100%;
+    box-sizing:border-box;
+    border:1px solid rgba(0,0,0,.10);
+    background:rgba(255,255,255,.92);
+    color:inherit;
+    outline:none;
+    transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    min-width:0;
+    height:38px;
+    padding:0 12px;
+    border-radius:999px;
+  }
+
+  .jb-search input[type="search"]:focus{
+    border-color:rgba(238,61,133,.35);
+    box-shadow:0 0 0 4px rgba(238,61,133,.10);
+    background:#fff;
+  }
+
+  .jb-search-btn,
+  .jb-add,
+  .jb-secondary{
+    appearance:none;
+    border:1px solid rgba(0,0,0,.10);
+    border-radius:12px;
+    text-decoration:none;
+    cursor:pointer;
+    transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+    height:38px;
+    padding:0 14px;
+    font-weight:700;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    white-space:nowrap;
+  }
+
+  .jb-search-btn,
+  .jb-secondary{
+    background:rgba(255,255,255,.85);
+    color:#000;
+  }
+
+  .jb-search-btn:hover,
+  .jb-secondary:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .jb-add{
+    background:var(--orange);
+    color:#fff;
+    border-color:transparent;
+  }
+
+  .jb-add:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .jb-tool-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .git-list{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    width:100%;
+    min-width:0;
+  }
+
+  .git-card{
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:14px;
+    background:rgba(255,255,255,.55);
+    padding:12px;
+    width:100%;
+    min-width:0;
+  }
+
+  .git-card-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+  }
+
+  .git-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    background:rgba(250,189,100,.16);
+    color:var(--orange);
+    font-size:11px;
+    font-weight:900;
+    margin-bottom:6px;
+  }
+
+  .git-po-no{
+    font-size:14px;
+    font-weight:900;
+    color:#111827;
+    line-height:1.25;
+    word-break:break-word;
+  }
+
+  .git-po-sub{
+    margin-top:4px;
+    font-size:11px;
+    color:#667085;
+    font-weight:700;
+    line-height:1.45;
+  }
+
+  .git-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+
+  .git-status.started{
+    background:rgba(16,185,129,.10);
+    color:#047857;
+  }
+
+  .git-status.not-started{
+    background:rgba(250,189,100,.16);
+    color:#b76c00;
+  }
+
+  .git-grid{
+    display:grid;
+    grid-template-columns:1fr 1.2fr 1fr auto;
+    gap:12px;
+    align-items:start;
+    width:100%;
+    min-width:0;
+  }
+
+  .git-box{
+    min-width:0;
+  }
+
+  .git-box-title{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:6px;
+  }
+
+  .git-meta{
+    display:grid;
+    grid-template-columns:78px 1fr;
+    gap:5px 6px;
+    font-size:11px;
+    min-width:0;
+  }
+
+  .git-meta .k{
+    color:#667085;
+    font-weight:800;
+  }
+
+  .git-meta .v{
+    color:#111827;
+    font-weight:800;
+    min-width:0;
+    word-break:break-word;
+  }
+
+  .git-inward-list{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    min-width:0;
+  }
+
+  .git-inward-card{
+    padding:8px 10px;
+    border-radius:12px;
+    background:rgba(0,0,0,.03);
+    min-width:0;
+    border:1px solid transparent;
+    transition:border-color .18s ease, background .18s ease, box-shadow .18s ease;
+  }
+
+  .git-inward-card.is-target{
+    border-color:rgba(238,61,133,.24);
+    background:rgba(238,61,133,.06);
+    box-shadow:0 0 0 3px rgba(238,61,133,.10);
+  }
+
+  .git-inward-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:6px;
+  }
+
+  .git-inward-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px dashed rgba(15,23,42,.10);
+  }
+
+  .git-inline-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:24px;
+    padding:0 9px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    white-space:nowrap;
+  }
+
+  .git-inline-status.started{
+    background:rgba(16,185,129,.10);
+    color:#047857;
+  }
+
+  .git-inline-status.pending{
+    background:rgba(250,189,100,.16);
+    color:#b76c00;
+  }
+
+  .git-generate-form{
+    margin:0;
+  }
+
+  .git-generate-btn{
+    appearance:none;
+    border:none;
+    border-radius:10px;
+    background:var(--orange);
+    color:#fff;
+    font-weight:800;
+    font-size:11px;
+    height:32px;
+    padding:0 12px;
+    cursor:pointer;
+    transition:background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+
+  .git-generate-btn:hover{
+    background:#000;
+    color:#fff;
+  }
+
+  .git-generated-link{
+    font-size:11px;
+    font-weight:800;
+    color:var(--orange);
+    text-decoration:none;
+  }
+
+  .git-generated-link:hover{
+    text-decoration:underline;
+  }
+
+  .git-inward-no{
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#667085;
+    margin-bottom:6px;
+  }
+
+  .git-inward-item{
+    font-size:12px;
+    color:#111827;
+    font-weight:800;
+    line-height:1.4;
+    padding-top:5px;
+    margin-top:5px;
+    border-top:1px dashed rgba(15,23,42,.10);
+  }
+
+  .git-inward-item:first-child{
+    border-top:none;
+    margin-top:0;
+    padding-top:0;
+  }
+
+  .git-inward-sub{
+    margin-top:2px;
+    font-size:10px;
+    color:#667085;
+    font-weight:700;
+  }
+
+  .git-dyeing-box{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+  }
+
+  .git-summary-box{
+    padding:8px 10px;
+    border-radius:12px;
+    background:rgba(0,0,0,.03);
+  }
+
+  .git-summary-label{
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:4px;
+  }
+
+  .git-summary-value{
+    font-size:13px;
+    font-weight:900;
+    color:#111827;
+    word-break:break-word;
+  }
+
+  .git-summary-sub{
+    margin-top:4px;
+    font-size:10px;
+    color:#667085;
+    line-height:1.45;
+    font-weight:700;
+    word-break:break-word;
+  }
+
+  .git-actions-col{
+    min-width:110px;
+  }
+
+  .git-actions-title{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#667085;
+    font-weight:900;
+    margin-bottom:6px;
+  }
+
+  .git-actions{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .jb-link{
+    font-weight:700;
+    text-decoration:none;
+    color:var(--orange);
+    display:inline-flex;
+    align-items:center;
+    justify-content:flex-start;
+    min-height:28px;
+  }
+
+  .jb-link:hover{
+    text-decoration:underline;
+  }
+
+  .jb-empty{
+    padding:14px 12px;
+    opacity:.7;
+    text-align:center;
+    font-weight:700;
+  }
+
+  @media (max-width: 1280px){
+    .git-grid{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .git-actions-col{
+      grid-column:1 / -1;
+      min-width:0;
+    }
+
+    .git-actions{
+      flex-direction:row;
+      flex-wrap:wrap;
+      gap:10px 14px;
+    }
+  }
+
+  @media (max-width: 768px){
+    .jb-tools{
+      align-items:stretch;
+    }
+
+    .jb-search{
+      flex:1 1 100%;
+    }
+
+    .jb-tool-actions{
+      width:100%;
+    }
+
+    .jb-tool-actions > *{
+      flex:1 1 auto;
+    }
+
+    .git-card-top{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+
+    .git-grid{
+      grid-template-columns:1fr;
+    }
+
+    .git-actions{
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .git-inward-head{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+  }
 </style>
 
-<section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
-  <div class="jb-head"><div><div class="jb-title">Greige Inwards</div><div class="jb-sub">Track inwarded Greige POs, available greige stock, and start dyeing PO generation inward-wise.</div></div></div>
-  <div class="git-tools"><form class="git-search" method="get"><input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search by greige PO, vendor, firm..."><button class="jb-add" type="submit">Search</button></form><a class="jb-secondary" href="{% url 'accounts:greigepo_list' %}">Back to Greige PO</a></div>
-  <div class="git-wrap"><table class="git-table"><thead><tr><th>Greige Inward Details</th><th>Dyeing PO Details</th></tr></thead><tbody>
-    {% for row in rows %}
-    <tr>
-      <td>
-        <div class="git-card">
-          <div class="git-pill">{{ row.po.system_number }}</div>
-          <div class="git-mini-title">{{ row.po.po_number|default:'No PO Number' }}</div>
-          <div class="git-mini-sub">Vendor: {{ row.po.vendor.name }} · Firm: {% if row.po.firm %}{{ row.po.firm.firm_name }}{% else %}—{% endif %}</div>
-          <div class="git-mini-sub">Available Greige: {{ row.po.remaining_qty_total|default:'0.00' }}</div>
-          <div class="git-mini">
-            {% for inward_entry in row.inward_entries %}
-            <div class="git-mini-card{% if inward_entry.is_target %} target{% endif %}">
-              <div class="git-mini-title">{{ inward_entry.inward.inward_number }} · {{ inward_entry.inward.inward_date|date:'d-m-Y' }}</div>
-              {% for item in inward_entry.items %}
-              <div class="git-mini-sub">{{ item.fabric_name }} — Ordered {{ item.ordered_qty }} / Inward {{ item.inward_qty }}{% if item.unit %} {{ item.unit }}{% endif %}</div>
-              {% endfor %}
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </td>
-      <td>
-        <div class="git-card">
-          <div class="git-mini">
-            {% for inward_entry in row.inward_entries %}
-            <div class="git-mini-card{% if inward_entry.is_target %} target{% endif %}">
-              <div class="git-mini-title">{{ inward_entry.inward.inward_number }}</div>
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="git-page">
+      <div class="jobbers-embed">
+        <div class="jb-panel">
 
-              {% if inward_entry.dyeing_po %}
-                <div class="git-pill git-status-green">Dyeing started</div>
-                <div class="git-mini-sub">{{ inward_entry.dyeing_po.system_number }}</div>
-                <div class="git-mini-sub">Vendor: {{ inward_entry.dyeing_po.vendor.name }} · Total Weight: {{ inward_entry.dyeing_po.total_weight|default:'0.00' }}</div>
-                <div class="git-mini-sub">Dyeing Items: {{ inward_entry.dyeing_items_count }}</div>
-                <div class="git-actions">
-                  <a class="jb-secondary" href="{% url 'accounts:dyeingpo_detail' inward_entry.dyeing_po.id %}">View Dyeing PO</a>
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">Greige Inwards</div>
+              <div class="jb-sub">Track inwarded Greige POs and dyeing progress.</div>
+            </div>
+          </div>
+
+          <div class="jb-tools">
+            <form class="jb-search" method="get">
+              <input
+                type="search"
+                name="q"
+                value="{{ q|default:'' }}"
+                placeholder="Search by greige PO, vendor, firm..."
+              >
+              <button class="jb-search-btn" type="submit">Search</button>
+            </form>
+
+            <div class="jb-tool-actions">
+              <a class="jb-add" href="{% url 'accounts:greigepo_list' %}">
+                Back to Greige PO
+              </a>
+            </div>
+          </div>
+
+          <div class="git-list">
+            {% for row in rows %}
+            <div class="git-card">
+              <div class="git-card-top">
+                <div>
+                  <div class="git-badge">{{ row.po.system_number }}</div>
+                  <div class="git-po-no">{{ row.po.po_number|default:"No PO Number" }}</div>
+                  <div class="git-po-sub">
+                    {{ row.po.po_date|date:"d-m-Y" }}
+                    {% if row.po.vendor %} · {{ row.po.vendor.name }}{% endif %}
+                    {% if row.po.firm %} · {{ row.po.firm.firm_name }}{% endif %}
+                  </div>
                 </div>
-              {% else %}
-                <div class="git-pill git-status-blue">Ready for dyeing</div>
-                <div class="git-mini-sub">No Dyeing PO has been generated for this inward yet.</div>
-                <div class="git-actions">
-                  <form method="post" action="{% url 'accounts:generate_dyeing_po_from_greige' row.po.id %}" class="git-inline-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="inward_id" value="{{ inward_entry.inward.id }}">
-                    <button type="submit" class="git-link-btn">Generate Dyeing PO</button>
-                  </form>
+
+                <span class="git-status {% if row.dyeing_generated_count and row.dyeing_generated_count == row.total_inwards %}started{% elif row.dyeing_generated_count %}started{% else %}not-started{% endif %}">
+                  {% if row.dyeing_generated_count and row.dyeing_generated_count == row.total_inwards %}All Inwards Started{% elif row.dyeing_generated_count %}Partially Started{% else %}Not Started{% endif %}
+                </span>
+              </div>
+
+              <div class="git-grid">
+                <div class="git-box">
+                  <div class="git-box-title">PO Details</div>
+                  <div class="git-meta">
+                    {% if row.po.po_number %}
+                      <div class="k">PO No</div>
+                      <div class="v">{{ row.po.po_number }}</div>
+                    {% endif %}
+
+                    <div class="k">Date</div>
+                    <div class="v">{{ row.po.po_date|date:"d-m-Y" }}</div>
+
+                    <div class="k">Vendor</div>
+                    <div class="v">{{ row.po.vendor.name }}</div>
+
+                    {% if row.po.firm %}
+                      <div class="k">Firm</div>
+                      <div class="v">{{ row.po.firm.firm_name }}</div>
+                    {% endif %}
+
+                    <div class="k">Total</div>
+                    <div class="v">{{ row.po.total_weight|default:"0.00" }}</div>
+
+                    <div class="k">Inward</div>
+                    <div class="v">{{ row.po.total_inward_qty|default:"0.00" }}</div>
+
+                    <div class="k">Available</div>
+                    <div class="v">{{ row.po.remaining_qty_total|default:"0.00" }}</div>
+                  </div>
                 </div>
-              {% endif %}
+
+                <div class="git-box">
+                  <div class="git-box-title">Inward Details</div>
+
+                  {% if row.inward_entries %}
+                    <div class="git-inward-list">
+                      {% for inward_entry in row.inward_entries %}
+                        <div
+                          class="git-inward-card {% if inward_entry.is_target %}is-target{% endif %}"
+                          id="greige-inward-{{ inward_entry.inward.id }}"
+                        >
+                          <div class="git-inward-head">
+                            <div>
+                              <div class="git-inward-no">{{ inward_entry.inward.inward_number }}</div>
+                              <div class="git-inward-sub" style="margin-bottom:8px;">
+                                Vendor: {% if inward_entry.inward.vendor %}{{ inward_entry.inward.vendor.name }}{% else %}—{% endif %}
+                                {% if inward_entry.inward.inward_date %} · Date: {{ inward_entry.inward.inward_date|date:"d-m-Y" }}{% endif %}
+                              </div>
+                            </div>
+
+                            <span class="git-inline-status {% if inward_entry.dyeing_po %}started{% else %}pending{% endif %}">
+                              {% if inward_entry.dyeing_po %}Dyeing Generated{% else %}Pending{% endif %}
+                            </span>
+                          </div>
+
+                          {% for item in inward_entry.items %}
+                            <div class="git-inward-item">
+                              {{ item.fabric_name }}
+                              <div class="git-inward-sub">
+                                Ordered: {{ item.ordered_qty|default:"0.00" }}
+                                · Inward: {{ item.inward_qty|default:"0.00" }}{% if item.unit %} {{ item.unit }}{% endif %}
+                              </div>
+                            </div>
+                          {% endfor %}
+
+                          <div class="git-inward-actions">
+  <a class="git-generated-link" href="{% url 'accounts:greigepo_inward' row.po.id %}?inward={{ inward_entry.inward.id }}">
+    Edit Inward
+  </a>
+
+  {% if inward_entry.dyeing_po %}
+    <a class="git-generated-link" href="{% url 'accounts:dyeingpo_detail' inward_entry.dyeing_po.id %}">
+      View Dyeing PO
+    </a>
+  {% else %}
+    <form class="git-generate-form" method="post" action="{% url 'accounts:generate_dyeing_po_from_greige' row.po.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="inward_id" value="{{ inward_entry.inward.id }}">
+      <button type="submit" class="git-generate-btn">Generate Dyeing PO</button>
+    </form>
+  {% endif %}
+</div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="git-summary-box">
+                      <div class="git-summary-sub">No inward entries found.</div>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="git-box">
+                  <div class="git-box-title">Dyeing Status</div>
+
+                  <div class="git-dyeing-box">
+                    <div class="git-summary-box">
+                      <div class="git-summary-label">Generated</div>
+                      <div class="git-summary-value">{{ row.dyeing_generated_count }}/{{ row.total_inwards }}</div>
+                      <div class="git-summary-sub">
+                        Dyeing PO is tracked separately for each inward.
+                      </div>
+                    </div>
+
+                    <div class="git-summary-box">
+                      <div class="git-summary-label">Status</div>
+                      <div class="git-summary-value">
+                        {% if row.dyeing_generated_count and row.dyeing_generated_count == row.total_inwards %}
+                          Completed
+                        {% elif row.dyeing_generated_count %}
+                          Partial
+                        {% else %}
+                          Pending
+                        {% endif %}
+                      </div>
+                      <div class="git-summary-sub">
+                        Use the Generate button inside each inward card.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="git-actions-col">
+                  <div class="git-actions-title">Actions</div>
+                  <div class="git-actions">
+                    <a class="jb-link" href="{% url 'accounts:dyeingpo_list' %}">
+                      View Dyeing PO List
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
             {% empty %}
-            <div class="git-empty">No inward entries found.</div>
+            <div class="jb-empty">
+              No inwarded Greige POs found yet.
+            </div>
             {% endfor %}
           </div>
+
         </div>
-      </td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="2" class="git-empty">No inwarded Greige POs found yet.</td></tr>
-    {% endfor %}
-  </tbody></table></div>
-</div></div></div></div></section>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function(){
+    var targetId = "{{ target_inward_id|default:'' }}";
+    if (!targetId) return;
+    var el = document.getElementById("greige-inward-" + targetId);
+    if (!el) return;
+    window.setTimeout(function(){
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+  })();
+</script>
 {% endblock %}

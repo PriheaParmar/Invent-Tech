@@ -76,7 +76,7 @@ class BOMAdmin(admin.ModelAdmin):
         "category",
         "available_stock",
         "booked_price",
-        "estimated_total_cost",
+    "selling_price",
         "owner",
     )
     search_fields = ("bom_code", "sku_code", "product_name", "catalogue_name")

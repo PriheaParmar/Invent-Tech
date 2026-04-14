@@ -2112,137 +2112,118 @@ class CatalogueForm(forms.ModelForm):
 
         return name
     
-    
 class BOMForm(forms.ModelForm):
-    catalogue = forms.ModelChoiceField(
-        queryset=Catalogue.objects.none(),
-        required=False,
-        empty_label="Select Catalogue",
-    )
-    sub_category_master = forms.ModelChoiceField(
-        queryset=SubCategory.objects.none(),
-        required=False,
-        empty_label="Select Sub Category",
-    )
-
     class Meta:
         model = BOM
         fields = [
             "sku_code",
             "size_type",
-            "catalogue",
             "catalogue_name",
+            "catalogue",
             "brand",
             "category",
             "main_category",
             "gender",
-            "sub_category_master",
             "sub_category",
+            "sub_category_master",
             "pattern_type",
             "character_name",
             "license_name",
+            "product_name",
+            "color_name",
             "booked_price",
             "color_price",
             "accessories_price",
             "selling_price",
             "maintenance_price",
-            "product_name",
             "available_stock",
             "damage_percent",
-            "is_discontinued",
             "product_image",
             "size_chart_image",
             "notes",
+            "is_discontinued",
         ]
         widgets = {
+            "sku_code": forms.TextInput(attrs={"placeholder": "Enter SKU"}),
+            "size_type": forms.Select(),
             "catalogue_name": forms.HiddenInput(),
+            "catalogue": forms.Select(),
+            "brand": forms.Select(),
+            "category": forms.Select(),
+            "main_category": forms.Select(),
+            "gender": forms.Select(),
             "sub_category": forms.HiddenInput(),
-            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Short BOM note or costing remark"}),
+            "sub_category_master": forms.Select(),
+            "pattern_type": forms.Select(),
+            "character_name": forms.TextInput(attrs={"placeholder": "Enter character name"}),
+            "license_name": forms.TextInput(attrs={"placeholder": "Enter license name"}),
+            "product_name": forms.TextInput(attrs={"placeholder": "Enter product name"}),
+            "color_name": forms.TextInput(attrs={"placeholder": "Enter color"}),
+            "booked_price": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "MRP"}),
+            "color_price": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Color / Drawcord / Tie Dye Price"}),
+            "accessories_price": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Accessories Price"}),
+            "selling_price": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Selling Price"}),
+            "maintenance_price": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Maintenance Price"}),
+            "available_stock": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Available Stock"}),
+            "damage_percent": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "Damage %"}),
             "product_image": forms.ClearableFileInput(attrs={"accept": "image/*"}),
             "size_chart_image": forms.ClearableFileInput(attrs={"accept": "image/*"}),
+            "notes": forms.Textarea(attrs={"rows": 4, "placeholder": "Optional notes"}),
         }
 
     def __init__(self, *args, user=None, **kwargs):
+        self.user = user
         super().__init__(*args, **kwargs)
 
-        brand_qs = Brand.objects.filter(owner=user).order_by("name") if user else Brand.objects.none()
-        category_qs = Category.objects.filter(owner=user).order_by("name") if user else Category.objects.none()
-        main_category_qs = MainCategory.objects.filter(owner=user).order_by("name") if user else MainCategory.objects.none()
-        pattern_type_qs = PatternType.objects.filter(owner=user).order_by("name") if user else PatternType.objects.none()
-        catalogue_qs = Catalogue.objects.filter(owner=user).order_by("name") if user else Catalogue.objects.none()
-        sub_category_qs = (
-            SubCategory.objects.filter(owner=user)
-            .select_related("main_category")
-            .order_by("main_category__name", "name")
+        self.fields["catalogue"].queryset = (
+            Catalogue.objects.filter(owner=user).order_by("name")
+            if user else Catalogue.objects.none()
+        )
+        self.fields["brand"].queryset = (
+            Brand.objects.filter(owner=user).order_by("name")
+            if user else Brand.objects.none()
+        )
+        self.fields["category"].queryset = (
+            Category.objects.filter(owner=user).order_by("name")
+            if user else Category.objects.none()
+        )
+        self.fields["main_category"].queryset = (
+            MainCategory.objects.filter(owner=user).order_by("name")
+            if user else MainCategory.objects.none()
+        )
+        self.fields["sub_category_master"].queryset = (
+            SubCategory.objects.filter(owner=user).select_related("main_category").order_by("main_category__name", "name")
             if user else SubCategory.objects.none()
         )
+        self.fields["pattern_type"].queryset = (
+            PatternType.objects.filter(owner=user).order_by("name")
+            if user else PatternType.objects.none()
+        )
 
-        self.fields["brand"].queryset = brand_qs
-        self.fields["category"].queryset = category_qs
-        self.fields["main_category"].queryset = main_category_qs
-        self.fields["pattern_type"].queryset = pattern_type_qs
-        self.fields["catalogue"].queryset = catalogue_qs
-        self.fields["sub_category_master"].queryset = sub_category_qs
+        self.fields["catalogue"].required = False
+        self.fields["brand"].required = False
+        self.fields["category"].required = False
+        self.fields["main_category"].required = False
+        self.fields["sub_category_master"].required = False
+        self.fields["pattern_type"].required = False
 
-        self.fields["catalogue_name"].required = False
-        self.fields["sub_category"].required = False
-        self.fields["product_image"].required = False
-        self.fields["size_chart_image"].required = False
+        self.fields["catalogue"].empty_label = "Select catalogue"
+        self.fields["brand"].empty_label = "Select brand"
+        self.fields["category"].empty_label = "Select category"
+        self.fields["main_category"].empty_label = "Select main category"
+        self.fields["sub_category_master"].empty_label = "Select sub category"
+        self.fields["pattern_type"].empty_label = "Select pattern type"
 
-        self.fields["sku_code"].label = "SKU"
-        self.fields["size_type"].label = "Size Type"
-        self.fields["catalogue"].label = "Catalogue Name"
-        self.fields["brand"].label = "Brand"
-        self.fields["category"].label = "Category"
-        self.fields["main_category"].label = "Main Category"
-        self.fields["gender"].label = "Gender"
-        self.fields["sub_category_master"].label = "Sub Category"
-        self.fields["pattern_type"].label = "Pattern Type"
-        self.fields["character_name"].label = "Character Name"
-        self.fields["license_name"].label = "License Name"
-        self.fields["booked_price"].label = "MRP (₹)"
-        self.fields["color_price"].label = "Color / Drawcord / Tie Dye Price (₹)"
-        self.fields["accessories_price"].label = "Accessories Price (₹)"
-        self.fields["selling_price"].label = "Selling Price (₹)"
-        self.fields["maintenance_price"].label = "Maintenance Price (₹)"
-        self.fields["product_name"].label = "Product Name"
-        self.fields["available_stock"].label = "Available Stock"
-        self.fields["damage_percent"].label = "Damage (%)"
-        self.fields["is_discontinued"].label = "Is Discontinue"
-
-        self.fields["catalogue"].label_from_instance = lambda obj: obj.name
-        self.fields["sub_category_master"].label_from_instance = lambda obj: f"{obj.main_category.name} / {obj.name}"
-
-        empty_labels = {
-            "catalogue": "Select Catalogue",
-            "brand": "Select Brand",
-            "category": "Select Category",
-            "main_category": "Select Main Category",
-            "pattern_type": "Select Pattern Type",
-            "sub_category_master": "Select Sub Category",
-        }
-        for field_name, empty_label in empty_labels.items():
-            self.fields[field_name].required = False
-            if hasattr(self.fields[field_name], "empty_label"):
-                self.fields[field_name].empty_label = empty_label
-
-        placeholders = {
-            "sku_code": "Enter design SKU",
+        for field_name, placeholder in {
+            "sku_code": "Enter SKU",
             "character_name": "Enter character name",
             "license_name": "Enter license name",
-            "booked_price": "0.00",
-            "color_price": "0.00",
-            "accessories_price": "0.00",
-            "selling_price": "0.00",
-            "maintenance_price": "0.00",
             "product_name": "Enter product name",
-            "available_stock": "0.00",
-            "damage_percent": "0.00",
-        }
-        for field_name, placeholder in placeholders.items():
+            "color_name": "Enter color",
+        }.items():
             self.fields[field_name].widget.attrs.setdefault("placeholder", placeholder)
 
-        numeric_fields = [
+        for field_name in [
             "booked_price",
             "color_price",
             "accessories_price",
@@ -2250,8 +2231,7 @@ class BOMForm(forms.ModelForm):
             "maintenance_price",
             "available_stock",
             "damage_percent",
-        ]
-        for field_name in numeric_fields:
+        ]:
             self.fields[field_name].widget.attrs.update({"step": "0.01", "min": "0"})
 
         for field_name in [
@@ -2271,13 +2251,41 @@ class BOMForm(forms.ModelForm):
         if self.instance.pk and self.instance.sub_category_master_id:
             self.initial["sub_category_master"] = self.instance.sub_category_master_id
 
+    def clean_sku_code(self):
+        value = (self.cleaned_data.get("sku_code") or "").strip().upper()
+        if not value:
+            raise forms.ValidationError("SKU is required.")
+
+        qs = BOM.objects.filter(owner=self.user, sku_code__iexact=value) if self.user else BOM.objects.none()
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("This SKU already exists.")
+        return value
+
+    def clean_product_name(self):
+        return (self.cleaned_data.get("product_name") or "").strip()
+
+    def clean_character_name(self):
+        return (self.cleaned_data.get("character_name") or "").strip()
+
+    def clean_license_name(self):
+        return (self.cleaned_data.get("license_name") or "").strip()
+
+    def clean_color_name(self):
+        return (self.cleaned_data.get("color_name") or "").strip()
+
     def clean(self):
         cleaned = super().clean()
         catalogue = cleaned.get("catalogue")
         sub_category_master = cleaned.get("sub_category_master")
+        main_category = cleaned.get("main_category")
 
         cleaned["catalogue_name"] = catalogue.name if catalogue else (cleaned.get("catalogue_name") or "")
         cleaned["sub_category"] = sub_category_master.name if sub_category_master else (cleaned.get("sub_category") or "")
+
+        if sub_category_master and main_category and sub_category_master.main_category_id != main_category.id:
+            self.add_error("sub_category_master", "Selected sub category does not belong to selected main category.")
 
         return cleaned
 
@@ -2288,41 +2296,63 @@ class BOMMaterialItemForm(forms.ModelForm):
         fields = ["item_type", "material", "unit", "cost_per_uom", "average", "cost", "notes"]
         widgets = {
             "item_type": forms.HiddenInput(),
-            "cost_per_uom": forms.NumberInput(
-                attrs={"step": "0.01", "min": "0", "class": "js-bom-rate", "placeholder": "Cost / unit"}
-            ),
-            "average": forms.NumberInput(
-                attrs={"step": "0.01", "min": "0", "class": "js-bom-average", "placeholder": "Avg"}
-            ),
-            "cost": forms.NumberInput(
-                attrs={
-                    "step": "0.01",
-                    "min": "0",
-                    "class": "js-bom-cost",
-                    "readonly": "readonly",
-                    "placeholder": "Cost",
-                }
-            ),
-            "notes": forms.TextInput(attrs={"placeholder": "Optional note"}),
+            "material": forms.Select(),
+            "unit": forms.Select(),
+            "cost_per_uom": forms.NumberInput(attrs={
+                "step": "0.01",
+                "min": "0",
+                "placeholder": "Cost Per UOM",
+                "class": "js-bom-cost-per-uom",
+            }),
+            "average": forms.NumberInput(attrs={
+                "step": "0.01",
+                "min": "0",
+                "placeholder": "Average",
+                "class": "js-bom-average",
+            }),
+            "cost": forms.NumberInput(attrs={
+                "step": "0.01",
+                "min": "0",
+                "placeholder": "Cost",
+                "class": "js-bom-cost",
+                "readonly": "readonly",
+            }),
+            "notes": forms.HiddenInput(),
         }
 
     def __init__(self, *args, user=None, forced_item_type=None, **kwargs):
         super().__init__(*args, **kwargs)
-        material_qs = Material.objects.select_related("material_type", "material_sub_type").order_by("name")
-        self.fields["material"].queryset = material_qs
-        self.fields["material"].label_from_instance = lambda obj: f"{obj.name} ({obj.get_material_kind_display()})"
-        self.fields["material"].empty_label = "Select material"
 
         self.fields["unit"].queryset = (
             MaterialUnit.objects.filter(owner=user).order_by("name")
             if user else MaterialUnit.objects.none()
         )
         self.fields["unit"].required = False
-        self.fields["unit"].empty_label = "Select unit"
+        self.fields["unit"].empty_label = "Select UOM"
+
+        qs = Material.objects.select_related("material_type", "material_sub_type").order_by("name")
+
+        if forced_item_type == BOMMaterialItem.ItemType.RAW_FABRIC:
+            qs = qs.order_by("name")
+        elif forced_item_type == BOMMaterialItem.ItemType.ACCESSORY:
+            qs = qs.order_by("name")
+
+        self.fields["material"].queryset = qs
+        self.fields["material"].empty_label = "Select material"
+        self.fields["material"].label_from_instance = (
+            lambda obj: f"{obj.name} ({obj.get_material_kind_display()})"
+        )
 
         if forced_item_type:
-            self.initial["item_type"] = forced_item_type
             self.fields["item_type"].initial = forced_item_type
+            self.initial["item_type"] = forced_item_type
+
+    def clean(self):
+        cleaned = super().clean()
+        cost_per_uom = cleaned.get("cost_per_uom") or 0
+        average = cleaned.get("average") or 0
+        cleaned["cost"] = cost_per_uom * average
+        return cleaned
 
 
 class BOMJobberItemForm(forms.ModelForm):
@@ -2352,6 +2382,17 @@ class BOMJobberItemForm(forms.ModelForm):
         self.fields["jobber"].widget.attrs.setdefault("data-jobber-field", "1")
         self.fields["jobber_type"].widget.attrs.setdefault("data-jobber-type-field", "1")
         self.fields["price"].widget.attrs.setdefault("data-jobber-price-field", "1")
+
+    def clean(self):
+        cleaned = super().clean()
+        jobber = cleaned.get("jobber")
+        jobber_type = cleaned.get("jobber_type")
+
+        if jobber and not jobber_type:
+            cleaned["jobber_type"] = jobber.jobber_type
+            self.instance.jobber_type = jobber.jobber_type
+
+        return cleaned
 
 
 class BOMProcessItemForm(forms.ModelForm):

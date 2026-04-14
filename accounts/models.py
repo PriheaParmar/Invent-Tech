@@ -986,7 +986,6 @@ class SubCategory(OwnedModel):
     def __str__(self):
         return f"{self.main_category.name} / {self.name}"
 
-
 class BOM(OwnedModel):
     GENDER_CHOICES = [
         ("male", "Male"),
@@ -1017,8 +1016,20 @@ class BOM(OwnedModel):
         related_name="boms",
     )
 
-    brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name="boms", null=True, blank=True)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="boms", null=True, blank=True)
+    brand = models.ForeignKey(
+        Brand,
+        on_delete=models.PROTECT,
+        related_name="boms",
+        null=True,
+        blank=True,
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.PROTECT,
+        related_name="boms",
+        null=True,
+        blank=True,
+    )
     main_category = models.ForeignKey(
         MainCategory,
         on_delete=models.PROTECT,
@@ -1051,6 +1062,7 @@ class BOM(OwnedModel):
 
     character_name = models.CharField(max_length=120, blank=True, default="")
     license_name = models.CharField(max_length=120, blank=True, default="")
+    color_name = models.CharField(max_length=100, blank=True, default="")
     color_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     accessories_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     maintenance_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -1059,92 +1071,54 @@ class BOM(OwnedModel):
     available_stock = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     damage_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     is_discontinued = models.BooleanField(default=False)
+
     product_image = models.ImageField(upload_to="bom/%Y/%m/", blank=True, null=True)
-    size_chart_image = models.ImageField(upload_to="bom/%Y/%m/", blank=True, null=True)
+    size_chart_image = models.ImageField(upload_to="bom/size_chart/%Y/%m/", blank=True, null=True)
     notes = models.TextField(blank=True, default="")
 
     class Meta:
         ordering = ["-id"]
-        unique_together = [("owner", "bom_code"), ("owner", "sku_code")]
-
-    def save(self, *args, **kwargs):
-        if not self.bom_code and self.owner_id:
-            next_number = (BOM.objects.filter(owner=self.owner).count() or 0) + 1
-            self.bom_code = f"BOM-{next_number:04d}"
-        super().save(*args, **kwargs)
+        unique_together = [("owner", "sku_code")]
 
     def __str__(self):
-        return self.bom_code or self.sku_code
+        return self.sku_code
+
+    def save(self, *args, **kwargs):
+        if not self.bom_code:
+            next_id = self.pk or (BOM.objects.order_by("-id").first().id + 1 if BOM.objects.exists() else 1)
+            self.bom_code = f"BOM-{next_id:04d}"
+
+        if self.catalogue_id:
+            self.catalogue_name = self.catalogue.name
+
+        if self.sub_category_master_id:
+            self.sub_category = self.sub_category_master.name
+
+        super().save(*args, **kwargs)
 
     @property
-    def material_cost_total(self):
-        return self.material_items.aggregate(total=Sum("cost")).get("total") or Decimal("0")
+    def display_sku_name(self):
+        return self.product_name or self.sku_code
 
     @property
-    def jobber_cost_total(self):
-        return self.jobber_items.aggregate(total=Sum("price")).get("total") or Decimal("0")
-
-    @property
-    def process_cost_total(self):
-        return self.process_items.aggregate(total=Sum("price")).get("total") or Decimal("0")
-
-    @property
-    def expense_cost_total(self):
-        return self.expense_items.aggregate(total=Sum("price")).get("total") or Decimal("0")
-
-    @property
-    def overhead_total(self):
-        return (
-            (self.color_price or Decimal("0"))
-            + (self.accessories_price or Decimal("0"))
-            + (self.maintenance_price or Decimal("0"))
-        )
-
-    @property
-    def subtotal_cost(self):
-        return (
-            self.material_cost_total
-            + self.jobber_cost_total
-            + self.process_cost_total
-            + self.expense_cost_total
-            + self.overhead_total
-        )
-
-    @property
-    def damage_value(self):
-        subtotal = self.subtotal_cost or Decimal("0")
-        percent = self.damage_percent or Decimal("0")
-        return (subtotal * percent) / Decimal("100")
-
-    @property
-    def estimated_total_cost(self):
-        return self.subtotal_cost + self.damage_value
-
-    @property
-    def linked_fabrics(self):
-        return self.material_items.filter(item_type=BOMMaterialItem.ItemType.RAW_FABRIC)
-
-    @property
-    def linked_accessories(self):
-        return self.material_items.filter(
-            item_type__in=[
-                BOMMaterialItem.ItemType.ACCESSORY,
-                BOMMaterialItem.ItemType.TRIM,
-                BOMMaterialItem.ItemType.PACKING,
+    def linked_fabric_names(self):
+        return ", ".join(
+            [
+                row.material.name
+                for row in self.material_items.filter(item_type=BOMMaterialItem.ItemType.RAW_FABRIC).select_related("material")
+                if row.material_id
             ]
         )
 
     @property
-    def linked_fabric_names(self):
-        return ", ".join([item.material.name for item in self.linked_fabrics if item.material])
-
-    @property
     def linked_accessory_names(self):
-        return ", ".join([item.material.name for item in self.linked_accessories if item.material])
-
-    @property
-    def display_sku_name(self):
-        return self.sku_code or self.product_name or self.bom_code
+        return ", ".join(
+            [
+                row.material.name
+                for row in self.material_items.filter(item_type=BOMMaterialItem.ItemType.ACCESSORY).select_related("material")
+                if row.material_id
+            ]
+        )
 
     @property
     def display_catalogue_name(self):
@@ -1157,12 +1131,12 @@ class BOM(OwnedModel):
         return self.brand.name if self.brand else ""
 
     @property
-    def display_main_category_name(self):
-        return self.main_category.name if self.main_category else ""
-
-    @property
     def display_category_name(self):
         return self.category.name if self.category else ""
+
+    @property
+    def display_main_category_name(self):
+        return self.main_category.name if self.main_category else ""
 
     @property
     def display_sub_category_name(self):
@@ -1461,3 +1435,20 @@ class ProgramSizeDetail(models.Model):
 
     def __str__(self):
         return f"{self.program} - {self.size}"
+
+    @property
+    def total_inward_qty(self):
+        total = self.inwards.aggregate(total=Sum("items__quantity")).get("total") or Decimal("0")
+        return total
+
+    @property
+    def remaining_qty_total(self):
+        ordered = self.available_qty or Decimal("0")
+        inward = self.total_inward_qty or Decimal("0")
+        return ordered - inward if ordered > inward else Decimal("0")
+
+    class Meta:
+        ordering = ["-id"]
+
+    def __str__(self):
+        return self.system_number or f"Greige PO {self.pk or 'Draft'}"
