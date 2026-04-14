@@ -1,0 +1,164 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=1">
+
+<style>
+  .tc-content-preview{
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+    line-height:1.45;
+    white-space:normal;
+    color:rgba(15, 23, 42, .82);
+    max-width:520px;
+  }
+
+  .tc-title-cell{
+    min-width:220px;
+  }
+
+  .tc-title-main{
+    font-weight:800;
+    color:#111827;
+  }
+
+  .tc-title-sub{
+    margin-top:4px;
+    font-size:12px;
+    opacity:.68;
+  }
+
+  @media (max-width: 768px){
+    .tc-content-preview{
+      max-width:260px;
+    }
+  }
+</style>
+
+<div class="jobbers-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Terms &amp; Conditions</div>
+        <div class="jb-sub">Create and manage reusable PO terms in a clean utility flow</div>
+      </div>
+
+      {% if not full_page %}
+        <button
+          type="button"
+          class="jb-iconbtn jb-close"
+          aria-label="Close"
+          onclick="
+            const panel = document.getElementById('mastersEmbedPanel');
+            const mount = document.getElementById('mastersEmbedMount');
+            if (panel && mount) {
+              panel.style.display = 'none';
+              panel.style.pointerEvents = 'none';
+              mount.classList.remove('is-loading');
+              mount.innerHTML = '';
+            } else {
+              window.history.back();
+            }
+          "
+        >
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:termscondition_list' %}" id="termsConditionSearchForm">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+        <input
+          type="search"
+          name="q"
+          value="{{ q }}"
+          placeholder="Search title or terms content"
+          autocomplete="off"
+          aria-label="Search terms and conditions"
+          id="termsConditionSearchInput"
+        >
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:termscondition_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Terms Content</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in terms_conditions %}
+          <tr>
+            <td class="tc-title-cell">
+              <div class="tc-title-main">{{ item.title }}</div>
+              <div class="tc-title-sub">Reusable PO terms entry</div>
+            </td>
+            <td>
+              <div class="tc-content-preview">{{ item.content }}</div>
+            </td>
+            <td class="jb-actions">
+              <a class="jb-link"
+                 href="{% url 'accounts:termscondition_edit' item.id %}{% if not full_page %}?embed=1{% endif %}">
+                Edit
+              </a>
+              <span class="jb-dot">•</span>
+
+              <form method="post"
+                    action="{% url 'accounts:termscondition_delete' item.id %}{% if not full_page %}?embed=1{% endif %}"
+                    class="jb-inline-delete js-jb-delete-form"
+                    data-delete-label="terms &amp; condition &quot;{{ item.title|escape }}&quot;">
+                {% csrf_token %}
+                {% if not full_page %}
+                <input type="hidden" name="embed" value="1">
+                {% endif %}
+                <button class="jb-link jb-link-danger jb-link-button" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="jb-empty">No terms and conditions found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      const form = document.getElementById("termsConditionSearchForm");
+      const input = document.getElementById("termsConditionSearchInput");
+
+      if (!form || !input) return;
+
+      let timer = null;
+
+      input.addEventListener("input", function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          form.submit();
+        }, 300);
+      });
+    })();
+  </script>
+</div>

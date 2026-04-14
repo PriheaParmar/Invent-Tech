@@ -1,8 +1,6 @@
 from decimal import Decimal
-from django.conf import settings
 from django.db.models import Sum
 from django.utils import timezone
-from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
 
@@ -259,7 +257,25 @@ class Party(models.Model):
     def __str__(self):
         return self.party_name
 
+class Client(OwnedModel):
+    name = models.CharField(max_length=180)
+    contact_person = models.CharField(max_length=120, blank=True, default="")
+    phone = models.CharField(max_length=10, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+    gst_number = models.CharField(max_length=15, blank=True, default="")
+    pan_number = models.CharField(max_length=10, blank=True, default="")
+    city = models.CharField(max_length=80, blank=True, default="")
+    state = models.CharField(max_length=2, choices=INDIA_STATE_CHOICES, blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    is_active = models.BooleanField(default=True)
 
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("owner", "name")]
+
+    def __str__(self):
+        return self.name
+    
 class Location(OwnedModel):
     name = models.CharField(max_length=120)
     address_line_1 = models.CharField(max_length=255, blank=True, default="")
@@ -568,7 +584,7 @@ class YarnPurchaseOrderItem(models.Model):
         else:
             label = "Yarn Item"
         return f"{self.po} - {label}"
-
+    
 class YarnPOInward(OwnedModel):
     po = models.ForeignKey(
         "YarnPurchaseOrder",
@@ -582,15 +598,16 @@ class YarnPOInward(OwnedModel):
         null=True,
         blank=True,
     )
+    inward_type = models.ForeignKey(
+        "InwardType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="yarn_inwards",
+    )
     inward_number = models.CharField(max_length=30, unique=True)
     inward_date = models.DateField(default=timezone.localdate)
     notes = models.TextField(blank=True, default="")
-
-    class Meta:
-        ordering = ["-inward_date", "-id"]
-
-    def __str__(self):
-        return self.inward_number
 
 
 class YarnPOInwardItem(models.Model):
@@ -636,39 +653,19 @@ class GreigePurchaseOrder(OwnedModel):
         related_name="greige_pos",
     )
 
+    source_yarn_inward = models.ForeignKey(
+        "YarnPOInward",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_greige_pos",
+    )
+
     vendor = models.ForeignKey(
         "Vendor",
         on_delete=models.PROTECT,
         related_name="greige_purchase_orders",
     )
-
-    firm = models.ForeignKey(
-        "Firm",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="greige_purchase_orders",
-    )
-
-    remarks = models.TextField(blank=True, default="")
-    total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
-    @property
-    def total_inward_qty(self):
-        total = self.inwards.aggregate(total=Sum("items__quantity")).get("total") or Decimal("0")
-        return total
-
-    @property
-    def remaining_qty_total(self):
-        ordered = self.total_weight or Decimal("0")
-        inward = self.total_inward_qty or Decimal("0")
-        return ordered - inward if ordered > inward else Decimal("0")
-
-    class Meta:
-        ordering = ["-id"]
-
-    def __str__(self):
-        return self.system_number or f"Greige PO {self.pk or 'Draft'}"
 
 
 class GreigePurchaseOrderItem(models.Model):
@@ -1025,7 +1022,18 @@ class MaterialUnit(OwnedModel):
 
     def __str__(self):
         return self.name
-    
+
+
+class InwardType(OwnedModel):
+    name = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("owner", "name")]
+
+    def __str__(self):
+        return self.name
 
 class MainCategory(OwnedModel):
     name = models.CharField(max_length=120)
@@ -1509,3 +1517,25 @@ class Expense(OwnedModel):
 
     def __str__(self):
         return self.name
+    
+class DyeingOtherCharge(OwnedModel):
+    name = models.CharField(max_length=120)
+
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("owner", "name")]
+
+    def __str__(self):
+        return self.name
+    
+class TermsCondition(OwnedModel):
+    title = models.CharField(max_length=150)
+    content = models.TextField()
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["title"]
+        unique_together = [("owner", "title")]
+
+    def __str__(self):
+        return self.title

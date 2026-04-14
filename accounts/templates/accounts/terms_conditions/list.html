@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Terms & Conditions - InventTech{% endblock %}
+{% block page_title %}Terms & Conditions{% endblock %}
+{% block page_subtitle %}Manage reusable PO terms and conditions{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/terms_conditions/list_embed.html" with full_page=True %}
+</div>
+{% endblock %}

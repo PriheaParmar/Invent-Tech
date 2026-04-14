@@ -100,14 +100,14 @@
       "Jobber Type",
       "Jobber",
       "Material Sub Type",
-      "Material Unit"
+      "Material Unit","Dyeing Other Charges",
     ],
     Production: ["Techpack", "BOM", "Job Card Details", "Branch SKU"],
     Dyeing: ["Dyeing Master", "Greige Master", "Dyeing Other Charge Headers"],
     Design: ["Catalogue", "Pattern Type", "Designer", "Season", "Theme"],
     Admin: ["Jobber Bulk Changes"],
     Inventory: ["Inward Type"],
-    Dispatch: ["Terms & Condition"],
+    Dispatch: ["Terms & Conditions"],
     Accounts: ["Expense"],
     Uploads: ["Material Bulk Upload"],
   };
@@ -121,6 +121,7 @@
     "Material Sub Type": "{% url 'accounts:materialsubtype_list' %}",
     "Brand": "{% url 'accounts:brand_list' %}",
     "Party": "{% url 'accounts:party_list' %}",
+    "Client": "{% url 'accounts:client_list' %}",
     "Vendor": "{% url 'accounts:vendor_list' %}",
     "Location": "{% url 'accounts:location_list' %}",
     "Material Unit": "{% url 'accounts:materialunit_list' %}",
@@ -130,6 +131,10 @@
     "Pattern Type": "{% url 'accounts:patterntype_list' %}",
     "BOM": "{% url 'accounts:bom_list' %}",
     "Expense": "{% url 'accounts:expense_list' %}",
+    "Terms & Conditions": "{% url 'accounts:termscondition_list' %}",
+    "Dyeing Other Charges": "{% url 'accounts:dyeing_other_charge_list' %}",
+    "Dyeing Other Charge Headers": "{% url 'accounts:dyeing_other_charge_list' %}",
+    "Inward Type": "{% url 'accounts:inwardtype_list' %}",
   };
 
   const UTILITIES = [
@@ -166,7 +171,7 @@
 
     { name: "Jobber Bulk Changes", tag: "Admin", icon: "settings" },
     { name: "Inward Type", tag: "Inventory", icon: "inward" },
-    { name: "Terms & Condition", tag: "Dispatch", icon: "document" },
+    { name: "Terms & Conditions", tag: "Dispatch", icon: "document" },
     { name: "Expense", tag: "Accounts", icon: "wallet" },
     { name: "Material Bulk Upload", tag: "Uploads", icon: "upload" }
   ];
@@ -218,12 +223,14 @@
   "Pattern Type",
   "Catalogue",
   "Party",
+  "Client",
   "Brand",
   "Vendor",
   "Category",
   "Location",
   "BOM",
   "Expense",
+  "Terms & Conditions",
 ];  
 
   const MASTER_ROUTE_PREFIXES = MASTER_TILE_NAMES

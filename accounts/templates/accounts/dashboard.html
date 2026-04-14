@@ -451,7 +451,7 @@
       { title: "Theme", tag: "Design", key: "theme" },
       { title: "Jobber Bulk Changes", tag: "Admin", key: "jobber bulk changes" },
       { title: "Inward Type", tag: "Inventory", key: "inward type grn" },
-      { title: "Terms & Condition", tag: "Dispatch", key: "terms condition" },
+      { title: "Terms & Conditions", tag: "Dispatch", key: "terms condition" },
       { title: "Expense", tag: "Accounts", key: "expense" },
       { title: "Material Bulk Upload", tag: "Uploads", key: "material bulk upload" },
     ];
@@ -474,6 +474,9 @@
       "Catalogue": "{% url 'accounts:catalogue_list' %}",
       "BOM": "{% url 'accounts:bom_list' %}",
       "Expense": "{% url 'accounts:expense_list' %}",
+      "Terms & Conditions": "{% url 'accounts:termscondition_list' %}",
+      "Dyeing Other Charge Headers": "{% url 'accounts:dyeing_other_charge_list' %}",
+      "Inward Type": "{% url 'accounts:inwardtype_list' %}",
     };
 
     function tileHtml(u) {

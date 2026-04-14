@@ -1,0 +1,121 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=1">
+
+<style>
+  .terms-form-embed{
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .terms-form-embed .jf-field textarea{
+    min-height: 180px;
+  }
+
+  .terms-form-note{
+    margin-top: 6px;
+    font-size: 12px;
+    opacity: .68;
+  }
+</style>
+
+<div class="jobbers-embed jobber-form-embed terms-form-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">
+          {% if mode == "edit" %}Edit Terms &amp; Conditions{% else %}Add Terms &amp; Conditions{% endif %}
+        </div>
+        <div class="jb-sub">
+          {% if mode == "edit" %}
+          Update the selected reusable PO terms content
+          {% else %}
+          Create reusable PO terms for yarn, greige, dyeing, and ready PO use
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="jf-head-actions">
+        <a class="jb-iconbtn jb-back"
+           href="{% url 'accounts:termscondition_list' %}{% if not full_page %}?embed=1{% endif %}"
+           aria-label="Back">
+          <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button
+          type="button"
+          class="jb-iconbtn jb-close"
+          aria-label="Close"
+          onclick="
+            const panel = document.getElementById('mastersEmbedPanel');
+            const mount = document.getElementById('mastersEmbedMount');
+            if (panel && mount) {
+              panel.style.display = 'none';
+              panel.style.pointerEvents = 'none';
+              mount.classList.remove('is-loading');
+              mount.innerHTML = '';
+            } else {
+              window.history.back();
+            }
+          "
+        >
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="jb-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post"
+          action="{% if mode == 'edit' and terms_condition %}{% url 'accounts:termscondition_edit' terms_condition.id %}{% else %}{% url 'accounts:termscondition_add' %}{% endif %}{% if not full_page %}?embed=1{% endif %}"
+          class="jf-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="jf-grid">
+        <div class="jf-field jf-full">
+          <label for="{{ form.title.id_for_label }}">Title</label>
+          {{ form.title }}
+          <div class="terms-form-note">Use a short clear heading like Payment Terms, Delivery Terms, or Quality Terms.</div>
+          {% if form.title.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.title.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field jf-full">
+          <label for="{{ form.content.id_for_label }}">Terms Content</label>
+          {{ form.content }}
+          <div class="terms-form-note">Write the complete reusable terms text that should appear in PO flow.</div>
+          {% if form.content.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.content.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="jf-footer">
+        <a class="jb-secondary" href="{% url 'accounts:termscondition_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="jb-add jb-save">
+          {% if mode == "edit" %}Update Terms{% else %}Save Terms{% endif %}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>

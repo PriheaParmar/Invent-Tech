@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
-    Jobber, JobberType, UserExtra, Party, Location, Brand, Catalogue,
-    BOM, BOMMaterialItem, BOMJobberItem, BOMProcessItem, BOMExpenseItem
+    Jobber, JobberType, UserExtra, Party, Location, Brand, Catalogue,Client,
+    BOM, BOMMaterialItem, BOMJobberItem, BOMProcessItem, BOMExpenseItem,DyeingOtherCharge,TermsCondition
 )
 
 @admin.register(JobberType)
@@ -82,3 +82,23 @@ class BOMAdmin(admin.ModelAdmin):
     search_fields = ("bom_code", "sku_code", "product_name", "catalogue_name")
     list_filter = ("owner", "is_discontinued", "gender", "size_type")
     inlines = [BOMMaterialInline, BOMJobberInline, BOMProcessInline, BOMExpenseInline]
+    
+@admin.register(Client)
+class ClientAdmin(admin.ModelAdmin):
+    list_display = ("name", "contact_person", "phone", "email", "city", "is_active", "owner")
+    search_fields = ("name", "contact_person", "phone", "email", "gst_number", "pan_number")
+    list_filter = ("is_active", "state", "owner")
+    ordering = ("name",)
+
+@admin.register(DyeingOtherCharge)
+class DyeingOtherChargeAdmin(admin.ModelAdmin):
+    list_display = ("name", "owner", "created_at")
+    search_fields = ("name", "owner__username")
+    list_filter = ("owner",)
+
+@admin.register(TermsCondition)
+class TermsConditionAdmin(admin.ModelAdmin):
+    list_display = ("title", "owner", "is_active", "created_at")
+    search_fields = ("title", "content", "owner__username")
+    list_filter = ("is_active", "owner")
+    ordering = ("title",)

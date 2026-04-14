@@ -3,7 +3,6 @@ from django.forms import inlineformset_factory
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
-from django import forms
 from django.core.exceptions import ValidationError
 
 from django.db.models import Q
@@ -12,14 +11,18 @@ import re
 from .models import (
     Jobber,
     JobberType,
+    InwardType,
     Material,
     YarnDetail,
     GreigeDetail,
     FinishedDetail,
+    DyeingOtherCharge,
+    TermsCondition,
     TrimDetail,
     Party,
     Location,
     Category,
+    Client,
     Firm,
     MaterialShade,
     MaterialSubType,
@@ -51,6 +54,126 @@ from .models import (
     Expense,
 )
 
+
+class ClientForm(forms.ModelForm):
+    class Meta:
+        model = Client
+        fields = [
+            "name",
+            "contact_person",
+            "phone",
+            "email",
+            "gst_number",
+            "pan_number",
+            "city",
+            "state",
+            "address",
+            "is_active",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "Enter client name", "maxlength": "180"}),
+            "contact_person": forms.TextInput(attrs={"placeholder": "Enter contact person", "maxlength": "120"}),
+            "phone": forms.TextInput(attrs={
+                "placeholder": "Enter 10 digit phone number",
+                "inputmode": "numeric",
+                "maxlength": "10",
+                "autocomplete": "off",
+                "pattern": r"\d{10}",
+                "oninput": "this.value=this.value.replace(/\D/g,'').slice(0,10)",
+            }),
+            "email": forms.EmailInput(attrs={
+                "placeholder": "Enter email",
+                "autocomplete": "email",
+                "spellcheck": "false",
+            }),
+            "gst_number": forms.TextInput(attrs={
+                "placeholder": "27ABCDE1234F1Z5",
+                "maxlength": "15",
+                "autocapitalize": "characters",
+                "spellcheck": "false",
+                "autocomplete": "off",
+                "data-mask-format": "99AAAAA9999AXZX",
+            }),
+            "pan_number": forms.TextInput(attrs={
+                "placeholder": "ABCDE1234F",
+                "maxlength": "10",
+                "autocapitalize": "characters",
+                "spellcheck": "false",
+                "autocomplete": "off",
+                "data-mask-format": "AAAAA9999A",
+            }),
+            "city": forms.TextInput(attrs={"placeholder": "Enter city", "maxlength": "80"}),
+            "state": forms.Select(),
+            "address": forms.Textarea(attrs={"rows": 3, "placeholder": "Enter address"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+        for name, field in self.fields.items():
+            existing = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = f"{existing} jf-input".strip()
+
+        self.fields["name"].required = True
+        self.fields["phone"].required = True
+        self.fields["state"].required = False
+
+    @staticmethod
+    def _clean_text(value):
+        return re.sub(r"\s+", " ", (value or "").strip())
+
+    def clean_name(self):
+        value = self._clean_text(self.cleaned_data.get("name"))
+        if not value:
+            raise forms.ValidationError("Client name is required.")
+
+        if self.user is not None:
+            qs = Client.objects.filter(owner=self.user, name__iexact=value)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("This client already exists.")
+
+        return value
+
+    def clean_contact_person(self):
+        value = self._clean_text(self.cleaned_data.get("contact_person"))
+        if value and not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,119}", value):
+            raise forms.ValidationError("Contact person can contain only letters, spaces, dot, apostrophe, and hyphen.")
+        return value
+
+    def clean_phone(self):
+        value = re.sub(r"\D", "", (self.cleaned_data.get("phone") or ""))
+        if not value:
+            raise forms.ValidationError("Phone number is required.")
+        if not re.fullmatch(r"\d{10}", value):
+            raise forms.ValidationError("Phone number must be exactly 10 digits.")
+        return value
+
+    def clean_email(self):
+        return (self.cleaned_data.get("email") or "").strip().lower()
+
+    def clean_gst_number(self):
+        value = (self.cleaned_data.get("gst_number") or "").strip().upper()
+        if value and not PARTY_GST_RE.fullmatch(value):
+            raise forms.ValidationError("Enter a valid GST number, like 27ABCDE1234F1Z5.")
+        return value
+
+    def clean_pan_number(self):
+        value = (self.cleaned_data.get("pan_number") or "").strip().upper()
+        if value and not PARTY_PAN_RE.fullmatch(value):
+            raise forms.ValidationError("Enter a valid PAN number, like ABCDE1234F.")
+        return value
+
+    def clean_city(self):
+        value = self._clean_text(self.cleaned_data.get("city"))
+        if value and not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,79}", value):
+            raise forms.ValidationError("City can contain only letters, spaces, dot, apostrophe, and hyphen.")
+        return value
+
+    def clean_address(self):
+        return self._clean_text(self.cleaned_data.get("address"))
 # ============================================================
 # JOBBERS
 # ============================================================
@@ -1390,6 +1513,13 @@ class VendorForm(forms.ModelForm):
 # YARN PURCHASE ORDER
 # ============================================================
 class YarnPurchaseOrderForm(forms.ModelForm):
+    terms_template = forms.ModelChoiceField(
+        queryset=TermsCondition.objects.none(),
+        required=False,
+        empty_label="Select saved terms",
+        label="Saved Terms & Conditions",
+    )
+
     class Meta:
         model = YarnPurchaseOrder
         fields = [
@@ -1423,6 +1553,7 @@ class YarnPurchaseOrderForm(forms.ModelForm):
 
         self.fields["vendor"].queryset = Vendor.objects.filter(owner=user, is_active=True).order_by("name") if user else Vendor.objects.none()
         self.fields["firm"].queryset = Firm.objects.filter(owner=user).order_by("firm_name") if user else Firm.objects.none()
+        self.fields["terms_template"].queryset = TermsCondition.objects.filter(owner=user, is_active=True).order_by("title") if user else TermsCondition.objects.none()
         self.fields["vendor"].empty_label = "Select vendor"
         self.fields["firm"].empty_label = "Select firm"
 
@@ -1438,6 +1569,15 @@ class YarnPurchaseOrderForm(forms.ModelForm):
         }
         for field_name, attrs in compact_attrs.items():
             self.fields[field_name].widget.attrs.update(attrs)
+
+        self.fields["terms_template"].widget.attrs.update({
+            "data-terms-template-select": "1",
+        })
+
+        if self.instance.pk and self.instance.terms_conditions:
+            matched = self.fields["terms_template"].queryset.filter(content=self.instance.terms_conditions).first()
+            if matched:
+                self.initial["terms_template"] = matched.pk
 
         if not self.is_bound:
             from django.utils import timezone
@@ -1475,7 +1615,7 @@ class YarnPOReviewForm(forms.Form):
 class YarnPOInwardForm(forms.ModelForm):
     class Meta:
         model = YarnPOInward
-        fields = ["vendor", "inward_date", "notes"]
+        fields = ["vendor", "inward_type", "inward_date", "notes"]
         widgets = {
             "inward_date": forms.DateInput(attrs={"type": "date"}),
             "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
@@ -1489,19 +1629,19 @@ class YarnPOInwardForm(forms.ModelForm):
             if user is not None else Vendor.objects.none()
         )
         self.fields["vendor"].empty_label = "Select inward vendor"
+
+        self.fields["inward_type"].required = True
+        self.fields["inward_type"].queryset = (
+            InwardType.objects.filter(owner=user).order_by("name")
+            if user is not None else InwardType.objects.none()
+        )
+        self.fields["inward_type"].empty_label = "Select inward type"
         
 class YarnPurchaseOrderItemForm(forms.ModelForm):
-    UNIT_CHOICES = [
-        ("", "Select unit"),
-        ("MTR", "MTR"),
-        ("KG", "KG"),
-        ("PCS", "PCS"),
-        ("CONE", "CONE"),
-        ("BAG", "BAG"),
-        ("ROLL", "ROLL"),
-    ]
-
-    unit = forms.ChoiceField(required=False, choices=UNIT_CHOICES)
+    unit = forms.ChoiceField(
+        required=False,
+        choices=[("", "Select unit")],
+    )
 
     class Meta:
         model = YarnPurchaseOrderItem
@@ -1528,16 +1668,19 @@ class YarnPurchaseOrderItemForm(forms.ModelForm):
             if bound_unit:
                 current_unit = bound_unit
 
+        unit_choices = _material_unit_choices(user, current_unit)
+
         self.fields["unit"].required = False
-        self.fields["unit"].widget = forms.Select(
-            choices=_material_unit_choices(user, current_unit)
-        )
+        self.fields["unit"].choices = unit_choices
+        self.fields["unit"].widget = forms.Select(choices=unit_choices)
 
     def clean_unit(self):
-        value = (self.cleaned_data.get("unit") or "").strip().upper()
-        valid_units = {choice for choice, _label in self.UNIT_CHOICES if choice}
+        value = (self.cleaned_data.get("unit") or "").strip()
+        valid_units = {choice for choice, _label in self.fields["unit"].choices if choice}
+
         if value and value not in valid_units:
             raise forms.ValidationError("Select a valid unit.")
+
         return value
 
 YarnPurchaseOrderItemFormSet = inlineformset_factory(
@@ -1561,20 +1704,17 @@ class GreigePurchaseOrderForm(forms.ModelForm):
             "po_date",
             "available_qty",
             "vendor",
-            "firm",
             "shipping_address",
             "delivery_period",
             "expected_delivery_date",
             "cancel_date",
             "validity_period",
             "delivery_schedule",
-            "remarks",
         ]
         widgets = {
             "po_date": forms.DateInput(attrs={"type": "date"}),
             "expected_delivery_date": forms.DateInput(attrs={"type": "date"}),
             "cancel_date": forms.DateInput(attrs={"type": "date"}),
-            "remarks": forms.Textarea(attrs={"rows": 3}),
         }
 
     def __init__(self, *args, user=None, source_yarn_po=None, lock_source=False, **kwargs):
@@ -1583,10 +1723,6 @@ class GreigePurchaseOrderForm(forms.ModelForm):
         self.fields["vendor"].queryset = (
             Vendor.objects.filter(owner=user, is_active=True).order_by("name")
             if user else Vendor.objects.none()
-        )
-        self.fields["firm"].queryset = (
-            Firm.objects.filter(owner=user).order_by("firm_name")
-            if user else Firm.objects.none()
         )
 
         source_ids_qs = YarnPurchaseOrder.objects.filter(
@@ -1610,7 +1746,6 @@ class GreigePurchaseOrderForm(forms.ModelForm):
 
         self.fields["source_yarn_po"].empty_label = "Select source yarn PO"
         self.fields["vendor"].empty_label = "Select vendor"
-        self.fields["firm"].empty_label = "Select firm"
 
         if lock_source:
             self.fields["source_yarn_po"].disabled = True
@@ -1630,6 +1765,9 @@ class GreigePOInwardForm(forms.ModelForm):
             "inward_date": forms.DateInput(attrs={"type": "date"}),
             "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
         }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class DyeingPurchaseOrderForm(forms.ModelForm):
@@ -1715,6 +1853,9 @@ class DyeingPOInwardForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
         }
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
 class ReadyPurchaseOrderForm(forms.ModelForm):
     class Meta:
         model = ReadyPurchaseOrder
@@ -1795,6 +1936,8 @@ class ReadyPOInwardForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
         }
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
 
 class BrandForm(forms.ModelForm):
     class Meta:
@@ -2283,3 +2426,104 @@ ProgramSizeDetailFormSet = inlineformset_factory(
     extra=9,
     can_delete=True,
 )
+
+class DyeingOtherChargeForm(forms.ModelForm):
+    class Meta:
+        model = DyeingOtherCharge
+        fields = ["name"]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "placeholder": "Enter other charge name (e.g. Silicon Wash, Bio Wash)",
+            }),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_name(self):
+        name = (self.cleaned_data.get("name") or "").strip()
+        if not name:
+            raise forms.ValidationError("Other charge name is required.")
+
+        if self.user is not None:
+            qs = DyeingOtherCharge.objects.filter(owner=self.user, name__iexact=name)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("This dyeing other charge already exists.")
+
+        return name
+
+\
+    
+class TermsConditionForm(forms.ModelForm):
+    class Meta:
+        model = TermsCondition
+        fields = ["title", "content"]
+        widgets = {
+            "title": forms.TextInput(attrs={
+                "placeholder": "Enter terms title",
+            }),
+            "content": forms.Textarea(attrs={
+                "rows": 5,
+                "placeholder": "Enter terms and conditions content",
+            }),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_title(self):
+        title = (self.cleaned_data.get("title") or "").strip()
+        if not title:
+            raise forms.ValidationError("Title is required.")
+
+        if self.user is not None:
+            qs = TermsCondition.objects.filter(owner=self.user, title__iexact=title)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("This terms title already exists.")
+
+        return title
+
+    def clean_content(self):
+        content = (self.cleaned_data.get("content") or "").strip()
+        if not content:
+            raise forms.ValidationError("Terms content is required.")
+        return content
+    
+    
+class InwardTypeForm(forms.ModelForm):
+    class Meta:
+        model = InwardType
+        fields = ["name", "description"]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "placeholder": "Enter inward type name (e.g. GRN, Return Inward)",
+            }),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Optional note about when this inward type should be used",
+            }),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_name(self):
+        name = (self.cleaned_data.get("name") or "").strip()
+        if not name:
+            raise forms.ValidationError("Inward type name is required.")
+
+        if self.user is not None:
+            qs = InwardType.objects.filter(owner=self.user, name__iexact=name)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("This inward type already exists.")
+
+        return name

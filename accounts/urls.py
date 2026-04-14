@@ -94,6 +94,7 @@ urlpatterns = [
     path("po/yarn/<int:pk>/review/", views.yarnpo_review, name="yarnpo_review"),
     path("po/yarn/<int:pk>/pdf/", views.yarnpo_pdf, name="yarnpo_pdf"),
     path("po/yarn/<int:pk>/inward/", views.yarnpo_inward, name="yarnpo_inward"),
+    path("po/yarn/inwards/<int:pk>/edit/", views.yarn_inward_update, name="yarn_inward_edit"),  
     path("po/yarn/inwards/", views.yarn_inward_tracker, name="yarn_inward_tracker"),
     path("po/yarn/<int:pk>/generate-greige/", views.generate_greige_po_from_yarn, name="generate_greige_po_from_yarn"),
 
@@ -178,4 +179,24 @@ urlpatterns = [
     path("utilities/expenses/", views.expense_list_create, name="expense_list"),
     path("utilities/expenses/<int:pk>/edit/", views.expense_edit, name="expense_edit"),
     path("utilities/expenses/<int:pk>/delete/", views.expense_delete, name="expense_delete"),
+    
+    # Clients
+    path("master/clients/", views.client_list, name="client_list"),
+    path("master/clients/add/", views.client_create, name="client_add"),
+    path("master/clients/<int:pk>/edit/", views.client_update, name="client_edit"),
+    path("master/clients/<int:pk>/delete/", views.client_delete, name="client_delete"),
+    
+    path("utilities/terms-conditions/", views.termscondition_list, name="termscondition_list"),
+    path("utilities/terms-conditions/add/", views.termscondition_create, name="termscondition_add"),
+    path("utilities/terms-conditions/<int:pk>/edit/", views.termscondition_update, name="termscondition_edit"),
+    path("utilities/terms-conditions/<int:pk>/delete/", views.termscondition_delete, name="termscondition_delete"),
+    # Dyeing Other Charges
+    path("utilities/dyeing-other-charges/", views.dyeing_other_charge_list_create, name="dyeing_other_charge_list"),
+    path("utilities/dyeing-other-charges/<int:pk>/edit/", views.dyeing_other_charge_edit, name="dyeing_other_charge_edit"),
+    path("utilities/dyeing-other-charges/<int:pk>/delete/", views.dyeing_other_charge_delete, name="dyeing_other_charge_delete"),
+    
+      # Inward Types
+    path("utilities/inward-types/", views.inwardtype_list_create, name="inwardtype_list"),
+    path("utilities/inward-types/<int:pk>/edit/", views.inwardtype_edit, name="inwardtype_edit"),
+    path("utilities/inward-types/<int:pk>/delete/", views.inwardtype_delete, name="inwardtype_delete"),
 ]

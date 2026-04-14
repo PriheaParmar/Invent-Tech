@@ -485,6 +485,7 @@
         <div class="yp-shell">
           <form method="post" class="yp-form">
             {% csrf_token %}
+            {% if selected_source_inward %}<input type="hidden" name="source_yarn_inward_id" value="{{ selected_source_inward.id }}">{% endif %}
 
             <div class="yp-headbar">
               <div class="yp-head-main">
@@ -519,7 +520,7 @@
 
             {% if existing_po and mode != 'edit' %}
               <div class="yp-errors">
-                Greige PO already exists for this Yarn PO.
+                {% if selected_source_inward %}Greige PO already exists for this Yarn inward.{% else %}Greige PO already exists for this Yarn PO.{% endif %}
                 <a href="{% url 'accounts:greigepo_detail' existing_po.id %}">Open existing Greige PO</a>
               </div>
             {% endif %}
@@ -534,6 +535,13 @@
               <div class="yp-chip">
                 <div class="yp-chip-label">Source Yarn PO</div>
                 <div class="yp-chip-value">{{ source_yarn_po.system_number }}</div>
+              </div>
+              {% endif %}
+
+              {% if selected_source_inward %}
+              <div class="yp-chip">
+                <div class="yp-chip-label">Source Yarn Inward</div>
+                <div class="yp-chip-value">{{ selected_source_inward.inward_number }}</div>
               </div>
               {% endif %}
 
@@ -696,7 +704,7 @@
                     <div>
                       <div class="yp-panel-kicker">Source inward</div>
                       <div class="yp-panel-title">Source Yarn inward rows</div>
-                      <div class="yp-panel-sub">These inward quantities will be used to generate Greige PO items.</div>
+                      <div class="yp-panel-sub">{% if selected_source_inward %}Only the selected Yarn inward is shown here and will be used to generate Greige PO items.{% else %}These inward quantities will be used to generate Greige PO items.{% endif %}</div>
                     </div>
                   </div>
 
@@ -768,6 +776,13 @@
                         <div class="yp-summary-k">Available Qty</div>
                         <div class="yp-summary-v">{{ form.available_qty.value|default:"0.00" }}</div>
                       </div>
+
+                      {% if selected_source_inward %}
+                      <div class="yp-summary-row">
+                        <div class="yp-summary-k">Source Inward</div>
+                        <div class="yp-summary-v">{{ selected_source_inward.inward_number }}</div>
+                      </div>
+                      {% endif %}
 
                       <div class="yp-summary-row">
                         <div class="yp-summary-k">Vendor</div>

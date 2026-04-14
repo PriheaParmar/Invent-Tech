@@ -6,14 +6,17 @@
 {% block content %}
 <style>
   :root{
-    --blue: rgba(28, 109, 216, 1);
-    --blue-soft: rgba(28, 109, 216, .10);
-    --blue-soft-2: rgba(28, 109, 216, .06);
-    --blue-border: rgba(28, 109, 216, .14);
+    --blue:#1c6dd8;
+    --blue-soft:rgba(28,109,216,.10);
+    --blue-soft-2:rgba(28,109,216,.06);
+    --blue-border:rgba(28,109,216,.14);
+    --pink:#ee3d85;
+    --pink-soft:rgba(238,61,133,.08);
     --text-main:#111827;
     --text-soft:#667085;
     --line:rgba(15,23,42,.08);
     --bg-soft:#f8fbff;
+    --danger:#dc2626;
   }
 
   .canvas{
@@ -28,13 +31,12 @@
   }
 
   .yarn-inward-shell{
-    position:relative;
     width:100%;
     min-width:0;
-    padding:18px;
-    border-radius:24px;
-    border:2px dashed rgb(0, 0, 0);
-    background:#fff;
+    padding:8px 0 0;
+    background:transparent;
+    border:none;
+    border-radius:0;
   }
 
   .yarn-inward-form{
@@ -48,8 +50,7 @@
     justify-content:space-between;
     gap:16px;
     flex-wrap:wrap;
-    padding:14px 8px;
-    border-radius:20px;
+    padding:6px 2px 2px;
   }
 
   .yarn-head-main{
@@ -60,17 +61,18 @@
   }
 
   .yarn-head-icon{
-    width:46px;
-    height:46px;
+    width:44px;
+    height:44px;
     border-radius:14px;
     flex:0 0 auto;
     display:grid;
     place-items:center;
+    background:rgba(28,109,216,.08);
   }
 
   .yarn-head-icon svg{
-    width:34px;
-    height:34px;
+    width:32px;
+    height:32px;
     display:block;
   }
 
@@ -130,12 +132,18 @@
     border-color:transparent;
     color:#fff;
     background:var(--pink);
-    box-shadow:0 10px 18px rgba(28,109,216,.16);
+    box-shadow:0 10px 18px rgba(238,61,133,.18);
   }
 
   .yarn-btn-primary:hover{
     color:#fff;
     background:#d63377;
+  }
+
+  .yarn-btn-primary:disabled{
+    opacity:.65;
+    cursor:not-allowed;
+    box-shadow:none;
   }
 
   .yarn-pill{
@@ -144,7 +152,7 @@
     min-height:38px;
     padding:0 13px;
     border-radius:999px;
-    background:rgba(238,61,133,.08);
+    background:var(--pink-soft);
     color:var(--pink);
     border:1px solid rgba(238,61,133,.12);
     font-size:11px;
@@ -155,7 +163,7 @@
 
   .yarn-top-grid{
     display:grid;
-    grid-template-columns:repeat(4, minmax(0, 1fr));
+    grid-template-columns:repeat(5, minmax(0, 1fr));
     gap:12px;
   }
 
@@ -207,13 +215,22 @@
   .yarn-field.is-readonly input{
     background:#f8fbff;
     color:var(--text-main);
-    font-weight:500;
+    font-weight:600;
   }
 
   .yarn-err{
-    color:#dc2626;
+    color:var(--danger);
     font-size:11px;
     font-weight:700;
+    line-height:1.35;
+  }
+
+  .yarn-form-error{
+    margin-top:2px;
+  }
+
+  .yarn-row-error{
+    margin-top:6px;
   }
 
   .yarn-section{
@@ -309,10 +326,6 @@
     margin-top:3px;
   }
 
-  .yarn-section[open] .yarn-caret-box{
-    background:#1c6dd8;
-  }
-
   .yarn-section-body{
     display:grid;
     gap:12px;
@@ -326,7 +339,6 @@
   }
 
   .yarn-soft-card{
-    position:relative;
     border-radius:16px;
     background:#fbfdff;
     border:1px solid rgba(28,109,216,.08);
@@ -470,6 +482,12 @@
     font:inherit;
   }
 
+  .yarn-inline-input:disabled{
+    background:#f3f4f6;
+    color:#98a2b3;
+    cursor:not-allowed;
+  }
+
   .yarn-empty{
     padding:14px;
     text-align:center;
@@ -485,9 +503,9 @@
     flex-wrap:wrap;
   }
 
-  @media (max-width: 1100px){
+  @media (max-width: 1180px){
     .yarn-top-grid{
-      grid-template-columns:repeat(2, minmax(0, 1fr));
+      grid-template-columns:repeat(3, minmax(0, 1fr));
     }
 
     .yarn-overview-grid{
@@ -496,11 +514,6 @@
   }
 
   @media (max-width: 760px){
-    .yarn-inward-shell{
-      padding:14px;
-      border-radius:18px;
-    }
-
     .yarn-head-card,
     .yarn-head-actions,
     .yarn-actions{
@@ -545,18 +558,30 @@
                 </svg>
               </div>
               <div>
-                <h1 class="yarn-head-title">Yarn Inward</h1>
+                <h1 class="yarn-head-title">
+                  {% if editing_inward %}Edit Yarn Inward{% else %}Yarn Inward{% endif %}
+                </h1>
                 <div class="yarn-head-subtitle">
-                  Add inward quantity against {{ po.system_number }}{% if po.vendor %} · {{ po.vendor.name }}{% endif %}
+                  {% if editing_inward %}
+                    Update inward details for {{ editing_inward.inward_number }} against {{ po.system_number }}
+                  {% else %}
+                    Add inward quantity against {{ po.system_number }}{% if po.vendor %} · {{ po.vendor.name }}{% endif %}
+                  {% endif %}
                 </div>
               </div>
             </div>
 
             <div class="yarn-head-actions">
               <div class="yarn-pill">Remaining Qty: {{ po.remaining_qty_total|default:"0.00" }}</div>
-              <a class="yarn-btn" href="{% url 'accounts:yarnpo_list' %}">Back</a>
+              <a class="yarn-btn" href="{% url 'accounts:yarn_inward_tracker' %}">Back</a>
             </div>
           </div>
+
+          {% for err in inward_form.non_field_errors %}
+            <div class="yarn-error-box">
+              <div class="yarn-err">{{ err }}</div>
+            </div>
+          {% endfor %}
 
           <div class="yarn-top-grid">
             <div class="yarn-field is-readonly">
@@ -566,14 +591,22 @@
 
             <div class="yarn-field is-readonly">
               <label>Yarn Inward No</label>
-              <input type="text" value="{{ next_inward_number_preview|default:'Auto' }}" readonly>
+              <input type="text" value="{% if editing_inward %}{{ editing_inward.inward_number }}{% else %}{{ next_inward_number_preview|default:'Auto' }}{% endif %}" readonly>
+            </div>
+
+            <div class="yarn-field">
+              <label for="{{ inward_form.inward_type.id_for_label }}">Inward Type</label>
+              {{ inward_form.inward_type }}
+              {% for err in inward_form.inward_type.errors %}
+                <div class="yarn-err yarn-form-error">{{ err }}</div>
+              {% endfor %}
             </div>
 
             <div class="yarn-field">
               <label for="{{ inward_form.vendor.id_for_label }}">Inward Vendor</label>
               {{ inward_form.vendor }}
               {% for err in inward_form.vendor.errors %}
-                <div class="yarn-err">{{ err }}</div>
+                <div class="yarn-err yarn-form-error">{{ err }}</div>
               {% endfor %}
             </div>
 
@@ -581,7 +614,7 @@
               <label for="{{ inward_form.inward_date.id_for_label }}">Date</label>
               {{ inward_form.inward_date }}
               {% for err in inward_form.inward_date.errors %}
-                <div class="yarn-err">{{ err }}</div>
+                <div class="yarn-err yarn-form-error">{{ err }}</div>
               {% endfor %}
             </div>
           </div>
@@ -589,6 +622,7 @@
           <details class="yarn-section" open>
             <summary>
               <div class="yarn-section-head">
+                <div class="yarn-section-dot"></div>
                 <div class="yarn-section-title">PO Details</div>
               </div>
               <div class="yarn-section-right">
@@ -683,6 +717,7 @@
           <details class="yarn-section" open>
             <summary>
               <div class="yarn-section-head">
+                <div class="yarn-section-dot"></div>
                 <div class="yarn-section-title">Inward Details</div>
               </div>
               <div class="yarn-section-right">
@@ -697,9 +732,6 @@
                 <label for="{{ inward_form.notes.id_for_label }}">Notes</label>
                 {{ inward_form.notes }}
                 {% for err in inward_form.notes.errors %}
-                  <div class="yarn-err">{{ err }}</div>
-                {% endfor %}
-                {% for err in inward_form.non_field_errors %}
                   <div class="yarn-err">{{ err }}</div>
                 {% endfor %}
               </div>
@@ -726,48 +758,56 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for item in po.items.all %}
+                    {% for row in line_rows %}
                     <tr>
                       <td>
                         <div class="yarn-material">
-                          {% if item.material_type %}
-                            {{ item.material_type.name }}
-                          {% elif item.material %}
-                            {{ item.material.name }}
+                          {% if row.item.material_type %}
+                            {{ row.item.material_type.name }}
+                          {% elif row.item.material %}
+                            {{ row.item.material.name }}
                           {% else %}
                             —
                           {% endif %}
                         </div>
                         <div class="yarn-small">
-                          {% if item.count %}Count: {{ item.count }}{% endif %}
-                          {% if item.gsm %} · GSM: {{ item.gsm }}{% endif %}
-                          {% if item.rate %} · Rate: ₹{{ item.rate }}{% endif %}
+                          {% if row.item.count %}Count: {{ row.item.count }}{% endif %}
+                          {% if row.item.gsm %} · GSM: {{ row.item.gsm }}{% endif %}
+                          {% if row.item.rate %} · Rate: ₹{{ row.item.rate }}{% endif %}
                         </div>
                       </td>
-                      <td>{{ item.unit|default:"—" }}</td>
-                      <td>{{ item.quantity|default:"0.00" }}</td>
-                      <td>{{ item.inward_qty_total|default:"0.00" }}</td>
-                      <td>{{ item.remaining_qty_total|default:"0.00" }}</td>
+                      <td>{{ row.item.unit|default:"—" }}</td>
+                      <td>{{ row.item.quantity|default:"0.00" }}</td>
+                      <td>{{ row.item.inward_qty_total|default:"0.00" }}</td>
+                      <td>{{ row.item.remaining_qty_total|default:"0.00" }}</td>
                       <td>
                         <input
                           class="yarn-inline-input"
                           type="number"
                           step="0.01"
                           min="0"
-                          name="qty_{{ item.id }}"
-                          value=""
+                          name="qty_{{ row.item.id }}"
+                          value="{{ row.qty_value }}"
                           placeholder="0.00"
+                          {% if row.item.remaining_qty_total <= 0 and not editing_inward %}disabled{% endif %}
                         >
+                        {% if row.error %}
+                          <div class="yarn-err yarn-row-error">{{ row.error }}</div>
+                        {% endif %}
                       </td>
                       <td>
                         <input
                           class="yarn-inline-input"
                           type="text"
-                          name="remark_{{ item.id }}"
-                          value=""
+                          name="remark_{{ row.item.id }}"
+                          value="{{ row.remark_value }}"
                           placeholder="Remark"
                         >
                       </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="7" class="yarn-empty">No inward rows found.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -787,6 +827,7 @@
           <details class="yarn-section" open>
             <summary>
               <div class="yarn-section-head">
+                <div class="yarn-section-dot"></div>
                 <div class="yarn-section-title">Inward History</div>
               </div>
               <div class="yarn-section-right">
@@ -804,6 +845,7 @@
                       <th>Yarn</th>
                       <th>Order Qty</th>
                       <th>Inward No</th>
+                      <th>Inward Type</th>
                       <th>Date</th>
                       <th>Vendor</th>
                       <th>Notes</th>
@@ -826,6 +868,7 @@
                         </td>
                         <td>{{ row.po_item.quantity|default:"0.00" }}</td>
                         <td>{{ inward.inward_number }}</td>
+                        <td>{% if inward.inward_type %}{{ inward.inward_type.name }}{% else %}—{% endif %}</td>
                         <td>{{ inward.inward_date|date:"d-m-Y" }}</td>
                         <td>{% if inward.vendor %}{{ inward.vendor.name }}{% else %}—{% endif %}</td>
                         <td>{{ inward.notes|default:"—" }}</td>
@@ -835,7 +878,7 @@
                       {% endfor %}
                     {% empty %}
                     <tr>
-                      <td colspan="8" class="yarn-empty">No inward history.</td>
+                      <td colspan="9" class="yarn-empty">No inward history.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -845,8 +888,16 @@
           </details>
 
           <div class="yarn-actions">
-            <a class="yarn-btn" href="{% url 'accounts:yarnpo_list' %}">Cancel</a>
-            <button type="submit" class="yarn-btn-primary">Save Inward</button>
+            <a class="yarn-btn" href="{% url 'accounts:yarn_inward_tracker' %}">Cancel</a>
+            <button type="submit" class="yarn-btn-primary" {% if not has_remaining_qty and not editing_inward %}disabled{% endif %}>
+              {% if editing_inward %}
+                Update Inward
+              {% elif has_remaining_qty %}
+                Save Inward
+              {% else %}
+                Inward Completed
+              {% endif %}
+            </button>
           </div>
         </form>
       </div>

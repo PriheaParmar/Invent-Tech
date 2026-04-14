@@ -29,9 +29,3 @@ def firm_and_role_context(request):
         "CURRENT_ROLE": current_role,
     }
 
-def firm_context(request):
-    if request.user.is_authenticated:
-        firm = Firm.objects.filter(owner=request.user).first()
-    else:
-        firm = None
-    return {"current_firm": firm}

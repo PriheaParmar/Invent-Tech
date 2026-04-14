@@ -1,0 +1,16 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Clients - InventTech{% endblock %}
+{% block page_title %}Clients{% endblock %}
+{% block page_subtitle %}Manage client master records{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="jb-page">
+      {% include "accounts/clients/list_embed.html" with full_page=True %}
+    </div>
+  </div>
+</section>
+{% endblock %}
