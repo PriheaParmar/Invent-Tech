@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Sub Categories - InventTech{% endblock %}
+{% block page_title %}Sub Categories{% endblock %}
+{% block page_subtitle %}Manage reusable sub categories linked to main categories{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/sub_categories/list_embed.html" with full_page=True %}
+</div>
+{% endblock %}

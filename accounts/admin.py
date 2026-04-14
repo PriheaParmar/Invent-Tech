@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Jobber, JobberType, UserExtra, Party, Location, Brand, Catalogue,Client,
+    Jobber, JobberType, UserExtra, Party, Location, Brand, Catalogue,Client,MainCategory, SubCategory,
     BOM, BOMMaterialItem, BOMJobberItem, BOMProcessItem, BOMExpenseItem,DyeingOtherCharge,TermsCondition
 )
 
@@ -102,3 +102,18 @@ class TermsConditionAdmin(admin.ModelAdmin):
     search_fields = ("title", "content", "owner__username")
     list_filter = ("is_active", "owner")
     ordering = ("title",)
+    
+@admin.register(MainCategory)
+class MainCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "owner", "created_at")
+    search_fields = ("name", "description", "owner__username")
+    list_filter = ("owner",)
+    ordering = ("name",)
+
+
+@admin.register(SubCategory)
+class SubCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "main_category", "owner", "created_at")
+    search_fields = ("name", "description", "main_category__name", "owner__username")
+    list_filter = ("main_category", "owner")
+    ordering = ("main_category__name", "name")

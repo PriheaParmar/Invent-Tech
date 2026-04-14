@@ -219,6 +219,11 @@
     color:#15803d;
   }
 
+  .po-status.rejected{
+    background:rgba(217,45,32,.14);
+    color:#b42318;
+  }
+
   .po-status.partial{
     background:rgba(59,130,246,.14);
     color:#1d4ed8;
@@ -406,6 +411,24 @@
     margin:0;
   }
 
+  .jb-link-disabled{
+    color:#98a2b3 !important;
+    pointer-events:none;
+    cursor:not-allowed;
+    text-decoration:none !important;
+  }
+
+  .po-note-warning{
+    margin-top:6px;
+    display:inline-block;
+    font-size:10px;
+    font-weight:800;
+    color:#b42318;
+    background:rgba(217,45,32,.08);
+    border-radius:999px;
+    padding:5px 10px;
+  }
+
   .jb-empty{
     padding:14px 12px;
     opacity:.7;
@@ -511,9 +534,13 @@
                   </div>
                 </div>
 
-                <span class="po-status {% if po.total_inward_qty and po.remaining_qty_total == 0 %}approved{% elif po.total_inward_qty %}partial{% else %}pending{% endif %}">
-                  {% if po.total_inward_qty and po.remaining_qty_total == 0 %}Completed{% elif po.total_inward_qty %}Partial Inward{% else %}Pending Inward{% endif %}
-                </span>
+                {% if po.approval_status == "approved" %}
+  <span class="po-status approved">Approved</span>
+{% elif po.approval_status == "rejected" %}
+  <span class="po-status rejected">Rejected</span>
+{% else %}
+  <span class="po-status pending">Pending Approval</span>
+{% endif %}
               </div>
 
               <div class="po-grid">
@@ -528,6 +555,15 @@
 
                     <div class="k">Source</div>
                     <div class="v">{{ po.source_yarn_po.system_number|default:"—" }}</div>
+
+                    <div class="k">Source Status</div>
+                    <div class="v">
+                      {% if po.source_yarn_po %}
+                        {{ po.source_yarn_po.get_approval_status_display|default:po.source_yarn_po.approval_status|title }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </div>
 
                     <div class="k">Remarks</div>
                     <div class="v">{{ po.remarks|default:"—"|truncatechars:80 }}</div>
@@ -572,7 +608,7 @@
                   <div class="po-summary">
                     <div class="po-summary-box">
                       <div class="po-summary-label">Total Qty</div>
-                      <div class="po-summary-value">{{ po.total_weight|default:"0.00" }}</div>
+                      <div class="po-summary-value">{{ po.total_weight|default:po.available_qty|default:"0.00" }}</div>
                     </div>
 
                     <div class="po-summary-box">
@@ -605,16 +641,27 @@
                     {% endif %}
                   </div>
 
+                  {% if po.approval_status != "approved" %}
+  <div class="po-note-warning">Approve Greige PO first</div>
+{% endif %}
+
                   <div class="po-actions">
                     <a class="jb-link" href="{% url 'accounts:greigepo_detail' po.id %}">View</a>
-                    <a class="jb-link" href="{% url 'accounts:greigepo_inward' po.id %}">Inward</a>
                     <a class="jb-link" href="{% url 'accounts:greigepo_edit' po.id %}">Edit</a>
+                      <a class="jb-link" href="{% url 'accounts:greigepo_review' po.id %}">Review</a>
+                    {{% if po.approval_status == "approved" %}
+  <a class="jb-link" href="{% url 'accounts:greigepo_inward' po.id %}">Inward</a>
+{% else %}
+  <span class="jb-link jb-link-disabled" title="Approve Greige PO first">Inward</span>
+{% endif %}
 
                     {% with dyeing_po=po.dyeing_pos.all.0 %}
                       {% if dyeing_po %}
                         <a class="jb-link" href="{% url 'accounts:dyeingpo_detail' dyeing_po.id %}">View Dyeing PO</a>
-                      {% else %}
+                      {% elif po.total_inward_qty and po.total_inward_qty > 0 %}
                         <a class="jb-link" href="{% url 'accounts:generate_dyeing_po_from_greige' po.id %}">Generate Dyeing PO</a>
+                      {% else %}
+                        <span class="jb-link jb-link-disabled" title="Generate Greige inward first">Generate Dyeing PO</span>
                       {% endif %}
                     {% endwith %}
 

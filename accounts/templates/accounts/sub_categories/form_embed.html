@@ -1,18 +1,24 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/vendors.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=3">
 
-<div class="jobbers-embed vendor-embed vendor-form-embed catalogue-embed">
+<div class="jobbers-embed jobber-form-embed">
   <section class="jb-panel">
+    {% include "accounts/_messages_embed.html" %}
+
     <div class="jb-head">
       <div>
         <div class="jb-title">
-          {% if mode == "add" %}Add Catalogue{% else %}Edit Catalogue{% endif %}
+          {% if mode == "edit" %}Edit Sub Category{% else %}Add Sub Category{% endif %}
         </div>
-        <div class="jb-sub">Store catalogue master details</div>
+        <div class="jb-sub">Create or update sub categories linked to a main category</div>
       </div>
 
       <div class="jf-head-actions">
-        <a class="jb-iconbtn jb-back" href="{% url 'accounts:catalogue_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+        <a
+          class="jb-iconbtn jb-back"
+          href="{% url 'accounts:subcategory_list' %}{% if not full_page %}?embed=1{% endif %}"
+          aria-label="Back"
+        >
           <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
             <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
           </svg>
@@ -30,9 +36,9 @@
     </div>
 
     {% if mode == "add" %}
-      {% url "accounts:catalogue_add" as action_url %}
+      {% url "accounts:subcategory_add" as action_url %}
     {% else %}
-      {% url "accounts:catalogue_edit" catalogue.id as action_url %}
+      {% url "accounts:subcategory_edit" sub_category.id as action_url %}
     {% endif %}
 
     {% if form.non_field_errors %}
@@ -50,8 +56,18 @@
       {% endif %}
 
       <div class="jf-grid">
-        <div class="jf-field">
-          <label for="{{ form.name.id_for_label }}">Catalogue Name</label>
+        <div class="jf-field jf-full">
+          <label for="{{ form.main_category.id_for_label }}">Main Category</label>
+          {{ form.main_category }}
+          {% if form.main_category.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.main_category.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field jf-full">
+          <label for="{{ form.name.id_for_label }}">Sub Category Name</label>
           {{ form.name }}
           {% if form.name.errors %}
           <div class="jb-field-errors">
@@ -72,8 +88,10 @@
       </div>
 
       <div class="jf-footer">
-        <a class="jb-secondary" href="{% url 'accounts:catalogue_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
-        <button type="submit" class="jb-add jb-save">Save Catalogue</button>
+        <a class="jb-secondary" href="{% url 'accounts:subcategory_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="jb-add jb-save">
+          {% if mode == "edit" %}Update Sub Category{% else %}Save Sub Category{% endif %}
+        </button>
       </div>
     </form>
   </section>

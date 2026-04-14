@@ -4,7 +4,7 @@ from io import BytesIO
 from decimal import Decimal, InvalidOperation
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
-from django.db.models import Q, Prefetch, Sum
+from django.db.models import Q, Prefetch, Sum, Count
 
 logger = logging.getLogger(__name__)
 from datetime import timedelta
@@ -24,7 +24,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from .forms import (
     FirmForm,
@@ -37,9 +37,10 @@ from .forms import (
     DyeingOtherChargeForm,
     TermsConditionForm,
     JobberTypeForm,
-    LocationForm,
+    LocationForm,    MainCategoryForm,
     CategoryForm,    
     ClientForm,
+    DashboardProfileForm,
     BOMForm,    
     ProgramForm,
     ProgramJobberItemFormSet,
@@ -48,7 +49,9 @@ from .forms import (
     BOMJobberItemFormSet,
     BOMProcessItemFormSet,
     BOMExpenseItemFormSet,
+    BOMImageFormSet,
     MaterialForm,
+    SubCategoryForm,
     MaterialShadeForm,
     MaterialSubTypeForm,
     MaterialTypeForm,
@@ -58,7 +61,7 @@ from .forms import (
     VendorForm,
     CatalogueForm,
     ExpenseForm,
-    BrandForm,
+    BrandForm,    GreigePOReviewForm,
     YarnPOInwardForm,
     YarnPOReviewForm,
     YarnPurchaseOrderForm,
@@ -85,10 +88,12 @@ from .models import (
     DyeingOtherCharge,
     BOMProcessItem,
     BOMExpenseItem,
+    BOMImage,
     DyeingPOInward,
     Catalogue,
     DyeingPOInwardItem,
     Jobber,
+    SubCategory,
     Expense,
     JobberType,
     Category,    
@@ -2157,8 +2162,6 @@ def _bind_yarnpo_item_formset(request, instance=None, user=None):
     return formset
 @login_required
 @require_http_methods(["GET", "POST"])
-@login_required
-@require_http_methods(["GET", "POST"])
 def yarnpo_create(request):
     default_firm = Firm.objects.filter(owner=request.user).first()
 
@@ -2482,6 +2485,10 @@ def yarnpo_inward(request, pk: int):
 
     if not _can_access_yarn_po(request.user, po):
         raise PermissionDenied("You do not have access to this PO.")
+    
+    if not _is_po_approved_for_inward(po):
+        messages.error(request, "Yarn PO must be approved before inward can be generated.")
+        return redirect("accounts:yarnpo_list")
 
     po = _attach_yarn_po_metrics(po)
     item_errors = {}
@@ -2601,6 +2608,10 @@ def yarn_inward_update(request, pk: int):
 
     if not _can_access_yarn_po(request.user, po):
         raise PermissionDenied("You do not have access to this inward.")
+    
+    if not _is_po_approved_for_inward(po):
+        messages.error(request, "Yarn PO must be approved before inward can be updated.")
+        return redirect("accounts:yarnpo_list")
 
     if inward.generated_greige_pos.exists():
         messages.error(request, "This inward cannot be edited because a Greige PO has already been generated from it.")
@@ -2897,10 +2908,10 @@ def yarnpo_review(request, pk: int):
             decision = review_form.cleaned_data["decision"]
 
             if decision == "approve":
-                po.approval_status = YarnPurchaseOrder.ApprovalStatus.APPROVED
+                po.approval_status = "approved"
                 po.rejection_reason = ""
             else:
-                po.approval_status = YarnPurchaseOrder.ApprovalStatus.REJECTED
+                po.approval_status = "rejected"
                 po.rejection_reason = review_form.cleaned_data["rejection_reason"].strip()
 
             po.reviewed_by = request.user
@@ -3063,12 +3074,16 @@ def _greige_po_queryset():
         )
         .order_by("-id")
     )
+def _selected_greige_inward_total(source_greige_inward):
+    if source_greige_inward is None:
+        return Decimal("0")
+    return source_greige_inward.items.aggregate(total=Sum("quantity")).get("total") or Decimal("0") 
 
 
 def _dyeing_po_queryset():
     return (
         DyeingPurchaseOrder.objects
-        .select_related("vendor", "firm", "source_greige_po", "owner")
+        .select_related("vendor", "firm", "source_greige_po", "source_greige_inward", "owner")
         .prefetch_related(
             Prefetch(
                 "items",
@@ -3106,7 +3121,6 @@ def _selected_yarn_inward_total(source_yarn_inward):
     if source_yarn_inward is None:
         return Decimal("0")
     return source_yarn_inward.items.aggregate(total=Sum("quantity")).get("total") or Decimal("0")
-
 
 def _sync_greige_po_items_from_source(greige_po, source_inward=None):
     yarn_po = (
@@ -3175,10 +3189,20 @@ def _sync_greige_po_items_from_source(greige_po, source_inward=None):
     if item_rows:
         GreigePurchaseOrderItem.objects.bulk_create(item_rows)
 
-    greige_po.total_weight = total_weight
-    greige_po.available_qty = total_weight
-    greige_po.save(update_fields=["total_weight", "available_qty", "updated_at"])
+    update_fields = ["updated_at"]
+
+    if hasattr(greige_po, "available_qty"):
+        greige_po.available_qty = total_weight
+        update_fields.append("available_qty")
+
+    if hasattr(greige_po, "total_weight"):
+        greige_po.total_weight = total_weight
+        update_fields.append("total_weight")
+
+    greige_po.save(update_fields=update_fields)
     return total_weight
+
+
 
 def _selected_yarn_inward_total(source_yarn_inward):
     if source_yarn_inward is None:
@@ -3186,11 +3210,13 @@ def _selected_yarn_inward_total(source_yarn_inward):
     return source_yarn_inward.items.aggregate(total=Sum("quantity")).get("total") or Decimal("0")
 
 
-def _build_greige_material_rows(source_yarn_inward, owner, submitted_data=None, existing_po=None):
+def _build_greige_material_rows(source_yarn_inward, owner, submitted_data=None, existing_po=None, row_errors=None):
+    greige_qs = Material.objects.filter(material_kind="greige")
+    if owner is not None and hasattr(Material, "owner"):
+        greige_qs = greige_qs.filter(owner=owner)
+
     greige_material_options = list(
-        Material.objects.filter(material_kind="greige")
-        .select_related("material_type")
-        .order_by("name")
+        greige_qs.select_related("material_type").order_by("name")
     )
 
     unit_options = list(
@@ -3206,6 +3232,7 @@ def _build_greige_material_rows(source_yarn_inward, owner, submitted_data=None, 
             if item.source_yarn_po_item_id:
                 existing_by_po_item[item.source_yarn_po_item_id] = item
 
+    row_errors = row_errors or {}
     rows = []
     if source_yarn_inward is None:
         return rows, greige_material_options, unit_options
@@ -3243,6 +3270,7 @@ def _build_greige_material_rows(source_yarn_inward, owner, submitted_data=None, 
             "quantity": inward_item.quantity,
             "selected_material_id": selected_material_id,
             "selected_unit_id": selected_unit_id,
+            "error": row_errors.get(inward_item.id, ""),
         })
 
     return rows, greige_material_options, unit_options
@@ -3250,6 +3278,9 @@ def _build_greige_material_rows(source_yarn_inward, owner, submitted_data=None, 
 
 def _extract_greige_material_selection(request, source_yarn_inward, owner):
     greige_qs = Material.objects.filter(material_kind="greige")
+    if owner is not None and hasattr(Material, "owner"):
+        greige_qs = greige_qs.filter(owner=owner)
+
     unit_qs = MaterialUnit.objects.filter(owner=owner) if owner else MaterialUnit.objects.all()
 
     greige_material_map = {}
@@ -3300,26 +3331,50 @@ def _sync_dyeing_po_items_from_source(dyeing_po):
 
     item_rows = []
     total_weight = Decimal("0")
+    source_inward = getattr(dyeing_po, "source_greige_inward", None)
 
-    for greige_item in greige_po.items.all():
-        inward_qty = greige_item.inward_qty_total or Decimal("0")
-        if inward_qty <= 0:
-            continue
+    if source_inward is not None:
+        inward_items = source_inward.items.select_related("po_item")
+        for inward_item in inward_items:
+            greige_item = inward_item.po_item
+            inward_qty = inward_item.quantity or Decimal("0")
+            if greige_item is None or inward_qty <= 0:
+                continue
 
-        greige_name = greige_item.fabric_name or "Greige Item"
+            greige_name = greige_item.fabric_name or "Greige Item"
 
-        item_rows.append(
-            DyeingPurchaseOrderItem(
-                po=dyeing_po,
-                source_greige_po_item=greige_item,
-                fabric_name=greige_name,
-                greige_name=greige_name,
-                unit=greige_item.unit or "",
-                quantity=inward_qty,
-                remark=f"Generated from Greige inward of {greige_po.system_number}",
+            item_rows.append(
+                DyeingPurchaseOrderItem(
+                    po=dyeing_po,
+                    source_greige_po_item=greige_item,
+                    fabric_name=greige_name,
+                    greige_name=greige_name,
+                    unit=greige_item.unit or "",
+                    quantity=inward_qty,
+                    remark=f"Generated from Greige inward {source_inward.inward_number}",
+                )
             )
-        )
-        total_weight += inward_qty
+            total_weight += inward_qty
+    else:
+        for greige_item in greige_po.items.all():
+            inward_qty = greige_item.inward_qty_total or Decimal("0")
+            if inward_qty <= 0:
+                continue
+
+            greige_name = greige_item.fabric_name or "Greige Item"
+
+            item_rows.append(
+                DyeingPurchaseOrderItem(
+                    po=dyeing_po,
+                    source_greige_po_item=greige_item,
+                    fabric_name=greige_name,
+                    greige_name=greige_name,
+                    unit=greige_item.unit or "",
+                    quantity=inward_qty,
+                    remark=f"Generated from Greige inward of {greige_po.system_number}",
+                )
+            )
+            total_weight += inward_qty
 
     DyeingPurchaseOrderItem.objects.filter(po=dyeing_po).delete()
     if item_rows:
@@ -3444,12 +3499,13 @@ def greigepo_create(request, yarn_po_id=None):
                     greige_po.source_yarn_po = selected_source
                     greige_po.source_yarn_inward = selected_source_inward
 
-                    if not greige_po.shipping_address and selected_source.source_yarn_po.firm:
+                    if not greige_po.shipping_address and selected_source.firm:
                         greige_po.shipping_address = _firm_address(selected_source.firm)
 
                     greige_po.save()
                     _sync_greige_po_items_from_source(greige_po, source_inward=selected_source_inward)
-                    return redirect("accounts:greigepo_list")
+                    messages.success(request, f"Greige PO {greige_po.system_number} saved successfully.")
+                    return redirect("accounts:greigepo_inward", pk=greige_po.pk)
             else:
                 if not selected_source.inwards.exists():
                     form.add_error("source_yarn_po", "Selected Yarn PO has no inward entries yet.")
@@ -3463,10 +3519,10 @@ def greigepo_create(request, yarn_po_id=None):
 
                     if not greige_po.shipping_address and selected_source.firm:
                         greige_po.shipping_address = _firm_address(selected_source.firm)
-
                     greige_po.save()
                     _sync_greige_po_items_from_source(greige_po)
-                    return redirect("accounts:greigepo_list")
+                    messages.success(request, f"Greige PO {greige_po.system_number} saved successfully.")
+                    return redirect("accounts:greigepo_inward", pk=greige_po.pk)
     else:
         initial = {}
         if source_yarn_po is not None:
@@ -3494,6 +3550,27 @@ def greigepo_create(request, yarn_po_id=None):
     source_inwards = [selected_source_inward] if selected_source_inward else (list(source_yarn_po.inwards.all()) if source_yarn_po else [])
     existing_po = selected_source_inward.generated_greige_pos.order_by("-id").first() if selected_source_inward else None
 
+    effective_owner = source_yarn_po.owner if source_yarn_po else request.user
+
+    greige_rows, greige_material_options, unit_options = _build_greige_material_rows(
+        selected_source_inward,
+        effective_owner,
+        submitted_data=request.POST if request.method == "POST" else None,
+        existing_po=existing_po,
+    )
+
+    terms_condition_options = _greige_terms_condition_options(effective_owner)
+
+    selected_terms_condition_id = (request.POST.get("terms_condition_id") or "").strip() if request.method == "POST" else ""
+    greige_description = (request.POST.get("greige_description") or "").strip() if request.method == "POST" else ""
+    greige_total_weight = (request.POST.get("greige_total_weight") or form.initial.get("available_qty") or form["available_qty"].value() or "0.00")
+    greige_subtotal = (request.POST.get("greige_subtotal") or "0.00")
+    greige_discount_percent = (request.POST.get("greige_discount_percent") or "0")
+    greige_after_discount = (request.POST.get("greige_after_discount") or "0.00")
+    greige_others = (request.POST.get("greige_others") or "0")
+    greige_cgst = (request.POST.get("greige_cgst") or "2.5")
+    greige_sgst = (request.POST.get("greige_sgst") or "2.5")
+    
     return render(
         request,
         "accounts/greige_po/form.html",
@@ -3506,6 +3583,19 @@ def greigepo_create(request, yarn_po_id=None):
             "selected_source_inward": selected_source_inward,
             "source_inwards": source_inwards,
             "existing_po": existing_po,
+            "greige_rows": greige_rows,
+            "greige_material_options": greige_material_options,
+            "unit_options": unit_options,
+            "terms_condition_options": terms_condition_options,
+            "selected_terms_condition_id": selected_terms_condition_id,
+            "greige_description": greige_description,
+            "greige_total_weight": greige_total_weight,
+            "greige_subtotal": greige_subtotal,
+            "greige_discount_percent": greige_discount_percent,
+            "greige_after_discount": greige_after_discount,
+            "greige_others": greige_others,
+            "greige_cgst": greige_cgst,
+            "greige_sgst": greige_sgst,
         },
     )
 @login_required
@@ -3528,10 +3618,31 @@ def greigepo_update(request, pk: int):
         if not po.shipping_address and po.source_yarn_po and po.source_yarn_po.firm:
             po.shipping_address = _firm_address(po.source_yarn_po.firm)
         po.save()
-        return redirect("accounts:greigepo_list")
+        messages.success(request, f"Greige PO {po.system_number} updated successfully.")
+        return redirect("accounts:greigepo_inward", pk=po.pk)
 
     source_inwards = [po.source_yarn_inward] if po.source_yarn_inward else (list(po.source_yarn_po.inwards.all()) if po.source_yarn_po else [])
+    effective_owner = po.owner
 
+    greige_rows, greige_material_options, unit_options = _build_greige_material_rows(
+        po.source_yarn_inward,
+        effective_owner,
+        submitted_data=request.POST if request.method == "POST" else None,
+        existing_po=po,
+    )
+
+    terms_condition_options = _greige_terms_condition_options(effective_owner)
+
+    selected_terms_condition_id = (request.POST.get("terms_condition_id") or "").strip()
+    greige_description = (request.POST.get("greige_description") or "").strip()
+    greige_total_weight = (request.POST.get("greige_total_weight") or po.available_qty or "0.00")
+    greige_subtotal = (request.POST.get("greige_subtotal") or "0.00")
+    greige_discount_percent = (request.POST.get("greige_discount_percent") or "0")
+    greige_after_discount = (request.POST.get("greige_after_discount") or "0.00")
+    greige_others = (request.POST.get("greige_others") or "0")
+    greige_cgst = (request.POST.get("greige_cgst") or "2.5")
+    greige_sgst = (request.POST.get("greige_sgst") or "2.5")
+    
     return render(
         request,
         "accounts/greige_po/form.html",
@@ -3544,6 +3655,19 @@ def greigepo_update(request, pk: int):
             "selected_source_inward": po.source_yarn_inward,
             "source_inwards": source_inwards,
             "existing_po": None,
+            "greige_rows": greige_rows,
+            "greige_material_options": greige_material_options,
+            "unit_options": unit_options,
+            "terms_condition_options": terms_condition_options,
+            "selected_terms_condition_id": selected_terms_condition_id,
+            "greige_description": greige_description,
+            "greige_total_weight": greige_total_weight,
+            "greige_subtotal": greige_subtotal,
+            "greige_discount_percent": greige_discount_percent,
+            "greige_after_discount": greige_after_discount,
+            "greige_others": greige_others,
+            "greige_cgst": greige_cgst,
+            "greige_sgst": greige_sgst,
         },
     )
 
@@ -3580,6 +3704,9 @@ def greigepo_inward(request, pk: int):
     po = get_object_or_404(_greige_po_queryset(), pk=pk)
     if not _can_access_greige_po(request.user, po):
         raise PermissionDenied("You do not have access to this Greige PO.")
+    if not _is_po_approved_for_inward(po):
+        messages.error(request, "Greige PO must be approved before inward can be generated.")
+        return redirect("accounts:greigepo_list")
 
     item_errors = {}
     line_inputs = {}
@@ -3631,7 +3758,9 @@ def greigepo_inward(request, pk: int):
                 )
                 for item, qty, remark in line_payload
             ])
-            return redirect("accounts:greigepo_inward", pk=po.pk)
+
+            tracker_url = reverse("accounts:greige_inward_tracker")
+            return redirect(f"{tracker_url}?inward={inward.pk}")
 
     line_rows = [
         {
@@ -3658,6 +3787,7 @@ def greigepo_inward(request, pk: int):
 @login_required
 def greige_inward_tracker(request):
     q = (request.GET.get("q") or "").strip()
+    target_inward_id = (request.GET.get("inward") or "").strip()
 
     qs = _greige_po_queryset().filter(inwards__isnull=False).distinct()
     if not _can_review_yarn_po(request.user):
@@ -3674,10 +3804,14 @@ def greige_inward_tracker(request):
 
     rows = []
     for po in qs:
-        dyeing_po = po.dyeing_pos.first()
-
         inward_entries = []
+        dyeing_generated_count = 0
+
         for inward in po.inwards.all():
+            linked_dyeing_po = inward.generated_dyeing_pos.order_by("-id").first()
+            if linked_dyeing_po:
+                dyeing_generated_count += 1
+
             inward_entries.append({
                 "inward": inward,
                 "items": [
@@ -3691,14 +3825,17 @@ def greige_inward_tracker(request):
                     }
                     for inward_item in inward.items.all()
                 ],
+                "is_target": str(inward.id) == target_inward_id,
+                "dyeing_po": linked_dyeing_po,
+                "dyeing_started": bool(linked_dyeing_po),
+                "dyeing_items_count": linked_dyeing_po.items.count() if linked_dyeing_po else 0,
             })
 
         rows.append({
             "po": po,
-            "dyeing_po": dyeing_po,
-            "dyeing_started": bool(dyeing_po),
             "inward_entries": inward_entries,
-            "dyeing_items": list(dyeing_po.items.all()) if dyeing_po else [],
+            "dyeing_generated_count": dyeing_generated_count,
+            "total_inwards": len(inward_entries),
         })
 
     return render(
@@ -3707,16 +3844,31 @@ def greige_inward_tracker(request):
         {
             "rows": rows,
             "q": q,
+            "target_inward_id": target_inward_id,
         },
     )
 
 
 @login_required
+@require_POST
 def generate_dyeing_po_from_greige(request, pk: int):
     greige_po = get_object_or_404(_greige_po_queryset(), pk=pk)
     if not _can_access_greige_po(request.user, greige_po):
         raise PermissionDenied("You do not have access to this Greige PO.")
-    return redirect("accounts:dyeingpo_add_from_greige", greige_po_id=pk)
+
+    inward_id = (request.POST.get("inward_id") or "").strip()
+    if not inward_id:
+        return redirect("accounts:greige_inward_tracker")
+
+    greige_inward = get_object_or_404(
+        GreigePOInward.objects.select_related("po"),
+        pk=inward_id,
+        po=greige_po,
+    )
+
+    return redirect(
+        f"{reverse('accounts:dyeingpo_add_from_greige', kwargs={'greige_po_id': pk})}?inward={greige_inward.pk}"
+    )
 
 @login_required
 def generate_ready_po_from_dyeing(request, pk: int):
@@ -3756,10 +3908,19 @@ def dyeingpo_list(request):
 @require_http_methods(["GET", "POST"])
 def dyeingpo_create(request, greige_po_id=None):
     source_greige_po = None
+    selected_source_inward = None
+
     if greige_po_id is not None:
         source_greige_po = get_object_or_404(_greige_po_queryset(), pk=greige_po_id)
         if not _can_access_greige_po(request.user, source_greige_po):
             raise PermissionDenied("You do not have access to this Greige PO.")
+
+    inward_id = (request.POST.get("source_greige_inward") or request.GET.get("inward") or "").strip()
+    if source_greige_po is not None and inward_id:
+        selected_source_inward = get_object_or_404(
+            source_greige_po.inwards.prefetch_related("items__po_item"),
+            pk=inward_id,
+        )
 
     if request.method == "POST":
         form = DyeingPurchaseOrderForm(
@@ -3774,31 +3935,53 @@ def dyeingpo_create(request, greige_po_id=None):
             if not _can_access_greige_po(request.user, selected_source):
                 raise PermissionDenied("You do not have access to this Greige PO.")
 
-            if not selected_source.inwards.exists():
-                form.add_error("source_greige_po", "Selected Greige PO has no inward entries yet.")
-            elif selected_source.dyeing_pos.exists():
-                form.add_error("source_greige_po", "Dyeing PO already exists for this Greige PO.")
+            if selected_source_inward is not None:
+                if selected_source_inward.po_id != selected_source.id:
+                    form.add_error(None, "Selected Greige inward does not belong to the chosen Greige PO.")
+                elif selected_source_inward.generated_dyeing_pos.exists():
+                    form.add_error(None, "Dyeing PO already exists for this Greige inward.")
+                else:
+                    dyeing_po = form.save(commit=False)
+                    dyeing_po.owner = selected_source.owner
+                    dyeing_po.system_number = _next_dyeing_po_number()
+                    dyeing_po.source_greige_po = selected_source
+                    dyeing_po.source_greige_inward = selected_source_inward
+                    if dyeing_po.firm and not dyeing_po.shipping_address:
+                        dyeing_po.shipping_address = _firm_address(dyeing_po.firm)
+                    dyeing_po.save()
+                    _sync_dyeing_po_items_from_source(dyeing_po)
+                    return redirect("accounts:dyeingpo_inward", pk=dyeing_po.pk)
             else:
-                dyeing_po = form.save(commit=False)
-                dyeing_po.owner = selected_source.owner
-                dyeing_po.system_number = _next_dyeing_po_number()
-                dyeing_po.source_greige_po = selected_source
-                if dyeing_po.firm and not dyeing_po.shipping_address:
-                    dyeing_po.shipping_address = _firm_address(dyeing_po.firm)
-                dyeing_po.save()
-                _sync_dyeing_po_items_from_source(dyeing_po)
-                return redirect("accounts:dyeingpo_list")
+                if not selected_source.inwards.exists():
+                    form.add_error("source_greige_po", "Selected Greige PO has no inward entries yet.")
+                elif selected_source.dyeing_pos.filter(source_greige_inward__isnull=True).exists():
+                    form.add_error("source_greige_po", "Dyeing PO already exists for this Greige PO.")
+                else:
+                    dyeing_po = form.save(commit=False)
+                    dyeing_po.owner = selected_source.owner
+                    dyeing_po.system_number = _next_dyeing_po_number()
+                    dyeing_po.source_greige_po = selected_source
+                    if dyeing_po.firm and not dyeing_po.shipping_address:
+                        dyeing_po.shipping_address = _firm_address(dyeing_po.firm)
+                    dyeing_po.save()
+                    _sync_dyeing_po_items_from_source(dyeing_po)
+                    return redirect("accounts:dyeingpo_inward", pk=dyeing_po.pk)
     else:
         initial = {}
         if source_greige_po is not None:
             initial = {
                 "po_number": source_greige_po.po_number or "",
                 "po_date": timezone.localdate(),
-                "available_qty": source_greige_po.total_inward_qty or Decimal("0"),
+                "available_qty": _selected_greige_inward_total(selected_source_inward) if selected_source_inward else (source_greige_po.total_inward_qty or Decimal("0")),
                 "vendor": source_greige_po.vendor_id,
                 "firm": source_greige_po.firm_id if source_greige_po.firm else None,
                 "shipping_address": _firm_address(source_greige_po.firm) if source_greige_po.firm else "",
-                "remarks": f"Generated from Greige PO {source_greige_po.system_number}",
+                "remarks": (
+                    f"Generated from Greige inward {selected_source_inward.inward_number}"
+                    if selected_source_inward else
+                    f"Generated from Greige PO {source_greige_po.system_number}"
+                ),
+                "source_greige_inward": selected_source_inward.pk if selected_source_inward else None,
             }
 
         form = DyeingPurchaseOrderForm(
@@ -3816,8 +3999,9 @@ def dyeingpo_create(request, greige_po_id=None):
             "mode": "add",
             "po_obj": None,
             "source_greige_po": source_greige_po,
-            "source_inwards": list(source_greige_po.inwards.all()) if source_greige_po else [],
-            "existing_po": source_greige_po.dyeing_pos.order_by("-id").first() if source_greige_po else None,
+            "selected_source_inward": selected_source_inward,
+            "source_inwards": [selected_source_inward] if selected_source_inward else (list(source_greige_po.inwards.all()) if source_greige_po else []),
+            "existing_po": selected_source_inward.generated_dyeing_pos.order_by("-id").first() if selected_source_inward else (source_greige_po.dyeing_pos.order_by("-id").first() if source_greige_po else None),
         },
     )
 
@@ -4705,29 +4889,14 @@ def expense_delete(request, pk: int):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
 
-
 @login_required
-@require_http_methods(["GET", "POST"])
-def dyeing_other_charge_list_create(request):
+@require_GET
+def dyeing_other_charge_list(request):
     q = (request.GET.get("q") or "").strip()
 
     charges = DyeingOtherCharge.objects.filter(owner=request.user).order_by("name")
     if q:
         charges = charges.filter(name__icontains(q))
-
-    if request.method == "POST":
-        form = DyeingOtherChargeForm(request.POST, user=request.user)
-        if form.is_valid():
-            obj = form.save(commit=False)
-            obj.owner = request.user
-            obj.save()
-
-            url = _dyeing_other_charge_list_url(request)
-            if _is_embed(request):
-                return JsonResponse({"ok": True, "url": url})
-            return redirect(url)
-    else:
-        form = DyeingOtherChargeForm(user=request.user)
 
     template = (
         "accounts/dyeing_other_charges/list_embed.html"
@@ -4739,8 +4908,37 @@ def dyeing_other_charge_list_create(request):
         template,
         {
             "charges": charges,
-            "form": form,
             "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def dyeing_other_charge_create(request):
+    form = DyeingOtherChargeForm(request.POST or None, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _dyeing_other_charge_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = (
+        "accounts/dyeing_other_charges/form_embed.html"
+        if _is_embed(request)
+        else "accounts/dyeing_other_charges/form.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "mode": "add",
         },
     )
 
@@ -4762,9 +4960,9 @@ def dyeing_other_charge_edit(request, pk: int):
         return redirect(url)
 
     template = (
-        "accounts/dyeing_other_charges/edit_embed.html"
+        "accounts/dyeing_other_charges/form_embed.html"
         if _is_embed(request)
-        else "accounts/dyeing_other_charges/edit.html"
+        else "accounts/dyeing_other_charges/form.html"
     )
     return render(
         request,
@@ -4772,9 +4970,9 @@ def dyeing_other_charge_edit(request, pk: int):
         {
             "form": form,
             "charge": charge,
+            "mode": "edit",
         },
     )
-
 
 @login_required
 @require_POST
@@ -4786,6 +4984,7 @@ def dyeing_other_charge_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
+
 
 # ==========================
 # CATEGORIES (embed supported)
@@ -5132,12 +5331,41 @@ def catalogue_delete(request, pk: int):
 def _build_bom_formsets(request, instance=None):
     bind = request.method == "POST"
     data = request.POST if bind else None
+    files = request.FILES if bind else None
 
-    material_formset = BOMMaterialItemFormSet(
+    material_queryset = (
+        instance.material_items.filter(item_type=BOMMaterialItem.ItemType.RAW_FABRIC).order_by("sort_order", "id")
+        if instance else BOMMaterialItem.objects.none()
+    )
+    accessory_queryset = (
+        instance.material_items.filter(item_type=BOMMaterialItem.ItemType.ACCESSORY).order_by("sort_order", "id")
+        if instance else BOMMaterialItem.objects.none()
+    )
+    image_queryset = (
+        instance.images.order_by("sort_order", "id")
+        if instance else BOMImage.objects.none()
+    )
+
+    materials_formset = BOMMaterialItemFormSet(
         data=data,
         instance=instance,
         prefix="materials",
-        form_kwargs={"user": request.user},
+        queryset=material_queryset,
+        form_kwargs={
+            "user": request.user,
+            "forced_item_type": BOMMaterialItem.ItemType.RAW_FABRIC,
+        },
+    )
+
+    accessories_formset = BOMMaterialItemFormSet(
+        data=data,
+        instance=instance,
+        prefix="accessories",
+        queryset=accessory_queryset,
+        form_kwargs={
+            "user": request.user,
+            "forced_item_type": BOMMaterialItem.ItemType.ACCESSORY,
+        },
     )
 
     jobber_formset = BOMJobberItemFormSet(
@@ -5158,9 +5386,56 @@ def _build_bom_formsets(request, instance=None):
         data=data,
         instance=instance,
         prefix="expenses",
+        form_kwargs={"user": request.user},
     )
 
-    return material_formset, jobber_formset, process_formset, expense_formset
+    image_formset = BOMImageFormSet(
+        data=data,
+        files=files,
+        instance=instance,
+        prefix="images",
+        queryset=image_queryset,
+    )
+
+    return materials_formset, accessories_formset, jobber_formset, process_formset, expense_formset, image_formset
+
+
+def _save_bom_material_formset(formset, bom, forced_item_type):
+    objects = formset.save(commit=False)
+
+    for obj in formset.deleted_objects:
+        obj.delete()
+
+    for index, obj in enumerate(objects, start=1):
+        obj.bom = bom
+        obj.item_type = forced_item_type
+        obj.sort_order = index
+        obj.save()
+
+def _save_simple_formset(formset):
+    objects = formset.save(commit=False)
+
+    for obj in formset.deleted_objects:
+        obj.delete()
+
+    for index, obj in enumerate(objects, start=1):
+        if hasattr(obj, "sort_order"):
+            obj.sort_order = index
+        obj.save()
+
+
+def _save_bom_image_formset(formset, bom):
+    objects = formset.save(commit=False)
+
+    for obj in formset.deleted_objects:
+        obj.delete()
+
+    for index, obj in enumerate(objects, start=1):
+        obj.bom = bom
+        obj.sort_order = index
+        obj.save()
+
+    formset.save_m2m()
 
 
 def _bom_has_at_least_one_material(material_formset):
@@ -5188,6 +5463,7 @@ def bom_list(request):
             "jobber_items__jobber_type",
             "process_items__jobber_type",
             "expense_items",
+            "images",
         )
         .order_by("-id")
     )
@@ -5198,7 +5474,9 @@ def bom_list(request):
             | Q(sku_code__icontains=q)
             | Q(product_name__icontains=q)
             | Q(catalogue_name__icontains=q)
+            | Q(catalogue__name__icontains=q)
             | Q(sub_category__icontains=q)
+            | Q(sub_category_master__name__icontains=q)
             | Q(character_name__icontains=q)
             | Q(license_name__icontains=q)
             | Q(brand__name__icontains=q)
@@ -5220,25 +5498,26 @@ def bom_list(request):
     tpl = "accounts/boms/list_embed.html" if _is_embed(request) else "accounts/boms/list.html"
     return render(request, tpl, ctx)
 
-
 @login_required
 @require_http_methods(["GET", "POST"])
 def bom_create(request):
     form = BOMForm(request.POST or None, request.FILES or None, user=request.user)
-    material_formset, jobber_formset, process_formset, expense_formset = _build_bom_formsets(request)
+    materials_formset, accessories_formset, jobber_formset, process_formset, expense_formset, image_formset = _build_bom_formsets(request)
 
     if request.method == "POST":
         is_valid = (
             form.is_valid()
-            and material_formset.is_valid()
+            and materials_formset.is_valid()
+            and accessories_formset.is_valid()
             and jobber_formset.is_valid()
             and process_formset.is_valid()
             and expense_formset.is_valid()
+            and image_formset.is_valid()
         )
 
-        if is_valid and not _bom_has_at_least_one_material(material_formset):
-            material_formset._non_form_errors = material_formset.error_class(
-                ["Add at least one material / fabric / accessory row."]
+        if is_valid and not _bom_has_at_least_one_material(materials_formset):
+            materials_formset._non_form_errors = materials_formset.error_class(
+                ["Add at least one material row."]
             )
             is_valid = False
 
@@ -5248,15 +5527,27 @@ def bom_create(request):
                 bom.owner = request.user
                 bom.save()
 
-                material_formset.instance = bom
+                materials_formset.instance = bom
+                accessories_formset.instance = bom
                 jobber_formset.instance = bom
                 process_formset.instance = bom
                 expense_formset.instance = bom
+                image_formset.instance = bom
 
-                material_formset.save()
-                jobber_formset.save()
-                process_formset.save()
-                expense_formset.save()
+                _save_bom_material_formset(
+                    materials_formset,
+                    bom,
+                    BOMMaterialItem.ItemType.RAW_FABRIC,
+                )
+                _save_bom_material_formset(
+                    accessories_formset,
+                    bom,
+                    BOMMaterialItem.ItemType.ACCESSORY,
+                )
+                _save_simple_formset(jobber_formset)
+                _save_simple_formset(process_formset)
+                _save_simple_formset(expense_formset)
+                _save_bom_image_formset(image_formset, bom)
 
             url = reverse("accounts:bom_list")
             if _is_embed(request):
@@ -5269,44 +5560,75 @@ def bom_create(request):
         tpl,
         {
             "form": form,
-            "material_formset": material_formset,
+            "materials_formset": materials_formset,
+            "accessories_formset": accessories_formset,
             "jobber_formset": jobber_formset,
             "process_formset": process_formset,
             "expense_formset": expense_formset,
+            "image_formset": image_formset,
             "mode": "add",
         },
     )
 
 
+def _greige_terms_condition_options(owner):
+
+    qs = TermsCondition.objects.all()
+    if owner is not None:
+        qs = qs.filter(owner=owner)
+    return qs.order_by("title")
 @login_required
 @require_http_methods(["GET", "POST"])
 def bom_update(request, pk: int):
     bom = get_object_or_404(BOM, pk=pk, owner=request.user)
     form = BOMForm(request.POST or None, request.FILES or None, instance=bom, user=request.user)
-    material_formset, jobber_formset, process_formset, expense_formset = _build_bom_formsets(request, instance=bom)
+    materials_formset, accessories_formset, jobber_formset, process_formset, expense_formset, image_formset = _build_bom_formsets(
+        request,
+        instance=bom,
+    )
 
     if request.method == "POST":
         is_valid = (
             form.is_valid()
-            and material_formset.is_valid()
+            and materials_formset.is_valid()
+            and accessories_formset.is_valid()
             and jobber_formset.is_valid()
             and process_formset.is_valid()
             and expense_formset.is_valid()
+            and image_formset.is_valid()
         )
 
-        if is_valid and not _bom_has_at_least_one_material(material_formset):
-            material_formset._non_form_errors = material_formset.error_class(
-                ["Add at least one material / fabric / accessory row."]
+        if is_valid and not _bom_has_at_least_one_material(materials_formset):
+            materials_formset._non_form_errors = materials_formset.error_class(
+                ["Add at least one material row."]
             )
             is_valid = False
 
         if is_valid:
             with transaction.atomic():
-                form.save()
-                material_formset.save()
-                jobber_formset.save()
-                process_formset.save()
-                expense_formset.save()
+                bom = form.save()
+
+                materials_formset.instance = bom
+                accessories_formset.instance = bom
+                jobber_formset.instance = bom
+                process_formset.instance = bom
+                expense_formset.instance = bom
+                image_formset.instance = bom
+
+                _save_bom_material_formset(
+                    materials_formset,
+                    bom,
+                    BOMMaterialItem.ItemType.RAW_FABRIC,
+                )
+                _save_bom_material_formset(
+                    accessories_formset,
+                    bom,
+                    BOMMaterialItem.ItemType.ACCESSORY,
+                )
+                _save_simple_formset(jobber_formset)
+                _save_simple_formset(process_formset)
+                _save_simple_formset(expense_formset)
+                _save_bom_image_formset(image_formset, bom)
 
             url = reverse("accounts:bom_list")
             if _is_embed(request):
@@ -5319,10 +5641,12 @@ def bom_update(request, pk: int):
         tpl,
         {
             "form": form,
-            "material_formset": material_formset,
+            "materials_formset": materials_formset,
+            "accessories_formset": accessories_formset,
             "jobber_formset": jobber_formset,
             "process_formset": process_formset,
             "expense_formset": expense_formset,
+            "image_formset": image_formset,
             "mode": "edit",
             "bom": bom,
         },
@@ -5675,7 +5999,7 @@ def program_bom_summary(request, bom_id: int):
         "gender": bom.get_gender_display(),
         "main_category_name": bom.display_main_category_name,
         "category_name": bom.display_category_name,
-        "sub_category_name": bom.sub_category,
+        "sub_category_name": bom.display_sub_category_name,
         "pattern_type_name": bom.display_pattern_type_name,
         "license_name": bom.license_name,
         "character_name": bom.character_name,
@@ -5805,10 +6129,9 @@ def _inwardtype_list_url(request):
         url += "?embed=1"
     return url
 
-
 @login_required
-@require_http_methods(["GET", "POST"])
-def inwardtype_list_create(request):
+@require_GET
+def inwardtype_list(request):
     q = (request.GET.get("q") or "").strip()
 
     inward_types = InwardType.objects.filter(owner=request.user).order_by("name")
@@ -5816,20 +6139,6 @@ def inwardtype_list_create(request):
         inward_types = inward_types.filter(
             Q(name__icontains=q) | Q(description__icontains=q)
         )
-
-    if request.method == "POST":
-        form = InwardTypeForm(request.POST, user=request.user)
-        if form.is_valid():
-            obj = form.save(commit=False)
-            obj.owner = request.user
-            obj.save()
-
-            url = _inwardtype_list_url(request)
-            if _is_embed(request):
-                return JsonResponse({"ok": True, "url": url})
-            return redirect(url)
-    else:
-        form = InwardTypeForm(user=request.user)
 
     template = (
         "accounts/inward_types/list_embed.html"
@@ -5841,11 +6150,39 @@ def inwardtype_list_create(request):
         template,
         {
             "inward_types": inward_types,
-            "form": form,
             "q": q,
         },
     )
 
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def inwardtype_create(request):
+    form = InwardTypeForm(request.POST or None, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _inwardtype_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = (
+        "accounts/inward_types/form_embed.html"
+        if _is_embed(request)
+        else "accounts/inward_types/form.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "mode": "add",
+        },
+    )
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -5864,9 +6201,9 @@ def inwardtype_edit(request, pk: int):
         return redirect(url)
 
     template = (
-        "accounts/inward_types/edit_embed.html"
+        "accounts/inward_types/form_embed.html"
         if _is_embed(request)
-        else "accounts/inward_types/edit.html"
+        else "accounts/inward_types/form.html"
     )
     return render(
         request,
@@ -5874,6 +6211,7 @@ def inwardtype_edit(request, pk: int):
         {
             "form": form,
             "inward_type": inward_type,
+            "mode": "edit",
         },
     )
 
@@ -5888,3 +6226,208 @@ def inwardtype_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
+
+
+def _subcategory_list_url(request):
+    url = reverse("accounts:subcategory_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
+@login_required
+def subcategory_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = (
+        SubCategory.objects.filter(owner=request.user)
+        .select_related("main_category")
+        .order_by("main_category__name", "name")
+    )
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q)
+            | Q(description__icontains=q)
+            | Q(main_category__name__icontains=q)
+        )
+
+    template = (
+        "accounts/sub_categories/list_embed.html"
+        if _is_embed(request)
+        else "accounts/sub_categories/list.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "sub_categories": qs,
+            "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def subcategory_create(request):
+    form = SubCategoryForm(request.POST or None, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _subcategory_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = (
+        "accounts/sub_categories/form_embed.html"
+        if _is_embed(request)
+        else "accounts/sub_categories/form.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "mode": "add",
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def subcategory_edit(request, pk: int):
+    sub_category = get_object_or_404(SubCategory, pk=pk, owner=request.user)
+    form = SubCategoryForm(request.POST or None, instance=sub_category, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _subcategory_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = (
+        "accounts/sub_categories/form_embed.html"
+        if _is_embed(request)
+        else "accounts/sub_categories/form.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "mode": "edit",
+            "sub_category": sub_category,
+        },
+    )
+
+
+@login_required
+@require_POST
+def subcategory_delete(request, pk: int):
+    sub_category = get_object_or_404(SubCategory, pk=pk, owner=request.user)
+    sub_category.delete()
+
+    url = _subcategory_list_url(request)
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+def _is_po_approved_for_inward(po) -> bool:
+    current_status = str(getattr(po, "approval_status", "") or "").strip().lower()
+    if current_status:
+        return current_status == "approved"
+
+    source_yarn_po = getattr(po, "source_yarn_po", None)
+    source_status = str(getattr(source_yarn_po, "approval_status", "") or "").strip().lower()
+    if source_status:
+        return source_status == "approved"
+
+    return True
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def greigepo_review(request, pk: int):
+    po = get_object_or_404(
+        _greige_po_queryset(),
+        pk=pk,
+    )
+
+    if not _can_access_greige_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Greige PO.")
+
+    embed_mode = _is_embed(request)
+    can_review = _can_review_yarn_po(request.user)
+
+    review_form = GreigePOReviewForm(request.POST or None)
+
+    review_checks = {
+        "has_header": bool(po.vendor_id and po.po_date),
+        "has_source": bool(po.source_yarn_po_id),
+        "has_items": po.items.exists(),
+        "has_shipping": bool((po.shipping_address or "").strip()),
+    }
+    review_ready_count = sum(1 for value in review_checks.values() if value)
+
+    context = {
+        "po": po,
+        "review_form": review_form,
+        "can_review_greige_po": can_review,
+        "embed_mode": embed_mode,
+        "review_checks": review_checks,
+        "review_ready_count": review_ready_count,
+    }
+
+    if request.method == "POST":
+        if not can_review:
+            return HttpResponseForbidden("You are not allowed to review this PO.")
+
+        if review_form.is_valid():
+            decision = review_form.cleaned_data["decision"]
+
+            if decision == "approve":
+                po.approval_status = "approved"
+                po.rejection_reason = ""
+            else:
+                po.approval_status = "rejected"
+                po.rejection_reason = review_form.cleaned_data["rejection_reason"].strip()
+
+            po.reviewed_by = request.user
+            po.reviewed_at = timezone.now()
+            po.save(update_fields=[
+                "approval_status",
+                "rejection_reason",
+                "reviewed_by",
+                "reviewed_at",
+            ])
+
+            if embed_mode:
+                return JsonResponse({
+                    "ok": True,
+                    "message": "Greige PO reviewed successfully.",
+                    "redirect_url": reverse("accounts:greigepo_list"),
+                })
+
+            return redirect("accounts:greigepo_list")
+
+        if embed_mode:
+            return render(
+                request,
+                "accounts/greige_po/review_embed.html",
+                context,
+                status=400,
+            )
+
+    template_name = (
+        "accounts/greige_po/review_embed.html"
+        if embed_mode
+        else "accounts/greige_po/review.html"
+    )
+
+    return render(request, template_name, context)

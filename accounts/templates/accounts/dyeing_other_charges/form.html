@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}{% if mode == "edit" %}Edit Dyeing Other Charge{% else %}Add Dyeing Other Charge{% endif %} - InventTech{% endblock %}
+{% block page_title %}{% if mode == "edit" %}Edit Dyeing Other Charge{% else %}Add Dyeing Other Charge{% endif %}{% endblock %}
+{% block page_subtitle %}Manage reusable dyeing extra charge master{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/dyeing_other_charges/form_embed.html" with full_page=True %}
+</div>
+{% endblock %}

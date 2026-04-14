@@ -6,824 +6,718 @@
 {% block content %}
 <style>
   :root{
-    --pink: rgba(238, 61, 133, 1);
-    --pink-soft: rgba(238, 61, 133, .08);
-    --pink-border: rgba(238, 61, 133, .16);
-
+    --pink:#ee3d85;
+    --pink-soft:rgba(238,61,133,.08);
+    --pink-border:rgba(238,61,133,.16);
     --ink:#0f172a;
     --muted:#667085;
     --line:rgba(15,23,42,.08);
     --line-soft:rgba(15,23,42,.06);
     --panel:#ffffff;
-    --panel-soft:#fafbfc;
-    --panel-muted:#f6f8fb;
-    --shadow:0 16px 42px rgba(15,23,42,.05);
-    --shadow-soft:0 8px 20px rgba(15,23,42,.04);
+    --panel-muted:#f8fafc;
+    --shadow:0 10px 28px rgba(15,23,42,.05);
     --danger:#dc2626;
+    --blue:#1c6dd8;
   }
 
-  .canvas{
-    grid-template-columns:1fr !important;
-    width:100%;
-    min-width:0;
+  .canvas{grid-template-columns:1fr !important;width:100%;min-width:0;}
+  .gp-page{width:100%;min-width:0;}
+  .gp-wrap{padding:8px 6px;}
+  .gp-shell{display:grid;gap:14px;}
+  .gp-top{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  }
+  .gp-top-main{display:flex;align-items:center;gap:12px;min-width:0;}
+  .gp-top-icon{
+    width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--pink-soft);
+  }
+  .gp-top-icon svg{width:28px;height:28px;display:block;}
+  .gp-title{font-size:22px;font-weight:950;line-height:1.05;color:var(--ink);}
+  .gp-subtitle{margin-top:3px;font-size:11px;font-weight:700;color:var(--muted);}
+  .gp-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .gp-btn,
+  .gp-btn-primary{
+    appearance:none;border:1px solid rgba(15,23,42,.10);min-height:38px;padding:0 14px;border-radius:11px;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:800;
+    text-decoration:none;cursor:pointer;transition:.18s ease;background:#fff;color:var(--ink);
+  }
+  .gp-btn:hover{background:var(--panel-muted);}
+  .gp-btn-primary{background:var(--pink);border-color:var(--pink);color:#fff;box-shadow:0 8px 16px rgba(238,61,133,.16);}
+  .gp-btn-primary:hover{background:#d92f74;border-color:#d92f74;color:#fff;}
+
+  .gp-chipbar{display:flex;gap:10px;flex-wrap:wrap;}
+  .gp-chip{
+    min-width:150px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:var(--shadow);
+  }
+  .gp-chip-label{font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .gp-chip-value{margin-top:3px;font-size:14px;font-weight:900;color:var(--ink);word-break:break-word;}
+
+  .gp-errors{
+    padding:10px 12px;border-radius:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.16);
+    font-size:12px;font-weight:800;color:#991b1b;
   }
 
-  .yp-page{
-    width:100%;
-    min-width:0;
+  .gp-layout{
+    display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start;
+  }
+  .gp-main,.gp-side{min-width:0;display:grid;gap:14px;}
+
+  .gp-accordion{
+    border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow);overflow:hidden;
+  }
+  .gp-accordion summary{
+    list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:14px 16px;background:#fff;
+  }
+  .gp-accordion summary::-webkit-details-marker{display:none;}
+  .gp-acc-left{display:flex;gap:10px;align-items:center;min-width:0;}
+  .gp-dot{
+    width:10px;height:10px;border-radius:999px;background:var(--pink);box-shadow:0 0 0 5px var(--pink-soft);flex:0 0 auto;
+  }
+  .gp-acc-title{font-size:15px;font-weight:900;color:var(--ink);}
+  .gp-acc-sub{margin-top:2px;font-size:10px;font-weight:700;color:var(--muted);}
+  .gp-caret{
+    width:28px;height:28px;border-radius:9px;background:var(--panel-muted);display:grid;place-items:center;flex:0 0 auto;
+  }
+  .gp-caret:before{
+    content:"";width:8px;height:8px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg);margin-top:-2px;
+  }
+  .gp-accordion[open] .gp-caret:before{transform:rotate(225deg);margin-top:3px;}
+  .gp-body{padding:0 16px 16px;display:grid;gap:12px;}
+
+  .gp-grid{display:grid;gap:10px;}
+  .gp-header-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .gp-field{display:flex;flex-direction:column;gap:4px;min-width:0;}
+  .gp-field.span-2{grid-column:span 2;}
+  .gp-field.span-4{grid-column:span 4;}
+  .gp-field label{font-size:10px;font-weight:900;letter-spacing:.04em;color:#344054;}
+  .gp-field input,
+  .gp-field select,
+  .gp-field textarea{
+    width:100%;box-sizing:border-box;min-height:38px;padding:8px 10px;border-radius:10px;border:1px solid rgba(15,23,42,.10);
+    background:#fff;outline:none;color:var(--ink);font:inherit;font-size:12px;transition:.18s ease;
+  }
+  .gp-field textarea{min-height:82px;resize:vertical;}
+  .gp-field input:focus,
+  .gp-field select:focus,
+  .gp-field textarea:focus,
+  .gp-row-input:focus,
+  .gp-row-select:focus{
+    border-color:rgba(238,61,133,.28);box-shadow:0 0 0 4px rgba(238,61,133,.08);
+  }
+  .gp-field input[readonly],
+  .gp-row-readonly{background:#f8fafc;color:#475467;}
+  .gp-inline-errors,.errorlist{font-size:11px;font-weight:800;color:#b42318;margin:0;padding:0;list-style:none;}
+
+  .gp-split{
+    display:grid;grid-template-columns:1.25fr .95fr;gap:12px;
   }
 
-  .jobbers-embed{
-    padding:10px 6px;
+  .gp-source-grid{
+    display:grid;gap:10px;grid-template-columns:repeat(3,minmax(0,1fr));
   }
 
-  .yp-shell{
-    width:100%;
-    min-width:0;
-    padding:14px;
-    border-radius:18px;
-    background:rgba(255,255,255,.72);
-    border:2px dashed black;
-    box-shadow:0 12px 36px rgba(15,23,42,.08);
+  .gp-table-wrap{overflow:auto;border-top:1px solid var(--line);}
+  .gp-table{width:100%;min-width:1320px;border-collapse:collapse;}
+  .gp-table th,.gp-table td{
+    padding:10px;border-bottom:1px solid var(--line-soft);text-align:left;vertical-align:top;font-size:12px;
+  }
+  .gp-table th{
+    font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#475467;font-weight:900;background:#fafbfc;white-space:nowrap;
+  }
+  .gp-name{font-weight:900;color:var(--ink);}
+  .gp-sub{margin-top:2px;font-size:10px;font-weight:700;color:var(--muted);}
+  .gp-row-input,.gp-row-select{
+    width:100%;min-height:34px;padding:7px 9px;border-radius:10px;border:1px solid rgba(15,23,42,.10);background:#fff;outline:none;
+    box-sizing:border-box;font:inherit;font-size:12px;
   }
 
-  .yp-form{
-    display:grid;
-    gap:14px;
+  .gp-side-card{
+    position:sticky;top:16px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow);overflow:hidden;
+  }
+  .gp-side-head{padding:14px 16px 0;}
+  .gp-side-body{padding:12px 16px 16px;display:grid;gap:8px;}
+  .gp-summary-row{
+    display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:#fafbfc;border:1px solid var(--line-soft);
+  }
+  .gp-summary-k{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+  .gp-summary-v{font-size:12px;font-weight:900;color:var(--ink);text-align:right;word-break:break-word;}
+
+  .gp-note{
+    padding:10px 12px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:12px;font-weight:800;
   }
 
-  .yp-headbar{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:12px;
-    flex-wrap:wrap;
-    padding:0;
-    border-radius:0;
-    background:transparent;
+  @media (max-width:1100px){
+    .gp-layout{grid-template-columns:1fr;}
+    .gp-header-grid,.gp-source-grid,.gp-split{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .gp-field.span-4{grid-column:span 2;}
   }
 
-  .yp-head-main{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    min-width:0;
-  }
-
-  .yp-head-icon{
-    width:42px;
-    height:42px;
-    flex:0 0 auto;
-    border-radius:12px;
-    display:grid;
-    place-items:center;
-  }
-
-  .yp-head-icon svg{
-    width:32px;
-    height:32px;
-    display:block;
-  }
-
-  .yp-head-copy{
-    min-width:0;
-  }
-
-  .yp-title{
-    font-size:20px;
-    font-weight:950;
-    line-height:1.05;
-    letter-spacing:-.02em;
-    color:var(--ink);
-  }
-
-  .yp-subtitle{
-    margin-top:3px;
-    color:var(--muted);
-    font-size:11px;
-    font-weight:700;
-    line-height:1.4;
-  }
-
-  .yp-head-actions{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-
-  .yp-btn,
-  .yp-btn-primary,
-  .yp-btn-secondary{
-    appearance:none;
-    border:1px solid rgba(15,23,42,.10);
-    min-height:36px;
-    padding:0 13px;
-    border-radius:10px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    font-size:12px;
-    font-weight:800;
-    text-decoration:none;
-    cursor:pointer;
-    transition:all .18s ease;
-    white-space:nowrap;
-  }
-
-  .yp-btn,
-  .yp-btn-secondary{
-    background:#fff;
-    color:var(--ink);
-  }
-
-  .yp-btn:hover,
-  .yp-btn-secondary:hover{
-    background:var(--panel-muted);
-    border-color:rgba(15,23,42,.16);
-  }
-
-  .yp-btn-primary{
-    color:#fff;
-    border-color:var(--pink);
-    background:var(--pink);
-    box-shadow:0 8px 16px rgba(238,61,133,.14);
-  }
-
-  .yp-btn-primary:hover{
-    color:#fff;
-    background:#d92f74;
-    border-color:#d92f74;
-  }
-
-  .yp-errors{
-    padding:10px 12px;
-    border-radius:12px;
-    background:rgba(239,68,68,.08);
-    border:1px solid rgba(239,68,68,.16);
-    font-weight:800;
-    color:#991b1b;
-    font-size:12px;
-  }
-
-  .yp-chipbar{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-
-  .yp-chip{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-    min-width:160px;
-    padding:10px 12px;
-    border-radius:14px;
-    background:#fff;
-    border:1px solid var(--line);
-    box-shadow:var(--shadow-soft);
-  }
-
-  .yp-chip.highlight{
-    border-color:var(--pink-border);
-    background:#fff;
-  }
-
-  .yp-chip-label{
-    font-size:10px;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    font-weight:900;
-    color:var(--muted);
-  }
-
-  .yp-chip-value{
-    font-size:15px;
-    font-weight:900;
-    line-height:1.15;
-    color:var(--ink);
-    word-break:break-word;
-  }
-
-  .yp-layout{
-    display:grid;
-    grid-template-columns:minmax(0, 1fr) 320px;
-    gap:12px;
-    align-items:start;
-  }
-
-  .yp-main,
-  .yp-side{
-    min-width:0;
-    display:grid;
-    gap:12px;
-  }
-
-  .yp-panel,
-  .yp-summary,
-  .yp-card{
-    border:1px solid var(--line);
-    border-radius:18px;
-    background:var(--panel);
-    box-shadow:var(--shadow-soft);
-    overflow:hidden;
-  }
-
-  .yp-panel-head,
-  .yp-lines-head,
-  .yp-card-head,
-  .yp-summary-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:10px;
-    padding:12px 12px 0;
-  }
-
-  .yp-panel-kicker{
-    font-size:10px;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    color:var(--pink);
-    font-weight:900;
-  }
-
-  .yp-panel-title{
-    margin-top:2px;
-    font-size:15px;
-    font-weight:900;
-    line-height:1.1;
-    color:var(--ink);
-  }
-
-  .yp-panel-sub{
-    margin-top:3px;
-    font-size:10px;
-    font-weight:700;
-    color:var(--muted);
-  }
-
-  .yp-panel-body,
-  .yp-summary-body,
-  .yp-card-body{
-    padding:12px;
-  }
-
-  .yp-grid{
-    display:grid;
-    gap:10px;
-  }
-
-  .yp-header-grid{
-    grid-template-columns:1.15fr .9fr .9fr .9fr;
-  }
-
-  .yp-field{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-    min-width:0;
-  }
-
-  .yp-field.span-2{
-    grid-column:span 2;
-  }
-
-  .yp-field.span-4{
-    grid-column:span 4;
-  }
-
-  .yp-field label{
-    font-size:10px;
-    font-weight:800;
-    color:#344054;
-  }
-
-  .yp-field input,
-  .yp-field select,
-  .yp-field textarea{
-    width:100%;
-    box-sizing:border-box;
-    min-height:36px;
-    padding:7px 10px;
-    border-radius:10px;
-    border:1px solid rgba(15,23,42,.10);
-    background:#fff;
-    outline:none;
-    color:var(--ink);
-    font:inherit;
-    font-size:12px;
-    appearance:none;
-    transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
-  }
-
-  .yp-field textarea{
-    min-height:74px;
-    resize:vertical;
-  }
-
-  .yp-field input:focus,
-  .yp-field select:focus,
-  .yp-field textarea:focus{
-    border-color:rgba(238,61,133,.28);
-    box-shadow:0 0 0 4px rgba(238,61,133,.08);
-    background:#fff;
-  }
-
-  .yp-field input[readonly],
-  .yp-field input[disabled],
-  .yp-field select[disabled],
-  .yp-field textarea[disabled]{
-    background:#f8fafc;
-    color:#475467;
-  }
-
-  .yp-help{
-    margin-top:3px;
-    font-size:10px;
-    font-weight:700;
-    color:var(--muted);
-  }
-
-  .yp-errorlist{
-    margin:2px 0 0;
-    padding:0;
-    list-style:none;
-    color:#b42318;
-    font-size:11px;
-    font-weight:800;
-  }
-
-  .yp-lines-table{
-    width:100%;
-    min-width:720px;
-    border-collapse:collapse;
-  }
-
-  .yp-lines-wrap{
-    overflow:auto;
-    border-top:1px solid var(--line);
-  }
-
-  .yp-lines-table th,
-  .yp-lines-table td{
-    padding:10px 10px;
-    border-bottom:1px solid var(--line-soft);
-    text-align:left;
-    vertical-align:top;
-    font-size:12px;
-  }
-
-  .yp-lines-table th{
-    font-size:10px;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    color:#475467;
-    font-weight:900;
-    background:#fafbfc;
-    white-space:nowrap;
-  }
-
-  .yp-lines-name{
-    font-weight:900;
-    color:var(--ink);
-  }
-
-  .yp-lines-sub{
-    margin-top:3px;
-    font-size:10px;
-    color:var(--muted);
-    font-weight:700;
-    line-height:1.45;
-  }
-
-  .yp-summary-list{
-    display:grid;
-    gap:8px;
-  }
-
-  .yp-summary-row{
-    display:flex;
-    justify-content:space-between;
-    gap:10px;
-    padding:10px 12px;
-    border-radius:12px;
-    background:#fafbfc;
-    border:1px solid var(--line-soft);
-  }
-
-  .yp-summary-k{
-    font-size:10px;
-    font-weight:900;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    color:var(--muted);
-  }
-
-  .yp-summary-v{
-    font-size:12px;
-    font-weight:900;
-    color:var(--ink);
-    text-align:right;
-    word-break:break-word;
-  }
-
-  .yp-note{
-    padding:10px 12px;
-    border-radius:12px;
-    background:#fff7ed;
-    border:1px solid #fed7aa;
-    color:#9a3412;
-    font-size:12px;
-    font-weight:800;
-  }
-
-  @media (max-width: 1080px){
-    .yp-layout{
-      grid-template-columns:1fr;
-    }
-
-    .yp-header-grid{
-      grid-template-columns:repeat(2, minmax(0, 1fr));
-    }
-
-    .yp-field.span-4{
-      grid-column:span 2;
-    }
-  }
-
-  @media (max-width: 720px){
-    .yp-headbar{
-      flex-direction:column;
-      align-items:stretch;
-    }
-
-    .yp-head-actions{
-      width:100%;
-    }
-
-    .yp-head-actions > *{
-      flex:1 1 auto;
-    }
-
-    .yp-header-grid{
-      grid-template-columns:1fr;
-    }
-
-    .yp-field.span-2,
-    .yp-field.span-4{
-      grid-column:span 1;
-    }
+  @media (max-width:720px){
+    .gp-top{flex-direction:column;align-items:stretch;}
+    .gp-actions>*{flex:1 1 auto;}
+    .gp-header-grid,.gp-source-grid,.gp-split{grid-template-columns:1fr;}
+    .gp-field.span-2,.gp-field.span-4{grid-column:span 1;}
   }
 </style>
 
 <section class="page-section is-active">
   <div class="canvas">
-    <div class="yp-page">
-      <div class="jobbers-embed">
-        <div class="yp-shell">
-          <form method="post" class="yp-form">
-            {% csrf_token %}
-            {% if selected_source_inward %}<input type="hidden" name="source_yarn_inward_id" value="{{ selected_source_inward.id }}">{% endif %}
+    <div class="gp-page">
+      <div class="gp-wrap">
+        <form method="post" class="gp-shell">
+          {% csrf_token %}
+          {% if selected_source_inward %}
+            <input type="hidden" name="source_yarn_inward_id" value="{{ selected_source_inward.id }}">
+          {% endif %}
 
-            <div class="yp-headbar">
-              <div class="yp-head-main">
-                <div class="yp-head-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M6.75 4.75h7.5l3 3v11.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 5.25 19.25v-13a1.5 1.5 0 0 1 1.5-1.5Z" stroke="var(--pink)" stroke-width="1.8" stroke-linejoin="round"/>
-                    <path d="M14.25 4.9v2.6a1 1 0 0 0 1 1h2.6" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M8.5 12h7" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M8.5 15.5h5.5" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round"/>
-                  </svg>
-                </div>
-
-                <div class="yp-head-copy">
-                  <div class="yp-title">{% if mode == 'edit' %}Edit Greige PO{% else %}Create Greige PO{% endif %}</div>
-                  <div class="yp-subtitle">Generate Greige PO from Yarn inward and continue the process to Greige inward and Dyeing PO.</div>
-                </div>
+          <div class="gp-top">
+            <div class="gp-top-main">
+              <div class="gp-top-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M6.75 4.75h7.5l3 3v11.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 5.25 19.25v-13a1.5 1.5 0 0 1 1.5-1.5Z" stroke="var(--pink)" stroke-width="1.8" stroke-linejoin="round"/>
+                  <path d="M14.25 4.9v2.6a1 1 0 0 0 1 1h2.6" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M8.5 12h7" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M8.5 15.5h5.5" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
               </div>
-
-              <div class="yp-head-actions">
-                <a class="yp-btn-secondary" href="{% url 'accounts:greigepo_list' %}">Back to Greige PO</a>
-                <button type="submit" class="yp-btn-primary">Save Greige PO</button>
+              <div>
+                <div class="gp-title">{% if mode == 'edit' %}Edit Greige PO{% else %}Create Greige PO{% endif %}</div>
+                <div class="gp-subtitle">Modern greige PO flow from yarn inward with row-wise greige type, unit, rates, and summary.</div>
               </div>
             </div>
 
-            {% if form.non_field_errors %}
-              <div class="yp-errors">
-                {% for err in form.non_field_errors %}
-                  <div>{{ err }}</div>
-                {% endfor %}
-              </div>
-            {% endif %}
-
-            {% if existing_po and mode != 'edit' %}
-              <div class="yp-errors">
-                {% if selected_source_inward %}Greige PO already exists for this Yarn inward.{% else %}Greige PO already exists for this Yarn PO.{% endif %}
-                <a href="{% url 'accounts:greigepo_detail' existing_po.id %}">Open existing Greige PO</a>
-              </div>
-            {% endif %}
-
-            <div class="yp-chipbar">
-              <div class="yp-chip highlight">
-                <div class="yp-chip-label">Greige PO Number</div>
-                <div class="yp-chip-value">{{ system_number_preview }}</div>
-              </div>
-
-              {% if source_yarn_po %}
-              <div class="yp-chip">
-                <div class="yp-chip-label">Source Yarn PO</div>
-                <div class="yp-chip-value">{{ source_yarn_po.system_number }}</div>
-              </div>
-              {% endif %}
-
-              {% if selected_source_inward %}
-              <div class="yp-chip">
-                <div class="yp-chip-label">Source Yarn Inward</div>
-                <div class="yp-chip-value">{{ selected_source_inward.inward_number }}</div>
-              </div>
-              {% endif %}
-
-              <div class="yp-chip">
-                <div class="yp-chip-label">Mode</div>
-                <div class="yp-chip-value">{% if mode == 'edit' %}Edit{% else %}Create{% endif %}</div>
-              </div>
+            <div class="gp-actions">
+              <a class="gp-btn" href="{% url 'accounts:greigepo_list' %}">Back</a>
+              <button type="submit" class="gp-btn-primary">{% if mode == 'edit' %}Update Greige PO{% else %}Save Greige PO{% endif %}</button>
             </div>
+          </div>
 
-            <div class="yp-layout">
-              <div class="yp-main">
-                <div class="yp-panel">
-                  <div class="yp-panel-head">
+          {% if form.non_field_errors %}
+            <div class="gp-errors">
+              {% for err in form.non_field_errors %}
+                <div>{{ err }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if existing_po and mode != 'edit' %}
+            <div class="gp-errors">
+              {% if selected_source_inward %}Greige PO already exists for this Yarn inward.{% else %}Greige PO already exists for this Yarn PO.{% endif %}
+              <a href="{% url 'accounts:greigepo_detail' existing_po.id %}">Open existing Greige PO</a>
+            </div>
+          {% endif %}
+
+          <div class="gp-chipbar">
+            <div class="gp-chip">
+              <div class="gp-chip-label">Greige PO Number</div>
+              <div class="gp-chip-value">{{ system_number_preview }}</div>
+            </div>
+            {% if source_yarn_po %}
+            <div class="gp-chip">
+              <div class="gp-chip-label">Source Yarn PO</div>
+              <div class="gp-chip-value">{{ source_yarn_po.system_number }}</div>
+            </div>
+            {% endif %}
+            {% if selected_source_inward %}
+            <div class="gp-chip">
+              <div class="gp-chip-label">Source Yarn Inward</div>
+              <div class="gp-chip-value">{{ selected_source_inward.inward_number }}</div>
+            </div>
+            {% endif %}
+            <div class="gp-chip">
+              <div class="gp-chip-label">Mode</div>
+              <div class="gp-chip-value">{% if mode == 'edit' %}Edit{% else %}Create{% endif %}</div>
+            </div>
+          </div>
+
+          <div class="gp-layout">
+            <div class="gp-main">
+              <details class="gp-accordion" open>
+                <summary>
+                  <div class="gp-acc-left">
+                    <div class="gp-dot"></div>
                     <div>
-                      <div class="yp-panel-kicker">Header</div>
-                      <div class="yp-panel-title">Greige PO details</div>
-                      <div class="yp-panel-sub">Fill the basic purchase order information.</div>
+                      <div class="gp-acc-title">Greige PO Header</div>
+                      <div class="gp-acc-sub">Basic PO header and source selection</div>
                     </div>
                   </div>
+                  <div class="gp-caret"></div>
+                </summary>
 
-                  <div class="yp-panel-body">
-                    <div class="yp-grid yp-header-grid">
-                      <div class="yp-field">
-                        <label>Greige PO No</label>
-                        <input type="text" value="{{ system_number_preview }}" readonly>
-                      </div>
+                <div class="gp-body">
+                  <div class="gp-grid gp-header-grid">
+                    <div class="gp-field">
+                      <label>Greige PO No</label>
+                      <input type="text" value="{{ system_number_preview }}" readonly>
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.internal_po_number.id_for_label }}">Internal PO Number</label>
-                        {{ form.internal_po_number }}
-                        {{ form.internal_po_number.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.internal_po_number.id_for_label }}">Internal PO Number</label>
+                      {{ form.internal_po_number }}
+                      {{ form.internal_po_number.errors }}
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.source_yarn_po.id_for_label }}">Source Yarn PO</label>
-                        {{ form.source_yarn_po }}
-                        {{ form.source_yarn_po.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.source_yarn_po.id_for_label }}">Source Yarn PO</label>
+                      {{ form.source_yarn_po }}
+                      {{ form.source_yarn_po.errors }}
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.po_number.id_for_label }}">PO Number</label>
-                        {{ form.po_number }}
-                        {{ form.po_number.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.po_number.id_for_label }}">PO Number</label>
+                      {{ form.po_number }}
+                      {{ form.po_number.errors }}
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.po_date.id_for_label }}">Date</label>
-                        {{ form.po_date }}
-                        {{ form.po_date.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.po_date.id_for_label }}">Date</label>
+                      {{ form.po_date }}
+                      {{ form.po_date.errors }}
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.available_qty.id_for_label }}">Available Qty</label>
-                        {{ form.available_qty }}
-                        {{ form.available_qty.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.available_qty.id_for_label }}">Available Qty</label>
+                      {{ form.available_qty }}
+                      {{ form.available_qty.errors }}
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.vendor.id_for_label }}">Vendor</label>
-                        {{ form.vendor }}
-                        {{ form.vendor.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.vendor.id_for_label }}">Vendor</label>
+                      {{ form.vendor }}
+                      {{ form.vendor.errors }}
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.firm.id_for_label }}">Firm</label>
-                        {{ form.firm }}
-                        {{ form.firm.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.expected_delivery_date.id_for_label }}">Expected Delivery Date</label>
+                      {{ form.expected_delivery_date }}
+                      {{ form.expected_delivery_date.errors }}
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.cancel_date.id_for_label }}">Cancel Date</label>
-                        {{ form.cancel_date }}
-                        {{ form.cancel_date.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.delivery_period.id_for_label }}">Delivery Period</label>
+                      {{ form.delivery_period }}
+                      {{ form.delivery_period.errors }}
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.validity_period.id_for_label }}">Validity Period</label>
-                        {{ form.validity_period }}
-                        {{ form.validity_period.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.cancel_date.id_for_label }}">Cancel Date</label>
+                      {{ form.cancel_date }}
+                      {{ form.cancel_date.errors }}
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.delivery_period.id_for_label }}">Delivery Period</label>
-                        {{ form.delivery_period }}
-                        {{ form.delivery_period.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.validity_period.id_for_label }}">Validity Period</label>
+                      {{ form.validity_period }}
+                      {{ form.validity_period.errors }}
+                    </div>
 
-                      <div class="yp-field">
-                        <label for="{{ form.expected_delivery_date.id_for_label }}">Expected Delivery Date</label>
-                        {{ form.expected_delivery_date }}
-                        {{ form.expected_delivery_date.errors }}
-                      </div>
+                    <div class="gp-field">
+                      <label for="{{ form.delivery_schedule.id_for_label }}">Delivery Schedule</label>
+                      {{ form.delivery_schedule }}
+                      {{ form.delivery_schedule.errors }}
+                    </div>
 
-                      <div class="yp-field span-2">
-                        <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
-                        {{ form.shipping_address }}
-                        {{ form.shipping_address.errors }}
-                      </div>
-
-                      <div class="yp-field span-2">
-                        <label for="{{ form.delivery_schedule.id_for_label }}">Delivery Schedule</label>
-                        {{ form.delivery_schedule }}
-                        {{ form.delivery_schedule.errors }}
-                      </div>
-
-                      <div class="yp-field span-4">
-                        <label for="{{ form.remarks.id_for_label }}">Remarks</label>
-                        {{ form.remarks }}
-                        {{ form.remarks.errors }}
-                      </div>
+                    <div class="gp-field span-4">
+                      <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
+                      {{ form.shipping_address }}
+                      {{ form.shipping_address.errors }}
                     </div>
                   </div>
                 </div>
+              </details>
 
-                <div class="yp-panel">
-                  <div class="yp-panel-head">
+              <details class="gp-accordion" open>
+                <summary>
+                  <div class="gp-acc-left">
+                    <div class="gp-dot"></div>
                     <div>
-                      <div class="yp-panel-kicker">Source</div>
-                      <div class="yp-panel-title">Source Yarn PO details</div>
-                      <div class="yp-panel-sub">Reference details pulled from the linked Yarn PO.</div>
+                      <div class="gp-acc-title">Source Snapshot</div>
+                      <div class="gp-acc-sub">Yarn PO and inward information used for this greige PO</div>
                     </div>
                   </div>
+                  <div class="gp-caret"></div>
+                </summary>
 
-                  <div class="yp-panel-body">
-                    {% if source_yarn_po %}
-                    <div class="yp-grid" style="grid-template-columns:repeat(3, minmax(0, 1fr));">
-                      <div class="yp-field">
+                <div class="gp-body">
+                  {% if source_yarn_po %}
+                    <div class="gp-source-grid">
+                      <div class="gp-field">
                         <label>Yarn PO</label>
                         <input type="text" value="{{ source_yarn_po.system_number }}" readonly>
                       </div>
-                      <div class="yp-field">
+                      <div class="gp-field">
                         <label>Vendor</label>
-                        <input type="text" value="{{ source_yarn_po.vendor.name }}" readonly>
+                        <input type="text" value="{{ source_yarn_po.vendor.name|default:'—' }}" readonly>
                       </div>
-                      <div class="yp-field">
+                      <div class="gp-field">
                         <label>Firm</label>
                         <input type="text" value="{% if source_yarn_po.firm %}{{ source_yarn_po.firm.firm_name }}{% else %}—{% endif %}" readonly>
                       </div>
-                      <div class="yp-field">
+                      <div class="gp-field">
                         <label>PO No</label>
                         <input type="text" value="{{ source_yarn_po.po_number|default:'—' }}" readonly>
                       </div>
-                      <div class="yp-field">
+                      <div class="gp-field">
                         <label>Total Ordered</label>
                         <input type="text" value="{{ source_yarn_po.total_weight|default:'0.00' }}" readonly>
                       </div>
-                      <div class="yp-field">
+                      <div class="gp-field">
                         <label>Total Inward</label>
                         <input type="text" value="{{ source_yarn_po.total_inward_qty|default:'0.00' }}" readonly>
                       </div>
                     </div>
-                    {% else %}
-                      <div class="yp-note">Choose a source Yarn PO to see linked inward information.</div>
-                    {% endif %}
-                  </div>
+                  {% else %}
+                    <div class="gp-note">Choose a source Yarn PO to see linked inward information.</div>
+                  {% endif %}
                 </div>
+              </details>
 
-                <div class="yp-panel">
-                  <div class="yp-panel-head">
+              <details class="gp-accordion" open>
+                <summary>
+                  <div class="gp-acc-left">
+                    <div class="gp-dot"></div>
                     <div>
-                      <div class="yp-panel-kicker">Source inward</div>
-                      <div class="yp-panel-title">Source Yarn inward rows</div>
-                      <div class="yp-panel-sub">{% if selected_source_inward %}Only the selected Yarn inward is shown here and will be used to generate Greige PO items.{% else %}These inward quantities will be used to generate Greige PO items.{% endif %}</div>
+                      <div class="gp-acc-title">Greige Details</div>
+                      <div class="gp-acc-sub">Greige type, unit, quantity, and technical row details</div>
                     </div>
                   </div>
+                  <div class="gp-caret"></div>
+                </summary>
 
-                  <div class="yp-lines-wrap">
-                    {% if source_inwards %}
-                    <table class="yp-lines-table">
+                <div class="gp-body">
+                  <div class="gp-table-wrap">
+                    <table class="gp-table" id="greige-lines-table">
                       <thead>
                         <tr>
-                          <th>Inward No</th>
-                          <th>Date</th>
-                          <th>Item</th>
+                          <th>Source Yarn</th>
+                          <th>Greige Type</th>
+                          <th>Unit</th>
                           <th>Qty</th>
+                          <th>Value</th>
+                          <th>Dia</th>
+                          <th>Gauge</th>
+                          <th>Rolls</th>
+                          <th>Rate</th>
+                          <th>Final Amount</th>
+                          <th>Remark</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {% for inward in source_inwards %}
-                          {% for inward_item in inward.items.all %}
-                          <tr>
-                            <td>{{ inward.inward_number }}</td>
-                            <td>{{ inward.inward_date|date:"d-m-Y" }}</td>
+                        {% if greige_rows %}
+                          {% for row in greige_rows %}
+                          <tr class="gp-line-row">
                             <td>
-                              <div class="yp-lines-name">
-                                {% if inward_item.po_item.material_type %}
-                                  {{ inward_item.po_item.material_type.name }}
-                                {% elif inward_item.po_item.material %}
-                                  {{ inward_item.po_item.material.name }}
-                                {% else %}
-                                  Yarn Item
-                                {% endif %}
-                              </div>
+                              <div class="gp-name">{{ row.source_name }}</div>
+                              <div class="gp-sub">{{ row.inward_number }}{% if row.inward_date %} · {{ row.inward_date|date:"d-m-Y" }}{% endif %} · Unit: {{ row.source_unit|default:"—" }}</div>
                             </td>
-                            <td>{{ inward_item.quantity }}</td>
+
+                            <td>
+                              <select class="gp-row-select" name="greige_material_{{ row.inward_item_id }}">
+                                <option value="">Select greige type</option>
+                                {% for material in greige_material_options %}
+                                  <option value="{{ material.id }}" {% if row.selected_material_id == material.id|stringformat:'s' %}selected{% endif %}>
+                                    {{ material.name }}
+                                  </option>
+                                {% endfor %}
+                              </select>
+                            </td>
+
+                            <td>
+                              <select class="gp-row-select" name="greige_unit_{{ row.inward_item_id }}">
+                                <option value="">Select unit</option>
+                                {% for unit in unit_options %}
+                                  <option value="{{ unit.id }}" {% if row.selected_unit_id == unit.id|stringformat:'s' %}selected{% endif %}>{{ unit.name }}</option>
+                                {% endfor %}
+                              </select>
+                            </td>
+
+                            <td><input class="gp-row-input js-gp-qty" type="number" step="0.01" min="0" name="greige_qty_{{ row.inward_item_id }}" value="{{ row.quantity|default:'0.00' }}"></td>
+                            <td><input class="gp-row-input" type="text" name="greige_value_{{ row.inward_item_id }}" value="{{ row.value|default:'' }}" placeholder="Value"></td>
+                            <td><input class="gp-row-input" type="text" name="greige_dia_{{ row.inward_item_id }}" value="{{ row.dia|default:'' }}" placeholder="Dia"></td>
+                            <td><input class="gp-row-input" type="text" name="greige_gauge_{{ row.inward_item_id }}" value="{{ row.gauge|default:'' }}" placeholder="Gauge"></td>
+                            <td><input class="gp-row-input" type="text" name="greige_rolls_{{ row.inward_item_id }}" value="{{ row.rolls|default:'' }}" placeholder="Rolls"></td>
+                            <td><input class="gp-row-input js-gp-rate" type="number" step="0.01" min="0" name="greige_rate_{{ row.inward_item_id }}" value="{{ row.rate|default:'' }}" placeholder="Rate"></td>
+                            <td><input class="gp-row-input gp-row-readonly js-gp-final" type="text" name="greige_final_amount_{{ row.inward_item_id }}" value="{{ row.final_amount|default:'' }}" readonly></td>
+                            <td>
+                              <input class="gp-row-input" type="text" name="greige_remark_{{ row.inward_item_id }}" value="{{ row.remark|default:'' }}" placeholder="Remark">
+                              {% if row.error %}
+                                <div class="gp-inline-errors">{{ row.error }}</div>
+                              {% endif %}
+                            </td>
                           </tr>
                           {% endfor %}
-                        {% endfor %}
+                        {% else %}
+                          <tr>
+                            <td colspan="11"><div class="gp-note">No Yarn inward rows found for greige generation.</div></td>
+                          </tr>
+                        {% endif %}
                       </tbody>
                     </table>
-                    {% else %}
-                      <div class="yp-panel-body">
-                        <div class="yp-note">No Yarn inward data found yet.</div>
+                  </div>
+
+                  <div class="gp-split">
+                    <div class="gp-grid">
+                      <div class="gp-field">
+                        <label for="terms_condition_id">Terms & Conditions</label>
+                        <select id="terms_condition_id" name="terms_condition_id">
+                          <option value="">Select terms & conditions</option>
+                          {% for tc in terms_condition_options %}
+                            <option
+                              value="{{ tc.id }}"
+                              data-content="{{ tc.content|escape }}"
+                              {% if selected_terms_condition_id == tc.id|stringformat:'s' %}selected{% endif %}
+                            >{{ tc.title }}</option>
+                          {% endfor %}
+                        </select>
                       </div>
-                    {% endif %}
+
+                      <div class="gp-field">
+                        <label for="terms_preview">Terms Preview</label>
+                        <textarea id="terms_preview" readonly placeholder="Selected terms content will appear here"></textarea>
+                      </div>
+
+                      <div class="gp-field">
+                        <label for="greige_description">Description</label>
+                        <textarea id="greige_description" name="greige_description" placeholder="Greige description / notes">{{ greige_description|default:'' }}</textarea>
+                      </div>
+                    </div>
+
+                    <div class="gp-grid">
+                      <div class="gp-field">
+                        <label for="greige_total_weight">Total Weight</label>
+                        <input id="greige_total_weight" type="text" name="greige_total_weight" value="{{ greige_total_weight|default:'0.00' }}" readonly>
+                      </div>
+                      <div class="gp-field">
+                        <label for="greige_subtotal">Sub Total</label>
+                        <input id="greige_subtotal" type="text" name="greige_subtotal" value="{{ greige_subtotal|default:'0.00' }}" readonly>
+                      </div>
+                      <div class="gp-field">
+                        <label for="greige_discount_percent">Discount In (%)</label>
+                        <input id="greige_discount_percent" type="number" step="0.01" min="0" name="greige_discount_percent" value="{{ greige_discount_percent|default:'0' }}">
+                      </div>
+                      <div class="gp-field">
+                        <label for="greige_after_discount">After Discount Value</label>
+                        <input id="greige_after_discount" type="text" name="greige_after_discount" value="{{ greige_after_discount|default:'0.00' }}" readonly>
+                      </div>
+                      <div class="gp-field">
+                        <label for="greige_others">Others</label>
+                        <input id="greige_others" type="number" step="0.01" min="0" name="greige_others" value="{{ greige_others|default:'0' }}">
+                      </div>
+                      <div class="gp-field">
+                        <label for="greige_cgst">CGST (%)</label>
+                        <input id="greige_cgst" type="number" step="0.01" min="0" name="greige_cgst" value="{{ greige_cgst|default:'2.5' }}">
+                      </div>
+                      <div class="gp-field">
+                        <label for="greige_sgst">SGST (%)</label>
+                        <input id="greige_sgst" type="number" step="0.01" min="0" name="greige_sgst" value="{{ greige_sgst|default:'2.5' }}">
+                      </div>
+                      <div class="gp-field">
+                        <label for="greige_grand_total">Grand Total</label>
+                        <input id="greige_grand_total" type="text" value="0.00" readonly>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </details>
 
-              <div class="yp-side">
-                <div class="yp-summary">
-                  <div class="yp-summary-head">
+              <details class="gp-accordion">
+                <summary>
+                  <div class="gp-acc-left">
+                    <div class="gp-dot"></div>
                     <div>
-                      <div class="yp-panel-kicker">Summary</div>
-                      <div class="yp-panel-title">Quick overview</div>
+                      <div class="gp-acc-title">Source Inward Rows</div>
+                      <div class="gp-acc-sub">Reference inward rows coming from yarn inward</div>
                     </div>
                   </div>
+                  <div class="gp-caret"></div>
+                </summary>
 
-                  <div class="yp-summary-body">
-                    <div class="yp-summary-list">
-                      <div class="yp-summary-row">
-                        <div class="yp-summary-k">Greige PO No</div>
-                        <div class="yp-summary-v">{{ system_number_preview }}</div>
-                      </div>
-
-                      <div class="yp-summary-row">
-                        <div class="yp-summary-k">Source Yarn PO</div>
-                        <div class="yp-summary-v">{% if source_yarn_po %}{{ source_yarn_po.system_number }}{% else %}—{% endif %}</div>
-                      </div>
-
-                      <div class="yp-summary-row">
-                        <div class="yp-summary-k">Available Qty</div>
-                        <div class="yp-summary-v">{{ form.available_qty.value|default:"0.00" }}</div>
-                      </div>
-
-                      {% if selected_source_inward %}
-                      <div class="yp-summary-row">
-                        <div class="yp-summary-k">Source Inward</div>
-                        <div class="yp-summary-v">{{ selected_source_inward.inward_number }}</div>
-                      </div>
-                      {% endif %}
-
-                      <div class="yp-summary-row">
-                        <div class="yp-summary-k">Vendor</div>
-                        <div class="yp-summary-v">
-                          {% if source_yarn_po and source_yarn_po.vendor %}
-                            {{ source_yarn_po.vendor.name }}
-                          {% else %}
-                            Select vendor
-                          {% endif %}
-                        </div>
-                      </div>
-
-                      <div class="yp-summary-row">
-                        <div class="yp-summary-k">Flow</div>
-                        <div class="yp-summary-v">Yarn → Greige → Inward → Dyeing</div>
-                      </div>
+                <div class="gp-body">
+                  {% if source_inwards %}
+                    <div class="gp-table-wrap">
+                      <table class="gp-table" style="min-width:760px;">
+                        <thead>
+                          <tr>
+                            <th>Inward No</th>
+                            <th>Date</th>
+                            <th>Item</th>
+                            <th>Qty</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for inward in source_inwards %}
+                            {% for inward_item in inward.items.all %}
+                            <tr>
+                              <td>{{ inward.inward_number }}</td>
+                              <td>{{ inward.inward_date|date:"d-m-Y" }}</td>
+                              <td>
+                                <div class="gp-name">
+                                  {% if inward_item.po_item.material_type %}
+                                    {{ inward_item.po_item.material_type.name }}
+                                  {% elif inward_item.po_item.material %}
+                                    {{ inward_item.po_item.material.name }}
+                                  {% else %}
+                                    Yarn Item
+                                  {% endif %}
+                                </div>
+                              </td>
+                              <td>{{ inward_item.quantity }}</td>
+                            </tr>
+                            {% endfor %}
+                          {% endfor %}
+                        </tbody>
+                      </table>
                     </div>
+                  {% else %}
+                    <div class="gp-note">No Yarn inward data found yet.</div>
+                  {% endif %}
+                </div>
+              </details>
+            </div>
+
+            <div class="gp-side">
+              <div class="gp-side-card">
+                <div class="gp-side-head">
+                  <div class="gp-acc-title">Quick Summary</div>
+                  <div class="gp-acc-sub">Live split summary of the greige PO</div>
+                </div>
+                <div class="gp-side-body">
+                  <div class="gp-summary-row">
+                    <div class="gp-summary-k">Greige PO No</div>
+                    <div class="gp-summary-v">{{ system_number_preview }}</div>
+                  </div>
+                  <div class="gp-summary-row">
+                    <div class="gp-summary-k">Source Yarn PO</div>
+                    <div class="gp-summary-v">{% if source_yarn_po %}{{ source_yarn_po.system_number }}{% else %}—{% endif %}</div>
+                  </div>
+                  <div class="gp-summary-row">
+                    <div class="gp-summary-k">Source Inward</div>
+                    <div class="gp-summary-v">{% if selected_source_inward %}{{ selected_source_inward.inward_number }}{% else %}All Inwards{% endif %}</div>
+                  </div>
+                  <div class="gp-summary-row">
+                    <div class="gp-summary-k">Rows</div>
+                    <div class="gp-summary-v" id="summary-row-count">{{ greige_rows|length }}</div>
+                  </div>
+                  <div class="gp-summary-row">
+                    <div class="gp-summary-k">Total Weight</div>
+                    <div class="gp-summary-v" id="summary-total-weight">{{ greige_total_weight|default:'0.00' }}</div>
+                  </div>
+                  <div class="gp-summary-row">
+                    <div class="gp-summary-k">Sub Total</div>
+                    <div class="gp-summary-v" id="summary-subtotal">{{ greige_subtotal|default:'0.00' }}</div>
+                  </div>
+                  <div class="gp-summary-row">
+                    <div class="gp-summary-k">Grand Total</div>
+                    <div class="gp-summary-v" id="summary-grand-total">0.00</div>
+                  </div>
+                  <div class="gp-summary-row">
+                    <div class="gp-summary-k">Flow</div>
+                    <div class="gp-summary-v">Yarn → Greige → Inward → Dyeing</div>
                   </div>
                 </div>
-
-                {% if existing_po and mode != 'edit' %}
-                <div class="yp-card">
-                  <div class="yp-card-head">
-                    <div>
-                      <div class="yp-panel-kicker">Existing record</div>
-                      <div class="yp-panel-title">Greige PO already exists</div>
-                    </div>
-                  </div>
-                  <div class="yp-card-body">
-                    <div class="yp-note">
-                      A Greige PO already exists for this source Yarn PO.
-                    </div>
-                  </div>
-                </div>
-                {% endif %}
               </div>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </section>
+
+<script>
+(function () {
+  function num(v) {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function money(v) {
+    return (Math.round((v + Number.EPSILON) * 100) / 100).toFixed(2);
+  }
+
+  function recalcRows() {
+    let subtotal = 0;
+    let totalWeight = 0;
+
+    document.querySelectorAll(".gp-line-row").forEach(function (row) {
+      const qtyInput = row.querySelector(".js-gp-qty");
+      const rateInput = row.querySelector(".js-gp-rate");
+      const finalInput = row.querySelector(".js-gp-final");
+
+      const qty = num(qtyInput ? qtyInput.value : 0);
+      const rate = num(rateInput ? rateInput.value : 0);
+      const finalAmount = qty * rate;
+
+      if (finalInput) {
+        finalInput.value = money(finalAmount);
+      }
+
+      subtotal += finalAmount;
+      totalWeight += qty;
+    });
+
+    const discount = num(document.getElementById("greige_discount_percent")?.value);
+    const others = num(document.getElementById("greige_others")?.value);
+    const cgst = num(document.getElementById("greige_cgst")?.value);
+    const sgst = num(document.getElementById("greige_sgst")?.value);
+
+    const afterDiscount = subtotal - (subtotal * discount / 100);
+    const tax = afterDiscount * (cgst + sgst) / 100;
+    const grandTotal = afterDiscount + others + tax;
+
+    const totalWeightInput = document.getElementById("greige_total_weight");
+    const subtotalInput = document.getElementById("greige_subtotal");
+    const afterDiscountInput = document.getElementById("greige_after_discount");
+    const grandTotalInput = document.getElementById("greige_grand_total");
+
+    if (totalWeightInput) totalWeightInput.value = money(totalWeight);
+    if (subtotalInput) subtotalInput.value = money(subtotal);
+    if (afterDiscountInput) afterDiscountInput.value = money(afterDiscount);
+    if (grandTotalInput) grandTotalInput.value = money(grandTotal);
+
+    const summaryWeight = document.getElementById("summary-total-weight");
+    const summarySubtotal = document.getElementById("summary-subtotal");
+    const summaryGrand = document.getElementById("summary-grand-total");
+
+    if (summaryWeight) summaryWeight.textContent = money(totalWeight);
+    if (summarySubtotal) summarySubtotal.textContent = money(subtotal);
+    if (summaryGrand) summaryGrand.textContent = money(grandTotal);
+  }
+
+  function syncTermsPreview() {
+    const select = document.getElementById("terms_condition_id");
+    const preview = document.getElementById("terms_preview");
+    if (!select || !preview) return;
+
+    const selected = select.options[select.selectedIndex];
+    const content = selected ? (selected.getAttribute("data-content") || "") : "";
+    const temp = document.createElement("textarea");
+    temp.innerHTML = content;
+    preview.value = temp.value;
+  }
+
+  document.addEventListener("input", function (e) {
+    if (
+      e.target.matches(".js-gp-qty") ||
+      e.target.matches(".js-gp-rate") ||
+      e.target.matches("#greige_discount_percent") ||
+      e.target.matches("#greige_others") ||
+      e.target.matches("#greige_cgst") ||
+      e.target.matches("#greige_sgst")
+    ) {
+      recalcRows();
+    }
+  });
+
+  document.addEventListener("change", function (e) {
+    if (e.target.matches("#terms_condition_id")) {
+      syncTermsPreview();
+    }
+  });
+
+  syncTermsPreview();
+  recalcRows();
+})();
+</script>
 {% endblock %}

@@ -642,12 +642,7 @@
                               <a class="yit-generated-link" href="{% url 'accounts:greigepo_edit' inward_block.greige_po.id %}">
                                 View Greige PO
                               </a>
-                              <span class="yit-inline-status pending">Edit Locked</span>
                             {% else %}
-                              <a class="yit-generated-link" href="{% url 'accounts:yarn_inward_edit' inward_block.inward.id %}">
-                                Edit Inward
-                              </a>
-
                               <form class="yit-generate-form" method="post" action="{% url 'accounts:generate_greige_po_from_yarn' row.po.id %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="inward_id" value="{{ inward_block.inward.id }}">
@@ -672,10 +667,26 @@
                     <div class="yit-summary-box">
                       <div class="yit-summary-label">Generated</div>
                       <div class="yit-summary-value">{{ row.greige_generated_count }}/{{ row.total_inwards }}</div>
-
+                      <div class="yit-summary-sub">
+                        Greige PO is tracked separately for each inward.
+                      </div>
                     </div>
 
-                  
+                    <div class="yit-summary-box">
+                      <div class="yit-summary-label">Status</div>
+                      <div class="yit-summary-value">
+                        {% if row.greige_generated_count and row.greige_generated_count == row.total_inwards %}
+                          Completed
+                        {% elif row.greige_generated_count %}
+                          Partial
+                        {% else %}
+                          Pending
+                        {% endif %}
+                      </div>
+                      <div class="yit-summary-sub">
+                        Use the Generate button inside each inward card.
+                      </div>
+                    </div>
                   </div>
                 </div>
 

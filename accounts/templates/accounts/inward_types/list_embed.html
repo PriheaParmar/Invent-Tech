@@ -1,99 +1,88 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/jobbers/types.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=2">
 
-<div class="{% if full_page %}jb-page{% endif %}">
-  <div class="jobbers-embed jb-types-embed">
-    <section class="jb-panel">
-      <div class="jb-head">
-        <div>
-          <div class="jb-title">Inward Types</div>
-          <div class="jb-sub">Manage reusable inward type names used in inward forms</div>
-        </div>
-
-        <div class="jb-head-actions">
-          {% if not full_page %}
-          <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
-            <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M18 6L6 18"></path>
-              <path d="M6 6l12 12"></path>
-            </svg>
-          </button>
-          {% endif %}
-        </div>
+<div class="jobbers-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Inward Types</div>
+        <div class="jb-sub">Manage reusable inward types used in yarn, greige and other inward forms</div>
       </div>
 
-      <form method="post"
-            action="{% url 'accounts:inwardtype_list' %}{% if not full_page %}?embed=1{% endif %}"
-            class="jb-inline-form">
-        {% csrf_token %}
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:inwardtype_list' %}">
         {% if not full_page %}
         <input type="hidden" name="embed" value="1">
         {% endif %}
-
-        <div class="jb-inline-field">
-          <label for="{{ form.name.id_for_label }}">Inward Type Name</label>
-          {{ form.name }}
-          {% if form.name.errors %}
-          <div class="jb-field-errors">
-            {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
-
-        <div class="jb-inline-field" style="grid-column: 1 / -1;">
-          <label for="{{ form.description.id_for_label }}">Description</label>
-          {{ form.description }}
-          {% if form.description.errors %}
-          <div class="jb-field-errors">
-            {% for error in form.description.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
-
-        <button class="jb-add" type="submit">Add</button>
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search inward type or description"
+          autocomplete="off"
+          aria-label="Search inward types"
+        >
+        <button class="jb-search-btn" type="submit">Search</button>
       </form>
 
-      <div class="jb-tablewrap">
-        <table class="jb-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th style="width: 140px;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for inward_type in inward_types %}
-            <tr>
-              <td>{{ inward_type.name }}</td>
-              <td>{{ inward_type.description|default:"-"|linebreaksbr }}</td>
-              <td class="jb-actions">
-                <a class="jb-link"
-                   href="{% url 'accounts:inwardtype_edit' inward_type.id %}{% if not full_page %}?embed=1{% endif %}">
-                  Edit
-                </a>
-                <span class="jb-dot">•</span>
-
-                <form method="post"
-                      action="{% url 'accounts:inwardtype_delete' inward_type.id %}{% if not full_page %}?embed=1{% endif %}"
-                      class="jb-inline-delete js-jb-delete-form"
-                      data-delete-label="inward type &quot;{{ inward_type.name|escape }}&quot;">
-                  {% csrf_token %}
-                  {% if not full_page %}
-                  <input type="hidden" name="embed" value="1">
-                  {% endif %}
-                  <button class="jb-link jb-link-danger jb-link-button" type="submit">Delete</button>
-                </form>
-              </td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="3" class="jb-empty">No inward types yet.</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:inwardtype_add' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Add inward type">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </a>
       </div>
-    </section>
-  </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Inward Type</th>
+            <th>Description</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inward_type in inward_types %}
+          <tr>
+            <td><strong>{{ inward_type.name }}</strong></td>
+            <td>{{ inward_type.description|default:"—"|linebreaksbr }}</td>
+            <td class="jb-actions">
+              <a class="jb-link" href="{% url 'accounts:inwardtype_edit' inward_type.id %}{% if not full_page %}?embed=1{% endif %}">Edit</a>
+              <span class="jb-dot">•</span>
+              <form
+                method="post"
+                action="{% url 'accounts:inwardtype_delete' inward_type.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="inward type &quot;{{ inward_type.name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                {% if not full_page %}
+                <input type="hidden" name="embed" value="1">
+                {% endif %}
+                <button class="jb-link jb-link-danger jb-link-button" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="jb-empty">No inward types found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>

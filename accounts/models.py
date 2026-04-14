@@ -1,18 +1,20 @@
 from decimal import Decimal
-from django.db.models import Sum
-from django.utils import timezone
+
 from django.conf import settings
 from django.db import models
+from django.db.models import Sum
+from django.utils import timezone
+
 
 # ============================================================
 # USER
+# ============================================================
 MATERIAL_KIND_CHOICES = (
     ("yarn", "Yarn"),
     ("greige", "Greige"),
     ("finished", "Finished"),
     ("trim", "Trim"),
 )
-# ============================================================
 
 
 class UserExtra(models.Model):
@@ -42,7 +44,6 @@ class OwnedModel(models.Model):
 # ============================================================
 # JOBBERS
 # ============================================================
-
 class JobberType(OwnedModel):
     name = models.CharField(max_length=80)
 
@@ -67,10 +68,8 @@ class Jobber(OwnedModel):
     name = models.CharField(max_length=120)
     phone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
-
     role = models.CharField(max_length=30, choices=ROLE_CHOICES, default="Operator")
     jobber_type = models.ForeignKey(JobberType, on_delete=models.SET_NULL, null=True, blank=True)
-
     address = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
@@ -85,7 +84,6 @@ class Jobber(OwnedModel):
 # ============================================================
 # MATERIAL
 # ============================================================
-
 class Material(models.Model):
     MATERIAL_KIND_CHOICES = [
         ("yarn", "Yarn"),
@@ -94,12 +92,7 @@ class Material(models.Model):
         ("trim", "Trim"),
     ]
 
-    material_kind = models.CharField(
-        max_length=16,
-        choices=MATERIAL_KIND_CHOICES,
-        default="yarn",
-    )
-
+    material_kind = models.CharField(max_length=16, choices=MATERIAL_KIND_CHOICES, default="yarn")
     material_type = models.ForeignKey(
         "MaterialType",
         on_delete=models.SET_NULL,
@@ -107,7 +100,6 @@ class Material(models.Model):
         blank=True,
         related_name="materials",
     )
-
     material_sub_type = models.ForeignKey(
         "MaterialSubType",
         on_delete=models.SET_NULL,
@@ -115,7 +107,6 @@ class Material(models.Model):
         blank=True,
         related_name="materials",
     )
-
     material_shade = models.ForeignKey(
         "MaterialShade",
         on_delete=models.SET_NULL,
@@ -123,11 +114,9 @@ class Material(models.Model):
         blank=True,
         related_name="materials",
     )
-
     name = models.CharField(max_length=150)
     remarks = models.TextField(blank=True)
     image = models.ImageField(upload_to="materials/%Y/%m/", blank=True, null=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -153,17 +142,17 @@ class GreigeDetail(models.Model):
 
 
 class FinishedDetail(models.Model):
-    class FinishType(models.TextChoices):
-        DYED = "dyed", "Dyed"
-        PRINTED = "printed", "Printed"
-        COATED = "coated", "Coated"
-        WASHED = "washed", "Washed"
-        OTHER = "other", "Other"
+    FINISH_TYPE_CHOICES = [
+        ("dyed", "Dyed"),
+        ("printed", "Printed"),
+        ("coated", "Coated"),
+        ("washed", "Washed"),
+        ("other", "Other"),
+    ]
 
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="finished")
-
     base_fabric_type = models.CharField(max_length=120, blank=True)
-    finish_type = models.CharField(max_length=20, choices=FinishType.choices, blank=True)
+    finish_type = models.CharField(max_length=20, choices=FINISH_TYPE_CHOICES, blank=True)
     gsm = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     width = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     end_use = models.CharField(max_length=120, blank=True)
@@ -181,7 +170,6 @@ class TrimDetail(models.Model):
     ]
 
     material = models.OneToOneField(Material, on_delete=models.CASCADE, related_name="trim")
-
     trim_type = models.CharField(max_length=80, choices=TRIM_TYPE_CHOICES, blank=True)
     size = models.CharField(max_length=60, blank=True)
     color = models.CharField(max_length=60, blank=True)
@@ -191,7 +179,6 @@ class TrimDetail(models.Model):
 # ============================================================
 # PARTY
 # ============================================================
-
 INDIA_STATE_CHOICES = [
     ("AN", "Andaman & Nicobar Islands"),
     ("AP", "Andhra Pradesh"),
@@ -236,19 +223,15 @@ class Party(models.Model):
     party_name = models.CharField(max_length=150)
     full_name = models.CharField(max_length=200, blank=True)
     address = models.TextField(blank=True)
-
     pan_number = models.CharField(max_length=10, blank=True)
     gst_number = models.CharField(max_length=15, blank=True)
     tan_number = models.CharField(max_length=10, blank=True)
-
     state = models.CharField(max_length=2, choices=INDIA_STATE_CHOICES, blank=True)
     phone_number = models.CharField(max_length=15, blank=True)
     email = models.EmailField(blank=True)
-
     bank_name = models.CharField(max_length=120, blank=True)
     account_number = models.CharField(max_length=30, blank=True)
     ifsc_code = models.CharField(max_length=20, blank=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -256,6 +239,7 @@ class Party(models.Model):
 
     def __str__(self):
         return self.party_name
+
 
 class Client(OwnedModel):
     name = models.CharField(max_length=180)
@@ -275,7 +259,8 @@ class Client(OwnedModel):
 
     def __str__(self):
         return self.name
-    
+
+
 class Location(OwnedModel):
     name = models.CharField(max_length=120)
     address_line_1 = models.CharField(max_length=255, blank=True, default="")
@@ -292,6 +277,7 @@ class Location(OwnedModel):
     def __str__(self):
         return self.name
 
+
 class Brand(OwnedModel):
     name = models.CharField(max_length=120)
     description = models.TextField(blank=True, default="")
@@ -303,7 +289,8 @@ class Brand(OwnedModel):
 
     def __str__(self):
         return self.name
-    
+
+
 class Category(OwnedModel):
     name = models.CharField(max_length=120)
     description = models.TextField(blank=True, default="")
@@ -316,10 +303,10 @@ class Category(OwnedModel):
     def __str__(self):
         return self.name
 
-# ============================================================
-# UTILITIES (SINGLE COPY ONLY ✅)
-# ============================================================
 
+# ============================================================
+# UTILITIES
+# ============================================================
 class MaterialType(OwnedModel):
     material_kind = models.CharField(
         max_length=20,
@@ -359,11 +346,7 @@ class MaterialSubType(OwnedModel):
         null=True,
         blank=True,
     )
-    material_type = models.ForeignKey(
-        MaterialType,
-        on_delete=models.CASCADE,
-        related_name="sub_types",
-    )
+    material_type = models.ForeignKey(MaterialType, on_delete=models.CASCADE, related_name="sub_types")
     name = models.CharField(max_length=120)
     description = models.TextField(blank=True, null=True)
 
@@ -375,49 +358,34 @@ class MaterialSubType(OwnedModel):
         return self.name
 
 
-# ============================================================
-# FIRM
-# ============================================================
-
 class Firm(models.Model):
-    FIRM_TYPES = [
-        ("proprietorship", "Proprietorship"),
-        ("partnership", "Partnership"),
-        ("llp", "LLP"),
-        ("pvt_ltd", "Pvt Ltd"),
+    FIRM_TYPE_CHOICES = [
+        ("law_firm", "Law Firm"),
+        ("company", "Company"),
+        ("individual", "Individual"),
+        ("startup", "Startup"),
+        ("other", "Other"),
     ]
 
     owner = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="firm")
-
     firm_name = models.CharField(max_length=180)
-    class FirmType(models.TextChoices):
-        LAW_FIRM = "law_firm", "Law Firm"
-        COMPANY = "company", "Company"
-        INDIVIDUAL = "individual", "Individual"
-        STARTUP = "startup", "Startup"
-        OTHER = "other", "Other"
-
-    firm_type = models.CharField(max_length=20, choices=FirmType.choices, default=FirmType.COMPANY)
+    firm_type = models.CharField(max_length=20, choices=FIRM_TYPE_CHOICES, default="company")
     address_line = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
     pincode = models.CharField(max_length=12, blank=True)
-
     phone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
     website = models.URLField(blank=True)
-
     gst_number = models.CharField(max_length=20, blank=True)
     pan_number = models.CharField(max_length=20, blank=True)
     tan_number = models.CharField(max_length=20, blank=True)
     cin_number = models.CharField(max_length=30, blank=True)
-
     bank_name = models.CharField(max_length=120, blank=True)
     account_holder_name = models.CharField(max_length=120, blank=True)
     account_number = models.CharField(max_length=40, blank=True)
     ifsc_code = models.CharField(max_length=20, blank=True)
     branch_name = models.CharField(max_length=120, blank=True)
-
     logo = models.ImageField(upload_to="firm_logos/", blank=True, null=True)
 
     def __str__(self):
@@ -429,11 +397,9 @@ class Firm(models.Model):
         return ", ".join([p for p in parts if p])
 
 
-
 # ============================================================
 # VENDOR
 # ============================================================
-
 class Vendor(OwnedModel):
     name = models.CharField(max_length=180)
     contact_person = models.CharField(max_length=120, blank=True, default="")
@@ -454,18 +420,18 @@ class Vendor(OwnedModel):
 # ============================================================
 # YARN PURCHASE ORDER
 # ============================================================
-
 class YarnPurchaseOrder(OwnedModel):
+    APPROVAL_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
     system_number = models.CharField(max_length=30, unique=True, blank=True)
     po_number = models.CharField(max_length=30, blank=True, default="")
     po_date = models.DateField()
     cancel_date = models.DateField(null=True, blank=True)
-
-    vendor = models.ForeignKey(
-        "Vendor",
-        on_delete=models.PROTECT,
-        related_name="yarn_purchase_orders",
-    )
+    vendor = models.ForeignKey("Vendor", on_delete=models.PROTECT, related_name="yarn_purchase_orders")
     firm = models.ForeignKey(
         "Firm",
         on_delete=models.SET_NULL,
@@ -473,11 +439,9 @@ class YarnPurchaseOrder(OwnedModel):
         blank=True,
         related_name="yarn_purchase_orders",
     )
-
     shipping_address = models.TextField(blank=True, default="")
     remarks = models.TextField(blank=True, default="")
     terms_conditions = models.TextField(blank=True, default="")
-
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     discount_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     after_discount_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -486,17 +450,7 @@ class YarnPurchaseOrder(OwnedModel):
     sgst_percent = models.DecimalField(max_digits=6, decimal_places=2, default=2.5)
     total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     grand_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
-    class ApprovalStatus(models.TextChoices):
-        PENDING = "pending", "Pending"
-        APPROVED = "approved", "Approved"
-        REJECTED = "rejected", "Rejected"
-
-    approval_status = models.CharField(
-        max_length=20,
-        choices=ApprovalStatus.choices,
-        default=ApprovalStatus.PENDING,
-    )
+    approval_status = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default="pending")
     rejection_reason = models.TextField(blank=True, default="")
     reviewed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -509,10 +463,7 @@ class YarnPurchaseOrder(OwnedModel):
 
     @property
     def total_inward_qty(self):
-        total = (
-            self.inwards.aggregate(total=Sum("items__quantity")).get("total")
-            or Decimal("0")
-        )
+        total = self.inwards.aggregate(total=Sum("items__quantity")).get("total") or Decimal("0")
         return total
 
     @property
@@ -530,7 +481,6 @@ class YarnPurchaseOrder(OwnedModel):
 
 class YarnPurchaseOrderItem(models.Model):
     po = models.ForeignKey("YarnPurchaseOrder", on_delete=models.CASCADE, related_name="items")
-
     material_type = models.ForeignKey(
         "MaterialType",
         on_delete=models.PROTECT,
@@ -539,7 +489,6 @@ class YarnPurchaseOrderItem(models.Model):
         blank=True,
         limit_choices_to={"material_kind": "yarn"},
     )
-
     material = models.ForeignKey(
         "Material",
         on_delete=models.PROTECT,
@@ -547,7 +496,6 @@ class YarnPurchaseOrderItem(models.Model):
         null=True,
         blank=True,
     )
-
     unit = models.CharField(max_length=20, blank=True, default="")
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -572,25 +520,17 @@ class YarnPurchaseOrderItem(models.Model):
         ordered = self.quantity or Decimal("0")
         inward = self.inward_qty_total or Decimal("0")
         return ordered - inward if ordered > inward else Decimal("0")
+
     class Meta:
         ordering = ["id"]
 
     def __str__(self):
-        label = None
-        if self.material_type:
-            label = self.material_type.name
-        elif self.material:
-            label = str(self.material)
-        else:
-            label = "Yarn Item"
+        label = self.material_type.name if self.material_type else str(self.material) if self.material else "Yarn Item"
         return f"{self.po} - {label}"
-    
+
+
 class YarnPOInward(OwnedModel):
-    po = models.ForeignKey(
-        "YarnPurchaseOrder",
-        on_delete=models.CASCADE,
-        related_name="inwards",
-    )
+    po = models.ForeignKey("YarnPurchaseOrder", on_delete=models.CASCADE, related_name="inwards")
     vendor = models.ForeignKey(
         "Vendor",
         on_delete=models.SET_NULL,
@@ -611,16 +551,8 @@ class YarnPOInward(OwnedModel):
 
 
 class YarnPOInwardItem(models.Model):
-    inward = models.ForeignKey(
-        YarnPOInward,
-        on_delete=models.CASCADE,
-        related_name="items",
-    )
-    po_item = models.ForeignKey(
-        "YarnPurchaseOrderItem",
-        on_delete=models.CASCADE,
-        related_name="inward_items",
-    )
+    inward = models.ForeignKey(YarnPOInward, on_delete=models.CASCADE, related_name="items")
+    po_item = models.ForeignKey("YarnPurchaseOrderItem", on_delete=models.CASCADE, related_name="inward_items")
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     remark = models.CharField(max_length=255, blank=True, default="")
 
@@ -629,30 +561,28 @@ class YarnPOInwardItem(models.Model):
 
     def __str__(self):
         return f"{self.inward.inward_number} / {self.po_item_id}"
-    
+
+
 class GreigePurchaseOrder(OwnedModel):
+    APPROVAL_STATUS_CHOICES = [
+            ("pending", "Pending"),
+            ("approved", "Approved"),
+            ("rejected", "Rejected"),
+        ]
     system_number = models.CharField(max_length=30, unique=True, blank=True)
     po_number = models.CharField(max_length=30, blank=True, default="")
     po_date = models.DateField(default=timezone.localdate)
     internal_po_number = models.CharField(max_length=30, blank=True, default="")
     available_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
     shipping_address = models.CharField(max_length=255, blank=True, default="")
     delivery_period = models.CharField(max_length=100, blank=True, default="")
     expected_delivery_date = models.DateField(null=True, blank=True)
     cancel_date = models.DateField(null=True, blank=True)
-
     director = models.CharField(max_length=120, blank=True, default="")
     validity_period = models.CharField(max_length=100, blank=True, default="")
     address = models.TextField(blank=True, default="")
     delivery_schedule = models.CharField(max_length=150, blank=True, default="")
-
-    source_yarn_po = models.ForeignKey(
-        "YarnPurchaseOrder",
-        on_delete=models.CASCADE,
-        related_name="greige_pos",
-    )
-
+    source_yarn_po = models.ForeignKey("YarnPurchaseOrder", on_delete=models.CASCADE, related_name="greige_pos")
     source_yarn_inward = models.ForeignKey(
         "YarnPOInward",
         on_delete=models.SET_NULL,
@@ -660,21 +590,24 @@ class GreigePurchaseOrder(OwnedModel):
         blank=True,
         related_name="generated_greige_pos",
     )
-
-    vendor = models.ForeignKey(
-        "Vendor",
-        on_delete=models.PROTECT,
-        related_name="greige_purchase_orders",
+    vendor = models.ForeignKey("Vendor", on_delete=models.PROTECT, related_name="greige_purchase_orders")
+    approval_status = models.CharField(
+        max_length=20,
+        choices=APPROVAL_STATUS_CHOICES,
+        default="pending",
     )
-
+    rejection_reason = models.TextField(blank=True, default="")
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="reviewed_greige_purchase_orders",
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
 
 class GreigePurchaseOrderItem(models.Model):
-    po = models.ForeignKey(
-        "GreigePurchaseOrder",
-        on_delete=models.CASCADE,
-        related_name="items",
-    )
-
+    po = models.ForeignKey("GreigePurchaseOrder", on_delete=models.CASCADE, related_name="items")
     source_yarn_po_item = models.ForeignKey(
         "YarnPurchaseOrderItem",
         on_delete=models.SET_NULL,
@@ -682,7 +615,6 @@ class GreigePurchaseOrderItem(models.Model):
         blank=True,
         related_name="generated_greige_items",
     )
-
     fabric_name = models.CharField(max_length=150)
     yarn_name = models.CharField(max_length=150, blank=True, default="")
     unit = models.CharField(max_length=20, blank=True, default="")
@@ -708,11 +640,7 @@ class GreigePurchaseOrderItem(models.Model):
 
 
 class GreigePOInward(OwnedModel):
-    po = models.ForeignKey(
-        "GreigePurchaseOrder",
-        on_delete=models.CASCADE,
-        related_name="inwards",
-    )
+    po = models.ForeignKey("GreigePurchaseOrder", on_delete=models.CASCADE, related_name="inwards")
     inward_number = models.CharField(max_length=30, unique=True)
     inward_date = models.DateField(default=timezone.localdate)
     notes = models.TextField(blank=True, default="")
@@ -725,16 +653,8 @@ class GreigePOInward(OwnedModel):
 
 
 class GreigePOInwardItem(models.Model):
-    inward = models.ForeignKey(
-        "GreigePOInward",
-        on_delete=models.CASCADE,
-        related_name="items",
-    )
-    po_item = models.ForeignKey(
-        "GreigePurchaseOrderItem",
-        on_delete=models.CASCADE,
-        related_name="inward_items",
-    )
+    inward = models.ForeignKey("GreigePOInward", on_delete=models.CASCADE, related_name="items")
+    po_item = models.ForeignKey("GreigePurchaseOrderItem", on_delete=models.CASCADE, related_name="inward_items")
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     remark = models.CharField(max_length=255, blank=True, default="")
 
@@ -751,29 +671,16 @@ class DyeingPurchaseOrder(OwnedModel):
     po_date = models.DateField(default=timezone.localdate)
     internal_po_number = models.CharField(max_length=30, blank=True, default="")
     available_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
     shipping_address = models.CharField(max_length=255, blank=True, default="")
     delivery_period = models.CharField(max_length=100, blank=True, default="")
     expected_delivery_date = models.DateField(null=True, blank=True)
     cancel_date = models.DateField(null=True, blank=True)
-
     director = models.CharField(max_length=120, blank=True, default="")
     validity_period = models.CharField(max_length=100, blank=True, default="")
     address = models.TextField(blank=True, default="")
     delivery_schedule = models.CharField(max_length=150, blank=True, default="")
-
-    source_greige_po = models.ForeignKey(
-        "GreigePurchaseOrder",
-        on_delete=models.CASCADE,
-        related_name="dyeing_pos",
-    )
-
-    vendor = models.ForeignKey(
-        "Vendor",
-        on_delete=models.PROTECT,
-        related_name="dyeing_purchase_orders",
-    )
-
+    source_greige_po = models.ForeignKey("GreigePurchaseOrder", on_delete=models.CASCADE, related_name="dyeing_pos")
+    vendor = models.ForeignKey("Vendor", on_delete=models.PROTECT, related_name="dyeing_purchase_orders")
     firm = models.ForeignKey(
         "Firm",
         on_delete=models.SET_NULL,
@@ -781,7 +688,13 @@ class DyeingPurchaseOrder(OwnedModel):
         blank=True,
         related_name="dyeing_purchase_orders",
     )
-
+    source_greige_inward = models.ForeignKey(
+        "GreigePOInward",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_dyeing_pos",
+    )
     remarks = models.TextField(blank=True, default="")
     total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
@@ -804,12 +717,7 @@ class DyeingPurchaseOrder(OwnedModel):
 
 
 class DyeingPurchaseOrderItem(models.Model):
-    po = models.ForeignKey(
-        "DyeingPurchaseOrder",
-        on_delete=models.CASCADE,
-        related_name="items",
-    )
-
+    po = models.ForeignKey("DyeingPurchaseOrder", on_delete=models.CASCADE, related_name="items")
     source_greige_po_item = models.ForeignKey(
         "GreigePurchaseOrderItem",
         on_delete=models.SET_NULL,
@@ -817,7 +725,6 @@ class DyeingPurchaseOrderItem(models.Model):
         blank=True,
         related_name="generated_dyeing_items",
     )
-
     fabric_name = models.CharField(max_length=150)
     greige_name = models.CharField(max_length=150, blank=True, default="")
     unit = models.CharField(max_length=20, blank=True, default="")
@@ -843,11 +750,7 @@ class DyeingPurchaseOrderItem(models.Model):
 
 
 class DyeingPOInward(OwnedModel):
-    po = models.ForeignKey(
-        "DyeingPurchaseOrder",
-        on_delete=models.CASCADE,
-        related_name="inwards",
-    )
+    po = models.ForeignKey("DyeingPurchaseOrder", on_delete=models.CASCADE, related_name="inwards")
     inward_number = models.CharField(max_length=30, unique=True)
     inward_date = models.DateField(default=timezone.localdate)
     notes = models.TextField(blank=True, default="")
@@ -860,16 +763,8 @@ class DyeingPOInward(OwnedModel):
 
 
 class DyeingPOInwardItem(models.Model):
-    inward = models.ForeignKey(
-        DyeingPOInward,
-        on_delete=models.CASCADE,
-        related_name="items",
-    )
-    po_item = models.ForeignKey(
-        "DyeingPurchaseOrderItem",
-        on_delete=models.CASCADE,
-        related_name="inward_items",
-    )
+    inward = models.ForeignKey(DyeingPOInward, on_delete=models.CASCADE, related_name="items")
+    po_item = models.ForeignKey("DyeingPurchaseOrderItem", on_delete=models.CASCADE, related_name="inward_items")
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     remark = models.CharField(max_length=255, blank=True, default="")
 
@@ -878,36 +773,24 @@ class DyeingPOInwardItem(models.Model):
 
     def __str__(self):
         return f"{self.inward.inward_number} / {self.po_item_id}"
-    
+
+
 class ReadyPurchaseOrder(OwnedModel):
     system_number = models.CharField(max_length=30, unique=True, blank=True)
     po_number = models.CharField(max_length=30, blank=True, default="")
     po_date = models.DateField(default=timezone.localdate)
     internal_po_number = models.CharField(max_length=30, blank=True, default="")
     available_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
     shipping_address = models.CharField(max_length=255, blank=True, default="")
     delivery_period = models.CharField(max_length=100, blank=True, default="")
     expected_delivery_date = models.DateField(null=True, blank=True)
     cancel_date = models.DateField(null=True, blank=True)
-
     director = models.CharField(max_length=120, blank=True, default="")
     validity_period = models.CharField(max_length=100, blank=True, default="")
     address = models.TextField(blank=True, default="")
     delivery_schedule = models.CharField(max_length=150, blank=True, default="")
-
-    source_dyeing_po = models.ForeignKey(
-        "DyeingPurchaseOrder",
-        on_delete=models.CASCADE,
-        related_name="ready_pos",
-    )
-
-    vendor = models.ForeignKey(
-        "Vendor",
-        on_delete=models.PROTECT,
-        related_name="ready_purchase_orders",
-    )
-
+    source_dyeing_po = models.ForeignKey("DyeingPurchaseOrder", on_delete=models.CASCADE, related_name="ready_pos")
+    vendor = models.ForeignKey("Vendor", on_delete=models.PROTECT, related_name="ready_purchase_orders")
     firm = models.ForeignKey(
         "Firm",
         on_delete=models.SET_NULL,
@@ -915,7 +798,6 @@ class ReadyPurchaseOrder(OwnedModel):
         blank=True,
         related_name="ready_purchase_orders",
     )
-
     remarks = models.TextField(blank=True, default="")
     total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
@@ -935,14 +817,10 @@ class ReadyPurchaseOrder(OwnedModel):
 
     def __str__(self):
         return self.system_number or f"Ready PO {self.pk or 'Draft'}"
-    
-class ReadyPurchaseOrderItem(models.Model):
-    po = models.ForeignKey(
-        "ReadyPurchaseOrder",
-        on_delete=models.CASCADE,
-        related_name="items",
-    )
 
+
+class ReadyPurchaseOrderItem(models.Model):
+    po = models.ForeignKey("ReadyPurchaseOrder", on_delete=models.CASCADE, related_name="items")
     source_dyeing_po_item = models.ForeignKey(
         "DyeingPurchaseOrderItem",
         on_delete=models.SET_NULL,
@@ -950,7 +828,6 @@ class ReadyPurchaseOrderItem(models.Model):
         blank=True,
         related_name="generated_ready_items",
     )
-
     fabric_name = models.CharField(max_length=150)
     dyeing_name = models.CharField(max_length=150, blank=True, default="")
     unit = models.CharField(max_length=20, blank=True, default="")
@@ -973,13 +850,10 @@ class ReadyPurchaseOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.po} - {self.fabric_name}"
-    
+
+
 class ReadyPOInward(OwnedModel):
-    po = models.ForeignKey(
-        "ReadyPurchaseOrder",
-        on_delete=models.CASCADE,
-        related_name="inwards",
-    )
+    po = models.ForeignKey("ReadyPurchaseOrder", on_delete=models.CASCADE, related_name="inwards")
     inward_number = models.CharField(max_length=30, unique=True)
     inward_date = models.DateField(default=timezone.localdate)
     notes = models.TextField(blank=True, default="")
@@ -989,18 +863,11 @@ class ReadyPOInward(OwnedModel):
 
     def __str__(self):
         return self.inward_number
-    
+
+
 class ReadyPOInwardItem(models.Model):
-    inward = models.ForeignKey(
-        ReadyPOInward,
-        on_delete=models.CASCADE,
-        related_name="items",
-    )
-    po_item = models.ForeignKey(
-        "ReadyPurchaseOrderItem",
-        on_delete=models.CASCADE,
-        related_name="inward_items",
-    )
+    inward = models.ForeignKey(ReadyPOInward, on_delete=models.CASCADE, related_name="items")
+    po_item = models.ForeignKey("ReadyPurchaseOrderItem", on_delete=models.CASCADE, related_name="inward_items")
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     remark = models.CharField(max_length=255, blank=True, default="")
 
@@ -1009,8 +876,6 @@ class ReadyPOInwardItem(models.Model):
 
     def __str__(self):
         return f"{self.inward.inward_number} / {self.po_item_id}"
-    
-    
 
 
 class MaterialUnit(OwnedModel):
@@ -1035,6 +900,7 @@ class InwardType(OwnedModel):
     def __str__(self):
         return self.name
 
+
 class MainCategory(OwnedModel):
     name = models.CharField(max_length=120)
     description = models.TextField(blank=True)
@@ -1057,7 +923,8 @@ class PatternType(OwnedModel):
 
     def __str__(self):
         return self.name
-    
+
+
 class Catalogue(OwnedModel):
     name = models.CharField(max_length=140)
     wear_type = models.CharField(max_length=80, blank=True, default="")
@@ -1070,39 +937,88 @@ class Catalogue(OwnedModel):
 
     def __str__(self):
         return self.name
-    
-class BOM(OwnedModel):
-    class Gender(models.TextChoices):
-        MALE = "male", "Male"
-        FEMALE = "female", "Female"
-        UNISEX = "unisex", "Unisex"
-        KIDS = "kids", "Kids"
 
-    class SizeType(models.TextChoices):
-        CHARACTER = "character", "Character"
-        NUMERIC = "numeric", "Numeric"
-        ALPHA = "alpha", "Alpha"
-        FREE = "free", "Free Size"
+
+class Expense(OwnedModel):
+    name = models.CharField(max_length=120)
+
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("owner", "name")]
+
+    def __str__(self):
+        return self.name
+
+
+class DyeingOtherCharge(OwnedModel):
+    name = models.CharField(max_length=120)
+
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("owner", "name")]
+
+    def __str__(self):
+        return self.name
+
+
+class TermsCondition(OwnedModel):
+    title = models.CharField(max_length=150)
+    content = models.TextField()
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["title"]
+        unique_together = [("owner", "title")]
+
+    def __str__(self):
+        return self.title
+
+
+class SubCategory(OwnedModel):
+    main_category = models.ForeignKey(MainCategory, on_delete=models.CASCADE, related_name="sub_categories")
+    name = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["main_category__name", "name"]
+        unique_together = [("owner", "main_category", "name")]
+
+    def __str__(self):
+        return f"{self.main_category.name} / {self.name}"
+
+
+class BOM(OwnedModel):
+    GENDER_CHOICES = [
+        ("male", "Male"),
+        ("female", "Female"),
+        ("unisex", "Unisex"),
+        ("kids", "Kids"),
+    ]
+    SIZE_TYPE_CHOICES = [
+        ("character", "Character"),
+        ("numeric", "Numeric"),
+        ("alpha", "Alpha"),
+        ("free", "Free Size"),
+    ]
 
     bom_code = models.CharField(max_length=30, blank=True)
     sku_code = models.CharField(max_length=100)
     product_name = models.CharField(max_length=150, blank=True, default="")
+
+    # old text field kept for backward compatibility
     catalogue_name = models.CharField(max_length=120, blank=True, default="")
 
-    brand = models.ForeignKey(
-        Brand,
-        on_delete=models.PROTECT,
-        related_name="boms",
+    # new utility-linked catalogue
+    catalogue = models.ForeignKey(
+        "Catalogue",
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
-    )
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.PROTECT,
         related_name="boms",
-        null=True,
-        blank=True,
     )
+
+    brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name="boms", null=True, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="boms", null=True, blank=True)
     main_category = models.ForeignKey(
         MainCategory,
         on_delete=models.PROTECT,
@@ -1118,21 +1034,23 @@ class BOM(OwnedModel):
         blank=True,
     )
 
-    gender = models.CharField(
-        max_length=20,
-        choices=Gender.choices,
-        default=Gender.UNISEX,
-        blank=True,
-    )
-    size_type = models.CharField(
-        max_length=20,
-        choices=SizeType.choices,
-        default=SizeType.CHARACTER,
-    )
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, default="unisex", blank=True)
+    size_type = models.CharField(max_length=20, choices=SIZE_TYPE_CHOICES, default="character")
+
+    # old text field kept for backward compatibility
     sub_category = models.CharField(max_length=120, blank=True, default="")
+
+    # new utility-linked sub category
+    sub_category_master = models.ForeignKey(
+        "SubCategory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="boms",
+    )
+
     character_name = models.CharField(max_length=120, blank=True, default="")
     license_name = models.CharField(max_length=120, blank=True, default="")
-
     color_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     accessories_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     maintenance_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -1140,7 +1058,6 @@ class BOM(OwnedModel):
     booked_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     available_stock = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     damage_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
-
     is_discontinued = models.BooleanField(default=False)
     product_image = models.ImageField(upload_to="bom/%Y/%m/", blank=True, null=True)
     size_chart_image = models.ImageField(upload_to="bom/%Y/%m/", blank=True, null=True)
@@ -1219,19 +1136,21 @@ class BOM(OwnedModel):
 
     @property
     def linked_fabric_names(self):
-        return ", ".join(
-            [item.material.name for item in self.linked_fabrics if item.material]
-        )
+        return ", ".join([item.material.name for item in self.linked_fabrics if item.material])
 
     @property
     def linked_accessory_names(self):
-        return ", ".join(
-            [item.material.name for item in self.linked_accessories if item.material]
-        )
+        return ", ".join([item.material.name for item in self.linked_accessories if item.material])
 
     @property
     def display_sku_name(self):
         return self.sku_code or self.product_name or self.bom_code
+
+    @property
+    def display_catalogue_name(self):
+        if self.catalogue_id:
+            return self.catalogue.name
+        return self.catalogue_name or ""
 
     @property
     def display_brand_name(self):
@@ -1246,8 +1165,18 @@ class BOM(OwnedModel):
         return self.category.name if self.category else ""
 
     @property
+    def display_sub_category_name(self):
+        if self.sub_category_master_id:
+            return self.sub_category_master.name
+        return self.sub_category or ""
+
+    @property
     def display_pattern_type_name(self):
         return self.pattern_type.name if self.pattern_type else ""
+
+    @property
+    def extra_images(self):
+        return self.images.all()
 
 
 class BOMMaterialItem(models.Model):
@@ -1258,9 +1187,21 @@ class BOMMaterialItem(models.Model):
         PACKING = "packing", "Packing"
         OTHER = "other", "Other"
 
-    bom = models.ForeignKey(BOM, on_delete=models.CASCADE, related_name="material_items")
-    item_type = models.CharField(max_length=20, choices=ItemType.choices, default=ItemType.RAW_FABRIC)
-    material = models.ForeignKey(Material, on_delete=models.PROTECT, related_name="bom_material_items")
+    bom = models.ForeignKey(
+        BOM,
+        on_delete=models.CASCADE,
+        related_name="material_items",
+    )
+    item_type = models.CharField(
+        max_length=20,
+        choices=ItemType.choices,
+        default=ItemType.RAW_FABRIC,
+    )
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.PROTECT,
+        related_name="bom_material_items",
+    )
     unit = models.ForeignKey(
         MaterialUnit,
         on_delete=models.SET_NULL,
@@ -1310,6 +1251,14 @@ class BOMJobberItem(models.Model):
     def save(self, *args, **kwargs):
         if self.jobber and not self.jobber_type:
             self.jobber_type = self.jobber.jobber_type
+
+        if self.bom_id and self.jobber_type_id and (self.price is None or self.price == Decimal("0")):
+            mapped = (
+                self.bom.process_items.filter(jobber_type_id=self.jobber_type_id).order_by("id").first()
+            )
+            if mapped:
+                self.price = mapped.price or Decimal("0")
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -1318,11 +1267,7 @@ class BOMJobberItem(models.Model):
 
 class BOMProcessItem(models.Model):
     bom = models.ForeignKey(BOM, on_delete=models.CASCADE, related_name="process_items")
-    jobber_type = models.ForeignKey(
-        JobberType,
-        on_delete=models.PROTECT,
-        related_name="bom_process_items",
-    )
+    jobber_type = models.ForeignKey(JobberType, on_delete=models.PROTECT, related_name="bom_process_items")
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     sort_order = models.PositiveIntegerField(default=0)
 
@@ -1335,27 +1280,48 @@ class BOMProcessItem(models.Model):
 
 class BOMExpenseItem(models.Model):
     bom = models.ForeignKey(BOM, on_delete=models.CASCADE, related_name="expense_items")
-    expense_name = models.CharField(max_length=120)
+    expense = models.ForeignKey(
+        "Expense",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="bom_expense_items",
+    )
+    expense_name = models.CharField(max_length=120, blank=True, default="")
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ["sort_order", "id"]
 
+    def save(self, *args, **kwargs):
+        if self.expense_id:
+            self.expense_name = self.expense.name
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.bom} - {self.expense_name}"
+        label = self.expense.name if self.expense_id else self.expense_name
+        return f"{self.bom} - {label}"
+
+
+class BOMImage(models.Model):
+    bom = models.ForeignKey(BOM, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="bom/gallery/%Y/%m/")
+    caption = models.CharField(max_length=150, blank=True, default="")
+    sort_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return f"{self.bom} - Image {self.pk}"
 
 
 class Program(OwnedModel):
     program_no = models.CharField(max_length=30)
     program_date = models.DateField(default=timezone.localdate)
-
-    bom = models.ForeignKey(
-        "BOM",
-        on_delete=models.PROTECT,
-        related_name="programs",
-    )
-
+    bom = models.ForeignKey("BOM", on_delete=models.PROTECT, related_name="programs")
     firm = models.ForeignKey(
         "Firm",
         on_delete=models.SET_NULL,
@@ -1363,7 +1329,6 @@ class Program(OwnedModel):
         blank=True,
         related_name="programs",
     )
-
     total_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     ratio = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     damage = models.DecimalField(max_digits=6, decimal_places=2, default=0)
@@ -1405,7 +1370,7 @@ class Program(OwnedModel):
 
     @property
     def sub_category_name(self):
-        return self.bom.sub_category if self.bom_id else ""
+        return self.bom.display_sub_category_name if self.bom_id else ""
 
     @property
     def pattern_type_name(self):
@@ -1437,11 +1402,7 @@ class Program(OwnedModel):
 
 
 class ProgramJobberItem(models.Model):
-    program = models.ForeignKey(
-        "Program",
-        on_delete=models.CASCADE,
-        related_name="jobber_items",
-    )
+    program = models.ForeignKey("Program", on_delete=models.CASCADE, related_name="jobber_items")
     jobber = models.ForeignKey(
         "Jobber",
         on_delete=models.SET_NULL,
@@ -1486,13 +1447,8 @@ class ProgramSizeDetail(models.Model):
         ("5XL", "5XL"),
     ]
 
-    program = models.ForeignKey(
-        "Program",
-        on_delete=models.CASCADE,
-        related_name="size_details",
-    )
+    program = models.ForeignKey("Program", on_delete=models.CASCADE, related_name="size_details")
     size = models.CharField(max_length=10, choices=SIZE_CHOICES)
-
     cq = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     fq = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     dq = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -1505,37 +1461,3 @@ class ProgramSizeDetail(models.Model):
 
     def __str__(self):
         return f"{self.program} - {self.size}"
-    
-    
-    
-class Expense(OwnedModel):
-    name = models.CharField(max_length=120)
-
-    class Meta:
-        ordering = ["name"]
-        unique_together = [("owner", "name")]
-
-    def __str__(self):
-        return self.name
-    
-class DyeingOtherCharge(OwnedModel):
-    name = models.CharField(max_length=120)
-
-    class Meta:
-        ordering = ["name"]
-        unique_together = [("owner", "name")]
-
-    def __str__(self):
-        return self.name
-    
-class TermsCondition(OwnedModel):
-    title = models.CharField(max_length=150)
-    content = models.TextField()
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        ordering = ["title"]
-        unique_together = [("owner", "title")]
-
-    def __str__(self):
-        return self.title

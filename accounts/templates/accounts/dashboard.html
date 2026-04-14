@@ -348,6 +348,7 @@
         "Jobber",
         "Material Sub Type",
         "BOM",
+"Sub Category",
       ],
       Production: ["Techpack", "BOM", "Job Card Details", "Branch SKU"],
       Dyeing: ["Dyeing Master", "Greige Master", "Dyeing Other Charge Headers"],
@@ -477,6 +478,7 @@
       "Terms & Conditions": "{% url 'accounts:termscondition_list' %}",
       "Dyeing Other Charge Headers": "{% url 'accounts:dyeing_other_charge_list' %}",
       "Inward Type": "{% url 'accounts:inwardtype_list' %}",
+"Sub Category": "{% url 'accounts:subcategory_list' %}",
     };
 
     function tileHtml(u) {
@@ -556,6 +558,7 @@
         ROUTES["Brand"],
         ROUTES["Category"],
         ROUTES["Main Category"],
+        ROUTES["Sub Category"],
         ROUTES["BOM"],
         ROUTES["Expense"],
       ]
@@ -604,6 +607,170 @@
         mount.innerHTML = "";
       });
 
+
+function initBomEmbed(mount) {
+  const root = mount.querySelector("[data-bom-form-root]");
+  if (!root || root.dataset.bomInit === "1") return;
+
+  root.dataset.bomInit = "1";
+
+  function updateTotalForms(prefix, total) {
+    const input = root.querySelector(`#id_${prefix}-TOTAL_FORMS`);
+    if (input) input.value = total;
+  }
+
+  function formContainer(prefix) {
+    return root.querySelector(`[data-form-container="${prefix}"]`);
+  }
+
+  function getTemplate(prefix) {
+    return root.querySelector(`#${prefix}-empty-form`) || document.getElementById(`${prefix}-empty-form`);
+  }
+
+  function reindexTemplate(html, prefix, index) {
+    const regex = new RegExp(`${prefix}-__prefix__`, "g");
+    return html.replace(regex, `${prefix}-${index}`).replace(/__prefix__/g, index);
+  }
+
+  function addFormRow(prefix) {
+    const container = formContainer(prefix);
+    const template = getTemplate(prefix);
+    const totalInput = root.querySelector(`#id_${prefix}-TOTAL_FORMS`);
+    if (!container || !template || !totalInput) return;
+
+    const index = parseInt(totalInput.value || "0", 10);
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = reindexTemplate(template.innerHTML.trim(), prefix, index);
+
+    const row = wrapper.firstElementChild;
+    if (!row) return;
+
+    const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+    if (deleteInput) deleteInput.checked = false;
+
+    container.appendChild(row);
+    updateTotalForms(prefix, index + 1);
+    refreshSummary();
+  }
+
+  function removeFormRow(button) {
+    const row = button.closest(".bom-line-row");
+    if (!row) return;
+
+    const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+    if (deleteInput) {
+      deleteInput.checked = true;
+      row.style.display = "none";
+      row.classList.add("is-deleted");
+    } else {
+      row.remove();
+    }
+
+    refreshSummary();
+  }
+
+  root.addEventListener("click", function (e) {
+    const addBtn = e.target.closest("[data-form-add]");
+    if (addBtn) {
+      e.preventDefault();
+      addFormRow(addBtn.getAttribute("data-form-add"));
+      return;
+    }
+
+    const removeBtn = e.target.closest("[data-form-remove]");
+    if (removeBtn) {
+      e.preventDefault();
+      removeFormRow(removeBtn);
+    }
+  });
+
+  function num(val) {
+    const n = parseFloat(val);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function money(val) {
+    return `₹ ${val.toFixed(2)}`;
+  }
+
+  function visibleRows(selector) {
+    return Array.from(root.querySelectorAll(selector)).filter((row) => {
+      return !row.classList.contains("is-deleted") && row.style.display !== "none";
+    });
+  }
+
+  function calcMaterialRows() {
+    let total = 0;
+
+    visibleRows('[data-form-container="materials"] .bom-line-row').forEach((row) => {
+      const rate = row.querySelector('[name$="-cost_per_uom"]');
+      const avg = row.querySelector('[name$="-average"]');
+      const cost = row.querySelector('[name$="-cost"]');
+
+      const rowTotal = num(rate && rate.value) * num(avg && avg.value);
+      if (cost) cost.value = rowTotal.toFixed(2);
+      total += rowTotal;
+    });
+
+    return total;
+  }
+
+  function calcSimpleRows(selector, priceSuffix) {
+    let total = 0;
+
+    visibleRows(selector).forEach((row) => {
+      const input = row.querySelector(`[name$="${priceSuffix}"]`);
+      total += num(input && input.value);
+    });
+
+    return total;
+  }
+
+  function refreshSummary() {
+    const materials = calcMaterialRows();
+    const jobbers = calcSimpleRows('[data-form-container="jobbers"] .bom-line-row', '-price');
+    const processes = calcSimpleRows('[data-form-container="processes"] .bom-line-row', '-price');
+    const expenses = calcSimpleRows('[data-form-container="expenses"] .bom-line-row', '-price');
+
+    const overheads =
+      num(root.querySelector('[name="color_price"]')?.value) +
+      num(root.querySelector('[name="accessories_price"]')?.value) +
+      num(root.querySelector('[name="maintenance_price"]')?.value);
+
+    const finalTotal = materials + jobbers + processes + expenses + overheads;
+
+    const map = {
+      "[data-summary-materials]": materials,
+      "[data-summary-jobbers]": jobbers,
+      "[data-summary-processes]": processes,
+      "[data-summary-expenses]": expenses,
+      "[data-summary-overheads]": overheads,
+      "[data-summary-final]": finalTotal,
+    };
+
+    Object.entries(map).forEach(([selector, value]) => {
+      const el = root.querySelector(selector);
+      if (el) el.textContent = money(value);
+    });
+  }
+
+  root.addEventListener("input", function (e) {
+    const target = e.target;
+
+    if (
+      target.matches('[name$="-cost_per_uom"]') ||
+      target.matches('[name$="-average"]') ||
+      target.matches('[name$="-price"]') ||
+      target.matches('[name="color_price"]') ||
+      target.matches('[name="accessories_price"]') ||
+      target.matches('[name="maintenance_price"]')
+    ) {
+      refreshSummary();
+    }
+  });
+
+  refreshSummary();
+}
       // ==========================
       // MATERIALS ONLY: initEmbedMount
       // - works with current embedded material form
@@ -613,6 +780,8 @@
      
 function initEmbedMount(mount, contextUrl) {
   if (!mount) return;
+
+  initBomEmbed(mount);
 
   // ===== MATERIALS LIST FILTER (stay inside embed) =====
   const materialsList = mount.querySelector(".materials-embed");

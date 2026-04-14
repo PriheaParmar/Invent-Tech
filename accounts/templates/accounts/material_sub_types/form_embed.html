@@ -9,15 +9,15 @@
     <div class="jb-head">
       <div>
         <div class="jb-title">
-          {% if mode == "edit" %}Edit Material Shade{% else %}Add Material Shade{% endif %}
+          {% if mode == "edit" %}Edit Material Sub Type{% else %}Add Material Sub Type{% endif %}
         </div>
-        <div class="jb-sub">Used in Material module shade dropdown</div>
+        <div class="jb-sub">Manage sub types under each material type</div>
       </div>
 
       <div class="jf-head-actions">
         <a
           class="jb-iconbtn jb-back"
-          href="{% url 'accounts:materialshade_list' %}{% if not full_page %}?embed=1{% endif %}"
+          href="{% url 'accounts:materialsubtype_list' %}{% if not full_page %}?embed=1{% endif %}"
           aria-label="Back"
         >
           <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
@@ -37,9 +37,9 @@
     </div>
 
     {% if mode == "add" %}
-      {% url "accounts:materialshade_add" as action_url %}
+      {% url "accounts:materialsubtype_add" as action_url %}
     {% else %}
-      {% url "accounts:materialshade_edit" shade.id as action_url %}
+      {% url "accounts:materialsubtype_edit" material_sub_type.id as action_url %}
     {% endif %}
 
     {% if form.non_field_errors %}
@@ -50,7 +50,12 @@
     </div>
     {% endif %}
 
-    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="jf-form mat-form">
+    <form
+      method="post"
+      action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}"
+      class="jf-form mat-form"
+      data-material-subtype-form="1"
+    >
       {% csrf_token %}
       {% if not full_page %}
       <input type="hidden" name="embed" value="1">
@@ -80,7 +85,17 @@
         </div>
 
         <div class="jf-field jf-full mat-field mat-full">
-          <label for="{{ form.name.id_for_label }}">Material Shade Name</label>
+          <label for="{{ form.material_type.id_for_label }}">Material Type</label>
+          {{ form.material_type }}
+          {% if form.material_type.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.material_type.errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field jf-full mat-field mat-full">
+          <label for="{{ form.name.id_for_label }}">Material Sub Type Name</label>
           {{ form.name }}
           {% if form.name.errors %}
           <div class="jb-field-errors">
@@ -90,32 +105,22 @@
         </div>
 
         <div class="jf-field jf-full mat-field mat-full">
-          <label for="{{ form.code.id_for_label }}">Code</label>
-          {{ form.code }}
-          {% if form.code.errors %}
+          <label for="{{ form.description.id_for_label }}">Description</label>
+          {{ form.description }}
+          {% if form.description.errors %}
           <div class="jb-field-errors">
-            {% for error in form.code.errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
-
-        <div class="jf-field jf-full mat-field mat-full">
-          <label for="{{ form.notes.id_for_label }}">Notes</label>
-          {{ form.notes }}
-          {% if form.notes.errors %}
-          <div class="jb-field-errors">
-            {% for error in form.notes.errors %}<p>{{ error }}</p>{% endfor %}
+            {% for error in form.description.errors %}<p>{{ error }}</p>{% endfor %}
           </div>
           {% endif %}
         </div>
       </div>
 
       <div class="jf-footer">
-        <a class="jb-secondary" href="{% url 'accounts:materialshade_list' %}{% if not full_page %}?embed=1{% endif %}">
+        <a class="jb-secondary" href="{% url 'accounts:materialsubtype_list' %}{% if not full_page %}?embed=1{% endif %}">
           Cancel
         </a>
         <button type="submit" class="jb-add jb-save">
-          {% if mode == "edit" %}Update Material Shade{% else %}Save Material Shade{% endif %}
+          {% if mode == "edit" %}Update Material Sub Type{% else %}Save Material Sub Type{% endif %}
         </button>
       </div>
     </form>

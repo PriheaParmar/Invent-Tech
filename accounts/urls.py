@@ -191,12 +191,18 @@ urlpatterns = [
     path("utilities/terms-conditions/<int:pk>/edit/", views.termscondition_update, name="termscondition_edit"),
     path("utilities/terms-conditions/<int:pk>/delete/", views.termscondition_delete, name="termscondition_delete"),
     # Dyeing Other Charges
-    path("utilities/dyeing-other-charges/", views.dyeing_other_charge_list_create, name="dyeing_other_charge_list"),
-    path("utilities/dyeing-other-charges/<int:pk>/edit/", views.dyeing_other_charge_edit, name="dyeing_other_charge_edit"),
-    path("utilities/dyeing-other-charges/<int:pk>/delete/", views.dyeing_other_charge_delete, name="dyeing_other_charge_delete"),
-    
-      # Inward Types
-    path("utilities/inward-types/", views.inwardtype_list_create, name="inwardtype_list"),
+    path("utilities/dyeing-other-charges/", views.dyeing_other_charge_list, name="dyeing_other_charge_list"),
+path("utilities/dyeing-other-charges/add/", views.dyeing_other_charge_create, name="dyeing_other_charge_add"),
+path("utilities/dyeing-other-charges/<int:pk>/edit/", views.dyeing_other_charge_edit, name="dyeing_other_charge_edit"),
+path("utilities/dyeing-other-charges/<int:pk>/delete/", views.dyeing_other_charge_delete, name="dyeing_other_charge_delete"),
+# Inward Types
+    path("utilities/inward-types/", views.inwardtype_list, name="inwardtype_list"),
+    path("utilities/inward-types/add/", views.inwardtype_create, name="inwardtype_add"),
     path("utilities/inward-types/<int:pk>/edit/", views.inwardtype_edit, name="inwardtype_edit"),
     path("utilities/inward-types/<int:pk>/delete/", views.inwardtype_delete, name="inwardtype_delete"),
+    path("po/greige/<int:pk>/review/", views.greigepo_review, name="greigepo_review"),
+    path("utilities/sub-categories/", views.subcategory_list, name="subcategory_list"),
+    path("utilities/sub-categories/add/", views.subcategory_create, name="subcategory_add"),
+    path("utilities/sub-categories/<int:pk>/edit/", views.subcategory_edit, name="subcategory_edit"),
+    path("utilities/sub-categories/<int:pk>/delete/", views.subcategory_delete, name="subcategory_delete"),
 ]

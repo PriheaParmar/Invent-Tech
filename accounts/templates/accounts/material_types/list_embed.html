@@ -1,83 +1,101 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=3">
-<div class="jobbers-embed parties-embed">
-  <div class="jb-panel">
+<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=3">
+
+<div class="jobbers-embed material-subtype-list-embed">
+  <section class="jb-panel">
     {% include "accounts/_messages_embed.html" %}
 
-    <div class="jb-head pt-head">
+    <div class="jb-head">
       <div>
-        <div class="jb-title pt-title">Material Types</div>
-        <div class="jb-sub pt-sub">Manage the type of material</div>
+        <div class="jb-title">Material Types</div>
+        <div class="jb-sub">Manage the type of material</div>
       </div>
 
-      <div class="jb-head-actions pt-head-actions">
-        
-        <button type="button" class="jb-iconbtn pt-close" data-embed-close title="Close">
-          <svg class="jb-ico pt-ico" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M18 6L6 18"></path>
-            <path d="M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
     </div>
 
-    <div class="jb-tools pt-tools">
-      <form class="jb-search pt-search" method="get" action="{% url 'accounts:materialtype_list' %}">
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:materialtype_list' %}" data-embed-autosubmit-form="1">
+        {% if not full_page %}
         <input type="hidden" name="embed" value="1">
+        {% endif %}
 
-        <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search material type...">
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search material type or description"
+          autocomplete="off"
+        >
 
-        
         <button class="jb-search-btn" type="submit">Search</button>
-        <select name="kind" class="jb-search-btn" onchange="this.form.submit()">
+
+        <select name="kind" class="jb-search-btn" data-embed-autosubmit="1">
           <option value="">All Kinds</option>
           {% for value, label in kind_choices %}
-            <option value="{{ value }}" {% if selected_kind == value %}selected{% endif %}>
-              {{ label }}
-            </option>
+            <option value="{{ value }}" {% if selected_kind == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
-        <a class="jb-add pt-add mat-ico" href="{% url 'accounts:materialtype_add' %}?embed=1"><svg class="jb-add-ico mat-ico" viewBox="0 0 24 24" aria-hidden="true">
+      </form>
+
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:materialtype_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 5v14"></path>
             <path d="M5 12h14"></path>
-          </svg> </a>
-      </form>
+          </svg>
+        </a>
+      </div>
     </div>
 
-    <div class="jb-tablewrap pt-tablewrap">
-      <table class="jb-table pt-table">
+    <div class="jb-tablewrap">
+      <table class="jb-table">
         <thead>
           <tr>
             <th>Kind</th>
             <th>Name</th>
             <th>Description</th>
-            <th class="jb-actions pt-actions">Actions</th>
+            <th style="width: 140px;">Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for t in types %}
-            <tr>
-              <td>{{ t.get_material_kind_display|default:"—" }}</td>
-              <td><strong>{{ t.name }}</strong></td>
-              <td>{{ t.description|default:"—" }}</td>
-              <td class="jb-actions pt-actions">
-                <a class="jb-link pt-link" href="{% url 'accounts:materialtype_edit' t.id %}?embed=1">Edit</a>
-                <span class="jb-dot pt-dot">•</span>
-                <form method="post" action="{% url 'accounts:materialtype_delete' t.id %}?embed=1" class="jb-inline-delete js-jb-delete-form" style="display:inline;"
-                  data-delete-label="material type &quot;{{ t.name|escape }}&quot;">
-                  {% csrf_token %}
-                  <input type="hidden" name="embed" value="1">
-                  <button class="jb-link jb-link-button jb-link-danger pt-link danger" type="submit">Delete</button>
-                </form>
-              </td>
-            </tr>
+          <tr>
+            <td>{{ t.get_material_kind_display|default:"—" }}</td>
+            <td>{{ t.name }}</td>
+            <td>{{ t.description|default:"—" }}</td>
+            <td class="jb-actions">
+              <a class="jb-link" href="{% url 'accounts:materialtype_edit' t.id %}{% if not full_page %}?embed=1{% endif %}">Edit</a>
+              <span class="jb-dot">•</span>
+              <form
+                method="post"
+                action="{% url 'accounts:materialtype_delete' t.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="material type &quot;{{ t.name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                {% if not full_page %}
+                <input type="hidden" name="embed" value="1">
+                {% endif %}
+                <button class="jb-link jb-link-danger jb-link-button" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
           {% empty %}
-            <tr>
-              <td colspan="4" class="jb-empty pt-empty">No types found.</td>
-            </tr>
+          <tr>
+            <td colspan="4" class="jb-empty">No types found.</td>
+          </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 </div>
