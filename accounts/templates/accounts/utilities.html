@@ -100,6 +100,7 @@
       "Jobber",
       "Material Sub Type",
       "Material Unit",
+      "Accessories",
   "Dyeing Other Charges",
   
   "Dyeing Other Charge Headers",
@@ -123,7 +124,8 @@ const ROUTES = {
   "Material Sub Type": "{% url 'accounts:materialsubtype_list' %}",
   "Brand": "{% url 'accounts:brand_list' %}",
   "Party": "{% url 'accounts:party_list' %}",
-  "Client": "{% url 'accounts:client_list' %}",
+  "Client": "{% url 'accounts:client_list' %}",  
+  "Accessories": "{% url 'accounts:accessory_list' %}",
   "Vendor": "{% url 'accounts:vendor_list' %}",
   "Location": "{% url 'accounts:location_list' %}",
   "Material Unit": "{% url 'accounts:materialunit_list' %}",
@@ -143,6 +145,7 @@ const ROUTES = {
 
   const UTILITIES = [
     { name: "Material / Trim", tag: "Masters", icon: "material" },
+        { name: "Accessories", tag: "Masters", icon: "tag" },
     { name: "Material Type", tag: "Masters", icon: "layers" },
     { name: "Material Shades", tag: "Masters", icon: "palette" },
     { name: "Material Unit", tag: "Masters", icon: "scale" },
@@ -216,6 +219,7 @@ const ROUTES = {
   }
 
   const MASTER_TILE_NAMES = [
+      "Accessories",
   "Jobber",
   "Jobber Type",
   "Material / Trim",

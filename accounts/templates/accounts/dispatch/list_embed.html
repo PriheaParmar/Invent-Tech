@@ -1,0 +1,125 @@
+<style>
+  :root{
+    --ds-bg:#f8fafc;
+    --ds-card:#ffffff;
+    --ds-line:#e5e7eb;
+    --ds-text:#0f172a;
+    --ds-soft:#64748b;
+    --ds-blue:rgba(28,109,216,1);
+    --ds-pink:rgb(238,61,133);
+    --ds-orange:rgba(250,189,100,1);
+    --ds-shadow:0 16px 40px rgba(15,23,42,.08);
+  }
+  .dispatch-shell{display:flex;flex-direction:column;gap:18px;min-width:0;}
+  .dispatch-topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .dispatch-titlebox h2{margin:0;font-size:1.2rem;color:var(--ds-text);font-weight:800;}
+  .dispatch-titlebox p{margin:4px 0 0;color:var(--ds-soft);font-size:.92rem;}
+  .dispatch-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .dispatch-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;border:1px solid var(--ds-line);background:#fff;color:var(--ds-text);text-decoration:none;font-weight:700;font-size:.9rem;transition:.18s ease;}
+  .dispatch-btn:hover{transform:translateY(-1px);box-shadow:var(--ds-shadow);}
+  .dispatch-btn-primary{background:var(--ds-blue);border-color:var(--ds-blue);color:#fff;}
+  .dispatch-search-card{background:var(--ds-card);border:1px solid var(--ds-line);border-radius:18px;padding:16px;box-shadow:var(--ds-shadow);}
+  .dispatch-search-form{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:10px;}
+  .dispatch-input{width:100%;height:44px;border:1px solid var(--ds-line);border-radius:12px;padding:0 14px;font-size:.94rem;outline:none;background:#fff;color:var(--ds-text);}
+  .dispatch-input:focus{border-color:var(--ds-blue);box-shadow:0 0 0 4px rgba(28,109,216,.10);}
+  .dispatch-table-card{background:var(--ds-card);border:1px solid var(--ds-line);border-radius:18px;overflow:hidden;box-shadow:var(--ds-shadow);}
+  .dispatch-table-wrap{overflow:auto;}
+  .dispatch-table{width:100%;border-collapse:collapse;min-width:1050px;}
+  .dispatch-table th{background:#f8fafc;color:#334155;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;padding:14px 12px;border-bottom:1px solid var(--ds-line);text-align:left;white-space:nowrap;}
+  .dispatch-table td{padding:14px 12px;border-bottom:1px solid var(--ds-line);vertical-align:top;color:var(--ds-text);font-size:.92rem;}
+  .dispatch-table tr:last-child td{border-bottom:none;}
+  .dispatch-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:.78rem;font-weight:700;background:rgba(28,109,216,.08);color:var(--ds-blue);}
+  .dispatch-meta{display:flex;flex-direction:column;gap:3px;}
+  .dispatch-main{font-weight:700;color:var(--ds-text);}
+  .dispatch-sub{font-size:.82rem;color:var(--ds-soft);}
+  .dispatch-actions-col{display:flex;gap:8px;flex-wrap:wrap;}
+  .dispatch-link{display:inline-flex;align-items:center;justify-content:center;padding:8px 11px;border:1px solid var(--ds-line);border-radius:10px;text-decoration:none;color:var(--ds-text);font-weight:700;font-size:.82rem;background:#fff;}
+  .dispatch-link:hover{border-color:var(--ds-blue);color:var(--ds-blue);}
+  .dispatch-empty{padding:34px 18px;text-align:center;color:var(--ds-soft);}
+  @media (max-width:900px){
+    .dispatch-search-form{grid-template-columns:1fr;}
+  }
+</style>
+
+<div class="dispatch-shell">
+  <div class="dispatch-topbar">
+    <div class="dispatch-titlebox">
+      <h2>Dispatch Challans</h2>
+      <p>Create and manage challans linked with programs.</p>
+    </div>
+    <div class="dispatch-actions">
+      <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-btn dispatch-btn-primary">Create Challan</a>
+    </div>
+  </div>
+
+  <div class="dispatch-search-card">
+    <form method="get" class="dispatch-search-form">
+      {% if request.GET.embed == '1' %}<input type="hidden" name="embed" value="1">{% endif %}
+      <input type="text" name="q" value="{{ q }}" class="dispatch-input" placeholder="Search challan no, program no, SKU, client, LR no, vehicle...">
+      <button type="submit" class="dispatch-btn dispatch-btn-primary">Search</button>
+      <a href="{% url 'accounts:dispatch_list' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-btn">Clear</a>
+    </form>
+  </div>
+
+  <div class="dispatch-table-card">
+    <div class="dispatch-table-wrap">
+      <table class="dispatch-table">
+        <thead>
+          <tr>
+            <th>Challan</th>
+            <th>Date</th>
+            <th>Program</th>
+            <th>SKU</th>
+            <th>Client</th>
+            <th>Transport</th>
+            <th>Vehicle</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for challan in challans %}
+            <tr>
+              <td>
+                <div class="dispatch-meta">
+                  <span class="dispatch-main">{{ challan.challan_no }}</span>
+                  <span class="dispatch-sub">LR No: {{ challan.lr_no|default:"-" }}</span>
+                </div>
+              </td>
+              <td>{{ challan.challan_date|date:"d-m-Y" }}</td>
+              <td>
+                <div class="dispatch-meta">
+                  <span class="dispatch-main">{{ challan.program.program_no }}</span>
+                  <span class="dispatch-sub">Finish: {{ challan.program.finishing_date|date:"d-m-Y"|default:"-" }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="dispatch-meta">
+                  <span class="dispatch-main">{{ challan.program.bom.sku|default:"-" }}</span>
+                  <span class="dispatch-sub">{{ challan.program.bom.product_name|default:"-" }}</span>
+                </div>
+              </td>
+              <td>{{ challan.client.name|default:"-" }}</td>
+              <td>
+                <div class="dispatch-meta">
+                  <span class="dispatch-main">{{ challan.transport_name|default:"-" }}</span>
+                  <span class="dispatch-sub">Driver: {{ challan.driver_name|default:"-" }}</span>
+                </div>
+              </td>
+              <td><span class="dispatch-pill">{{ challan.vehicle_no|default:"-" }}</span></td>
+              <td>
+                <div class="dispatch-actions-col">
+                  <a href="{% url 'accounts:dispatch_detail' challan.pk %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-link">View</a>
+                  <a href="{% url 'accounts:dispatch_print' challan.pk %}" target="_blank" class="dispatch-link">Print</a>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="8" class="dispatch-empty">No dispatch challans found yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

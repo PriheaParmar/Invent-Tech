@@ -585,6 +585,173 @@
     color:#475569;
   }
 
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  :root{
+    --font-ui: "Inter", "Segoe UI", Arial, sans-serif;
+    --font-display: "Space Grotesk", "Inter", sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  /* Base */
+  .jb-panel,
+  .jb-panel *{
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Main heading */
+  .jb-title{
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: #0f172a;
+  }
+
+  /* Subtitle / helper text */
+  .jb-sub{
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.55;
+    color: #64748b;
+    opacity: 1;
+  }
+
+  /* Search input */
+  .jb-search input[type="search"]{
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .jb-search input[type="search"]::placeholder{
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  /* Buttons */
+  .jb-search-btn,
+  .jb-add,
+  .jb-secondary,
+  .pdf-menu-trigger,
+  .pdf-menu-item{
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* Small badge / status */
+  .yarnpo-badge,
+  .yarnpo-status,
+  .yarnpo-box-title,
+  .yarnpo-summary-label,
+  .yarnpo-actions-title{
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* PO number / important identifiers */
+  .yarnpo-po-no{
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+    color: #111827;
+  }
+
+  .yarnpo-po-sub{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #6b7280;
+  }
+
+  /* Labels and values */
+  .yarnpo-meta .k{
+    font-family: var(--font-ui);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #94a3b8;
+  }
+
+  .yarnpo-meta .v{
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #111827;
+  }
+
+  /* Section content */
+  .yarnpo-line-title,
+  .yarnpo-vendor-name,
+  .yarnpo-summary-value{
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  .yarnpo-line-title{
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .yarnpo-vendor-name{
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .yarnpo-summary-value{
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  /* Secondary descriptions */
+  .yarnpo-line-sub,
+  .yarnpo-vendor-sub,
+  .yarnpo-status-note,
+  .jb-empty{
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+    color: #667085;
+  }
+
+  /* Action links */
+  .jb-link,
+  .jb-link-button{
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* Review modal loading text */
+  .yarn-review-loading{
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #475569;
+  }
 </style>
 
 <section class="page-section is-active">

@@ -1,6 +1,7 @@
-from decimal import Decimal
 import re
 
+from decimal import Decimal
+from django.utils import timezone
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -10,6 +11,7 @@ from django.db.models import Q
 from django.forms import inlineformset_factory
 
 from .models import (
+    Accessory,
     BOM,
     BOMAccessoryItem,
     BOMImage,
@@ -21,11 +23,13 @@ from .models import (
     Catalogue,
     Category,
     Client,
+    DispatchChallan,
     DyeingMaterialLink,
     DyeingMaterialLinkDetail,
     DyeingOtherCharge,
-    DyeingPOInward,
     DyeingPurchaseOrder,
+    DyeingPurchaseOrderItem,
+    DyeingPOInward,
     Expense,
     FinishedDetail,
     Firm,
@@ -45,6 +49,8 @@ from .models import (
     MaterialUnit,
     Party,
     PatternType,
+    Program,
+    ProgramJobberDetail,
     ReadyPOInward,
     ReadyPurchaseOrder,
     SubCategory,
@@ -1181,6 +1187,46 @@ class ExpenseForm(forms.ModelForm):
 
         return name
 
+class AccessoryForm(forms.ModelForm):
+    class Meta:
+        model = Accessory
+        fields = ["name", "default_unit", "description"]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "placeholder": "Enter accessory name (e.g. Drawcord, Button, Zipper)",
+            }),
+            "default_unit": forms.Select(),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Optional notes about this accessory",
+            }),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+        if user is not None:
+            self.fields["default_unit"].queryset = MaterialUnit.objects.filter(owner=user).order_by("name")
+        else:
+            self.fields["default_unit"].queryset = MaterialUnit.objects.none()
+
+        self.fields["default_unit"].required = False
+        self.fields["default_unit"].empty_label = "Select default unit"
+
+    def clean_name(self):
+        name = (self.cleaned_data.get("name") or "").strip()
+        if not name:
+            raise forms.ValidationError("Accessory name is required.")
+
+        if self.user is not None:
+            qs = Accessory.objects.filter(owner=self.user, name__iexact=name)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("This accessory already exists.")
+
+        return name
 
 class TermsConditionForm(forms.ModelForm):
     class Meta:
@@ -2125,10 +2171,27 @@ class GreigePOReviewForm(forms.Form):
         return cleaned
 
 
+class DyeingPOReviewForm(forms.Form):
+    decision = forms.ChoiceField(
+        choices=[("approve", "Approve"), ("reject", "Reject")],
+        widget=forms.HiddenInput,
+    )
+    rejection_reason = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Reason for rejection"}),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("decision") == "reject" and not (cleaned.get("rejection_reason") or "").strip():
+            self.add_error("rejection_reason", "Rejection reason is required.")
+        return cleaned
+
+
 class GreigePOInwardForm(forms.ModelForm):
     class Meta:
         model = GreigePOInward
-        fields = ["inward_date", "vendor", "notes"]
+        fields = ["vendor", "inward_type", "inward_date", "notes"]
         widgets = {
             "inward_date": forms.DateInput(attrs={"type": "date"}),
             "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
@@ -2137,11 +2200,19 @@ class GreigePOInwardForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fields["vendor"].required = True
         self.fields["vendor"].queryset = (
             Vendor.objects.filter(owner=user, is_active=True).order_by("name")
             if user else Vendor.objects.none()
         )
         self.fields["vendor"].empty_label = "Select vendor"
+
+        self.fields["inward_type"].required = True
+        self.fields["inward_type"].queryset = (
+            InwardType.objects.filter(owner=user).order_by("name")
+            if user else InwardType.objects.none()
+        )
+        self.fields["inward_type"].empty_label = "Select inward type"
 
 
 # ============================================================
@@ -2149,45 +2220,47 @@ class GreigePOInwardForm(forms.ModelForm):
 # ============================================================
 
 class DyeingPurchaseOrderForm(forms.ModelForm):
-    source_greige_inward = forms.ModelChoiceField(
-        queryset=GreigePOInward.objects.none(),
-        required=False,
-        widget=forms.HiddenInput(),
-    )
-
     class Meta:
         model = DyeingPurchaseOrder
         fields = [
-            "po_number",
-            "internal_po_number",
             "source_greige_po",
-            "po_date",
-            "available_qty",
             "vendor",
             "firm",
-            "shipping_address",
-            "delivery_period",
+            "po_number",
+            "internal_po_number",
+            "po_date",
             "expected_delivery_date",
             "cancel_date",
-            "director",
-            "validity_period",
+            "shipping_address",
             "address",
-            "delivery_schedule",
             "remarks",
+            "terms_conditions",
+            "description",
+            "discount_percent",
+            "others",
+            "gst_percent",
+            "tcs_percent",
         ]
         widgets = {
             "po_date": forms.DateInput(attrs={"type": "date"}),
             "expected_delivery_date": forms.DateInput(attrs={"type": "date"}),
             "cancel_date": forms.DateInput(attrs={"type": "date"}),
+            "shipping_address": forms.Textarea(attrs={"rows": 2}),
+            "address": forms.Textarea(attrs={"rows": 2}),
             "remarks": forms.Textarea(attrs={"rows": 3}),
-            "address": forms.Textarea(attrs={"rows": 3}),
+            "terms_conditions": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(attrs={"rows": 3}),
         }
 
     def __init__(self, *args, user=None, source_greige_po=None, lock_source=False, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fields["source_greige_po"].queryset = (
+            GreigePurchaseOrder.objects.filter(owner=user).order_by("-id")
+            if user else GreigePurchaseOrder.objects.none()
+        )
         self.fields["vendor"].queryset = (
-            Vendor.objects.filter(owner=user, is_active=True).order_by("name")
+            Vendor.objects.filter(owner=user).order_by("name")
             if user else Vendor.objects.none()
         )
         self.fields["firm"].queryset = (
@@ -2195,53 +2268,231 @@ class DyeingPurchaseOrderForm(forms.ModelForm):
             if user else Firm.objects.none()
         )
 
-        source_ids_qs = GreigePurchaseOrder.objects.filter(
-            items__inward_items__isnull=False
-        )
-        if user is not None:
-            source_ids_qs = source_ids_qs.filter(owner=user)
+        self.fields["source_greige_po"].required = source_greige_po is None
+        self.fields["vendor"].required = True
+        self.fields["firm"].required = False
+        self.fields["po_number"].required = False
+        self.fields["internal_po_number"].required = False
+        self.fields["po_date"].required = True
+        self.fields["expected_delivery_date"].required = False
+        self.fields["cancel_date"].required = False
+        self.fields["shipping_address"].required = False
+        self.fields["address"].required = False
+        self.fields["remarks"].required = False
+        self.fields["terms_conditions"].required = False
+        self.fields["description"].required = False
+        self.fields["discount_percent"].required = False
+        self.fields["others"].required = False
+        self.fields["gst_percent"].required = False
+        self.fields["tcs_percent"].required = False
 
-        allowed_ids = set(source_ids_qs.values_list("pk", flat=True))
-
-        if self.instance.pk and self.instance.source_greige_po_id:
-            allowed_ids.add(self.instance.source_greige_po_id)
+        self.fields["source_greige_po"].empty_label = "Select Greige PO"
+        self.fields["vendor"].empty_label = "Select Vendor"
+        self.fields["firm"].empty_label = "Select Firm"
 
         if source_greige_po is not None:
-            allowed_ids.add(source_greige_po.pk)
-            self.fields["source_greige_po"].initial = source_greige_po.pk
+            self.fields["source_greige_po"].initial = source_greige_po
+            if lock_source:
+                self.fields["source_greige_po"].queryset = GreigePurchaseOrder.objects.filter(pk=source_greige_po.pk)
+                self.fields["source_greige_po"].disabled = True
 
-        self.fields["source_greige_po"].queryset = GreigePurchaseOrder.objects.filter(
-            pk__in=allowed_ids
-        ).order_by("-id")
-
-        self.fields["source_greige_po"].empty_label = "Select source greige PO"
-        self.fields["vendor"].empty_label = "Select vendor"
-        self.fields["firm"].empty_label = "Select firm"
-
-        source_greige_po = (
-            source_greige_po
-            or self.initial.get("source_greige_po")
-            or getattr(self.instance, "source_greige_po", None)
-        )
-
-        if "source_greige_inward" in self.fields:
-            if source_greige_po is not None:
-                self.fields["source_greige_inward"].queryset = source_greige_po.inwards.all().order_by("-inward_date", "-id")
-            else:
-                self.fields["source_greige_inward"].queryset = GreigePOInward.objects.none()
-
-        if getattr(self.instance, "source_greige_inward_id", None):
-            self.fields["source_greige_inward"].initial = self.instance.source_greige_inward_id
-
-        if lock_source:
-            self.fields["source_greige_po"].disabled = True
+            if not self.is_bound:
+                if source_greige_po.vendor_id:
+                    self.fields["vendor"].initial = source_greige_po.vendor_id
+                if source_greige_po.source_yarn_po and source_greige_po.source_yarn_po.firm_id:
+                    self.fields["firm"].initial = source_greige_po.source_yarn_po.firm_id
 
         if not self.is_bound:
-            from django.utils import timezone
-            self.fields["po_date"].initial = self.instance.po_date or timezone.localdate()
-            if self.instance.pk and not self.initial.get("available_qty"):
-                self.fields["available_qty"].initial = self.instance.remaining_qty_total
+            if not self.initial.get("po_date"):
+                self.initial["po_date"] = timezone.localdate()
+            self.initial.setdefault("discount_percent", Decimal("0"))
+            self.initial.setdefault("others", Decimal("0"))
+            self.initial.setdefault("gst_percent", Decimal("0"))
+            self.initial.setdefault("tcs_percent", Decimal("0"))
 
+    def clean(self):
+        cleaned_data = super().clean()
+
+        source_greige_po = cleaned_data.get("source_greige_po")
+        vendor = cleaned_data.get("vendor")
+
+        if source_greige_po and vendor and source_greige_po.vendor_id != vendor.id:
+            self.add_error("vendor", "Vendor must match the selected Greige PO vendor.")
+
+        return cleaned_data
+
+class DyeingPOReviewForm(forms.Form):
+    decision = forms.ChoiceField(
+        choices=[("approve", "Approve"), ("reject", "Reject")],
+        widget=forms.HiddenInput,
+    )
+    rejection_reason = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Reason for rejection"}),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("decision") == "reject" and not (cleaned.get("rejection_reason") or "").strip():
+            self.add_error("rejection_reason", "Rejection reason is required.")
+        return cleaned
+
+class DyeingPurchaseOrderItemForm(forms.ModelForm):
+    class Meta:
+        model = DyeingPurchaseOrderItem
+        fields = [
+            "dyeing_master_detail",
+            "finished_material",
+            "unit",
+            "total_qty",
+            "remaining_qty",
+            "value",
+            "rolls",
+            "dyeing_type",
+            "dyeing_name",
+            "rate",
+            "dyeing_other_charge",
+            "other_charge_amount",
+            "job_work_charges",
+            "description",
+            "remark",
+            "line_subtotal",
+            "line_final_amount",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 2}),
+            "remark": forms.TextInput(attrs={"placeholder": "Enter remarks"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["dyeing_master_detail"].required = False
+        self.fields["finished_material"].required = False
+        self.fields["unit"].required = False
+        self.fields["total_qty"].required = False
+        self.fields["remaining_qty"].required = False
+        self.fields["value"].required = False
+        self.fields["rolls"].required = False
+        self.fields["dyeing_type"].required = False
+        self.fields["dyeing_name"].required = False
+        self.fields["rate"].required = False
+        self.fields["dyeing_other_charge"].required = False
+        self.fields["other_charge_amount"].required = False
+        self.fields["job_work_charges"].required = False
+        self.fields["description"].required = False
+        self.fields["remark"].required = False
+        self.fields["line_subtotal"].required = False
+        self.fields["line_final_amount"].required = False
+
+        self.fields["dyeing_master_detail"].queryset = (
+            DyeingMaterialLinkDetail.objects
+            .select_related("link__vendor", "link__material", "finished_material")
+            .filter(link__owner=user, is_active=True)
+            .order_by("link__vendor__name", "link__material__name", "sort_order", "id")
+            if user else DyeingMaterialLinkDetail.objects.none()
+        )
+
+        self.fields["finished_material"].queryset = (
+            Material.objects.filter(material_kind="finished").order_by("name")
+        )
+
+        self.fields["dyeing_other_charge"].queryset = (
+            DyeingOtherCharge.objects.filter(owner=user).order_by("name")
+            if user else DyeingOtherCharge.objects.none()
+        )
+
+        self.fields["dyeing_master_detail"].empty_label = "Select Dyeing Master"
+        self.fields["finished_material"].empty_label = "Select Finished Material"
+        self.fields["dyeing_other_charge"].empty_label = "Select Other Charge"
+
+        current_unit = (self.initial.get("unit") or getattr(self.instance, "unit", "") or "").strip()
+        if self.is_bound:
+            bound_unit = (self.data.get(self.add_prefix("unit")) or "").strip()
+            if bound_unit:
+                current_unit = bound_unit
+
+        unit_choices = _material_unit_choices(user, current_unit)
+        self.fields["unit"] = forms.ChoiceField(required=False, choices=unit_choices)
+        self.fields["unit"].widget = forms.Select(choices=unit_choices)
+
+    def clean_unit(self):
+        value = (self.cleaned_data.get("unit") or "").strip()
+        valid_units = {choice for choice, _label in self.fields["unit"].choices if choice}
+        if value and value not in valid_units:
+            raise forms.ValidationError("Select a valid unit.")
+        return value
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if cleaned_data.get("DELETE"):
+            return cleaned_data
+
+        master_detail = cleaned_data.get("dyeing_master_detail")
+        finished_material = cleaned_data.get("finished_material")
+
+        if master_detail and not finished_material and master_detail.finished_material_id:
+            cleaned_data["finished_material"] = master_detail.finished_material
+
+        if master_detail:
+            if not cleaned_data.get("dyeing_type"):
+                cleaned_data["dyeing_type"] = master_detail.dyeing_type or ""
+            if not cleaned_data.get("dyeing_name"):
+                cleaned_data["dyeing_name"] = master_detail.dyeing_name or ""
+            if not cleaned_data.get("rate"):
+                cleaned_data["rate"] = master_detail.price or Decimal("0")
+
+        total_qty = cleaned_data.get("total_qty") or Decimal("0")
+        rate = cleaned_data.get("rate") or Decimal("0")
+        other_charge_amount = cleaned_data.get("other_charge_amount") or Decimal("0")
+        job_work_charges = cleaned_data.get("job_work_charges") or Decimal("0")
+
+        if total_qty < 0:
+            self.add_error("total_qty", "Quantity cannot be negative.")
+        if rate < 0:
+            self.add_error("rate", "Rate cannot be negative.")
+        if other_charge_amount < 0:
+            self.add_error("other_charge_amount", "Other charges cannot be negative.")
+        if job_work_charges < 0:
+            self.add_error("job_work_charges", "Job work charges cannot be negative.")
+
+        line_subtotal = total_qty * rate
+        line_final_amount = line_subtotal + other_charge_amount + job_work_charges
+
+        cleaned_data["remaining_qty"] = total_qty
+        cleaned_data["line_subtotal"] = line_subtotal
+        cleaned_data["line_final_amount"] = line_final_amount
+
+        return cleaned_data
+
+
+DyeingPurchaseOrderItemFormSet = inlineformset_factory(
+    DyeingPurchaseOrder,
+    DyeingPurchaseOrderItem,
+    form=DyeingPurchaseOrderItemForm,
+    fields=[
+        "dyeing_master_detail",
+        "finished_material",
+        "unit",
+        "total_qty",
+        "remaining_qty",
+        "value",
+        "rolls",
+        "dyeing_type",
+        "dyeing_name",
+        "rate",
+        "dyeing_other_charge",
+        "other_charge_amount",
+        "job_work_charges",
+        "description",
+        "remark",
+        "line_subtotal",
+        "line_final_amount",
+    ],
+    extra=1,
+    can_delete=True,
+)
 
 class DyeingPOInwardForm(forms.ModelForm):
     class Meta:
@@ -2301,7 +2552,10 @@ class ReadyPurchaseOrderForm(forms.ModelForm):
             if user else Firm.objects.none()
         )
 
-        source_ids_qs = DyeingPurchaseOrder.objects.filter(items__inward_items__isnull=False)
+        source_ids_qs = DyeingPurchaseOrder.objects.filter(
+            approval_status="approved",
+            items__inward_items__isnull=False
+        )
         if user is not None:
             source_ids_qs = source_ids_qs.filter(owner=user)
 
@@ -2425,6 +2679,7 @@ class DyeingMaterialLinkDetailForm(forms.ModelForm):
     class Meta:
         model = DyeingMaterialLinkDetail
         fields = [
+            "finished_material",
             "dyeing_type",
             "dyeing_name",
             "percentage_no_of_colors",
@@ -2434,6 +2689,7 @@ class DyeingMaterialLinkDetailForm(forms.ModelForm):
             "is_active",
         ]
         widgets = {
+            "finished_material": forms.Select(),
             "dyeing_type": forms.Select(),
             "dyeing_name": forms.TextInput(attrs={
                 "placeholder": "Enter dyeing name / process name",
@@ -2458,6 +2714,25 @@ class DyeingMaterialLinkDetailForm(forms.ModelForm):
                 "min": "0",
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["finished_material"].required = True
+        self.fields["finished_material"].queryset = (
+            Material.objects.filter(material_kind="finished")
+            .select_related("material_type")
+            .order_by("name")
+        )
+        self.fields["finished_material"].empty_label = "Select Finished Material"
+
+    def clean_finished_material(self):
+        value = self.cleaned_data.get("finished_material")
+        if value is None:
+            raise forms.ValidationError("Finished material is required.")
+        if value.material_kind != "finished":
+            raise forms.ValidationError("Only finished material is allowed.")
+        return value
 
     def clean_dyeing_name(self):
         value = (self.cleaned_data.get("dyeing_name") or "").strip()
@@ -2795,9 +3070,7 @@ class BOMAccessoryItemForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["accessory"].queryset = Material.objects.filter(
-            material_kind="trim"
-        ).select_related("material_type").order_by("name")
+        self.fields["accessory"].queryset = Accessory.objects.order_by("name")
 
         self.fields["unit"].queryset = MaterialUnit.objects.all().order_by("name")
         self.fields["accessory"].empty_label = "Select accessory"
@@ -2943,6 +3216,262 @@ BOMExpenseItemFormSet = inlineformset_factory(
     BOM,
     BOMExpenseItem,
     form=BOMExpenseItemForm,
+    extra=1,
+    can_delete=True,
+)
+
+class ProgramBOMChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        sku = (obj.sku or "").strip()
+        product = (obj.product_name or "").strip()
+        if sku and product:
+            return f"{sku} - {product}"
+        return sku or product or str(obj.pk)
+
+
+class ProgramForm(forms.ModelForm):
+    bom = ProgramBOMChoiceField(queryset=BOM.objects.none(), label="SKU Name")
+
+    class Meta:
+        model = Program
+        fields = [
+            "program_no",
+            "program_date",
+            "finishing_date",
+            "total_qty",
+            "ratio",
+            "firm",
+            "damage",
+            "bom",
+        ]
+        widgets = {
+            "program_no": forms.TextInput(
+                attrs={
+                    "readonly": "readonly",
+                    "placeholder": "Auto generated",
+                }
+            ),
+            "program_date": forms.DateInput(
+                attrs={
+                    "type": "date",
+                    "readonly": "readonly",
+                }
+            ),
+            "finishing_date": forms.DateInput(
+                attrs={
+                    "type": "date",
+                }
+            ),
+            "total_qty": forms.NumberInput(
+                attrs={
+                    "step": "0.01",
+                    "min": "0",
+                    "placeholder": "Enter total quantity",
+                }
+            ),
+            "ratio": forms.TextInput(
+                attrs={
+                    "placeholder": "Enter ratio (example: 1:2:2:1)",
+                }
+            ),
+            "firm": forms.Select(),
+            "damage": forms.NumberInput(
+                attrs={
+                    "step": "0.01",
+                    "min": "0",
+                    "placeholder": "Enter damage",
+                }
+            ),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+        if user:
+            self.fields["firm"].queryset = Firm.objects.filter(owner=user).order_by("firm_name")
+            self.fields["bom"].queryset = (
+                BOM.objects.filter(owner=user)
+                .select_related(
+                    "brand",
+                    "category",
+                    "main_category",
+                    "sub_category",
+                    "pattern_type",
+                    "catalogue",
+                )
+                .order_by("sku")
+            )
+        else:
+            self.fields["firm"].queryset = Firm.objects.none()
+            self.fields["bom"].queryset = BOM.objects.none()
+
+        self.fields["firm"].empty_label = "Select firm"
+        self.fields["bom"].empty_label = "Select SKU"
+        self.fields["finishing_date"].required = False
+
+        if not self.instance.pk and user:
+            self.initial.setdefault("program_no", Program.next_program_no(user))
+            self.initial.setdefault("program_date", timezone.localdate())
+
+            user_firm = Firm.objects.filter(owner=user).first()
+            if user_firm:
+                self.initial.setdefault("firm", user_firm.pk)
+
+    def clean_program_no(self):
+        if self.instance.pk:
+            return (self.cleaned_data.get("program_no") or self.instance.program_no or "").strip().upper()
+
+        if self.user:
+            return Program.next_program_no(self.user)
+
+        return (self.cleaned_data.get("program_no") or "").strip().upper()
+
+    def clean_program_date(self):
+        if self.instance.pk:
+            return self.cleaned_data.get("program_date") or self.instance.program_date
+        return timezone.localdate()
+
+    def clean_finishing_date(self):
+        return self.cleaned_data.get("finishing_date")
+
+    def clean_total_qty(self):
+        value = self.cleaned_data.get("total_qty") or Decimal("0")
+        if value <= 0:
+            raise forms.ValidationError("Total quantity must be greater than 0.")
+        return value
+
+    def clean_ratio(self):
+        return (self.cleaned_data.get("ratio") or "").strip()
+
+    def clean_damage(self):
+        value = self.cleaned_data.get("damage") or Decimal("0")
+        if value < 0:
+            raise forms.ValidationError("Damage cannot be negative.")
+        return value
+
+
+class DispatchChallanForm(forms.ModelForm):
+    class Meta:
+        model = DispatchChallan
+        fields = [
+            "challan_no",
+            "challan_date",
+            "client",
+            "driver_name",
+            "lr_no",
+            "transport_name",
+            "vehicle_no",
+            "remarks",
+        ]
+        widgets = {
+            "challan_no": forms.TextInput(
+                attrs={
+                    "readonly": "readonly",
+                    "placeholder": "Auto generated",
+                }
+            ),
+            "challan_date": forms.DateInput(
+                attrs={
+                    "type": "date",
+                }
+            ),
+            "client": forms.Select(),
+            "driver_name": forms.TextInput(attrs={"placeholder": "Enter driver name"}),
+            "lr_no": forms.TextInput(attrs={"placeholder": "Enter LR No."}),
+            "transport_name": forms.TextInput(attrs={"placeholder": "Enter transport name"}),
+            "vehicle_no": forms.TextInput(attrs={"placeholder": "Enter vehicle number"}),
+            "remarks": forms.Textarea(attrs={"rows": 3, "placeholder": "Enter remarks"}),
+        }
+
+    def __init__(self, *args, user=None, program=None, **kwargs):
+        self.user = user
+        self.program = program
+        super().__init__(*args, **kwargs)
+
+        self.fields["client"].queryset = (
+            Client.objects.filter(owner=user, is_active=True).order_by("name")
+            if user else Client.objects.none()
+        )
+        self.fields["client"].empty_label = "Select client"
+
+        if not self.instance.pk and user:
+            self.initial.setdefault("challan_no", DispatchChallan.next_challan_no(user))
+            self.initial.setdefault("challan_date", timezone.localdate())
+
+    def clean_challan_no(self):
+        if self.instance.pk:
+            return (self.cleaned_data.get("challan_no") or self.instance.challan_no or "").strip().upper()
+
+        if self.user:
+            return DispatchChallan.next_challan_no(self.user)
+
+        return (self.cleaned_data.get("challan_no") or "").strip().upper()
+
+    def clean_driver_name(self):
+        value = _compact_spaces(self.cleaned_data.get("driver_name"))
+        if value and not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,119}", value):
+            raise forms.ValidationError("Driver name can contain only letters, spaces, dot, apostrophe, and hyphen.")
+        return value
+
+    def clean_lr_no(self):
+        return _compact_spaces(self.cleaned_data.get("lr_no"))
+
+    def clean_transport_name(self):
+        value = _compact_spaces(self.cleaned_data.get("transport_name"))
+        if value and len(value) < 2:
+            raise forms.ValidationError("Transport name must be at least 2 characters long.")
+        return value
+
+    def clean_vehicle_no(self):
+        value = _compact_spaces(self.cleaned_data.get("vehicle_no")).upper()
+        if value and not re.fullmatch(r"[A-Z0-9\- ]{6,30}", value):
+            raise forms.ValidationError("Enter a valid vehicle number.")
+        return value
+
+    def clean_remarks(self):
+        return _compact_spaces(self.cleaned_data.get("remarks"))
+
+
+class ProgramJobberDetailForm(forms.ModelForm):
+    class Meta:
+        model = ProgramJobberDetail
+        fields = ["jobber", "jobber_type", "price", "sort_order"]
+        widgets = {
+            "jobber": forms.Select(),
+            "jobber_type": forms.Select(),
+            "price": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+            "sort_order": forms.HiddenInput(),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["jobber"].queryset = (
+            Jobber.objects.filter(owner=user, is_active=True)
+            .select_related("jobber_type")
+            .order_by("name")
+            if user else Jobber.objects.none()
+        )
+        self.fields["jobber_type"].queryset = (
+            JobberType.objects.filter(owner=user).order_by("name")
+            if user else JobberType.objects.none()
+        )
+
+        self.fields["jobber"].empty_label = "Select jobber"
+        self.fields["jobber_type"].empty_label = "Select jobber type"
+
+    def clean_price(self):
+        value = self.cleaned_data.get("price") or Decimal("0")
+        if value < 0:
+            raise forms.ValidationError("Jobber price cannot be negative.")
+        return value
+
+
+ProgramJobberDetailFormSet = inlineformset_factory(
+    Program,
+    ProgramJobberDetail,
+    form=ProgramJobberDetailForm,
     extra=1,
     can_delete=True,
 )

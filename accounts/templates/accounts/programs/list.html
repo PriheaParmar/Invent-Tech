@@ -1,0 +1,932 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Program List - InventTech{% endblock %}
+{% block page_title %}Program List{% endblock %}
+{% block page_subtitle %}Production program tracking and workflow overview{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+    --blue: rgba(28, 109, 216, 1);
+    --pink: rgb(238, 61, 133);
+    --orange: rgba(250, 189, 100, 1);
+
+    --pg-bg:#f6f7fb;
+    --pg-card:#ffffff;
+    --pg-card-soft:#fafbfd;
+    --pg-line:#e7eaf0;
+    --pg-line-2:#d8dee9;
+    --pg-text:#111827;
+    --pg-soft:#667085;
+    --pg-muted:#98a2b3;
+    --pg-dark:#0f172a;
+    --pg-success:#118a4b;
+    --pg-danger:#d92d20;
+
+    --pg-shadow:0 12px 28px rgba(15,23,42,.06);
+    --pg-radius-xl:28px;
+    --pg-radius-lg:20px;
+    --pg-radius-md:16px;
+    --pg-radius-sm:12px;
+  }
+
+  .program-page{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    padding-bottom:10px;
+  }
+
+  .program-toolbar{
+    background:var(--pg-card);
+    border:1px solid var(--pg-line);
+    border-radius:26px;
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    box-shadow:var(--pg-shadow);
+  }
+
+  .program-toolbar-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    min-width:0;
+  }
+
+  .program-search{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    min-width:0;
+  }
+
+  .program-searchbar{
+    width:min(420px, 100%);
+    min-width:280px;
+    height:48px;
+    border:1px solid var(--pg-line-2);
+    border-radius:16px;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 14px;
+  }
+
+  .program-searchbar svg{
+    width:18px;
+    height:18px;
+    stroke:var(--pg-soft);
+    fill:none;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    flex:0 0 auto;
+  }
+
+  .program-searchbar input{
+    width:100%;
+    border:0;
+    outline:none;
+    background:transparent;
+    color:var(--pg-text);
+    font-size:14px;
+    min-width:0;
+  }
+
+  .program-btn{
+    min-height:46px;
+    padding:0 16px;
+    border-radius:14px;
+    border:1px solid var(--pg-line-2);
+    background:#fff;
+    color:var(--pg-text);
+    font-size:14px;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    text-decoration:none;
+    cursor:pointer;
+    transition:.18s ease;
+  }
+
+  .program-btn:hover{
+    border-color:#c9d3e3;
+    transform:translateY(-1px);
+  }
+
+  .program-btn svg{
+    width:16px;
+    height:16px;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .program-btn-search{
+    color:var(--blue);
+    background:rgba(28,109,216,.05);
+    border-color:rgba(28,109,216,.12);
+  }
+
+  .program-btn-create{
+    color:#111827;
+    background:rgba(250,189,100,.22);
+    border-color:rgba(250,189,100,.34);
+  }
+
+  .program-toolbar-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .program-stat{
+    min-height:46px;
+    padding:0 14px;
+    border-radius:16px;
+    border:1px solid var(--pg-line);
+    background:var(--pg-card-soft);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .program-stat-dot{
+    width:10px;
+    height:10px;
+    border-radius:999px;
+    flex:0 0 auto;
+  }
+
+  .program-stat-dot--blue{ background:var(--blue); }
+  .program-stat-dot--pink{ background:var(--pink); }
+  .program-stat-dot--orange{ background:var(--orange); }
+
+  .program-stat-copy{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+
+  .program-stat-label{
+    font-size:12px;
+    font-weight:800;
+    color:var(--pg-soft);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+
+  .program-stat-value{
+    font-size:15px;
+    font-weight:900;
+    color:var(--pg-text);
+  }
+
+  .program-month{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .program-month-head{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:0 4px;
+  }
+
+  .program-month-title{
+    min-height:36px;
+    padding:0 14px;
+    border-radius:999px;
+    border:1px solid var(--pg-line);
+    background:#fff;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+    font-weight:900;
+    color:var(--pg-text);
+    letter-spacing:.02em;
+    box-shadow:0 6px 14px rgba(15,23,42,.04);
+  }
+
+  .program-month-line{
+    flex:1 1 auto;
+    height:1px;
+    background:var(--pg-line);
+  }
+
+  .program-stack{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .program-card{
+    background:var(--pg-card);
+    border:1px solid var(--pg-line);
+    border-radius:var(--pg-radius-xl);
+    box-shadow:var(--pg-shadow);
+    overflow:hidden;
+  }
+
+  .program-card-head{
+    padding:18px 20px 12px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .program-title-wrap{
+    min-width:0;
+  }
+
+  .program-title{
+    font-size:18px;
+    font-weight:900;
+    color:var(--pg-text);
+    line-height:1.2;
+  }
+
+  .program-subtitle{
+    margin-top:5px;
+    color:var(--pg-soft);
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .program-head-meta{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .program-pill{
+    min-height:30px;
+    padding:0 12px;
+    border-radius:999px;
+    border:1px solid transparent;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  .program-pill--firm{
+    color:#344054;
+    background:#f8fafc;
+    border-color:#e4e7ec;
+    text-transform:none;
+    font-size:12px;
+    letter-spacing:0;
+  }
+
+  .program-pill--verified{
+    color:var(--blue);
+    background:rgba(28,109,216,.08);
+    border-color:rgba(28,109,216,.12);
+  }
+
+  .program-pill--unverified{
+    color:var(--pink);
+    background:rgba(238,61,133,.08);
+    border-color:rgba(238,61,133,.12);
+  }
+
+  .program-pill--open{
+    color:#9a6700;
+    background:rgba(250,189,100,.18);
+    border-color:rgba(250,189,100,.28);
+  }
+
+  .program-pill--closed{
+    color:var(--pg-danger);
+    background:rgba(217,45,32,.08);
+    border-color:rgba(217,45,32,.12);
+  }
+
+  .program-card-body{
+    padding:0 20px 20px;
+    display:grid;
+    grid-template-columns:260px 190px minmax(0,1fr) 390px;
+    gap:14px;
+    align-items:start;
+  }
+
+  .program-box{
+    background:var(--pg-card-soft);
+    border:1px solid var(--pg-line);
+    border-radius:22px;
+    overflow:hidden;
+  }
+
+  .program-box-head{
+    padding:13px 15px;
+    border-bottom:1px solid var(--pg-line);
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  .program-box-title{
+    font-size:13px;
+    font-weight:900;
+    color:var(--pg-text);
+  }
+
+  .program-box-sub{
+    margin-top:3px;
+    font-size:11px;
+    color:var(--pg-soft);
+    font-weight:700;
+  }
+
+  .program-summary{
+    padding:14px 15px;
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+
+  .program-summary-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    padding-bottom:8px;
+    border-bottom:1px dashed var(--pg-line);
+  }
+
+  .program-summary-row:last-child{
+    border-bottom:0;
+    padding-bottom:0;
+  }
+
+  .program-summary-label{
+    font-size:12px;
+    color:var(--pg-soft);
+    font-weight:700;
+  }
+
+  .program-summary-value{
+    font-size:13px;
+    color:var(--pg-text);
+    font-weight:900;
+    text-align:right;
+  }
+
+  .program-actions{
+    padding:0 15px 15px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .program-mini{
+    min-height:34px;
+    padding:0 12px;
+    border-radius:12px;
+    border:1px solid var(--pg-line-2);
+    background:#fff;
+    color:var(--pg-text);
+    font-size:12px;
+    font-weight:900;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    cursor:pointer;
+  }
+
+  .program-mini svg{
+    width:14px;
+    height:14px;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .program-mini--verify{
+    color:var(--blue);
+    background:rgba(28,109,216,.05);
+    border-color:rgba(28,109,216,.12);
+  }
+
+  .program-mini--print{
+    color:var(--pink);
+    background:rgba(238,61,133,.05);
+    border-color:rgba(238,61,133,.12);
+  }
+
+  .program-mini--status{
+    color:#9a6700;
+    background:rgba(250,189,100,.18);
+    border-color:rgba(250,189,100,.28);
+  }
+
+  .program-mini--edit{
+    color:#344054;
+  }
+
+  .program-photo{
+    padding:14px;
+  }
+
+  .program-photo-box{
+    width:100%;
+    aspect-ratio:4 / 5;
+    border-radius:18px;
+    border:1px solid var(--pg-line);
+    background:#fff;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .program-photo-box img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+
+  .program-photo-empty{
+    color:var(--pg-muted);
+    font-size:13px;
+    font-weight:800;
+    text-align:center;
+    padding:16px;
+  }
+
+  .program-table-wrap{
+    overflow:auto;
+  }
+
+  .program-table{
+    width:100%;
+    min-width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .program-table th,
+  .program-table td{
+    padding:11px 12px;
+    border-bottom:1px solid var(--pg-line);
+    font-size:12px;
+    vertical-align:middle;
+  }
+
+  .program-table thead th{
+    background:#fff;
+    color:var(--pg-soft);
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    white-space:nowrap;
+    position:sticky;
+    top:0;
+    z-index:1;
+  }
+
+  .program-table tbody tr:last-child td{
+    border-bottom:0;
+  }
+
+  .program-type{
+    min-height:28px;
+    padding:0 10px;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    font-weight:900;
+    color:var(--blue);
+    background:rgba(28,109,216,.08);
+    white-space:nowrap;
+  }
+
+  .program-name{
+    font-weight:800;
+    color:var(--pg-text);
+  }
+
+  .program-qty{
+    font-weight:900;
+    color:var(--pg-text);
+  }
+
+  .program-link{
+    min-height:30px;
+    padding:0 10px;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    font-size:12px;
+    font-weight:900;
+    color:#9a6700;
+    background:rgba(250,189,100,.18);
+    white-space:nowrap;
+  }
+
+  .program-size-table thead th,
+  .program-size-table tbody td{
+    text-align:center;
+  }
+
+  .program-size-line{
+    font-weight:900;
+    color:var(--pg-text);
+  }
+
+  .program-size-zero{
+    color:var(--pg-muted);
+    font-weight:700;
+  }
+
+  .program-size-value{
+    color:var(--pg-success);
+    font-weight:900;
+  }
+
+  .program-empty{
+    padding:36px 20px;
+    background:#fff;
+    border:1px solid var(--pg-line);
+    border-radius:26px;
+    box-shadow:var(--pg-shadow);
+    text-align:center;
+    color:var(--pg-muted);
+    font-weight:800;
+  }
+
+  @media (max-width: 1500px){
+    .program-card-body{
+      grid-template-columns:260px 190px minmax(0,1fr);
+    }
+
+    .program-size-box{
+      grid-column:1 / -1;
+    }
+  }
+
+  @media (max-width: 1120px){
+    .program-card-body{
+      grid-template-columns:1fr;
+    }
+
+    .program-searchbar{
+      width:100%;
+      min-width:220px;
+    }
+
+    .program-search{
+      width:100%;
+    }
+
+    .program-toolbar-left{
+      width:100%;
+    }
+  }
+
+  @media (max-width: 720px){
+    .program-toolbar,
+    .program-card-head,
+    .program-card-body{
+      padding-left:14px;
+      padding-right:14px;
+    }
+
+    .program-card{
+      border-radius:22px;
+    }
+  }
+</style>
+
+<div class="program-page">
+  <div class="program-toolbar">
+    <div class="program-toolbar-left">
+      <form method="get" class="program-search">
+        <div class="program-searchbar">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.5-3.5"></path>
+          </svg>
+          <input type="search" name="q" value="{{ q }}" placeholder="Search program no, SKU, product or firm">
+        </div>
+
+        <button type="submit" class="program-btn program-btn-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.5-3.5"></path>
+          </svg>
+          Search
+        </button>
+      </form>
+
+      <a href="{% url 'accounts:program_add' %}" class="program-btn program-btn-create">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5v14"></path>
+          <path d="M5 12h14"></path>
+        </svg>
+        Create Program
+      </a>
+    </div>
+
+    <div class="program-toolbar-right">
+      <div class="program-stat">
+        <span class="program-stat-dot program-stat-dot--blue"></span>
+        <div class="program-stat-copy">
+          <span class="program-stat-label">Verified</span>
+          <span class="program-stat-value">{{ verified_count }}</span>
+        </div>
+      </div>
+
+      <div class="program-stat">
+        <span class="program-stat-dot program-stat-dot--pink"></span>
+        <div class="program-stat-copy">
+          <span class="program-stat-label">Unverified</span>
+          <span class="program-stat-value">{{ unverified_count }}</span>
+        </div>
+      </div>
+
+      <div class="program-stat">
+        <span class="program-stat-dot program-stat-dot--orange"></span>
+        <div class="program-stat-copy">
+          <span class="program-stat-label">Total</span>
+          <span class="program-stat-value">{{ programs|length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% regroup programs by created_at|date:"F Y" as month_groups %}
+
+  {% if month_groups %}
+    {% for group in month_groups %}
+      <section class="program-month">
+        <div class="program-month-head">
+          <span class="program-month-title">{{ group.grouper }}</span>
+          <span class="program-month-line"></span>
+        </div>
+
+        <div class="program-stack">
+          {% for program in group.list %}
+            <article class="program-card">
+              <div class="program-card-head">
+                <div class="program-title-wrap">
+                  <div class="program-title">{{ program.program_no }}</div>
+                  <div class="program-subtitle">
+                    {{ program.bom.sku }}{% if program.bom.product_name %} · {{ program.bom.product_name }}{% endif %}
+                  </div>
+                </div>
+
+                <div class="program-head-meta">
+                  <span class="program-pill program-pill--firm">
+                    {% if program.firm %}{{ program.firm.firm_name }}{% else %}No Firm{% endif %}
+                  </span>
+
+                  <span class="program-pill {% if program.is_verified %}program-pill--verified{% else %}program-pill--unverified{% endif %}">
+                    {% if program.is_verified %}Verified{% else %}Unverified{% endif %}
+                  </span>
+
+                  <span class="program-pill {% if program.status == 'open' %}program-pill--open{% else %}program-pill--closed{% endif %}">
+                    {{ program.status }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="program-card-body">
+
+                <!-- Summary -->
+                <section class="program-box">
+                  <div class="program-box-head">
+                    <div>
+                      <div class="program-box-title">Program Summary</div>
+                      <div class="program-box-sub">Dates, costing and invoice values</div>
+                    </div>
+                  </div>
+
+                  <div class="program-summary">
+                    <div class="program-summary-row">
+                      <span class="program-summary-label">Creation Date</span>
+                      <span class="program-summary-value">{{ program.created_at|date:"d-m-Y" }}</span>
+                    </div>
+
+                    <div class="program-summary-row">
+                      <span class="program-summary-label">Cost Price</span>
+                      <span class="program-summary-value">₹ {{ program.cost_price }}</span>
+                    </div>
+
+                    <div class="program-summary-row">
+                      <span class="program-summary-label">Avg</span>
+                      <span class="program-summary-value">₹ {{ program.avg_price }}</span>
+                    </div>
+
+                    <div class="program-summary-row">
+                      <span class="program-summary-label">Cutting Invoice</span>
+                      <span class="program-summary-value">₹ {{ program.cutting_invoice_amount }}</span>
+                    </div>
+
+                    <div class="program-summary-row">
+                      <span class="program-summary-label">Stitching Invoice</span>
+                      <span class="program-summary-value">₹ {{ program.stitching_invoice_amount }}</span>
+                    </div>
+
+                    <div class="program-summary-row">
+                      <span class="program-summary-label">GLT</span>
+                      <span class="program-summary-value">{{ program.glt_days }} Days</span>
+                    </div>
+
+                    <div class="program-summary-row">
+                      <span class="program-summary-label">GLT on 100%</span>
+                      <span class="program-summary-value">{{ program.glt_on_100_days }} Days</span>
+                    </div>
+                  </div>
+
+                  <div class="program-actions">
+                    <form method="post" action="{% url 'accounts:program_toggle_verify' program.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="program-mini program-mini--verify">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M20 6L9 17l-5-5"></path>
+                        </svg>
+                        {% if program.is_verified %}Unverify{% else %}Verify{% endif %}
+                      </button>
+                    </form>
+
+                    <a href="{% url 'accounts:program_edit' program.id %}" class="program-mini program-mini--edit">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.1 2.1 0 113 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                      </svg>
+                      Edit
+                    </a>
+
+                    <a href="{% url 'accounts:program_print' program.id %}" target="_blank" class="program-mini program-mini--print">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 9V4h12v5"></path>
+                        <path d="M6 14h12v6H6z"></path>
+                        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"></path>
+                      </svg>
+                      Print
+                    </a>
+
+                    <form method="post" action="{% url 'accounts:program_toggle_status' program.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="program-mini program-mini--status">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <circle cx="12" cy="12" r="8"></circle>
+                        </svg>
+                        {% if program.status == 'open' %}Close{% else %}Open{% endif %}
+                      </button>
+                    </form>
+                  </div>
+                </section>
+
+                <!-- Photo -->
+                <section class="program-box">
+                  <div class="program-box-head">
+                    <div>
+                      <div class="program-box-title">Photo Preview</div>
+                      <div class="program-box-sub">Primary style image from BOM</div>
+                    </div>
+                  </div>
+
+                  <div class="program-photo">
+                    <div class="program-photo-box">
+                      {% if program.preview_image_url %}
+                        <img src="{{ program.preview_image_url }}" alt="{{ program.bom.sku }}">
+                      {% else %}
+                        <div class="program-photo-empty">No preview image</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Jobber -->
+                <section class="program-box">
+                  <div class="program-box-head">
+                    <div>
+                      <div class="program-box-title">Jobber Flow</div>
+                      <div class="program-box-sub">Type, name, issue, inward and action</div>
+                    </div>
+                  </div>
+
+                  <div class="program-table-wrap">
+                    <table class="program-table">
+                      <thead>
+                        <tr>
+                          <th>Type</th>
+                          <th>Name</th>
+                          <th>Issue</th>
+                          <th>Inward</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for row in program.jobber_rows.all %}
+                          <tr>
+                            <td><span class="program-type">{{ row.jobber_type.name }}</span></td>
+                            <td class="program-name">{{ row.jobber.name }}</td>
+                            <td class="program-qty">{{ row.issued_qty }}</td>
+                            <td class="program-qty">{{ row.inward_qty }}</td>
+                            <td>
+                              <a href="{% url 'accounts:program_edit' program.id %}" class="program-link">Manage</a>
+                            </td>
+                          </tr>
+                        {% empty %}
+                          <tr>
+                            <td colspan="5" style="padding:20px;text-align:center;color:var(--pg-muted);font-weight:800;">
+                              No jobber rows found.
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <!-- Size -->
+                <section class="program-box program-size-box">
+                  <div class="program-box-head">
+                    <div>
+                      <div class="program-box-title">Size Chart</div>
+                      <div class="program-box-sub">Program size detail preview</div>
+                    </div>
+                  </div>
+
+                  <div class="program-table-wrap">
+                    <table class="program-table program-size-table">
+                      <thead>
+                        <tr>
+                          <th>Size</th>
+                          <th>XS</th>
+                          <th>S</th>
+                          <th>M</th>
+                          <th>L</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for size_row in program.size_rows.all %}
+                          <tr>
+                            <td class="program-size-line">{{ size_row.line_name }}</td>
+                            <td class="{% if size_row.xs_qty %}program-size-value{% else %}program-size-zero{% endif %}">{{ size_row.xs_qty }}</td>
+                            <td class="{% if size_row.s_qty %}program-size-value{% else %}program-size-zero{% endif %}">{{ size_row.s_qty }}</td>
+                            <td class="{% if size_row.m_qty %}program-size-value{% else %}program-size-zero{% endif %}">{{ size_row.m_qty }}</td>
+                            <td class="{% if size_row.l_qty %}program-size-value{% else %}program-size-zero{% endif %}">{{ size_row.l_qty }}</td>
+                          </tr>
+                        {% empty %}
+                          <tr>
+                            <td colspan="5" style="padding:20px;text-align:center;color:var(--pg-muted);font-weight:800;">
+                              No size chart found.
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  {% else %}
+    <div class="program-empty">
+      No program found.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

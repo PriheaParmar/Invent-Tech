@@ -18,11 +18,14 @@ from django.db.models import Count, Prefetch, Q, Sum
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from .forms import (
+    AccessoryForm,
     BOMAccessoryItemFormSet,
     BOMForm,
     BOMImageFormSet,
@@ -35,11 +38,11 @@ from .forms import (
     CategoryForm,
     ClientForm,
     DashboardProfileForm,
-    DyeingMaterialLinkDetailFormSet,
-    DyeingMaterialLinkForm,
-    DyeingOtherChargeForm,
+    DispatchChallanForm,
     DyeingPOInwardForm,
     DyeingPurchaseOrderForm,
+    DyeingPurchaseOrderItemFormSet,
+    DyeingPOReviewForm,
     ExpenseForm,
     FirmForm,
     GreigePOInwardForm,
@@ -58,6 +61,8 @@ from .forms import (
     MaterialUnitForm,
     PartyForm,
     PatternTypeForm,
+    ProgramForm,
+    ProgramJobberDetailFormSet,
     ReadyPOInwardForm,
     ReadyPurchaseOrderForm,
     SubCategoryForm,
@@ -70,11 +75,20 @@ from .forms import (
 )
 
 from .models import (
+    Accessory,
     BOM,
+    BOMAccessoryItem,
+    BOMImage,
+    BOMJobberTypeProcess,
+    BOMMaterialItem,
+    Program,
+    ProgramSizeDetail,
+    ProgramJobberDetail,
     Brand,
     Catalogue,
     Category,
     Client,
+    DispatchChallan,
     DyeingMaterialLink,
     DyeingMaterialLinkDetail,
     DyeingOtherCharge,
@@ -152,6 +166,29 @@ def _client_list_url(request):
     if _is_embed(request):
         url += "?embed=1"
     return url
+
+
+def _template_exists(template_name: str) -> bool:
+    try:
+        get_template(template_name)
+        return True
+    except TemplateDoesNotExist:
+        return False
+
+
+def _pick_template(*template_names: str) -> str:
+    for template_name in template_names:
+        if template_name and _template_exists(template_name):
+            return template_name
+    return template_names[-1]
+
+
+def _model_has_fields(model, *field_names: str) -> bool:
+    try:
+        existing_fields = {field.name for field in model._meta.get_fields()}
+    except Exception:
+        return False
+    return all(field_name in existing_fields for field_name in field_names)
 
 
 @login_required
@@ -436,6 +473,23 @@ def dashboard_view(request):
             for day in week
         ])
 
+    today_local = now_local.date()
+
+    yarn_inward_count = YarnPOInward.objects.filter(owner=request.user).count()
+    greige_inward_count = GreigePOInward.objects.filter(owner=request.user).count()
+    dyeing_inward_count = DyeingPOInward.objects.filter(owner=request.user).count()
+    ready_inward_count = ReadyPOInward.objects.filter(owner=request.user).count()
+
+    fabric_inward_count = greige_inward_count + dyeing_inward_count + ready_inward_count
+    total_inward_count = yarn_inward_count + greige_inward_count + dyeing_inward_count + ready_inward_count
+
+    today_inward_count = (
+        YarnPOInward.objects.filter(owner=request.user, inward_date=today_local).count()
+        + GreigePOInward.objects.filter(owner=request.user, inward_date=today_local).count()
+        + DyeingPOInward.objects.filter(owner=request.user, inward_date=today_local).count()
+        + ReadyPOInward.objects.filter(owner=request.user, inward_date=today_local).count()
+    )
+
     return render(
         request,
         "accounts/dashboard.html",
@@ -445,6 +499,14 @@ def dashboard_view(request):
             "current_date_label": now_local.strftime("%d %b %Y"),
             "current_time_label": now_local.strftime("%I:%M %p"),
             "calendar_weeks": calendar_weeks,
+
+            "total_inward_count": total_inward_count,
+            "today_inward_count": today_inward_count,
+            "fabric_inward_count": fabric_inward_count,
+            "yarn_inward_count": yarn_inward_count,
+            "greige_inward_count": greige_inward_count,
+            "dyeing_inward_count": dyeing_inward_count,
+            "ready_inward_count": ready_inward_count,
         },
     )
 
@@ -651,7 +713,10 @@ def jobbertype_list_create(request):
         }
     }
 
-    template = "accounts/jobbers/embed_types.html" if _is_embed(request) else "accounts/jobbers/types.html"
+    template = _pick_template(
+        "accounts/jobbers/embed_types.html" if _is_embed(request) else "accounts/jobbers/types.html",
+        "accounts/jobbers/embed_types.html",
+    )
     return render(request, template, context)
 
 
@@ -663,10 +728,9 @@ def material_kind_picker(request):
     ctx = {
         "kind_choices": Material.MATERIAL_KIND_CHOICES,
     }
-    tpl = (
-        "accounts/materials/kind_picker_embed.html"
-        if _is_embed(request)
-        else "accounts/materials/kind_picker_page.html"
+    tpl = _pick_template(
+        "accounts/materials/kind_picker_embed.html" if _is_embed(request) else "accounts/materials/kind_picker_page.html",
+        "accounts/materials/kind_picker_embed.html",
     )
     return render(request, tpl, ctx)
 
@@ -985,7 +1049,10 @@ def firm_list(request):
     firm = Firm.objects.filter(owner=request.user).first()
     firms = [firm] if firm else []
 
-    tpl = "accounts/firms/list_embed.html" if _is_embed(request) else "accounts/firms/list.html"
+    tpl = _pick_template(
+        "accounts/firms/list_embed.html" if _is_embed(request) else "accounts/firms/list.html",
+        "accounts/firms/list_embed.html",
+    )
     return render(request, tpl, {"firms": firms})
 
 
@@ -1059,13 +1126,18 @@ def firm_view(request):
             return JsonResponse({"ok": True, "url": reverse("accounts:firm")})
         return redirect("accounts:firm")
 
-    template = "accounts/firm/form_embed.html" if _is_embed(request) else "accounts/firm/form.html"
+    template = _pick_template(
+        "accounts/firms/form_embed.html" if _is_embed(request) else "accounts/firms/form.html",
+        "accounts/firms/form_embed.html",
+        "accounts/firms/form.html",
+    )
     return render(request, template, {"form": form})
 
 
 # ==========================
 # MATERIAL SHADES (Utilities)
 # ==========================
+@login_required
 def materialshade_list(request):
     q = (request.GET.get("q") or "").strip()
     selected_kind = (request.GET.get("kind") or "").strip()
@@ -2087,6 +2159,688 @@ def _build_yarn_po_pdf_response(po):
     response["Content-Disposition"] = f'attachment; filename="{po.system_number or "yarn_po"}.pdf"'
     return response
 
+def _build_greige_po_pdf_response(po):
+    try:
+        import os
+        from pathlib import Path
+        from html import escape
+
+        from django.conf import settings
+        from reportlab.lib import colors
+        from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import mm
+        from reportlab.lib.utils import ImageReader
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    except ImportError:
+        return HttpResponse(
+            "ReportLab is required for PDF generation. Install it with: pip install reportlab",
+            status=500,
+        )
+
+    brand_pink = colors.HexColor("#ED2F8C")
+    brand_orange = colors.HexColor("#F6A33B")
+    brand_blue = colors.HexColor("#1976F3")
+    brand_navy = colors.HexColor("#0F172A")
+    ink = colors.HexColor("#1F2937")
+    muted = colors.HexColor("#667085")
+    border = colors.HexColor("#D0D5DD")
+    soft_bg = colors.HexColor("#F8FAFC")
+    white = colors.white
+
+    def text_or_dash(value):
+        value = "" if value is None else str(value).strip()
+        return value if value else "-"
+
+    def fmt_money(value):
+        try:
+            return f"{float(value or 0):,.2f}"
+        except Exception:
+            return f"{value or '0.00'}"
+
+    def fmt_qty(value):
+        try:
+            return f"{float(value or 0):,.2f}".rstrip("0").rstrip(".")
+        except Exception:
+            return text_or_dash(value)
+
+    def line_if(label, value):
+        value = "" if value is None else str(value).strip()
+        if not value:
+            return ""
+        return f"<b>{escape(label)}:</b> {escape(value)}"
+
+    def join_parts(*parts):
+        clean = [str(p).strip() for p in parts if str(p).strip()]
+        return ", ".join(clean)
+
+    firm = getattr(po.source_yarn_po, "firm", None)
+    vendor = po.vendor
+    po_items = list(po.items.all())
+
+    def resolve_logo_path():
+        if firm and getattr(firm, "logo", None):
+            try:
+                logo_path = firm.logo.path
+                if logo_path and os.path.exists(logo_path):
+                    return logo_path
+            except Exception:
+                pass
+
+        fallback = Path(settings.BASE_DIR) / "Logo.jpeg"
+        if fallback.exists():
+            return str(fallback)
+
+        return None
+
+    logo_path = resolve_logo_path()
+
+    def draw_branding(canvas, doc):
+        page_w, page_h = A4
+        canvas.saveState()
+
+        canvas.setStrokeColor(colors.HexColor("#E4E7EC"))
+        canvas.setLineWidth(0.8)
+        canvas.roundRect(8 * mm, 8 * mm, page_w - 16 * mm, page_h - 16 * mm, 4 * mm, stroke=1, fill=0)
+
+        usable_w = page_w - 16 * mm
+        stripe_w = usable_w / 3.0
+        stripe_y = page_h - 13 * mm
+        stripe_h = 4.5 * mm
+
+        canvas.setFillColor(brand_pink)
+        canvas.rect(8 * mm, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+
+        canvas.setFillColor(brand_orange)
+        canvas.rect(8 * mm + stripe_w, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+
+        canvas.setFillColor(brand_blue)
+        canvas.rect(8 * mm + 2 * stripe_w, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+
+        if logo_path:
+            try:
+                img = ImageReader(logo_path)
+                iw, ih = img.getSize()
+                draw_w = 26 * mm
+                draw_h = draw_w * (ih / float(iw)) if iw and ih else 26 * mm
+                x = (page_w - draw_w) / 2.0
+                y = 10 * mm
+
+                try:
+                    canvas.setFillAlpha(0.10)
+                    canvas.setStrokeAlpha(0.10)
+                except Exception:
+                    pass
+
+                canvas.drawImage(
+                    img,
+                    x,
+                    y,
+                    width=draw_w,
+                    height=draw_h,
+                    preserveAspectRatio=True,
+                    mask="auto",
+                )
+            except Exception:
+                pass
+
+        canvas.restoreState()
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=10 * mm,
+        rightMargin=10 * mm,
+        topMargin=16 * mm,
+        bottomMargin=16 * mm,
+    )
+
+    styles = getSampleStyleSheet()
+
+    base_style = ParagraphStyle(
+        "GPOBase",
+        parent=styles["BodyText"],
+        fontName="Helvetica",
+        fontSize=8.5,
+        leading=10.5,
+        textColor=ink,
+        spaceAfter=0,
+    )
+
+    header_left_style = ParagraphStyle(
+        "GPOHeaderLeft",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8.4,
+        leading=10.4,
+        textColor=white,
+        alignment=TA_LEFT,
+    )
+
+    header_title_style = ParagraphStyle(
+        "GPOHeaderTitle",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=16,
+        textColor=brand_navy,
+        alignment=TA_RIGHT,
+    )
+
+    header_meta_style = ParagraphStyle(
+        "GPOHeaderMeta",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8.3,
+        leading=10.2,
+        textColor=ink,
+        alignment=TA_RIGHT,
+    )
+
+    section_head_left = ParagraphStyle(
+        "GPOSectionHeadLeft",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=10,
+        textColor=white,
+        alignment=TA_LEFT,
+    )
+
+    section_value_style = ParagraphStyle(
+        "GPOSectionValue",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8.2,
+        leading=10.2,
+        textColor=ink,
+        alignment=TA_LEFT,
+    )
+
+    table_head_style = ParagraphStyle(
+        "GPOTableHead",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=7.8,
+        leading=9.5,
+        textColor=white,
+        alignment=TA_CENTER,
+    )
+
+    item_center_style = ParagraphStyle(
+        "GPOItemCenter",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8,
+        leading=9.6,
+        alignment=TA_CENTER,
+    )
+
+    item_desc_style = ParagraphStyle(
+        "GPOItemDesc",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8,
+        leading=9.6,
+        alignment=TA_LEFT,
+    )
+
+    money_style = ParagraphStyle(
+        "GPOMoney",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8,
+        leading=9.6,
+        alignment=TA_RIGHT,
+    )
+
+    block_title_style = ParagraphStyle(
+        "GPOBlockTitle",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=8.4,
+        leading=10.5,
+        textColor=brand_navy,
+        alignment=TA_LEFT,
+    )
+
+    block_text_style = ParagraphStyle(
+        "GPOBlockText",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8.1,
+        leading=10.1,
+        textColor=ink,
+        alignment=TA_LEFT,
+    )
+
+    sign_style = ParagraphStyle(
+        "GPOSign",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=10,
+        textColor=ink,
+        alignment=TA_LEFT,
+    )
+
+    total_label_style = ParagraphStyle(
+        "GPOTotalLabel",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=8.2,
+        leading=10.2,
+        textColor=ink,
+        alignment=TA_LEFT,
+    )
+
+    total_value_style = ParagraphStyle(
+        "GPOTotalValue",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=8.2,
+        leading=10.2,
+        textColor=ink,
+        alignment=TA_RIGHT,
+    )
+
+    footer_note_style = ParagraphStyle(
+        "GPOFooterNote",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=7.6,
+        leading=9.2,
+        textColor=muted,
+        alignment=TA_CENTER,
+    )
+
+    story = []
+
+    firm_name = text_or_dash(firm.firm_name if firm else "InventTech")
+    firm_type = ""
+    if firm:
+        try:
+            firm_type = firm.get_firm_type_display()
+        except Exception:
+            firm_type = text_or_dash(getattr(firm, "firm_type", ""))
+
+    firm_address = join_parts(
+        getattr(firm, "address_line", ""),
+        getattr(firm, "city", ""),
+        getattr(firm, "state", ""),
+        getattr(firm, "pincode", ""),
+    )
+
+    firm_contact_line = " | ".join([
+        part for part in [
+            line_if("Phone", getattr(firm, "phone", "")),
+            line_if("Email", getattr(firm, "email", "")),
+            line_if("GSTIN", getattr(firm, "gst_number", "")),
+        ] if part
+    ])
+
+    firm_stat_line = " | ".join([
+        part for part in [
+            line_if("PAN", getattr(firm, "pan_number", "")),
+            line_if("TAN", getattr(firm, "tan_number", "")),
+            line_if("CIN", getattr(firm, "cin_number", "")),
+        ] if part
+    ])
+
+    order_number = po.po_number or po.system_number or "-"
+    po_date = po.po_date.strftime("%d-%m-%Y") if po.po_date else "-"
+    cancel_date = po.cancel_date.strftime("%d-%m-%Y") if po.cancel_date else "-"
+    approval_label = getattr(po, "get_approval_status_display", lambda: text_or_dash(po.approval_status))()
+
+    firm_header_html = f"<font size='13'><b>{escape(firm_name)}</b></font>"
+    if firm_type and firm_type != "-":
+        firm_header_html += f"<br/>{escape(firm_type)}"
+    if firm_address:
+        firm_header_html += f"<br/>{escape(firm_address)}"
+    if firm_contact_line:
+        firm_header_html += f"<br/>{firm_contact_line}"
+    if firm_stat_line:
+        firm_header_html += f"<br/>{firm_stat_line}"
+
+    source_yarn_po_no = text_or_dash(po.source_yarn_po.system_number if po.source_yarn_po else "")
+    source_yarn_inward_no = text_or_dash(po.source_yarn_inward.inward_number if po.source_yarn_inward else "")
+
+    header_table = Table(
+        [[
+            Paragraph(firm_header_html, header_left_style),
+            Table(
+                [[
+                    Paragraph("<b>GREIGE PURCHASE ORDER</b>", header_title_style),
+                ], [
+                    Paragraph(
+                        f"<b>PO No:</b> {escape(order_number)}<br/>"
+                        f"<b>PO Date:</b> {escape(po_date)}<br/>"
+                        f"<b>System No:</b> {escape(text_or_dash(po.system_number))}<br/>"
+                        f"<b>Status:</b> {escape(text_or_dash(approval_label))}<br/>"
+                        f"<b>Source Yarn PO:</b> {escape(source_yarn_po_no)}"
+                        + (f"<br/><b>Source Inward:</b> {escape(source_yarn_inward_no)}" if source_yarn_inward_no != "-" else "")
+                        + (f"<br/><b>Cancel Date:</b> {escape(cancel_date)}" if cancel_date != "-" else ""),
+                        header_meta_style,
+                    )
+                ]],
+                colWidths=[66 * mm],
+            ),
+        ]],
+        colWidths=[124 * mm, 66 * mm],
+    )
+    header_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), brand_navy),
+        ("BACKGROUND", (1, 0), (1, 0), colors.HexColor("#F5F8FF")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (0, 0), 9),
+        ("RIGHTPADDING", (0, 0), (0, 0), 9),
+        ("TOPPADDING", (0, 0), (0, 0), 9),
+        ("BOTTOMPADDING", (0, 0), (0, 0), 9),
+        ("LEFTPADDING", (1, 0), (1, 0), 0),
+        ("RIGHTPADDING", (1, 0), (1, 0), 0),
+        ("TOPPADDING", (1, 0), (1, 0), 0),
+        ("BOTTOMPADDING", (1, 0), (1, 0), 0),
+    ]))
+    header_table._argW[1] = 66 * mm
+    inner_header = header_table._cellvalues[0][1]
+    inner_header.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F5F8FF")),
+        ("BOX", (0, 0), (-1, -1), 0.9, brand_blue),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 6))
+
+    vendor_html = f"<b>{escape(text_or_dash(vendor.name if vendor else ''))}</b>"
+    vendor_lines = [
+        line_if("Contact", vendor.contact_person if vendor else ""),
+        line_if("Phone", vendor.phone if vendor else ""),
+        line_if("Email", vendor.email if vendor else ""),
+        line_if("GSTIN", vendor.gst_number if vendor else ""),
+        line_if("Address", vendor.address if vendor else ""),
+    ]
+    vendor_body = "<br/>".join([line for line in vendor_lines if line])
+    if vendor_body:
+        vendor_html += "<br/>" + vendor_body
+
+    bill_to_html = f"<b>{escape(text_or_dash(firm_name if firm else ''))}</b>"
+    bill_lines = [
+        line_if("Address", firm_address),
+        line_if("Phone", getattr(firm, "phone", "")),
+        line_if("Email", getattr(firm, "email", "")),
+        line_if("GSTIN", getattr(firm, "gst_number", "")),
+        line_if("Ship To", po.shipping_address),
+    ]
+    bill_body = "<br/>".join([line for line in bill_lines if line])
+    if bill_body:
+        bill_to_html += "<br/>" + bill_body
+
+    party_table = Table(
+        [
+            [
+                Paragraph("VENDOR", section_head_left),
+                Paragraph("BILL TO", section_head_left),
+            ],
+            [
+                Paragraph(vendor_html, section_value_style),
+                Paragraph(bill_to_html, section_value_style),
+            ],
+        ],
+        colWidths=[95 * mm, 95 * mm],
+    )
+    party_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), brand_orange),
+        ("BACKGROUND", (1, 0), (1, 0), brand_blue),
+        ("TEXTCOLOR", (0, 0), (-1, 0), white),
+        ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#FBFCFE")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.7, border),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ]))
+    story.append(party_table)
+    story.append(Spacer(1, 7))
+
+    item_rows = [[
+        Paragraph("Sr No", table_head_style),
+        Paragraph("Description", table_head_style),
+        Paragraph("Unit", table_head_style),
+        Paragraph("Qty", table_head_style),
+        Paragraph("Price (Rs.)", table_head_style),
+        Paragraph("Amount (Rs.)", table_head_style),
+    ]]
+
+    total_amount = Decimal("0")
+    total_qty = Decimal("0")
+    total_inward = Decimal("0")
+    remaining_qty = Decimal("0")
+
+    for index, item in enumerate(po_items, start=1):
+        label = item.fabric_name or (item.material.name if item.material else "Greige Item")
+
+        details = []
+        if item.yarn_name:
+            details.append(f"Yarn: {item.yarn_name}")
+        if item.count:
+            details.append(f"Count: {item.count}")
+        if item.dia:
+            details.append(f"Dia: {item.dia}")
+        if item.gauge:
+            details.append(f"Gauge: {item.gauge}")
+        if item.gsm:
+            details.append(f"GSM: {item.gsm}")
+        if item.sl:
+            details.append(f"SL: {item.sl}")
+        if item.rolls:
+            details.append(f"Rolls: {item.rolls}")
+        if item.hsn_code:
+            details.append(f"HSN: {item.hsn_code}")
+        if item.remark:
+            details.append(f"Remark: {item.remark}")
+
+        description_html = f"<b>{escape(text_or_dash(label))}</b>"
+        if details:
+            description_html += "<br/>" + escape(" | ".join(details))
+
+        item_rows.append([
+            Paragraph(str(index), item_center_style),
+            Paragraph(description_html, item_desc_style),
+            Paragraph(escape(text_or_dash(item.unit)), item_center_style),
+            Paragraph(escape(fmt_qty(item.quantity)), item_center_style),
+            Paragraph(escape(fmt_money(item.rate)), money_style),
+            Paragraph(escape(fmt_money(item.final_amount)), money_style),
+        ])
+
+        total_amount += Decimal(item.final_amount or 0)
+        total_qty += Decimal(item.quantity or 0)
+        total_inward += Decimal(item.inward_qty_total or 0)
+        remaining_qty += Decimal(item.remaining_qty_total or 0)
+
+    min_visual_rows = 5
+    for _ in range(max(0, min_visual_rows - len(po_items))):
+        item_rows.append([
+            Paragraph("", item_center_style),
+            Paragraph("", item_desc_style),
+            Paragraph("", item_center_style),
+            Paragraph("", item_center_style),
+            Paragraph("", money_style),
+            Paragraph("", money_style),
+        ])
+
+    items_table = Table(
+        item_rows,
+        colWidths=[13 * mm, 86 * mm, 18 * mm, 18 * mm, 26 * mm, 29 * mm],
+        repeatRows=1,
+    )
+    items_table_style = TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), brand_navy),
+        ("TEXTCOLOR", (0, 0), (-1, 0), white),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.55, border),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ])
+
+    for row_index in range(1, len(item_rows)):
+        if row_index % 2 == 0:
+            items_table_style.add("BACKGROUND", (0, row_index), (-1, row_index), colors.HexColor("#F9FAFB"))
+
+    items_table.setStyle(items_table_style)
+    story.append(items_table)
+    story.append(Spacer(1, 8))
+
+    notes_parts = []
+    if po.remarks:
+        notes_parts.append(f"<font color='#0F172A'><b>Remarks</b></font><br/>{escape(po.remarks).replace(chr(10), '<br/>')}")
+    if po.delivery_schedule:
+        notes_parts.append(f"<font color='#0F172A'><b>Delivery Schedule</b></font><br/>{escape(po.delivery_schedule).replace(chr(10), '<br/>')}")
+    if po.shipping_address:
+        notes_parts.append(f"<font color='#0F172A'><b>Shipping Address</b></font><br/>{escape(po.shipping_address).replace(chr(10), '<br/>')}")
+    if po.source_yarn_po:
+        notes_parts.append(f"<font color='#0F172A'><b>Source Yarn PO</b></font><br/>{escape(text_or_dash(po.source_yarn_po.system_number))}")
+
+    if not notes_parts:
+        notes_parts.append("<font color='#0F172A'><b>Notes</b></font><br/>Standard terms and conditions apply.")
+
+    notes_html = "<br/><br/>".join(notes_parts)
+
+    signature_table = Table(
+        [[
+            Paragraph("<b>AUTHORISED SIGNATORY</b><br/><br/>_________________________", sign_style),
+            Paragraph(f"<b>DATE</b><br/><br/>{escape(po_date)}", sign_style),
+        ]],
+        colWidths=[68 * mm, 30 * mm],
+    )
+    signature_table.setStyle(TableStyle([
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+
+    left_block = Table(
+        [
+            [Paragraph("NOTES / TERMS", block_title_style)],
+            [Paragraph(notes_html, block_text_style)],
+            [signature_table],
+        ],
+        colWidths=[102 * mm],
+    )
+    left_block.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), colors.HexColor("#FDF2F8")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.6, border),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+
+    totals_rows = [
+        [Paragraph("Total Qty", total_label_style), Paragraph(escape(fmt_qty(total_qty)), total_value_style)],
+        [Paragraph("Total Inward", total_label_style), Paragraph(escape(fmt_qty(total_inward)), total_value_style)],
+        [Paragraph("Remaining Qty", total_label_style), Paragraph(escape(fmt_qty(remaining_qty)), total_value_style)],
+        [Paragraph("Total Amount", total_label_style), Paragraph(escape(fmt_money(total_amount)), total_value_style)],
+    ]
+
+    totals_table = Table(totals_rows, colWidths=[49 * mm, 39 * mm])
+    totals_table_style = TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.6, border),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EFF6FF")),
+        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#FFF7ED")),
+    ])
+    for row_index in range(1, len(totals_rows) - 1):
+        if row_index % 2 == 1:
+            totals_table_style.add("BACKGROUND", (0, row_index), (-1, row_index), soft_bg)
+    totals_table.setStyle(totals_table_style)
+
+    lower_table = Table([[left_block, totals_table]], colWidths=[102 * mm, 88 * mm])
+    lower_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    story.append(lower_table)
+    story.append(Spacer(1, 8))
+
+    footer_table = Table(
+        [[Paragraph("THIS PO IS COMPUTER GENERATED, HENCE SIGNATURE IS NOT REQUIRED", footer_note_style)]],
+        colWidths=[190 * mm],
+    )
+    footer_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F8FAFC")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ]))
+    story.append(footer_table)
+
+    doc.build(story, onFirstPage=draw_branding, onLaterPages=draw_branding)
+    buffer.seek(0)
+
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    return response
+
+
+@login_required
+def greigepo_pdf(request, pk: int):
+    po = get_object_or_404(
+        GreigePurchaseOrder.objects
+        .select_related("vendor", "source_yarn_po", "source_yarn_po__firm", "owner", "reviewed_by")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=GreigePurchaseOrderItem.objects.select_related("material", "source_yarn_po_item")
+            )
+        ),
+        pk=pk,
+    )
+
+    if not _can_access_greige_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Greige PO.")
+
+    try:
+        response = _build_greige_po_pdf_response(po)
+    except Exception:
+        logger.exception("Branded Greige PO PDF generation failed for PO id=%s system_no=%s", po.pk, po.system_number)
+        return HttpResponse("Unable to generate Greige PO PDF.", status=500)
+
+    if response.status_code == 200 and response.get("Content-Type", "").startswith("application/pdf"):
+        filename = f'{po.system_number or "greige_po"}.pdf'
+        disposition = "attachment" if request.GET.get("download") == "1" else "inline"
+        response["Content-Disposition"] = f'{disposition}; filename="{filename}"'
+        response["Cache-Control"] = "no-store"
+        response["X-Content-Type-Options"] = "nosniff"
+        try:
+            response["Content-Length"] = str(len(response.content))
+        except Exception:
+            pass
+
+    return response
 
 @login_required
 def yarnpo_list(request):
@@ -2425,6 +3179,196 @@ def yarnpo_pdf(request, pk: int):
 
     if response.status_code == 200 and response.get("Content-Type", "").startswith("application/pdf"):
         filename = f'{po.system_number or "yarn_po"}.pdf'
+        disposition = "attachment" if request.GET.get("download") == "1" else "inline"
+        response["Content-Disposition"] = f'{disposition}; filename="{filename}"'
+        response["Cache-Control"] = "no-store"
+        response["X-Content-Type-Options"] = "nosniff"
+        try:
+            response["Content-Length"] = str(len(response.content))
+        except Exception:
+            pass
+
+    return response
+
+def _build_simple_greige_po_pdf_response(po):
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import mm
+        from reportlab.pdfgen import canvas
+    except ImportError:
+        return HttpResponse(
+            "ReportLab is required for PDF generation. Install it with: pip install reportlab",
+            status=500,
+        )
+
+    def safe_text(value):
+        value = "" if value is None else str(value).strip()
+        return value if value else "-"
+
+    def qty_text(value):
+        try:
+            return f"{float(value or 0):,.2f}".rstrip("0").rstrip(".")
+        except Exception:
+            return safe_text(value)
+
+    def money_text(value):
+        try:
+            return f"{float(value or 0):,.2f}"
+        except Exception:
+            return safe_text(value)
+
+    items = list(po.items.all())
+    total_amount = sum((item.final_amount or Decimal("0")) for item in items)
+    total_qty = sum((item.quantity or Decimal("0")) for item in items)
+
+    firm = getattr(po.source_yarn_po, "firm", None)
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    left = 15 * mm
+    top = height - 18 * mm
+    line_gap = 5.5 * mm
+
+    def draw_line(label, value, y, bold=False):
+        pdf.setFont("Helvetica-Bold" if bold else "Helvetica", 9)
+        pdf.drawString(left, y, f"{label}: {safe_text(value)}")
+
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(left, top, safe_text(firm.firm_name if firm else "InventTech"))
+
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawRightString(width - 15 * mm, top, "GREIGE PURCHASE ORDER")
+
+    y = top - 9 * mm
+    draw_line("PO No", po.po_number or po.system_number, y)
+    draw_line("PO Date", po.po_date.strftime("%d-%m-%Y") if po.po_date else "-", y - line_gap)
+    draw_line("System No", po.system_number, y - (2 * line_gap))
+    draw_line("Status", po.get_approval_status_display(), y - (3 * line_gap))
+    draw_line("Source Yarn PO", po.source_yarn_po.system_number if po.source_yarn_po else "-", y - (4 * line_gap))
+
+    y -= 32 * mm
+
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(left, y, "Vendor")
+    pdf.drawString(width / 2, y, "Bill To")
+
+    y -= 6 * mm
+    pdf.setFont("Helvetica", 9)
+
+    vendor_lines = [
+        safe_text(po.vendor.name if po.vendor else ""),
+        f"Phone: {safe_text(po.vendor.phone if po.vendor else '')}",
+        f"Email: {safe_text(po.vendor.email if po.vendor else '')}",
+        f"GSTIN: {safe_text(po.vendor.gst_number if po.vendor else '')}",
+        f"Address: {safe_text(po.vendor.address if po.vendor else '')}",
+    ]
+
+    bill_lines = [
+        safe_text(firm.firm_name if firm else ""),
+        f"Phone: {safe_text(getattr(firm, 'phone', ''))}",
+        f"Email: {safe_text(getattr(firm, 'email', ''))}",
+        f"GSTIN: {safe_text(getattr(firm, 'gst_number', ''))}",
+        f"Ship To: {safe_text(po.shipping_address)}",
+    ]
+
+    for idx in range(max(len(vendor_lines), len(bill_lines))):
+        vendor_text = vendor_lines[idx] if idx < len(vendor_lines) else ""
+        bill_text = bill_lines[idx] if idx < len(bill_lines) else ""
+        pdf.drawString(left, y, vendor_text)
+        pdf.drawString(width / 2, y, bill_text)
+        y -= 5 * mm
+
+    y -= 3 * mm
+
+    pdf.setFont("Helvetica-Bold", 9)
+    pdf.drawString(left, y, "Sr")
+    pdf.drawString(left + 12 * mm, y, "Fabric")
+    pdf.drawString(left + 62 * mm, y, "Yarn")
+    pdf.drawString(left + 108 * mm, y, "Unit")
+    pdf.drawRightString(left + 135 * mm, y, "Qty")
+    pdf.drawRightString(left + 162 * mm, y, "Rate")
+    pdf.drawRightString(width - 15 * mm, y, "Amount")
+
+    y -= 4 * mm
+    pdf.line(left, y, width - 15 * mm, y)
+    y -= 6 * mm
+
+    for index, item in enumerate(items, start=1):
+        if y < 45 * mm:
+            pdf.showPage()
+            y = height - 20 * mm
+
+            pdf.setFont("Helvetica-Bold", 9)
+            pdf.drawString(left, y, "Sr")
+            pdf.drawString(left + 12 * mm, y, "Fabric")
+            pdf.drawString(left + 62 * mm, y, "Yarn")
+            pdf.drawString(left + 108 * mm, y, "Unit")
+            pdf.drawRightString(left + 135 * mm, y, "Qty")
+            pdf.drawRightString(left + 162 * mm, y, "Rate")
+            pdf.drawRightString(width - 15 * mm, y, "Amount")
+            y -= 4 * mm
+            pdf.line(left, y, width - 15 * mm, y)
+            y -= 6 * mm
+
+        fabric_name = item.fabric_name or (item.material.name if item.material else "Greige Item")
+        yarn_name = item.yarn_name or "-"
+        unit = item.unit or "-"
+        qty = item.quantity or Decimal("0")
+        rate = item.rate or Decimal("0")
+        amount = item.final_amount or Decimal("0")
+
+        pdf.setFont("Helvetica", 8.5)
+        pdf.drawString(left, y, str(index))
+        pdf.drawString(left + 12 * mm, y, safe_text(fabric_name)[:28])
+        pdf.drawString(left + 62 * mm, y, safe_text(yarn_name)[:24])
+        pdf.drawString(left + 108 * mm, y, safe_text(unit)[:8])
+        pdf.drawRightString(left + 135 * mm, y, qty_text(qty))
+        pdf.drawRightString(left + 162 * mm, y, money_text(rate))
+        pdf.drawRightString(width - 15 * mm, y, money_text(amount))
+        y -= 6 * mm
+
+    y -= 4 * mm
+    pdf.line(left, y, width - 15 * mm, y)
+    y -= 8 * mm
+
+    pdf.setFont("Helvetica-Bold", 9)
+    pdf.drawString(left, y, f"Total Qty: {qty_text(total_qty)}")
+    pdf.drawRightString(left + 162 * mm, y, "Total Amount")
+    pdf.drawRightString(width - 15 * mm, y, money_text(total_amount))
+
+    y -= 12 * mm
+    pdf.setFont("Helvetica", 8.5)
+    pdf.drawString(left, y, "THIS PO IS COMPUTER GENERATED, HENCE SIGNATURE IS NOT REQUIRED")
+
+    pdf.save()
+    buffer.seek(0)
+
+    return HttpResponse(buffer.getvalue(), content_type="application/pdf")
+
+
+@login_required
+def greigepo_pdf(request, pk: int):
+    po = get_object_or_404(
+        GreigePurchaseOrder.objects
+        .select_related("vendor", "source_yarn_po", "source_yarn_po__firm", "reviewed_by", "owner")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=GreigePurchaseOrderItem.objects.select_related("material", "source_yarn_po_item")
+            )
+        ),
+        pk=pk,
+    )
+
+    if not _can_access_greige_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Greige PO.")
+
+    response = _build_simple_greige_po_pdf_response(po)
+
+    if response.status_code == 200 and response.get("Content-Type", "").startswith("application/pdf"):
+        filename = f'{po.system_number or "greige_po"}.pdf'
         disposition = "attachment" if request.GET.get("download") == "1" else "inline"
         response["Content-Disposition"] = f'{disposition}; filename="{filename}"'
         response["Cache-Control"] = "no-store"
@@ -2970,7 +3914,10 @@ def jobbertype_edit(request, pk):
     else:
         form = JobberTypeForm(instance=jt)
 
-    template = "accounts/jobbers/jobbertype_edit_embed.html" if _is_embed(request) else "accounts/jobbers/jobbertype_edit.html"
+    template = _pick_template(
+        "accounts/jobbers/jobbertype_edit_embed.html" if _is_embed(request) else "accounts/jobbers/jobbertype_edit.html",
+        "accounts/jobbers/jobbertype_edit_embed.html",
+    )
     return render(request, template, {
         "form": form,
         "obj": jt,
@@ -3044,7 +3991,7 @@ def _selected_greige_inward_total(source_greige_inward):
 def _dyeing_po_queryset():
     return (
         DyeingPurchaseOrder.objects
-        .select_related("vendor", "firm", "source_greige_po", "source_greige_inward", "owner")
+        .select_related("vendor", "firm", "source_greige_po", "source_greige_inward", "reviewed_by", "owner")
         .prefetch_related(
             Prefetch(
                 "items",
@@ -3134,6 +4081,7 @@ def _sync_greige_po_items_from_source(
                 )
             )
             total_weight += inward_qty
+            subtotal += Decimal(getattr(greige_item, "final_amount", 0) or 0)
     else:
         for yarn_item in yarn_po.items.all():
             inward_qty = yarn_item.inward_qty_total or Decimal("0")
@@ -3295,6 +4243,7 @@ def _sync_dyeing_po_items_from_source(dyeing_po):
 
     item_rows = []
     total_weight = Decimal("0")
+    subtotal = Decimal("0")
     source_inward = getattr(dyeing_po, "source_greige_inward", None)
 
     if source_inward is not None:
@@ -3315,7 +4264,19 @@ def _sync_dyeing_po_items_from_source(dyeing_po):
                     greige_name=greige_name,
                     unit=greige_item.unit or "",
                     quantity=inward_qty,
+                    total_qty=inward_qty,
+                    remaining_qty=inward_qty,
+                    value=Decimal("0"),
+                    rolls=Decimal("0"),
+                    dyeing_type="",
+                    dyeing_name="",
+                    rate=Decimal("0"),
+                    other_charge_amount=Decimal("0"),
+                    job_work_charges=Decimal("0"),
+                    description="",
                     remark=f"Generated from Greige inward {source_inward.inward_number}",
+                    line_subtotal=Decimal("0"),
+                    line_final_amount=Decimal("0"),
                 )
             )
             total_weight += inward_qty
@@ -3335,7 +4296,19 @@ def _sync_dyeing_po_items_from_source(dyeing_po):
                     greige_name=greige_name,
                     unit=greige_item.unit or "",
                     quantity=inward_qty,
+                    total_qty=inward_qty,
+                    remaining_qty=inward_qty,
+                    value=Decimal("0"),
+                    rolls=Decimal("0"),
+                    dyeing_type="",
+                    dyeing_name="",
+                    rate=Decimal("0"),
+                    other_charge_amount=Decimal("0"),
+                    job_work_charges=Decimal("0"),
+                    description="",
                     remark=f"Generated from Greige inward of {greige_po.system_number}",
+                    line_subtotal=Decimal("0"),
+                    line_final_amount=Decimal("0"),
                 )
             )
             total_weight += inward_qty
@@ -3344,10 +4317,29 @@ def _sync_dyeing_po_items_from_source(dyeing_po):
     if item_rows:
         DyeingPurchaseOrderItem.objects.bulk_create(item_rows)
 
+    update_fields = ["total_weight", "updated_at"]
     dyeing_po.total_weight = total_weight
-    dyeing_po.available_qty = total_weight
-    dyeing_po.save(update_fields=["total_weight", "available_qty", "updated_at"])
+
+    if hasattr(dyeing_po, "subtotal"):
+        dyeing_po.subtotal = subtotal
+        update_fields.append("subtotal")
+
+    if hasattr(dyeing_po, "after_discount_value"):
+        dyeing_po.after_discount_value = subtotal
+        update_fields.append("after_discount_value")
+
+    if hasattr(dyeing_po, "final_amount"):
+        dyeing_po.final_amount = subtotal
+        update_fields.append("final_amount")
+
+    if hasattr(dyeing_po, "available_qty"):
+        dyeing_po.available_qty = total_weight
+        update_fields.append("available_qty")
+
+    dyeing_po.save(update_fields=update_fields)
     return total_weight
+
+
 
 def _sync_ready_po_items_from_source(ready_po):
     dyeing_po = (
@@ -3883,6 +4875,7 @@ def greigepo_inward(request, pk: int):
             "inward_form": inward_form,
             "line_rows": line_rows,
             "existing_inwards": po.inwards.all().order_by("-inward_date", "-id"),
+            "next_inward_number_preview": _next_greige_inward_number(),
         },
     )
 
@@ -3978,6 +4971,12 @@ def generate_ready_po_from_dyeing(request, pk: int):
     dyeing_po = get_object_or_404(_dyeing_po_queryset(), pk=pk)
     if not _can_access_dyeing_po(request.user, dyeing_po):
         raise PermissionDenied("You do not have access to this Dyeing PO.")
+    if not _is_po_approved_for_inward(dyeing_po):
+        messages.error(request, "Dyeing PO must be approved before Ready PO can be generated.")
+        return redirect("accounts:dyeingpo_list")
+    if not dyeing_po.inwards.exists():
+        messages.error(request, "Create at least one Dyeing inward before generating Ready PO.")
+        return redirect("accounts:dyeingpo_inward", pk=dyeing_po.pk)
     return redirect("accounts:readypo_add_from_dyeing", dyeing_po_id=pk)
 
 @login_required
@@ -4003,6 +5002,7 @@ def dyeingpo_list(request):
         {
             "orders": qs,
             "q": q,
+            "can_review_dyeing_po": _can_review_yarn_po(request.user),
         },
     )
 
@@ -4025,6 +5025,11 @@ def dyeingpo_create(request, greige_po_id=None):
             pk=inward_id,
         )
 
+    temp_po = DyeingPurchaseOrder(
+        source_greige_po=source_greige_po,
+        source_greige_inward=selected_source_inward,
+    )
+
     if request.method == "POST":
         form = DyeingPurchaseOrderForm(
             request.POST,
@@ -4032,50 +5037,113 @@ def dyeingpo_create(request, greige_po_id=None):
             source_greige_po=source_greige_po,
             lock_source=bool(source_greige_po),
         )
+        formset = DyeingPurchaseOrderItemFormSet(
+            request.POST,
+            instance=temp_po,
+            prefix="items",
+            form_kwargs={"user": request.user},
+        )
 
-        if form.is_valid():
+        if form.is_valid() and formset.is_valid():
             selected_source = source_greige_po or form.cleaned_data["source_greige_po"]
             if not _can_access_greige_po(request.user, selected_source):
                 raise PermissionDenied("You do not have access to this Greige PO.")
 
-            if selected_source_inward is not None:
-                if selected_source_inward.po_id != selected_source.id:
-                    form.add_error(None, "Selected Greige inward does not belong to the chosen Greige PO.")
-                elif selected_source_inward.generated_dyeing_pos.exists():
-                    form.add_error(None, "Dyeing PO already exists for this Greige inward.")
-                else:
+            if selected_source_inward is not None and selected_source_inward.po_id != selected_source.id:
+                form.add_error(None, "Selected Greige inward does not belong to the chosen Greige PO.")
+            elif selected_source_inward is not None and selected_source_inward.generated_dyeing_pos.exists():
+                form.add_error(None, "Dyeing PO already exists for this Greige inward.")
+            elif selected_source_inward is None and not selected_source.inwards.exists():
+                form.add_error("source_greige_po", "Selected Greige PO has no inward entries yet.")
+            elif selected_source_inward is None and selected_source.dyeing_pos.filter(source_greige_inward__isnull=True).exists():
+                form.add_error("source_greige_po", "Dyeing PO already exists for this Greige PO.")
+            else:
+                with transaction.atomic():
                     dyeing_po = form.save(commit=False)
                     dyeing_po.owner = selected_source.owner
                     dyeing_po.system_number = _next_dyeing_po_number()
                     dyeing_po.source_greige_po = selected_source
                     dyeing_po.source_greige_inward = selected_source_inward
+
                     if dyeing_po.firm and not dyeing_po.shipping_address:
                         dyeing_po.shipping_address = _firm_address(dyeing_po.firm)
+
                     dyeing_po.save()
-                    _sync_dyeing_po_items_from_source(dyeing_po)
-                    return redirect("accounts:dyeingpo_inward", pk=dyeing_po.pk)
-            else:
-                if not selected_source.inwards.exists():
-                    form.add_error("source_greige_po", "Selected Greige PO has no inward entries yet.")
-                elif selected_source.dyeing_pos.filter(source_greige_inward__isnull=True).exists():
-                    form.add_error("source_greige_po", "Dyeing PO already exists for this Greige PO.")
-                else:
-                    dyeing_po = form.save(commit=False)
-                    dyeing_po.owner = selected_source.owner
-                    dyeing_po.system_number = _next_dyeing_po_number()
-                    dyeing_po.source_greige_po = selected_source
-                    if dyeing_po.firm and not dyeing_po.shipping_address:
-                        dyeing_po.shipping_address = _firm_address(dyeing_po.firm)
-                    dyeing_po.save()
-                    _sync_dyeing_po_items_from_source(dyeing_po)
-                    return redirect("accounts:dyeingpo_inward", pk=dyeing_po.pk)
+
+                    formset.instance = dyeing_po
+                    items = formset.save(commit=False)
+
+                    for obj in formset.deleted_objects:
+                        obj.delete()
+
+                    total_weight = Decimal("0")
+                    subtotal = Decimal("0")
+
+                    for item in items:
+                        item.po = dyeing_po
+
+                        if item.finished_material:
+                            item.fabric_name = item.finished_material.name
+                        elif item.dyeing_name:
+                            item.fabric_name = item.dyeing_name
+                        else:
+                            item.fabric_name = "Dyeing Item"
+
+                        if not item.greige_name:
+                            if selected_source_inward and selected_source_inward.items.exists():
+                                first_inward_item = selected_source_inward.items.select_related("po_item").first()
+                                if first_inward_item and first_inward_item.po_item:
+                                    item.greige_name = first_inward_item.po_item.fabric_name or ""
+                            elif selected_source and selected_source.items.exists():
+                                first_po_item = selected_source.items.first()
+                                if first_po_item:
+                                    item.greige_name = first_po_item.fabric_name or ""
+
+                        item.quantity = item.total_qty or Decimal("0")
+                        if not item.remaining_qty:
+                            item.remaining_qty = item.total_qty or Decimal("0")
+
+                        item.line_subtotal = item.line_subtotal or Decimal("0")
+                        item.line_final_amount = item.line_final_amount or Decimal("0")
+
+                        item.save()
+
+                        total_weight += item.total_qty or Decimal("0")
+                        subtotal += item.line_final_amount or Decimal("0")
+
+                    formset.save_m2m()
+
+                    discount = dyeing_po.discount_percent or Decimal("0")
+                    others = dyeing_po.others or Decimal("0")
+                    gst = dyeing_po.gst_percent or Decimal("0")
+                    tcs = dyeing_po.tcs_percent or Decimal("0")
+
+                    after_discount = subtotal - (subtotal * discount / Decimal("100"))
+                    after_others = after_discount + others
+                    gst_amount = after_others * gst / Decimal("100")
+                    tcs_amount = after_others * tcs / Decimal("100")
+                    final_amount = after_others + gst_amount + tcs_amount
+
+                    dyeing_po.total_weight = total_weight
+                    dyeing_po.subtotal = subtotal
+                    dyeing_po.after_discount_value = after_discount
+                    dyeing_po.final_amount = final_amount
+                    dyeing_po.save(update_fields=[
+                        "total_weight",
+                        "subtotal",
+                        "after_discount_value",
+                        "final_amount",
+                        "updated_at",
+                    ])
+
+                messages.success(request, f"Dyeing PO {dyeing_po.system_number} saved successfully.")
+                return redirect("accounts:dyeingpo_list")
     else:
         initial = {}
         if source_greige_po is not None:
             initial = {
                 "po_number": source_greige_po.po_number or "",
                 "po_date": timezone.localdate(),
-                "available_qty": _selected_greige_inward_total(selected_source_inward) if selected_source_inward else (source_greige_po.total_inward_qty or Decimal("0")),
                 "vendor": source_greige_po.vendor_id,
                 "firm": source_greige_po.source_yarn_po.firm_id if source_greige_po.source_yarn_po and source_greige_po.source_yarn_po.firm else None,
                 "shipping_address": _firm_address(source_greige_po.source_yarn_po.firm) if source_greige_po.source_yarn_po and source_greige_po.source_yarn_po.firm else "",
@@ -4084,7 +5152,6 @@ def dyeingpo_create(request, greige_po_id=None):
                     if selected_source_inward else
                     f"Generated from Greige PO {source_greige_po.system_number}"
                 ),
-                "source_greige_inward": selected_source_inward.pk if selected_source_inward else None,
             }
 
         form = DyeingPurchaseOrderForm(
@@ -4093,12 +5160,18 @@ def dyeingpo_create(request, greige_po_id=None):
             source_greige_po=source_greige_po,
             lock_source=bool(source_greige_po),
         )
+        formset = DyeingPurchaseOrderItemFormSet(
+            instance=temp_po,
+            prefix="items",
+            form_kwargs={"user": request.user},
+        )
 
     return render(
         request,
         "accounts/dyeing_po/form.html",
         {
             "form": form,
+            "formset": formset,
             "mode": "add",
             "po_obj": None,
             "source_greige_po": source_greige_po,
@@ -4124,11 +5197,72 @@ def dyeingpo_update(request, pk: int):
         lock_source=True,
     )
 
-    if request.method == "POST" and form.is_valid():
-        po = form.save(commit=False)
-        if po.firm and not po.shipping_address:
-            po.shipping_address = _firm_address(po.firm)
-        po.save()
+    formset = DyeingPurchaseOrderItemFormSet(
+        request.POST or None,
+        instance=po,
+        prefix="items",
+        form_kwargs={"user": request.user},
+    )
+
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        with transaction.atomic():
+            po = form.save(commit=False)
+            if po.firm and not po.shipping_address:
+                po.shipping_address = _firm_address(po.firm)
+            po.save()
+
+            items = formset.save(commit=False)
+
+            for obj in formset.deleted_objects:
+                obj.delete()
+
+            total_weight = Decimal("0")
+            subtotal = Decimal("0")
+
+            for item in items:
+                item.po = po
+
+                if item.finished_material:
+                    item.fabric_name = item.finished_material.name
+                elif item.dyeing_name:
+                    item.fabric_name = item.dyeing_name
+                else:
+                    item.fabric_name = "Dyeing Item"
+
+                item.quantity = item.total_qty or Decimal("0")
+                if not item.remaining_qty:
+                    item.remaining_qty = item.total_qty or Decimal("0")
+
+                item.save()
+
+                total_weight += item.total_qty or Decimal("0")
+                subtotal += item.line_final_amount or Decimal("0")
+
+            formset.save_m2m()
+
+            discount = po.discount_percent or Decimal("0")
+            others = po.others or Decimal("0")
+            gst = po.gst_percent or Decimal("0")
+            tcs = po.tcs_percent or Decimal("0")
+
+            after_discount = subtotal - (subtotal * discount / Decimal("100"))
+            after_others = after_discount + others
+            gst_amount = after_others * gst / Decimal("100")
+            tcs_amount = after_others * tcs / Decimal("100")
+            final_amount = after_others + gst_amount + tcs_amount
+
+            po.total_weight = total_weight
+            po.subtotal = subtotal
+            po.after_discount_value = after_discount
+            po.final_amount = final_amount
+            po.save(update_fields=[
+                "total_weight",
+                "subtotal",
+                "after_discount_value",
+                "final_amount",
+                "updated_at",
+            ])
+
         return redirect("accounts:dyeingpo_list")
 
     return render(
@@ -4136,9 +5270,11 @@ def dyeingpo_update(request, pk: int):
         "accounts/dyeing_po/form.html",
         {
             "form": form,
+            "formset": formset,
             "mode": "edit",
             "po_obj": po,
             "source_greige_po": po.source_greige_po,
+            "selected_source_inward": po.source_greige_inward,
             "source_inwards": list(po.source_greige_po.inwards.all()) if po.source_greige_po else [],
             "existing_po": None,
         },
@@ -4290,7 +5426,13 @@ def dyeingpo_inward(request, pk: int):
     po = get_object_or_404(_dyeing_po_queryset(), pk=pk)
     if not _can_access_dyeing_po(request.user, po):
         raise PermissionDenied("You do not have access to this Dyeing PO.")
+    if not _is_po_approved_for_inward(po):
+        messages.error(request, "Dyeing PO must be approved before inward can be generated.")
+        return redirect("accounts:dyeingpo_list")
 
+    if not _is_po_approved_for_inward(po):
+        messages.error(request, "You cannot create inward before Dyeing PO review approval.")
+        return redirect("accounts:dyeingpo_list")
     item_errors = {}
     line_inputs = {}
     inward_form = DyeingPOInwardForm(request.POST or None, user=request.user)
@@ -4379,6 +5521,8 @@ def _build_stock_lot_rows_for_user(user):
             "inward",
             "po_item__po__vendor",
             "po_item__po__firm",
+            "po_item__finished_material",
+            "po_item__source_greige_po_item",
         )
         .filter(inward__owner=user)
         .order_by("-inward__inward_date", "-id")
@@ -4389,34 +5533,48 @@ def _build_stock_lot_rows_for_user(user):
         po_item = inward_item.po_item
         po = po_item.po if po_item else None
 
-        material_name = "Ready / Dyeing Item"
+        ready_material_name = "Ready Material"
+        raw_material_name = "-"
+        dyeing_name = "-"
+        dyeing_type = "-"
+        unit = "KG"
+
         if po_item:
-            material_name = (
-                po_item.fabric_name
-                or getattr(po_item, "greige_name", "")
-                or "Ready / Dyeing Item"
-            )
+            if po_item.finished_material:
+                ready_material_name = po_item.finished_material.name
+            elif po_item.fabric_name:
+                ready_material_name = po_item.fabric_name
+            else:
+                ready_material_name = "Ready Material"
+
+            raw_material_name = po_item.greige_name or "-"
+            dyeing_name = po_item.dyeing_name or "-"
+            dyeing_type = po_item.dyeing_type or "-"
+            unit = po_item.unit or "KG"
 
         vendor_name = po.vendor.name if po and po.vendor else "-"
         firm_name = po.firm.firm_name if po and po.firm else "-"
         quantity = inward_item.quantity or Decimal("0")
-        unit = po_item.unit if po_item and po_item.unit else "KG"
 
         rows.append({
-            "stage": "dyeing",
-            "stage_label": "Dyeing",
+            "stage": "ready",
+            "stage_label": "Ready",
             "lot_number": inward.inward_number or f"DYEING-{inward.pk}",
             "lot_date": inward.inward_date,
-            "material_name": material_name,
-            "material_key": _normalize_stock_lot_search_value(material_name),
+            "material_name": ready_material_name,
+            "material_key": _normalize_stock_lot_search_value(ready_material_name),
+            "ready_material_name": ready_material_name,
+            "raw_material_name": raw_material_name,
             "vendor_name": vendor_name,
             "firm_name": firm_name,
             "source_number": po.system_number if po and po.system_number else (po.po_number if po else "-"),
             "quantity": quantity,
-            "used_quantity": None,
+            "used_quantity": Decimal("0"),
             "final_stock": quantity,
             "unit": unit,
             "remark": inward_item.remark or "",
+            "dyeing_name": dyeing_name,
+            "dyeing_type": dyeing_type,
             "detail_url": reverse("accounts:dyeingpo_inward", args=[po.pk]) if po else "",
             "detail_label": "Open Dyeing Inward",
             "pk": inward_item.pk,
@@ -4561,7 +5719,17 @@ def dyeing_inward_edit(request, pk: int):
         pk=pk,
     )
     po = inward.po
+    if not _is_po_approved_for_inward(po):
+        messages.error(request, "Dyeing PO must be approved before inward can be updated.")
+        return redirect("accounts:dyeing_inward_tracker")
 
+    if po.ready_pos.exists():
+        messages.error(
+            request,
+            "This inward cannot be edited because a Ready PO has already been generated from this Dyeing PO."
+        )
+        tracker_url = reverse("accounts:dyeing_inward_tracker")
+        return redirect(f"{tracker_url}?inward={inward.pk}")
     if not _can_access_dyeing_po(request.user, po):
         raise PermissionDenied("You do not have access to this Dyeing inward.")
 
@@ -4672,6 +5840,12 @@ def readypo_create(request, dyeing_po_id=None):
         source_dyeing_po = get_object_or_404(_dyeing_po_queryset(), pk=dyeing_po_id)
         if not _can_access_dyeing_po(request.user, source_dyeing_po):
             raise PermissionDenied("You do not have access to this Dyeing PO.")
+        if not _is_po_approved_for_inward(source_dyeing_po):
+            messages.error(request, "Dyeing PO must be approved before Ready PO can be created.")
+            return redirect("accounts:dyeingpo_list")
+        if not source_dyeing_po.inwards.exists():
+            messages.error(request, "Create at least one Dyeing inward before generating Ready PO.")
+            return redirect("accounts:dyeingpo_inward", pk=source_dyeing_po.pk)
 
         existing_po = source_dyeing_po.ready_pos.order_by("-id").first()
         if existing_po and request.method == "GET":
@@ -4693,6 +5867,10 @@ def readypo_create(request, dyeing_po_id=None):
                 form.add_error("source_dyeing_po", "Please select source Dyeing PO.")
             elif not _can_access_dyeing_po(request.user, selected_source):
                 raise PermissionDenied("You do not have access to this Dyeing PO.")
+            elif not _is_po_approved_for_inward(selected_source):
+                form.add_error("source_dyeing_po", "Selected Dyeing PO must be approved before Ready PO can be created.")
+            elif not selected_source.inwards.exists():
+                form.add_error("source_dyeing_po", "Selected Dyeing PO must have inward entries before Ready PO can be created.")
             elif selected_source.ready_pos.exists():
                 existing_po = selected_source.ready_pos.order_by("-id").first()
                 form.add_error("source_dyeing_po", "Ready PO already exists for this Dyeing PO.")
@@ -5207,6 +6385,96 @@ def expense_delete(request, pk: int):
     expense.delete()
 
     url = _expense_list_url(request)
+    if _is_embed(request):
+        return JsonResponse({"ok": True, "url": url})
+    return redirect(url)
+
+def _accessory_list_url(request):
+    url = reverse("accounts:accessory_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def accessory_list_create(request):
+    q = (request.GET.get("q") or "").strip()
+
+    accessories = Accessory.objects.filter(owner=request.user).select_related("default_unit").order_by("name")
+    if q:
+        accessories = accessories.filter(
+            Q(name__icontains=q) | Q(description__icontains=q)
+        )
+
+    if request.method == "POST":
+        form = AccessoryForm(request.POST, user=request.user)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
+
+            url = _accessory_list_url(request)
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+    else:
+        form = AccessoryForm(user=request.user)
+
+    template = (
+        "accounts/accessories/list_embed.html"
+        if _is_embed(request)
+        else "accounts/accessories/list.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "accessories": accessories,
+            "form": form,
+            "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def accessory_edit(request, pk: int):
+    accessory = get_object_or_404(Accessory, pk=pk, owner=request.user)
+    form = AccessoryForm(request.POST or None, instance=accessory, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+
+        url = _accessory_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = (
+        "accounts/accessories/edit_embed.html"
+        if _is_embed(request)
+        else "accounts/accessories/edit.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "accessory": accessory,
+        },
+    )
+
+
+@login_required
+@require_POST
+def accessory_delete(request, pk: int):
+    accessory = get_object_or_404(Accessory, pk=pk, owner=request.user)
+    accessory.delete()
+
+    url = _accessory_list_url(request)
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
@@ -5982,9 +7250,13 @@ def _is_po_approved_for_inward(po) -> bool:
         return current_status == "approved"
 
     source_yarn_po = getattr(po, "source_yarn_po", None)
-    source_status = str(getattr(source_yarn_po, "approval_status", "") or "").strip().lower()
-    if source_status:
-        return source_status == "approved"
+    source_greige_po = getattr(po, "source_greige_po", None)
+    source_dyeing_po = getattr(po, "source_dyeing_po", None)
+
+    for source in [source_yarn_po, source_greige_po, source_dyeing_po]:
+        source_status = str(getattr(source, "approval_status", "") or "").strip().lower()
+        if source_status:
+            return source_status == "approved"
 
     return True
 
@@ -6065,6 +7337,104 @@ def greigepo_review(request, pk: int):
         "accounts/greige_po/review_embed.html"
         if embed_mode
         else "accounts/greige_po/review.html"
+    )
+
+    return render(request, template_name, context)
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def dyeingpo_review(request, pk: int):
+    po = get_object_or_404(
+        _dyeing_po_queryset(),
+        pk=pk,
+    )
+
+    if not _can_access_dyeing_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Dyeing PO.")
+
+    review_field_names = ("approval_status", "rejection_reason", "reviewed_by", "reviewed_at")
+    review_templates_available = (
+        _template_exists("accounts/dyeing_po/review.html")
+        and _template_exists("accounts/dyeing_po/review_embed.html")
+    )
+
+    if not _model_has_fields(DyeingPurchaseOrder, *review_field_names) or not review_templates_available:
+        message = "Dyeing PO review needs model review fields and review templates before this page can work."
+        if _is_embed(request):
+            return JsonResponse({
+                "ok": False,
+                "message": message,
+                "redirect_url": reverse("accounts:dyeingpo_list"),
+            }, status=400)
+        messages.error(request, message)
+        return redirect("accounts:dyeingpo_list")
+
+    embed_mode = _is_embed(request)
+    can_review = _can_review_yarn_po(request.user)
+
+    review_form = DyeingPOReviewForm(request.POST or None)
+
+    review_checks = {
+        "has_header": bool(po.vendor_id and po.po_date),
+        "has_source": bool(po.source_greige_po_id),
+        "has_items": po.items.exists(),
+        "has_shipping": bool((po.shipping_address or "").strip()),
+    }
+    review_ready_count = sum(1 for value in review_checks.values() if value)
+
+    context = {
+        "po": po,
+        "review_form": review_form,
+        "can_review_dyeing_po": can_review,
+        "embed_mode": embed_mode,
+        "review_checks": review_checks,
+        "review_ready_count": review_ready_count,
+    }
+
+    if request.method == "POST":
+        if not can_review:
+            return HttpResponseForbidden("You are not allowed to review this PO.")
+
+        if review_form.is_valid():
+            decision = review_form.cleaned_data["decision"]
+
+            if decision == "approve":
+                po.approval_status = "approved"
+                po.rejection_reason = ""
+            else:
+                po.approval_status = "rejected"
+                po.rejection_reason = review_form.cleaned_data["rejection_reason"].strip()
+
+            po.reviewed_by = request.user
+            po.reviewed_at = timezone.now()
+            po.save(update_fields=[
+                "approval_status",
+                "rejection_reason",
+                "reviewed_by",
+                "reviewed_at",
+            ])
+
+            if embed_mode:
+                return JsonResponse({
+                    "ok": True,
+                    "message": "Dyeing PO reviewed successfully.",
+                    "redirect_url": reverse("accounts:dyeingpo_list"),
+                })
+
+            return redirect("accounts:dyeingpo_list")
+
+        if embed_mode:
+            return render(
+                request,
+                "accounts/dyeing_po/review_embed.html",
+                context,
+                status=400,
+            )
+
+    template_name = (
+        "accounts/dyeing_po/review_embed.html"
+        if embed_mode
+        else "accounts/dyeing_po/review.html"
     )
 
     return render(request, template_name, context)
@@ -6233,9 +7603,10 @@ def bom_create(request):
             "expense_formset": expense_formset,
             "mode": "add",
             "full_page": not _is_embed(request),
+            "action_url": reverse("accounts:bom_add"),
         },
     )
-
+    
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -6346,9 +7717,145 @@ def bom_update(request, pk: int):
             "mode": "edit",
             "bom": bom,
             "full_page": not _is_embed(request),
+            "action_url": reverse("accounts:bom_edit", args=[bom.pk]),
         },
     )
+    
+def _program_edit_url(request, program):
+    url = reverse("accounts:program_edit", args=[program.pk])
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
 
+def _bom_preview_image_url(bom):
+    # 1) direct image-like fields on BOM itself
+    for attr in ("image", "photo", "photo_update", "product_image"):
+        field = getattr(bom, attr, None)
+        if field and getattr(field, "name", None) and getattr(field, "url", None):
+            return field.url
+
+    # 2) child image rows under BOM
+    images_manager = getattr(bom, "images", None)
+    if images_manager is not None:
+        try:
+            for img in images_manager.all().order_by("sort_order", "id"):
+                for attr in ("image", "photo", "file"):
+                    field = getattr(img, attr, None)
+                    if field and getattr(field, "name", None) and getattr(field, "url", None):
+                        return field.url
+        except Exception:
+            pass
+
+    return ""
+
+def _program_sku_payloads(user):
+    boms = (
+        BOM.objects.filter(owner=user)
+        .select_related(
+            "brand",
+            "category",
+            "main_category",
+            "sub_category",
+            "pattern_type",
+            "catalogue",
+        )
+        .prefetch_related(
+            Prefetch(
+                "material_items",
+                queryset=BOMMaterialItem.objects.select_related("material").order_by("sort_order", "id"),
+            ),
+            Prefetch(
+                "accessory_items",
+                queryset=BOMAccessoryItem.objects.select_related("accessory").order_by("sort_order", "id"),
+            ),
+            Prefetch(
+                "images",
+                queryset=BOMImage.objects.order_by("sort_order", "id"),
+            ),
+            Prefetch(
+                "jobber_type_processes",
+                queryset=BOMJobberTypeProcess.objects.select_related("jobber_type").order_by("sort_order", "id"),
+            ),
+        )
+        .order_by("sku")
+    )
+
+    payload = {}
+    for bom in boms:
+        linked_fabrics = [
+            item.material.name
+            for item in bom.material_items.all()
+            if item.material_id and item.material
+        ]
+        linked_accessories = [
+            item.accessory.name
+            for item in bom.accessory_items.all()
+            if item.accessory_id and item.accessory
+        ]
+        accessories_price = sum(
+            ((item.cost or Decimal("0")) for item in bom.accessory_items.all()),
+            Decimal("0"),
+        )
+
+
+        payload[str(bom.pk)] = {
+            "sku": bom.sku or "",
+            "product_name": bom.product_name or "",
+            "linked_fabrics": linked_fabrics,
+            "linked_accessories": linked_accessories,
+            "brand": getattr(bom.brand, "name", "") or "",
+            "gender": bom.gender or "",
+            "main_category": getattr(bom.main_category, "name", "") or "",
+            "category": getattr(bom.category, "name", "") or "",
+            "sub_category": getattr(bom.sub_category, "name", "") or "",
+            "pattern_type": getattr(bom.pattern_type, "name", "") or "",
+            "character_name": bom.character_name or "",
+            "mrp": str(bom.mrp or Decimal("0")),
+            "color": bom.color or "",
+            "drawcord": bom.drawcord or "",
+            "tie_dye_price": str(bom.tie_dye_price or Decimal("0")),
+            "accessories_price": str(accessories_price),
+            "image_url": _bom_preview_image_url(bom),
+            "jobber_process_prices": {
+                str(row.jobber_type_id): str(row.price or Decimal("0"))
+                for row in bom.jobber_type_processes.all()
+                if row.jobber_type_id
+            },
+        }
+
+    return payload
+
+
+def _program_jobber_defaults(user):
+    rows = (
+        Jobber.objects.filter(owner=user, is_active=True)
+        .select_related("jobber_type")
+        .order_by("name")
+    )
+
+    return {
+        str(row.pk): {
+            "jobber_type_id": str(row.jobber_type_id) if row.jobber_type_id else "",
+            "jobber_type_name": row.jobber_type.name if row.jobber_type_id and row.jobber_type else "",
+        }
+        for row in rows
+    }
+
+def _ensure_program_size_rows(program):
+    default_rows = [
+        ("CQ", 1),
+        ("FQ", 2),
+        ("DQ", 3),
+        ("FQ-DQ", 4),
+        ("TP", 5),
+    ]
+
+    for line_name, order in default_rows:
+        ProgramSizeDetail.objects.get_or_create(
+            program=program,
+            line_name=line_name,
+            defaults={"sort_order": order},
+        )
 
 @login_required
 @require_POST
@@ -6360,6 +7867,878 @@ def bom_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def program_create(request):
+    program = Program(owner=request.user)
+
+    if request.method == "GET":
+        program.program_no = Program.next_program_no(request.user)
+        program.program_date = timezone.localdate()
+
+        user_firm = Firm.objects.filter(owner=request.user).first()
+        if user_firm:
+            program.firm = user_firm
+
+    form = ProgramForm(
+        request.POST or None,
+        instance=program,
+        user=request.user,
+    )
+
+    if request.method == "POST":
+        jobber_formset = ProgramJobberDetailFormSet(
+            request.POST,
+            instance=program,
+            prefix="jobbers",
+            form_kwargs={"user": request.user},
+        )
+
+        if form.is_valid() and jobber_formset.is_valid():
+            with transaction.atomic():
+                program = form.save(commit=False)
+                program.owner = request.user
+                program.save()
+                _ensure_program_size_rows(program)
+                jobber_formset.instance = program
+                jobber_formset.save()
+
+            messages.success(request, "Program saved successfully.")
+            edit_url = _program_edit_url(request, program)
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": edit_url})
+            return redirect(edit_url)
+    else:
+        jobber_formset = ProgramJobberDetailFormSet(
+            instance=program,
+            prefix="jobbers",
+            form_kwargs={"user": request.user},
+        )
+
+    template = "accounts/programs/form_embed.html" if _is_embed(request) else "accounts/programs/form.html"
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "jobber_formset": jobber_formset,
+            "mode": "add",
+            "full_page": not _is_embed(request),
+            "action_url": reverse("accounts:program_add"),
+            "sku_payloads": _program_sku_payloads(request.user),
+            "jobber_defaults": _program_jobber_defaults(request.user),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def program_update(request, pk: int):
+    program = get_object_or_404(Program, pk=pk, owner=request.user)
+
+    form = ProgramForm(
+        request.POST or None,
+        instance=program,
+        user=request.user,
+    )
+
+    if request.method == "POST":
+        jobber_formset = ProgramJobberDetailFormSet(
+            request.POST,
+            instance=program,
+            prefix="jobbers",
+            form_kwargs={"user": request.user},
+        )
+
+        if form.is_valid() and jobber_formset.is_valid():
+            with transaction.atomic():
+                program = form.save()
+                _ensure_program_size_rows(program)
+                jobber_formset.save()
+
+            messages.success(request, "Program updated successfully.")
+            edit_url = _program_edit_url(request, program)
+            if _is_embed(request):
+                return JsonResponse({"ok": True, "url": edit_url})
+            return redirect(edit_url)
+    else:
+        jobber_formset = ProgramJobberDetailFormSet(
+            instance=program,
+            prefix="jobbers",
+            form_kwargs={"user": request.user},
+        )
+
+    template = "accounts/programs/form_embed.html" if _is_embed(request) else "accounts/programs/form.html"
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "jobber_formset": jobber_formset,
+            "mode": "edit",
+            "program": program,
+            "full_page": not _is_embed(request),
+            "action_url": reverse("accounts:program_edit", args=[program.pk]),
+            "sku_payloads": _program_sku_payloads(request.user),
+            "jobber_defaults": _program_jobber_defaults(request.user),
+        },
+    )
+
+@login_required
+def program_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    programs = (
+        Program.objects.filter(owner=request.user)
+        .select_related("bom", "firm", "bom__brand", "bom__category", "bom__main_category", "bom__sub_category")
+        .prefetch_related(
+            Prefetch(
+                "jobber_rows",
+                queryset=ProgramJobberDetail.objects.select_related("jobber", "jobber_type").order_by("sort_order", "id"),
+            ),
+            Prefetch(
+                "size_rows",
+                queryset=ProgramSizeDetail.objects.order_by("sort_order", "id"),
+            ),
+            Prefetch(
+                "bom__images",
+                queryset=BOMImage.objects.order_by("sort_order", "id"),
+            ),
+        )
+        .order_by("-created_at", "-id")
+    )
+
+    if q:
+        programs = programs.filter(
+            Q(program_no__icontains=q)
+            | Q(bom__sku__icontains=q)
+            | Q(bom__product_name__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        )
+
+    verified_count = programs.filter(is_verified=True).count()
+    unverified_count = programs.filter(is_verified=False).count()
+
+    return render(
+        request,
+        "accounts/programs/list.html",
+        {
+            "programs": programs,
+            "q": q,
+            "verified_count": verified_count,
+            "unverified_count": unverified_count,
+        },
+    )
+
+
+@login_required
+@require_POST
+def program_toggle_verify(request, pk: int):
+    program = get_object_or_404(Program, pk=pk, owner=request.user)
+    program.is_verified = not program.is_verified
+    program.save(update_fields=["is_verified"])
+    messages.success(
+        request,
+        f"Program {'verified' if program.is_verified else 'marked unverified'} successfully."
+    )
+    return redirect("accounts:program_list")
+
+
+@login_required
+@require_POST
+def program_toggle_status(request, pk: int):
+    program = get_object_or_404(Program, pk=pk, owner=request.user)
+    program.status = "closed" if program.status == "open" else "open"
+    program.save(update_fields=["status"])
+    messages.success(request, f"Program marked {program.status}.")
+    return redirect("accounts:program_list")
+
+
+@login_required
+def program_print(request, pk: int):
+    program = get_object_or_404(
+        Program.objects.select_related("bom", "firm").prefetch_related(
+            Prefetch(
+                "jobber_rows",
+                queryset=ProgramJobberDetail.objects.select_related("jobber", "jobber_type").order_by("sort_order", "id"),
+            ),
+            Prefetch(
+                "size_rows",
+                queryset=ProgramSizeDetail.objects.order_by("sort_order", "id"),
+            ),
+            Prefetch(
+                "bom__images",
+                queryset=BOMImage.objects.order_by("sort_order", "id"),
+            ),
+        ),
+        pk=pk,
+        owner=request.user,
+    )
+    return render(
+        request,
+        "accounts/programs/print.html",
+        {
+            "program": program,
+        },
+    )
+
+
+def _dispatch_list_url(request):
+    url = reverse("accounts:dispatch_list")
+    if _is_embed(request):
+        url += "?embed=1"
+    return url
+
+
+@login_required
+def dispatch_list(request):
+    q = (request.GET.get("q") or "").strip()
+
+    challans = (
+        DispatchChallan.objects.filter(owner=request.user)
+        .select_related("program", "program__bom", "program__firm", "client", "firm")
+        .order_by("-challan_date", "-id")
+    )
+
+    if q:
+        challans = challans.filter(
+            Q(challan_no__icontains=q)
+            | Q(program__program_no__icontains=q)
+            | Q(program__bom__sku__icontains=q)
+            | Q(program__bom__product_name__icontains=q)
+            | Q(client__name__icontains=q)
+            | Q(lr_no__icontains=q)
+            | Q(transport_name__icontains=q)
+            | Q(vehicle_no__icontains=q)
+            | Q(driver_name__icontains=q)
+        )
+
+    template = (
+        "accounts/dispatch/list_embed.html"
+        if _is_embed(request)
+        else "accounts/dispatch/list.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "challans": challans,
+            "q": q,
+        },
+    )
+
+
+@login_required
+def dispatch_program_picker(request):
+    q = (request.GET.get("q") or "").strip()
+
+    programs = (
+        Program.objects.filter(owner=request.user)
+        .select_related("bom", "firm")
+        .annotate(challan_count=Count("dispatch_challans"))
+        .order_by("-finishing_date", "-program_date", "-id")
+    )
+
+    if q:
+        programs = programs.filter(
+            Q(program_no__icontains=q)
+            | Q(bom__sku__icontains=q)
+            | Q(bom__product_name__icontains=q)
+        )
+
+    template = (
+        "accounts/dispatch/program_picker_embed.html"
+        if _is_embed(request)
+        else "accounts/dispatch/program_picker.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "programs": programs,
+            "q": q,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def dispatch_create(request, program_id: int):
+    program = get_object_or_404(
+        Program.objects.select_related("bom", "firm"),
+        pk=program_id,
+        owner=request.user,
+    )
+
+    challan = DispatchChallan(
+        owner=request.user,
+        program=program,
+        firm=program.firm,
+    )
+
+    if request.method == "GET":
+        challan.challan_no = DispatchChallan.next_challan_no(request.user)
+        challan.challan_date = timezone.localdate()
+
+    form = DispatchChallanForm(
+        request.POST or None,
+        instance=challan,
+        user=request.user,
+        program=program,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        with transaction.atomic():
+            challan = form.save(commit=False)
+            challan.owner = request.user
+            challan.program = program
+            challan.firm = program.firm
+            challan.save()
+
+        messages.success(request, f"Dispatch challan {challan.challan_no} created successfully.")
+
+        url = _dispatch_list_url(request)
+        if _is_embed(request):
+            return JsonResponse({"ok": True, "url": url})
+        return redirect(url)
+
+    template = (
+        "accounts/dispatch/form_embed.html"
+        if _is_embed(request)
+        else "accounts/dispatch/form.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "mode": "add",
+            "program": program,
+            "challan_obj": None,
+        },
+    )
+
+
+@login_required
+def dispatch_detail(request, pk: int):
+    challan = get_object_or_404(
+        DispatchChallan.objects.select_related("program", "program__bom", "program__firm", "client", "firm"),
+        pk=pk,
+        owner=request.user,
+    )
+
+    template = (
+        "accounts/dispatch/detail_embed.html"
+        if _is_embed(request)
+        else "accounts/dispatch/detail.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "challan": challan,
+            "program": challan.program,
+        },
+    )
+
+def _build_dispatch_challan_pdf_response(challan):
+    try:
+        import os
+        from pathlib import Path
+        from html import escape
+
+        from django.conf import settings
+        from reportlab.lib import colors
+        from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import mm
+        from reportlab.lib.utils import ImageReader
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    except ImportError:
+        return HttpResponse(
+            "ReportLab is required for PDF generation. Install it with: pip install reportlab",
+            status=500,
+        )
+
+    brand_pink = colors.HexColor("#ED2F8C")
+    brand_orange = colors.HexColor("#F6A33B")
+    brand_blue = colors.HexColor("#1976F3")
+    brand_navy = colors.HexColor("#0F172A")
+    ink = colors.HexColor("#1F2937")
+    muted = colors.HexColor("#667085")
+    border = colors.HexColor("#D0D5DD")
+    soft_bg = colors.HexColor("#F8FAFC")
+    white = colors.white
+
+    def text_or_dash(value):
+        value = "" if value is None else str(value).strip()
+        return value if value else "-"
+
+    def fmt_qty(value):
+        try:
+            return f"{float(value or 0):,.2f}".rstrip("0").rstrip(".")
+        except Exception:
+            return text_or_dash(value)
+
+    def join_parts(*parts):
+        clean = [str(p).strip() for p in parts if str(p).strip()]
+        return ", ".join(clean)
+
+    def line_if(label, value):
+        value = "" if value is None else str(value).strip()
+        if not value:
+            return ""
+        return f"<b>{escape(label)}:</b> {escape(value)}"
+
+    def resolve_logo_path():
+        firm = challan.firm
+        if firm and getattr(firm, "logo", None):
+            try:
+                logo_path = firm.logo.path
+                if logo_path and os.path.exists(logo_path):
+                    return logo_path
+            except Exception:
+                pass
+
+        fallback = Path(settings.BASE_DIR) / "Logo.jpeg"
+        if fallback.exists():
+            return str(fallback)
+
+        return None
+
+    logo_path = resolve_logo_path()
+
+    def draw_branding(canvas, doc):
+        page_w, page_h = A4
+        canvas.saveState()
+
+        canvas.setStrokeColor(colors.HexColor("#E4E7EC"))
+        canvas.setLineWidth(0.8)
+        canvas.roundRect(8 * mm, 8 * mm, page_w - 16 * mm, page_h - 16 * mm, 4 * mm, stroke=1, fill=0)
+
+        usable_w = page_w - 16 * mm
+        stripe_w = usable_w / 3.0
+        stripe_y = page_h - 13 * mm
+        stripe_h = 4.5 * mm
+
+        canvas.setFillColor(brand_pink)
+        canvas.rect(8 * mm, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+
+        canvas.setFillColor(brand_orange)
+        canvas.rect(8 * mm + stripe_w, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+
+        canvas.setFillColor(brand_blue)
+        canvas.rect(8 * mm + 2 * stripe_w, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+
+        if logo_path:
+            try:
+                img = ImageReader(logo_path)
+                iw, ih = img.getSize()
+                draw_w = 26 * mm
+                draw_h = draw_w * (ih / float(iw)) if iw and ih else 26 * mm
+                x = (page_w - draw_w) / 2.0
+                y = 10 * mm
+
+                try:
+                    canvas.setFillAlpha(0.10)
+                    canvas.setStrokeAlpha(0.10)
+                except Exception:
+                    pass
+
+                canvas.drawImage(
+                    img,
+                    x,
+                    y,
+                    width=draw_w,
+                    height=draw_h,
+                    preserveAspectRatio=True,
+                    mask="auto",
+                )
+            except Exception:
+                pass
+
+        canvas.restoreState()
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=10 * mm,
+        rightMargin=10 * mm,
+        topMargin=16 * mm,
+        bottomMargin=16 * mm,
+    )
+
+    styles = getSampleStyleSheet()
+
+    base_style = ParagraphStyle(
+        "DispatchBase",
+        parent=styles["BodyText"],
+        fontName="Helvetica",
+        fontSize=8.5,
+        leading=10.5,
+        textColor=ink,
+        spaceAfter=0,
+    )
+
+    header_left_style = ParagraphStyle(
+        "DispatchHeaderLeft",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8.4,
+        leading=10.4,
+        textColor=white,
+        alignment=TA_LEFT,
+    )
+
+    header_title_style = ParagraphStyle(
+        "DispatchHeaderTitle",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=16,
+        textColor=brand_navy,
+        alignment=TA_RIGHT,
+    )
+
+    header_meta_style = ParagraphStyle(
+        "DispatchHeaderMeta",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8.3,
+        leading=10.2,
+        textColor=ink,
+        alignment=TA_RIGHT,
+    )
+
+    section_head_left = ParagraphStyle(
+        "DispatchSectionHeadLeft",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=10,
+        textColor=white,
+        alignment=TA_LEFT,
+    )
+
+    section_value_style = ParagraphStyle(
+        "DispatchSectionValue",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8.2,
+        leading=10.2,
+        textColor=ink,
+        alignment=TA_LEFT,
+    )
+
+    table_head_style = ParagraphStyle(
+        "DispatchTableHead",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=7.8,
+        leading=9.5,
+        textColor=white,
+        alignment=TA_CENTER,
+    )
+
+    item_style = ParagraphStyle(
+        "DispatchItem",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8,
+        leading=9.6,
+        alignment=TA_LEFT,
+    )
+
+    centered_style = ParagraphStyle(
+        "DispatchCentered",
+        parent=base_style,
+        fontName="Helvetica",
+        fontSize=8,
+        leading=9.6,
+        alignment=TA_CENTER,
+    )
+
+    sign_style = ParagraphStyle(
+        "DispatchSign",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=10,
+        textColor=ink,
+        alignment=TA_LEFT,
+    )
+
+    footer_note_style = ParagraphStyle(
+        "DispatchFooterNote",
+        parent=base_style,
+        fontName="Helvetica-Bold",
+        fontSize=7.6,
+        leading=9.2,
+        textColor=muted,
+        alignment=TA_CENTER,
+    )
+
+    story = []
+
+    program = challan.program
+    bom = getattr(program, "bom", None)
+    client = challan.client
+    firm = challan.firm
+
+    firm_name = text_or_dash(firm.firm_name if firm else "InventTech")
+    firm_type = ""
+    if firm:
+        try:
+            firm_type = firm.get_firm_type_display()
+        except Exception:
+            firm_type = text_or_dash(getattr(firm, "firm_type", ""))
+
+    firm_address = join_parts(
+        getattr(firm, "address_line", ""),
+        getattr(firm, "city", ""),
+        getattr(firm, "state", ""),
+        getattr(firm, "pincode", ""),
+    )
+
+    firm_contact_line = " | ".join([
+        part for part in [
+            line_if("Phone", getattr(firm, "phone", "")),
+            line_if("Email", getattr(firm, "email", "")),
+            line_if("GSTIN", getattr(firm, "gst_number", "")),
+        ] if part
+    ])
+
+    header_left_html = f"<font size='13'><b>{escape(firm_name)}</b></font>"
+    if firm_type and firm_type != "-":
+        header_left_html += f"<br/>{escape(firm_type)}"
+    if firm_address:
+        header_left_html += f"<br/>{escape(firm_address)}"
+    if firm_contact_line:
+        header_left_html += f"<br/>{firm_contact_line}"
+
+    challan_date = challan.challan_date.strftime("%d-%m-%Y") if challan.challan_date else "-"
+    finishing_date = program.finishing_date.strftime("%d-%m-%Y") if getattr(program, "finishing_date", None) else "-"
+    program_date = program.program_date.strftime("%d-%m-%Y") if getattr(program, "program_date", None) else "-"
+
+    right_meta_html = (
+        f"<b>Challan No:</b> {escape(text_or_dash(challan.challan_no))}<br/>"
+        f"<b>Challan Date:</b> {escape(challan_date)}<br/>"
+        f"<b>Program No:</b> {escape(text_or_dash(getattr(program, 'program_no', '')))}<br/>"
+        f"<b>Program Date:</b> {escape(program_date)}<br/>"
+        f"<b>Finishing Date:</b> {escape(finishing_date)}"
+    )
+
+    header_table = Table(
+        [[
+            Paragraph(header_left_html, header_left_style),
+            Table(
+                [
+                    [Paragraph("DISPATCH CHALLAN", header_title_style)],
+                    [Paragraph(right_meta_html, header_meta_style)],
+                ],
+                colWidths=[68 * mm],
+            ),
+        ]],
+        colWidths=[122 * mm, 68 * mm],
+    )
+    header_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), brand_navy),
+        ("BACKGROUND", (1, 0), (1, 0), colors.HexColor("#F4F8FF")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (0, 0), 10),
+        ("RIGHTPADDING", (0, 0), (0, 0), 10),
+        ("TOPPADDING", (0, 0), (0, 0), 10),
+        ("BOTTOMPADDING", (0, 0), (0, 0), 10),
+        ("LEFTPADDING", (1, 0), (1, 0), 0),
+        ("RIGHTPADDING", (1, 0), (1, 0), 0),
+        ("TOPPADDING", (1, 0), (1, 0), 0),
+        ("BOTTOMPADDING", (1, 0), (1, 0), 0),
+    ]))
+    inner_header = header_table._cellvalues[0][1]
+    inner_header.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F4F8FF")),
+        ("BOX", (0, 0), (-1, -1), 1.0, brand_blue),
+        ("LEFTPADDING", (0, 0), (-1, -1), 9),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 7))
+
+    client_html = f"<b>{escape(text_or_dash(client.name if client else ''))}</b>"
+    client_lines = [
+        line_if("Contact", getattr(client, "contact_person", "")),
+        line_if("Phone", getattr(client, "phone", "")),
+        line_if("Email", getattr(client, "email", "")),
+        line_if("GSTIN", getattr(client, "gst_number", "")),
+        line_if("Address", getattr(client, "address", "")),
+    ]
+    client_body = "<br/>".join([line for line in client_lines if line])
+    if client_body:
+        client_html += "<br/>" + client_body
+
+    program_html = (
+        f"<b>{escape(text_or_dash(getattr(program, 'program_no', '')))}</b><br/>"
+        f"<b>SKU:</b> {escape(text_or_dash(getattr(bom, 'sku', '')))}<br/>"
+        f"<b>Product:</b> {escape(text_or_dash(getattr(bom, 'product_name', '')))}<br/>"
+        f"<b>Program Date:</b> {escape(program_date)}<br/>"
+        f"<b>Finishing Date:</b> {escape(finishing_date)}<br/>"
+        f"<b>Total Qty:</b> {escape(fmt_qty(getattr(program, 'total_qty', 0)))}"
+    )
+
+    party_table = Table(
+        [
+            [
+                Paragraph("CLIENT DETAILS", section_head_left),
+                Paragraph("PROGRAM DETAILS", section_head_left),
+            ],
+            [
+                Paragraph(client_html, section_value_style),
+                Paragraph(program_html, section_value_style),
+            ],
+        ],
+        colWidths=[92 * mm, 98 * mm],
+    )
+    party_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), brand_orange),
+        ("BACKGROUND", (1, 0), (1, 0), brand_blue),
+        ("TEXTCOLOR", (0, 0), (-1, 0), white),
+        ("BACKGROUND", (0, 1), (0, 1), colors.HexColor("#FFF9F3")),
+        ("BACKGROUND", (1, 1), (1, 1), colors.HexColor("#F5F9FF")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.65, border),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ]))
+    story.append(party_table)
+    story.append(Spacer(1, 8))
+
+    challan_rows = [
+        [
+            Paragraph("Driver Name", table_head_style),
+            Paragraph("LR No", table_head_style),
+            Paragraph("Transport", table_head_style),
+            Paragraph("Vehicle No", table_head_style),
+        ],
+        [
+            Paragraph(escape(text_or_dash(challan.driver_name)), item_style),
+            Paragraph(escape(text_or_dash(challan.lr_no)), centered_style),
+            Paragraph(escape(text_or_dash(challan.transport_name)), item_style),
+            Paragraph(escape(text_or_dash(challan.vehicle_no)), centered_style),
+        ],
+    ]
+
+    challan_table = Table(challan_rows, colWidths=[52 * mm, 32 * mm, 66 * mm, 40 * mm])
+    challan_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), brand_navy),
+        ("TEXTCOLOR", (0, 0), (-1, 0), white),
+        ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#F8FAFC")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.55, border),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+    ]))
+    story.append(challan_table)
+    story.append(Spacer(1, 10))
+
+    remarks_html = escape(text_or_dash(challan.remarks)).replace("\n", "<br/>")
+    remarks_table = Table(
+        [
+            [Paragraph("REMARKS", section_head_left)],
+            [Paragraph(remarks_html, section_value_style)],
+        ],
+        colWidths=[190 * mm],
+    )
+    remarks_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), brand_pink),
+        ("TEXTCOLOR", (0, 0), (0, 0), white),
+        ("BACKGROUND", (0, 1), (0, 1), soft_bg),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("INNERGRID", (0, 0), (-1, -1), 0.6, border),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ]))
+    story.append(remarks_table)
+    story.append(Spacer(1, 12))
+
+    sign_table = Table(
+        [[
+            Paragraph("<b>RECEIVER SIGNATURE</b><br/><br/>______________________________", sign_style),
+            Paragraph("<b>FOR " + escape(firm_name.upper()) + "</b><br/><br/>______________________________", sign_style),
+        ]],
+        colWidths=[95 * mm, 95 * mm],
+    )
+    sign_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    story.append(sign_table)
+    story.append(Spacer(1, 10))
+
+    footer_table = Table(
+        [[Paragraph("THIS CHALLAN IS COMPUTER GENERATED, HENCE SIGNATURE IS NOT REQUIRED", footer_note_style)]],
+        colWidths=[190 * mm],
+    )
+    footer_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F8FAFC")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ]))
+    story.append(footer_table)
+
+    doc.build(story, onFirstPage=draw_branding, onLaterPages=draw_branding)
+    buffer.seek(0)
+
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    return response
+
+@login_required
+def dispatch_print(request, pk: int):
+    challan = get_object_or_404(
+        DispatchChallan.objects.select_related(
+            "program",
+            "program__bom",
+            "program__firm",
+            "client",
+            "firm",
+        ),
+        pk=pk,
+        owner=request.user,
+    )
+
+    response = _build_dispatch_challan_pdf_response(challan)
+
+    if response.status_code == 200 and response.get("Content-Type", "").startswith("application/pdf"):
+        filename = f'{challan.challan_no or "dispatch_challan"}.pdf'
+        disposition = "attachment" if request.GET.get("download") == "1" else "inline"
+        response["Content-Disposition"] = f'{disposition}; filename="{filename}"'
+        response["Cache-Control"] = "no-store"
+        response["X-Content-Type-Options"] = "nosniff"
+        try:
+            response["Content-Length"] = str(len(response.content))
+        except Exception:
+            pass
+
+    return response
 
 
 def _dyeing_material_link_list_url(request):

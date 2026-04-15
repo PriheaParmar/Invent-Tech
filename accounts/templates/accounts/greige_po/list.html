@@ -411,6 +411,81 @@
     margin:0;
   }
 
+  .pdf-menu{
+    position:relative;
+    display:inline-flex;
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .pdf-menu-trigger{
+    appearance:none;
+    background:none;
+    border:none;
+    padding:0;
+    margin:0;
+    cursor:pointer;
+    font:inherit;
+    font-weight:700;
+    color:var(--orange);
+    min-height:28px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .pdf-menu-trigger:hover{
+    text-decoration:underline;
+  }
+
+  .pdf-menu-caret{
+    font-size:10px;
+    line-height:1;
+    transform:translateY(1px);
+  }
+
+  .pdf-menu-dropdown{
+    position:absolute;
+    top:100%;
+    left:0;
+    min-width:128px;
+    display:none;
+    flex-direction:column;
+    gap:2px;
+    padding:6px;
+    margin-top:4px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:12px;
+    box-shadow:0 10px 28px rgba(15,23,42,.14);
+    z-index:20;
+  }
+
+  .pdf-menu:hover .pdf-menu-dropdown,
+  .pdf-menu:focus-within .pdf-menu-dropdown{
+    display:flex;
+  }
+
+  .pdf-menu-item{
+    display:flex;
+    align-items:center;
+    min-height:34px;
+    padding:0 10px;
+    border-radius:8px;
+    text-decoration:none;
+    color:#111827;
+    font-size:13px;
+    font-weight:700;
+    background:transparent;
+    transition:background .16s ease, color .16s ease;
+  }
+
+  .pdf-menu-item:hover{
+    background:rgba(0,0,0,.05);
+    color:var(--orange);
+    text-decoration:none;
+  }
+
   .jb-link-disabled{
     color:#98a2b3 !important;
     pointer-events:none;
@@ -481,6 +556,11 @@
       flex-wrap:wrap;
       gap:10px 14px;
     }
+
+    .pdf-menu-dropdown{
+      left:auto;
+      right:0;
+    }
   }
 
   @media (max-width: 768px){
@@ -513,6 +593,173 @@
       flex-direction:column;
       gap:6px;
     }
+
+    .pdf-menu-dropdown{
+      position:static;
+      margin-top:2px;
+      width:100%;
+      box-shadow:none;
+    }
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  :root{
+    --font-ui: "Inter", "Segoe UI", Arial, sans-serif;
+    --font-body: "Inter", "Segoe UI", Arial, sans-serif;
+    --font-display: "Space Grotesk", "Inter", sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  .greigepo-list-page,
+  .jb-panel,
+  .jb-panel *{
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .jb-title{
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: #0f172a;
+  }
+
+  .jb-sub{
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.55;
+    color: #64748b;
+    opacity: 1;
+  }
+
+  .jb-search input[type="search"]{
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .jb-search input[type="search"]::placeholder{
+    font-family: var(--font-body);
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .jb-search-btn,
+  .jb-add,
+  .jb-secondary{
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .po-badge,
+  .po-status,
+  .po-box-title,
+  .po-summary-label,
+  .po-actions-title,
+  .po-note-warning{
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .po-no{
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+    color: #111827;
+  }
+
+  .po-sub{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #6b7280;
+  }
+
+  .po-meta .k{
+    font-family: var(--font-body);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #94a3b8;
+  }
+
+  .po-meta .v{
+    font-family: var(--font-body);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .po-line-title,
+  .po-vendor-name{
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  .po-line-title{
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .po-vendor-name{
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .po-line-sub,
+  .po-vendor-sub,
+  .po-status-note,
+  .jb-empty{
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+    color: #667085;
+  }
+
+  .po-summary-value{
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  .jb-link,
+  .jb-link-button{
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .greige-review-loading{
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #475569;
   }
 </style>
 
@@ -662,46 +909,58 @@
                   <div class="po-actions-title">Status / Actions</div>
 
                   <div class="po-status-note" style="margin-top:0; margin-bottom:8px;">
-                    Source Yarn PO: {{ po.source_yarn_po.system_number|default:"—" }}
-                    <br>Inward Entries: {{ po.inwards.all|length }}
-                    {% if po.dyeing_pos.all|length %}
-                      <br>Dyeing PO generated
+                    {% if po.reviewed_by %}
+                      Reviewed by {{ po.reviewed_by.username }}
+                      {% if po.reviewed_at %}<br>{{ po.reviewed_at|date:"d-m-Y H:i" }}{% endif %}
                     {% else %}
-                      <br>Waiting for Dyeing PO generation
+                      Waiting for admin review
+                    {% endif %}
+
+                    {% if po.approval_status == 'rejected' and po.rejection_reason %}
+                      <br><strong>Reason:</strong> {{ po.rejection_reason|truncatechars:100 }}
                     {% endif %}
                   </div>
 
-                  {% if po.approval_status != "approved" %}
-                    <div class="po-note-warning">Approve Greige PO first</div>
-                  {% endif %}
-
                   <div class="po-actions">
-                    <a class="jb-link" href="{% url 'accounts:greigepo_detail' po.id %}">View</a>
-                    <a class="jb-link" href="{% url 'accounts:greigepo_edit' po.id %}">Edit</a>
+                    {% if can_review_greige_po %}
+                      <a
+                        class="jb-link"
+                        href="{% url 'accounts:greigepo_review' po.id %}"
+                        data-open-greige-review
+                        data-review-url="{% url 'accounts:greigepo_review' po.id %}?embed=1"
+                      >
+                        Review
+                      </a>
+                    {% endif %}
 
-                   {% if can_review_greige_po %}
-  <button
-    type="button"
-    class="jb-link jb-link-button"
-    data-open-greige-review
-    data-review-url="{% url 'accounts:greigepo_review' po.id %}?embed=1"
-  >
-    Review
-  </button>
-{% endif %}
+                    <div class="pdf-menu">
+                      <button type="button" class="pdf-menu-trigger">
+                        PDF
+                        <span class="pdf-menu-caret">▾</span>
+                      </button>
+                      <div class="pdf-menu-dropdown">
+                        <a class="pdf-menu-item" href="{% url 'accounts:greigepo_pdf' po.id %}" target="_blank" rel="noopener">
+                          View
+                        </a>
+                        <a class="pdf-menu-item" href="{% url 'accounts:greigepo_pdf' po.id %}?download=1">
+                          Download
+                        </a>
+                      </div>
+                    </div>
 
                     {% if po.approval_status == "approved" %}
                       <a class="jb-link" href="{% url 'accounts:greigepo_inward' po.id %}">Inward</a>
                     {% else %}
-                      <span class="jb-link jb-link-disabled" title="Approve Greige PO first">Inward</span>
+                      <span class="jb-link jb-link-disabled" title="Admin approval required before inward">Inward</span>
                     {% endif %}
+
+                    <a class="jb-link" href="{% url 'accounts:greigepo_edit' po.id %}">Edit</a>
 
                     {% with dyeing_po=po.dyeing_pos.all.0 %}
                       {% if dyeing_po %}
                         <a class="jb-link" href="{% url 'accounts:dyeingpo_detail' dyeing_po.id %}">View Dyeing PO</a>
                       {% elif po.total_inward_qty and po.total_inward_qty > 0 %}
                         <a class="jb-link" href="{% url 'accounts:generate_dyeing_po_from_greige' po.id %}">Generate Dyeing PO</a>
-                      
                       {% endif %}
                     {% endwith %}
 
@@ -781,22 +1040,22 @@
   }
 
   document.addEventListener("click", function (e) {
-  const reviewTrigger = e.target.closest("[data-open-greige-review]");
-  if (reviewTrigger) {
-    e.preventDefault();
-    e.stopPropagation();
-    loadReviewPanel(reviewTrigger.getAttribute("data-review-url"));
-    return false;
-  }
+    const reviewTrigger = e.target.closest("[data-open-greige-review]");
+    if (reviewTrigger) {
+      e.preventDefault();
+      e.stopPropagation();
+      loadReviewPanel(reviewTrigger.getAttribute("data-review-url"));
+      return false;
+    }
 
-  const closeTrigger = e.target.closest("[data-review-close]");
-  if (closeTrigger) {
-    e.preventDefault();
-    e.stopPropagation();
-    closeModal();
-    return false;
-  }
-});
+    const closeTrigger = e.target.closest("[data-review-close]");
+    if (closeTrigger) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModal();
+      return false;
+    }
+  });
 
   modal.addEventListener("click", function (e) {
     if (e.target === modal) {

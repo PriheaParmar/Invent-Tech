@@ -1,0 +1,12 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Review Dyeing PO - InventTech{% endblock %}
+{% block page_title %}PO Review{% endblock %}
+{% block page_subtitle %}Approve or reject dyeing purchase order{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    {% include "accounts/dyeing_po/_review_inline_panel.html" %}
+  </div>
+</section>
+{% endblock %}

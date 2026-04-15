@@ -1,0 +1,79 @@
+<style>
+  :root{
+    --dp-bg:#ffffff;--dp-line:#e5e7eb;--dp-text:#0f172a;--dp-soft:#64748b;
+    --dp-blue:rgba(28,109,216,1);--dp-pink:rgb(238,61,133);--dp-orange:rgba(250,189,100,1);
+    --dp-shadow:0 16px 40px rgba(15,23,42,.08);
+  }
+  .dp-shell{display:flex;flex-direction:column;gap:18px;}
+  .dp-toolbar,.dp-list{background:var(--dp-bg);border:1px solid var(--dp-line);border-radius:18px;box-shadow:var(--dp-shadow);}
+  .dp-toolbar{padding:16px;}
+  .dp-toolbar form{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:10px;}
+  .dp-input{height:44px;border:1px solid var(--dp-line);border-radius:12px;padding:0 14px;font-size:.94rem;outline:none;}
+  .dp-input:focus{border-color:var(--dp-blue);box-shadow:0 0 0 4px rgba(28,109,216,.10);}
+  .dp-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;border:1px solid var(--dp-line);background:#fff;color:var(--dp-text);text-decoration:none;font-weight:700;font-size:.9rem;}
+  .dp-btn-primary{background:var(--dp-blue);border-color:var(--dp-blue);color:#fff;}
+  .dp-list{overflow:hidden;}
+  .dp-table-wrap{overflow:auto;}
+  .dp-table{width:100%;border-collapse:collapse;min-width:900px;}
+  .dp-table th{padding:14px 12px;background:#f8fafc;border-bottom:1px solid var(--dp-line);text-align:left;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:#334155;}
+  .dp-table td{padding:14px 12px;border-bottom:1px solid var(--dp-line);vertical-align:top;color:var(--dp-text);}
+  .dp-main{font-weight:800;}
+  .dp-sub{font-size:.82rem;color:var(--dp-soft);margin-top:3px;}
+  .dp-count{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(238,61,133,.08);color:var(--dp-pink);font-weight:800;font-size:.78rem;}
+  .dp-empty{text-align:center;padding:34px 18px;color:var(--dp-soft);}
+  @media (max-width:900px){.dp-toolbar form{grid-template-columns:1fr;}}
+</style>
+
+<div class="dp-shell">
+  <div class="dp-toolbar">
+    <form method="get">
+      {% if request.GET.embed == '1' %}<input type="hidden" name="embed" value="1">{% endif %}
+      <input type="text" name="q" value="{{ q }}" class="dp-input" placeholder="Search program no, SKU, product name...">
+      <button type="submit" class="dp-btn dp-btn-primary">Search</button>
+      <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dp-btn">Clear</a>
+    </form>
+  </div>
+
+  <div class="dp-list">
+    <div class="dp-table-wrap">
+      <table class="dp-table">
+        <thead>
+          <tr>
+            <th>Program No</th>
+            <th>Finishing Date</th>
+            <th>SKU</th>
+            <th>Product</th>
+            <th>Firm</th>
+            <th>Challans</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for program in programs %}
+            <tr>
+              <td>
+                <div class="dp-main">{{ program.program_no }}</div>
+                <div class="dp-sub">Program date: {{ program.program_date|date:"d-m-Y" }}</div>
+              </td>
+              <td>{{ program.finishing_date|date:"d-m-Y"|default:"-" }}</td>
+              <td>{{ program.bom.sku|default:"-" }}</td>
+              <td>
+                <div class="dp-main">{{ program.bom.product_name|default:"-" }}</div>
+                <div class="dp-sub">Qty: {{ program.total_qty|default:"0" }}</div>
+              </td>
+              <td>{{ program.firm.firm_name|default:"-" }}</td>
+              <td><span class="dp-count">{{ program.challan_count|default:0 }}</span></td>
+              <td>
+                <a href="{% url 'accounts:dispatch_create' program.pk %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dp-btn dp-btn-primary">Select</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="dp-empty">No programs found for dispatch challan creation.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

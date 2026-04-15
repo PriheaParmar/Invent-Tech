@@ -1,0 +1,133 @@
+<style>
+  :root{
+    --df-card:#fff;--df-line:#e5e7eb;--df-text:#0f172a;--df-soft:#64748b;
+    --df-blue:rgba(28,109,216,1);--df-pink:rgb(238,61,133);--df-orange:rgba(250,189,100,1);
+    --df-shadow:0 16px 40px rgba(15,23,42,.08);
+  }
+  .df-shell{display:flex;flex-direction:column;gap:18px;}
+  .df-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:start;}
+  .df-card{background:var(--df-card);border:1px solid var(--df-line);border-radius:18px;box-shadow:var(--df-shadow);padding:18px;}
+  .df-card h3{margin:0 0 14px;font-size:1rem;font-weight:800;color:var(--df-text);}
+  .df-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+  .df-meta{padding:13px 14px;border:1px solid var(--df-line);border-radius:14px;background:#f8fafc;}
+  .df-label{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--df-soft);margin-bottom:5px;}
+  .df-value{font-size:.95rem;font-weight:700;color:var(--df-text);word-break:break-word;}
+  .df-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+  .df-field{display:flex;flex-direction:column;gap:6px;min-width:0;}
+  .df-field label{font-size:.85rem;font-weight:700;color:var(--df-text);}
+  .df-field input,.df-field select,.df-field textarea{width:100%;border:1px solid var(--df-line);border-radius:12px;padding:11px 12px;font-size:.94rem;outline:none;background:#fff;color:var(--df-text);}
+  .df-field textarea{min-height:112px;resize:vertical;}
+  .df-field input:focus,.df-field select:focus,.df-field textarea:focus{border-color:var(--df-blue);box-shadow:0 0 0 4px rgba(28,109,216,.10);}
+  .df-field-full{grid-column:1 / -1;}
+  .df-help{font-size:.78rem;color:var(--df-soft);}
+  .df-errors{margin:0 0 14px;padding:12px 14px;border:1px solid rgba(238,61,133,.18);background:rgba(238,61,133,.06);border-radius:14px;color:#9f1239;}
+  .df-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+  .df-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:12px;border:1px solid var(--df-line);text-decoration:none;background:#fff;color:var(--df-text);font-weight:800;}
+  .df-btn-primary{background:var(--df-blue);border-color:var(--df-blue);color:#fff;}
+  .df-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .df-badge{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:.78rem;font-weight:800;background:rgba(250,189,100,.16);color:#9a6700;}
+  @media (max-width:980px){.df-grid{grid-template-columns:1fr;}.df-form-grid,.df-meta-grid{grid-template-columns:1fr;}}
+</style>
+
+<div class="df-shell">
+  <div class="df-badges">
+    <span class="df-badge">Program Linked Challan</span>
+    <span class="df-badge">Program No: {{ program.program_no }}</span>
+  </div>
+
+  <div class="df-grid">
+    <div class="df-card">
+      <h3>Program Details</h3>
+      <div class="df-meta-grid">
+        <div class="df-meta">
+          <div class="df-label">Program Number</div>
+          <div class="df-value">{{ program.program_no }}</div>
+        </div>
+        <div class="df-meta">
+          <div class="df-label">Finishing Date</div>
+          <div class="df-value">{{ program.finishing_date|date:"d-m-Y"|default:"-" }}</div>
+        </div>
+        <div class="df-meta">
+          <div class="df-label">SKU Name</div>
+          <div class="df-value">{{ program.bom.sku|default:"-" }}</div>
+        </div>
+        <div class="df-meta">
+          <div class="df-label">Product Name</div>
+          <div class="df-value">{{ program.bom.product_name|default:"-" }}</div>
+        </div>
+        <div class="df-meta">
+          <div class="df-label">Firm</div>
+          <div class="df-value">{{ program.firm.firm_name|default:"-" }}</div>
+        </div>
+        <div class="df-meta">
+          <div class="df-label">Total Qty</div>
+          <div class="df-value">{{ program.total_qty|default:"0" }}</div>
+        </div>
+        <div class="df-meta">
+          <div class="df-label">Cost Price</div>
+          <div class="df-value">{{ program.cost_price|default:"0" }}</div>
+        </div>
+        <div class="df-meta">
+          <div class="df-label">Avg</div>
+          <div class="df-value">{{ program.avg_price|default:"0" }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="df-card">
+      <h3>Challan Details</h3>
+      {% if form.non_field_errors %}
+        <div class="df-errors">{{ form.non_field_errors }}</div>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="df-form-grid">
+          <div class="df-field">
+            <label for="{{ form.challan_no.id_for_label }}">Challan No</label>
+            {{ form.challan_no }}
+            {% if form.challan_no.errors %}<div class="df-help">{{ form.challan_no.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="df-field">
+            <label for="{{ form.challan_date.id_for_label }}">Challan Date</label>
+            {{ form.challan_date }}
+            {% if form.challan_date.errors %}<div class="df-help">{{ form.challan_date.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="df-field df-field-full">
+            <label for="{{ form.client.id_for_label }}">Client</label>
+            {{ form.client }}
+            {% if form.client.errors %}<div class="df-help">{{ form.client.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="df-field">
+            <label for="{{ form.driver_name.id_for_label }}">Driver Name</label>
+            {{ form.driver_name }}
+            {% if form.driver_name.errors %}<div class="df-help">{{ form.driver_name.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="df-field">
+            <label for="{{ form.lr_no.id_for_label }}">LR No</label>
+            {{ form.lr_no }}
+            {% if form.lr_no.errors %}<div class="df-help">{{ form.lr_no.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="df-field">
+            <label for="{{ form.transport_name.id_for_label }}">Transport</label>
+            {{ form.transport_name }}
+            {% if form.transport_name.errors %}<div class="df-help">{{ form.transport_name.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="df-field">
+            <label for="{{ form.vehicle_no.id_for_label }}">Vehicle No</label>
+            {{ form.vehicle_no }}
+            {% if form.vehicle_no.errors %}<div class="df-help">{{ form.vehicle_no.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="df-field df-field-full">
+            <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+            {{ form.remarks }}
+            {% if form.remarks.errors %}<div class="df-help">{{ form.remarks.errors|striptags }}</div>{% endif %}
+          </div>
+        </div>
+        <div class="df-actions">
+          <button type="submit" class="df-btn df-btn-primary">Save Challan</button>
+          <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="df-btn">Back</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

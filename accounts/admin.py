@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Jobber, JobberType, UserExtra, Party, Location, Brand, Catalogue,Client,MainCategory, SubCategory,
-    DyeingOtherCharge,TermsCondition
+    DyeingOtherCharge,TermsCondition, Accessory
 )
 
 @admin.register(JobberType)
@@ -81,3 +81,10 @@ class SubCategoryAdmin(admin.ModelAdmin):
     search_fields = ("name", "description", "main_category__name", "owner__username")
     list_filter = ("main_category", "owner")
     ordering = ("main_category__name", "name")
+    
+@admin.register(Accessory)
+class AccessoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "default_unit", "owner", "created_at")
+    search_fields = ("name", "description", "owner__username")
+    list_filter = ("owner", "default_unit")
+    ordering = ("name",)

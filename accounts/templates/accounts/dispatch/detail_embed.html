@@ -1,0 +1,55 @@
+<style>
+  :root{--dd-card:#fff;--dd-line:#e5e7eb;--dd-text:#0f172a;--dd-soft:#64748b;--dd-blue:rgba(28,109,216,1);--dd-shadow:0 16px 40px rgba(15,23,42,.08);} 
+  .dd-shell{display:flex;flex-direction:column;gap:18px;}
+  .dd-card{background:var(--dd-card);border:1px solid var(--dd-line);border-radius:18px;box-shadow:var(--dd-shadow);padding:18px;}
+  .dd-top{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:flex-start;}
+  .dd-title h2{margin:0;font-size:1.15rem;font-weight:800;color:var(--dd-text);} .dd-title p{margin:5px 0 0;color:var(--dd-soft);} 
+  .dd-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .dd-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;border:1px solid var(--dd-line);text-decoration:none;background:#fff;color:var(--dd-text);font-weight:800;}
+  .dd-btn-primary{background:var(--dd-blue);border-color:var(--dd-blue);color:#fff;}
+  .dd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;} 
+  .dd-meta{padding:13px 14px;border:1px solid var(--dd-line);border-radius:14px;background:#f8fafc;} 
+  .dd-label{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--dd-soft);margin-bottom:5px;} 
+  .dd-value{font-size:.95rem;font-weight:700;color:var(--dd-text);word-break:break-word;} 
+  @media (max-width:900px){.dd-grid{grid-template-columns:1fr;}}
+</style>
+
+<div class="dd-shell">
+  <div class="dd-card">
+    <div class="dd-top">
+      <div class="dd-title">
+        <h2>{{ challan.challan_no }}</h2>
+        <p>Dispatch challan linked with program {{ program.program_no }}</p>
+      </div>
+      <div class="dd-actions">
+        <a href="{% url 'accounts:dispatch_print' challan.pk %}" target="_blank" class="dd-btn dd-btn-primary">Print</a>
+        <a href="{% url 'accounts:dispatch_list' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dd-btn">Back</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="dd-card">
+    <h3 style="margin:0 0 14px;font-size:1rem;color:#0f172a;">Program Details</h3>
+    <div class="dd-grid">
+      <div class="dd-meta"><div class="dd-label">Program No</div><div class="dd-value">{{ program.program_no }}</div></div>
+      <div class="dd-meta"><div class="dd-label">Finishing Date</div><div class="dd-value">{{ program.finishing_date|date:"d-m-Y"|default:"-" }}</div></div>
+      <div class="dd-meta"><div class="dd-label">SKU</div><div class="dd-value">{{ program.bom.sku|default:"-" }}</div></div>
+      <div class="dd-meta"><div class="dd-label">Product</div><div class="dd-value">{{ program.bom.product_name|default:"-" }}</div></div>
+      <div class="dd-meta"><div class="dd-label">Firm</div><div class="dd-value">{{ program.firm.firm_name|default:"-" }}</div></div>
+      <div class="dd-meta"><div class="dd-label">Total Qty</div><div class="dd-value">{{ program.total_qty|default:"0" }}</div></div>
+    </div>
+  </div>
+
+  <div class="dd-card">
+    <h3 style="margin:0 0 14px;font-size:1rem;color:#0f172a;">Challan Details</h3>
+    <div class="dd-grid">
+      <div class="dd-meta"><div class="dd-label">Client</div><div class="dd-value">{{ challan.client.name|default:"-" }}</div></div>
+      <div class="dd-meta"><div class="dd-label">Challan Date</div><div class="dd-value">{{ challan.challan_date|date:"d-m-Y" }}</div></div>
+      <div class="dd-meta"><div class="dd-label">Driver Name</div><div class="dd-value">{{ challan.driver_name|default:"-" }}</div></div>
+      <div class="dd-meta"><div class="dd-label">LR No</div><div class="dd-value">{{ challan.lr_no|default:"-" }}</div></div>
+      <div class="dd-meta"><div class="dd-label">Transport</div><div class="dd-value">{{ challan.transport_name|default:"-" }}</div></div>
+      <div class="dd-meta"><div class="dd-label">Vehicle No</div><div class="dd-value">{{ challan.vehicle_no|default:"-" }}</div></div>
+      <div class="dd-meta" style="grid-column:1 / -1;"><div class="dd-label">Remarks</div><div class="dd-value">{{ challan.remarks|default:"-"|linebreaksbr }}</div></div>
+    </div>
+  </div>
+</div>

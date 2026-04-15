@@ -219,9 +219,9 @@
     color:#15803d;
   }
 
-  .po-status.partial{
-    background:rgba(59,130,246,.14);
-    color:#1d4ed8;
+  .po-status.rejected{
+    background:rgba(217,45,32,.12);
+    color:#b42318;
   }
 
   .po-grid{
@@ -401,6 +401,12 @@
     text-align:left;
   }
 
+  .jb-link-muted{
+    color:#98a2b3;
+    cursor:not-allowed;
+    pointer-events:none;
+  }
+
   .jb-inline-delete{
     display:block;
     margin:0;
@@ -461,6 +467,155 @@
       gap:6px;
     }
   }
+
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  :root{
+    --font-ui: "Inter", "Segoe UI", Arial, sans-serif;
+    --font-body: "Inter", "Segoe UI", Arial, sans-serif;
+    --font-display: "Space Grotesk", "Inter", sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  .dyeingpo-list-page,
+  .jb-panel,
+  .jb-panel *{
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .jb-title{
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: #0f172a;
+  }
+
+  .jb-sub{
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.55;
+    color: #64748b;
+    opacity: 1;
+  }
+
+  .jb-search input[type="search"]{
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .jb-search input[type="search"]::placeholder{
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .jb-search-btn,
+  .jb-add,
+  .jb-secondary{
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .po-badge,
+  .po-status,
+  .po-box-title,
+  .po-summary-label,
+  .po-actions-title{
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .po-no{
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+    color: #111827;
+  }
+
+  .po-sub{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #6b7280;
+  }
+
+  .po-meta .k{
+    font-family: var(--font-body);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #94a3b8;
+  }
+
+  .po-meta .v{
+    font-family: var(--font-body);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .po-line-title,
+  .po-vendor-name,
+  .po-summary-value{
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  .po-line-title{
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .po-vendor-name{
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .po-summary-value{
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .po-line-sub,
+  .po-vendor-sub,
+  .po-status-note,
+  .jb-empty{
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+    color: #667085;
+  }
+
+  .jb-link,
+  .jb-link-button{
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
 </style>
 
 <section class="page-section is-active">
@@ -472,7 +627,7 @@
           <div class="jb-head">
             <div>
               <div class="jb-title">Dyeing Purchase Orders</div>
-              <div class="jb-sub">All generated dyeing purchase orders with source, inward progress, vendor details, and ready-stage actions.</div>
+              <div class="jb-sub">All generated dyeing purchase orders with review status, source details, inward progress, vendor details, and ready-stage actions.</div>
             </div>
           </div>
 
@@ -511,8 +666,8 @@
                   </div>
                 </div>
 
-                <span class="po-status {% if po.total_inward_qty and po.remaining_qty_total == 0 %}approved{% elif po.total_inward_qty %}partial{% else %}pending{% endif %}">
-                  {% if po.total_inward_qty and po.remaining_qty_total == 0 %}Completed{% elif po.total_inward_qty %}Partial Inward{% else %}Pending Inward{% endif %}
+                <span class="po-status {{ po.approval_status|default:'pending' }}">
+                  {{ po.get_approval_status_display|default:"Pending" }}
                 </span>
               </div>
 
@@ -571,7 +726,7 @@
                   <div class="po-box-title">Summary</div>
                   <div class="po-summary">
                     <div class="po-summary-box">
-                      <div class="po-summary-label">Total Qty</div>
+                      <div class="po-summary-label">Total Weight</div>
                       <div class="po-summary-value">{{ po.total_weight|default:"0.00" }}</div>
                     </div>
 
@@ -597,8 +752,11 @@
 
                   <div class="po-status-note" style="margin-top:0; margin-bottom:8px;">
                     Source Greige PO: {{ po.source_greige_po.system_number|default:"—" }}
+                    <br>Approval: {{ po.get_approval_status_display|default:"Pending" }}
                     <br>Inward Entries: {{ po.inwards.all|length }}
-                    {% if po.ready_pos.all|length %}
+                    {% if po.approval_status == "rejected" and po.rejection_reason %}
+                      <br>Reason: {{ po.rejection_reason|truncatechars:70 }}
+                    {% elif po.ready_pos.all|length %}
                       <br>Ready PO generated
                     {% else %}
                       <br>Waiting for Ready PO generation
@@ -607,14 +765,28 @@
 
                   <div class="po-actions">
                     <a class="jb-link" href="{% url 'accounts:dyeingpo_detail' po.id %}">View</a>
-                    <a class="jb-link" href="{% url 'accounts:dyeingpo_inward' po.id %}">Inward</a>
+
+                    {% if can_review_dyeing_po %}
+                      <a class="jb-link" href="{% url 'accounts:dyeingpo_review' po.id %}">Review</a>
+                    {% endif %}
+
+                    {% if po.approval_status == "approved" %}
+                      <a class="jb-link" href="{% url 'accounts:dyeingpo_inward' po.id %}">Inward</a>
+                    {% else %}
+                      <span class="jb-link jb-link-muted">Inward</span>
+                    {% endif %}
+
                     <a class="jb-link" href="{% url 'accounts:dyeingpo_edit' po.id %}">Edit</a>
 
                     {% with ready_po=po.ready_pos.all.0 %}
                       {% if ready_po %}
                         <a class="jb-link" href="{% url 'accounts:readypo_detail' ready_po.id %}">View Ready PO</a>
                       {% else %}
-                        <a class="jb-link" href="{% url 'accounts:generate_ready_po_from_dyeing' po.id %}">Generate Ready PO</a>
+                        {% if po.approval_status == "approved" and po.total_inward_qty %}
+                          <a class="jb-link" href="{% url 'accounts:generate_ready_po_from_dyeing' po.id %}">Generate Ready PO</a>
+                        {% else %}
+                          <span class="jb-link jb-link-muted">Generate Ready PO</span>
+                        {% endif %}
                       {% endif %}
                     {% endwith %}
 

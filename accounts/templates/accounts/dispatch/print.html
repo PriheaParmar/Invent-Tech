@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dispatch Challan {{ challan.challan_no }}</title>
+  <style>
+    @page { size:A4; margin:16mm; }
+    body{font-family:Arial,sans-serif;color:#0f172a;margin:0;font-size:12px;}
+    .sheet{max-width:780px;margin:0 auto;}
+    .head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:2px solid #1c6dd8;padding-bottom:12px;margin-bottom:16px;}
+    .firm-name{font-size:22px;font-weight:800;margin-bottom:6px;}
+    .muted{color:#64748b;line-height:1.5;}
+    .title{text-align:right;}
+    .title h1{margin:0;font-size:24px;letter-spacing:.06em;}
+    .title p{margin:6px 0 0;color:#64748b;}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;}
+    .card h3{margin:0 0 10px;font-size:14px;}
+    .meta{margin:0 0 8px;}
+    .meta strong{display:inline-block;min-width:120px;}
+    .remarks{border:1px solid #e5e7eb;border-radius:12px;padding:12px;min-height:72px;margin-bottom:20px;}
+    .sign{display:flex;justify-content:space-between;gap:16px;margin-top:36px;}
+    .sign-box{width:48%;text-align:center;padding-top:30px;border-top:1px solid #94a3b8;}
+    .print-row{display:flex;justify-content:flex-end;margin-bottom:12px;}
+    .print-btn{padding:10px 16px;border:none;border-radius:10px;background:#1c6dd8;color:#fff;font-weight:700;cursor:pointer;}
+    @media print{.print-row{display:none;}}
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="print-row"><button onclick="window.print()" class="print-btn">Print</button></div>
+
+    <div class="head">
+      <div>
+        <div class="firm-name">{{ challan.firm.firm_name|default:"InventTech" }}</div>
+        <div class="muted">
+          {{ challan.firm.address_line|default:"" }}{% if challan.firm.city %}, {{ challan.firm.city }}{% endif %}{% if challan.firm.state %}, {{ challan.firm.state }}{% endif %}{% if challan.firm.pincode %} - {{ challan.firm.pincode }}{% endif %}<br>
+          {% if challan.firm.phone %}Phone: {{ challan.firm.phone }}<br>{% endif %}
+          {% if challan.firm.email %}Email: {{ challan.firm.email }}<br>{% endif %}
+          {% if challan.firm.gst_number %}GST: {{ challan.firm.gst_number }}{% endif %}
+        </div>
+      </div>
+      <div class="title">
+        <h1>DISPATCH CHALLAN</h1>
+        <p><strong>{{ challan.challan_no }}</strong></p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Program Details</h3>
+        <p class="meta"><strong>Program No:</strong> {{ program.program_no }}</p>
+        <p class="meta"><strong>Program Date:</strong> {{ program.program_date|date:"d-m-Y" }}</p>
+        <p class="meta"><strong>Finishing Date:</strong> {{ program.finishing_date|date:"d-m-Y"|default:"-" }}</p>
+        <p class="meta"><strong>SKU Name:</strong> {{ program.bom.sku|default:"-" }}</p>
+        <p class="meta"><strong>Product Name:</strong> {{ program.bom.product_name|default:"-" }}</p>
+        <p class="meta"><strong>Total Qty:</strong> {{ program.total_qty|default:"0" }}</p>
+      </div>
+
+      <div class="card">
+        <h3>Dispatch Details</h3>
+        <p class="meta"><strong>Client:</strong> {{ challan.client.name|default:"-" }}</p>
+        <p class="meta"><strong>Challan Date:</strong> {{ challan.challan_date|date:"d-m-Y" }}</p>
+        <p class="meta"><strong>Driver Name:</strong> {{ challan.driver_name|default:"-" }}</p>
+        <p class="meta"><strong>LR No:</strong> {{ challan.lr_no|default:"-" }}</p>
+        <p class="meta"><strong>Transport:</strong> {{ challan.transport_name|default:"-" }}</p>
+        <p class="meta"><strong>Vehicle No:</strong> {{ challan.vehicle_no|default:"-" }}</p>
+      </div>
+    </div>
+
+    <div class="remarks">
+      <strong>Remarks</strong><br><br>
+      {{ challan.remarks|default:"-"|linebreaksbr }}
+    </div>
+
+    <div class="sign">
+      <div class="sign-box">Receiver Signature</div>
+      <div class="sign-box">Authorised Signature</div>
+    </div>
+  </div>
+</body>
+</html>

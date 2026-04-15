@@ -15,6 +15,11 @@
     --yi-soft:#f9fafb;
     --yi-dark:#111827;
     --blue: rgba(28, 109, 216, 1);
+
+    --font-display:"Plus Jakarta Sans","Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+    --font-body:"Inter","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+    --font-ui:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    --font-mono:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
   }
 
   .canvas{
@@ -26,20 +31,23 @@
   .yarn-inward-page{
     width:100%;
     min-width:0;
+    font-family:var(--font-body);
+    color:var(--yi-text);
   }
 
   .yarn-inward-shell{
     width:100%;
     min-width:0;
     padding:12px;
-    border: 2px dashed black;
+    border:2px dashed black;
     background:white;
-    border-radius: 22px;
+    border-radius:22px;
   }
 
   .yarn-inward-form{
     display:grid;
     gap:10px;
+    font-family:var(--font-body);
   }
 
   .yarn-head{
@@ -56,17 +64,21 @@
 
   .yarn-head-title{
     margin:0;
-    font-size:20px;
+    font-family:var(--font-display);
+    font-size:22px;
     line-height:1.05;
-    font-weight:900;
+    font-weight:800;
+    letter-spacing:-0.03em;
     color:var(--yi-dark);
   }
 
   .yarn-head-subtitle{
-    margin-top:4px;
+    margin-top:6px;
+    font-family:var(--font-ui);
     font-size:11px;
-    line-height:1.45;
-    font-weight:600;
+    line-height:1.5;
+    font-weight:500;
+    letter-spacing:.01em;
     color:var(--yi-text-soft);
   }
 
@@ -86,9 +98,12 @@
     border-radius:999px;
     background:#d1e0ffd5;
     color:var(--blue);
+    font-family:var(--font-ui);
     font-size:11px;
-    font-weight:900;
+    font-weight:700;
+    letter-spacing:.04em;
     white-space:nowrap;
+    text-transform:uppercase;
   }
 
   .yarn-btn,
@@ -98,8 +113,10 @@
     border-radius:8px;
     min-height:34px;
     padding:0 12px;
+    font-family:var(--font-ui);
     font-size:12px;
-    font-weight:800;
+    font-weight:700;
+    letter-spacing:.01em;
     text-decoration:none;
     display:inline-flex;
     align-items:center;
@@ -132,8 +149,10 @@
   }
 
   .yarn-form-card-title{
-    font-size:12px;
-    font-weight:900;
+    font-family:var(--font-display);
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:-0.01em;
     color:var(--yi-dark);
     margin-bottom:8px;
   }
@@ -147,16 +166,25 @@
   .yarn-field{
     display:flex;
     flex-direction:column;
-    gap:4px;
+    gap:5px;
     min-width:0;
   }
 
+  .yarn-field.span-2{
+    grid-column:span 2;
+  }
+
+  .yarn-field.span-4{
+    grid-column:span 4;
+  }
+
   .yarn-field label{
+    font-family:var(--font-ui);
     font-size:10px;
-    font-weight:900;
+    font-weight:700;
     color:var(--yi-text-soft);
     text-transform:uppercase;
-    letter-spacing:.08em;
+    letter-spacing:.10em;
   }
 
   .yarn-field input,
@@ -167,12 +195,23 @@
     box-sizing:border-box;
     border:1px solid var(--yi-border);
     border-radius:8px;
-    padding:7px 9px;
+    padding:7px 10px;
     background:#fff;
     color:var(--yi-dark);
-    font:inherit;
+    font-family:var(--font-body);
+    font-size:13px;
+    font-weight:500;
+    line-height:1.45;
     outline:none;
     transition:.18s ease;
+  }
+
+  .yarn-field input::placeholder,
+  .yarn-field textarea::placeholder,
+  .yarn-inline-input::placeholder{
+    color:#9ca3af;
+    font-family:var(--font-body);
+    font-weight:400;
   }
 
   .yarn-field textarea{
@@ -192,13 +231,38 @@
   .yarn-field.is-readonly textarea{
     background:#f9fafb;
     color:var(--yi-dark);
-    font-weight:500;
-    font-size:15px;
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:13px;
+  }
+
+  .yarn-static-box{
+    min-height:36px;
+    box-sizing:border-box;
+    border:1px solid var(--yi-border);
+    border-radius:8px;
+    padding:7px 10px;
+    background:#f9fafb;
+    color:var(--yi-dark);
+    font-family:var(--font-body);
+    font-size:13px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    line-height:1.45;
+  }
+
+  .yarn-static-box.is-tall{
+    min-height:74px;
+    align-items:flex-start;
+    white-space:pre-wrap;
   }
 
   .yarn-err{
+    font-family:var(--font-ui);
     font-size:11px;
-    font-weight:700;
+    font-weight:600;
+    line-height:1.4;
     color:#dc2626;
   }
 
@@ -246,16 +310,19 @@
   }
 
   .yarn-section-title{
+    font-family:var(--font-display);
     font-size:15px;
-    font-weight:900;
+    font-weight:700;
+    letter-spacing:-0.01em;
     color:var(--yi-dark);
     line-height:1.2;
   }
 
   .yarn-section-sub{
     margin-top:2px;
+    font-family:var(--font-ui);
     font-size:10px;
-    font-weight:700;
+    font-weight:500;
     color:var(--yi-text-soft);
     line-height:1.35;
   }
@@ -268,13 +335,16 @@
   }
 
   .yarn-section-meta{
+    font-family:var(--font-ui);
     font-size:10px;
-    font-weight:900;
+    font-weight:700;
     color:var(--yi-dark);
     background:#f3f4f6;
     border-radius:999px;
     padding:4px 8px;
     white-space:nowrap;
+    text-transform:uppercase;
+    letter-spacing:.06em;
   }
 
   .yarn-caret-box{
@@ -346,13 +416,23 @@
   .yarn-table thead th,
   .yarn-mini-table thead th,
   .yarn-history-table thead th{
+    font-family:var(--font-ui);
     font-size:10px;
     text-transform:uppercase;
-    letter-spacing:.08em;
-    font-weight:900;
+    letter-spacing:.10em;
+    font-weight:700;
     color:var(--yi-text-soft);
     background:#f3f4f6;
     white-space:nowrap;
+  }
+
+  .yarn-table tbody td,
+  .yarn-mini-table tbody td,
+  .yarn-history-table tbody td{
+    font-family:var(--font-body);
+    font-weight:500;
+    color:var(--yi-dark);
+    font-variant-numeric:tabular-nums;
   }
 
   .yarn-table tbody tr:hover,
@@ -364,21 +444,26 @@
   .yarn-table tfoot td,
   .yarn-mini-table tfoot td{
     background:#fafafa;
-    font-weight:900;
+    font-family:var(--font-mono);
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
   }
 
   .yarn-material{
-    font-size:12px;
-    font-weight:900;
+    font-family:var(--font-display);
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:-0.01em;
     color:var(--yi-dark);
-    line-height:1.4;
+    line-height:1.35;
     word-break:break-word;
   }
 
   .yarn-small{
     margin-top:3px;
+    font-family:var(--font-ui);
     font-size:10px;
-    font-weight:700;
+    font-weight:500;
     color:var(--yi-text-soft);
     line-height:1.45;
     word-break:break-word;
@@ -393,15 +478,26 @@
     padding:6px 8px;
     background:#fff;
     color:var(--yi-dark);
-    font:inherit;
+    font-family:var(--font-body);
+    font-size:13px;
+    font-weight:500;
     outline:none;
+  }
+
+  .yarn-inline-input[type="number"]{
+    font-family:var(--font-mono);
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:-0.02em;
+    font-variant-numeric:tabular-nums;
   }
 
   .yarn-empty{
     padding:12px;
     text-align:center;
+    font-family:var(--font-ui);
     font-size:12px;
-    font-weight:700;
+    font-weight:500;
     color:var(--yi-text-soft);
   }
 
@@ -415,6 +511,11 @@
   @media (max-width: 1100px){
     .yarn-top-grid{
       grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    .yarn-field.span-2,
+    .yarn-field.span-4{
+      grid-column:span 2;
     }
   }
 
@@ -430,11 +531,20 @@
       grid-template-columns:1fr;
     }
 
+    .yarn-field.span-2,
+    .yarn-field.span-4{
+      grid-column:span 1;
+    }
+
     .yarn-btn,
     .yarn-btn-primary,
     .yarn-pill{
       width:100%;
       justify-content:center;
+    }
+
+    .yarn-head-title{
+      font-size:20px;
     }
   }
 </style>
@@ -468,41 +578,219 @@
             <div class="yarn-form-card-title">Inward Entry Information</div>
 
             <div class="yarn-top-grid">
-              <div class="yarn-field is-readonly">
-                <label>PO Number</label>
-                <input type="text" value="{{ po.system_number }}" readonly>
-              </div>
+  <div class="yarn-field is-readonly">
+    <label>PO Number</label>
+    <input type="text" value="{{ po.system_number }}" readonly>
+  </div>
 
-              <div class="yarn-field is-readonly">
-                <label>Greige Inward No</label>
-                <input type="text" value="{{ next_inward_number_preview|default:'Auto' }}" readonly>
-              </div>
+  <div class="yarn-field is-readonly">
+    <label>Greige Inward No</label>
+    <input type="text" value="{{ next_inward_number_preview }}" readonly>
+  </div>
 
-              <div class="yarn-field">
-                <label for="{{ inward_form.vendor.id_for_label }}">Inward Vendor</label>
-                {{ inward_form.vendor }}
-                {% for err in inward_form.vendor.errors %}
-                  <div class="yarn-err">{{ err }}</div>
-                {% endfor %}
-              </div>
+  <div class="yarn-field">
+    <label for="{{ inward_form.vendor.id_for_label }}">Inward Vendor</label>
+    {{ inward_form.vendor }}
+    {% for err in inward_form.vendor.errors %}
+      <div class="yarn-err">{{ err }}</div>
+    {% endfor %}
+  </div>
 
-              <div class="yarn-field">
-                <label for="{{ inward_form.inward_date.id_for_label }}">Date</label>
-                {{ inward_form.inward_date }}
-                {% for err in inward_form.inward_date.errors %}
-                  <div class="yarn-err">{{ err }}</div>
-                {% endfor %}
-              </div>
-            </div>
+  <div class="yarn-field">
+    <label for="{{ inward_form.inward_type.id_for_label }}">Inward Type</label>
+    {{ inward_form.inward_type }}
+    {% for err in inward_form.inward_type.errors %}
+      <div class="yarn-err">{{ err }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="yarn-field">
+    <label for="{{ inward_form.inward_date.id_for_label }}">Date</label>
+    {{ inward_form.inward_date }}
+    {% for err in inward_form.inward_date.errors %}
+      <div class="yarn-err">{{ err }}</div>
+    {% endfor %}
+  </div>
+</div>
           </div>
 
           <details class="yarn-section" open>
             <summary>
               <div class="yarn-section-head">
-                <div class="yarn-section-dot"></div>
                 <div>
-                  <div class="yarn-section-title">PO Details</div>
+                  <div class="yarn-section-title">Yarn PO Details</div>
+                 </div>
+              </div>
+
+              <div class="yarn-section-right">
+                <div class="yarn-section-meta">
+                  {% if po.source_yarn_po %}{{ po.source_yarn_po.system_number }}{% else %}No source PO{% endif %}
                 </div>
+                <span class="yarn-caret-box"><span class="yarn-caret"></span></span>
+              </div>
+            </summary>
+
+            <div class="yarn-section-body">
+              <div class="yarn-top-grid">
+                <div class="yarn-field is-readonly">
+                  <label>Yarn PO Number</label>
+                  <input type="text" value="{% if po.source_yarn_po %}{{ po.source_yarn_po.system_number }}{% else %}—{% endif %}" readonly>
+                </div>
+
+                <div class="yarn-field is-readonly">
+                  <label>Vendor</label>
+                  <input type="text" value="{% if po.source_yarn_po and po.source_yarn_po.vendor %}{{ po.source_yarn_po.vendor.name }}{% else %}—{% endif %}" readonly>
+                </div>
+
+                <div class="yarn-field is-readonly">
+                  <label>PO Date</label>
+                  <input type="text" value="{% if po.source_yarn_po %}{{ po.source_yarn_po.po_date|date:'d-m-Y'|default:'—' }}{% else %}—{% endif %}" readonly>
+                </div>
+
+                <div class="yarn-field is-readonly">
+                  <label>Status</label>
+                  <input type="text" value="{% if po.source_yarn_po %}{{ po.source_yarn_po.approval_status|default:'pending'|title }}{% else %}—{% endif %}" readonly>
+                </div>
+              </div>
+
+              {% if po.source_yarn_po and po.source_yarn_po.shipping_address %}
+              <div class="yarn-field is-readonly">
+                <label>Shipping Address</label>
+                <textarea readonly>{{ po.source_yarn_po.shipping_address }}</textarea>
+              </div>
+              {% endif %}
+
+              <div class="yarn-table-wrap">
+                <table class="yarn-mini-table">
+                  <thead>
+                    <tr>
+                      <th>Yarn Type</th>
+                      <th>Material</th>
+                      <th>Unit</th>
+                      <th>Ordered</th>
+                      <th>Received</th>
+                      <th>Remaining</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if po.source_yarn_po %}
+                      {% for item in po.source_yarn_po.items.all %}
+                      <tr>
+                        <td>
+                          <div class="yarn-material">{{ item.material_type.name|default:'—' }}</div>
+                          <div class="yarn-small">{{ item.material.name|default:'Yarn item' }}</div>
+                        </td>
+                        <td>{{ item.material.name|default:'—' }}</td>
+                        <td>{{ item.unit|default:'—' }}</td>
+                        <td>{{ item.quantity|default:'0.00' }}</td>
+                        <td>{{ item.inward_qty_total|default:'0.00' }}</td>
+                        <td>{{ item.remaining_qty_total|default:'0.00' }}</td>
+                      </tr>
+                      {% empty %}
+                      <tr>
+                        <td colspan="6" class="yarn-empty">No yarn PO items found.</td>
+                      </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr>
+                        <td colspan="6" class="yarn-empty">Source yarn PO not linked.</td>
+                      </tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="yarn-section" open>
+            <summary>
+              <div class="yarn-section-head">
+                <div>
+                  <div class="yarn-section-title">Yarn Inward Details</div>
+                 </div>
+              </div>
+
+              <div class="yarn-section-right">
+                <div class="yarn-section-meta">
+                  {% if po.source_yarn_inward %}{{ po.source_yarn_inward.inward_number }}{% else %}Full PO source{% endif %}
+                </div>
+                <span class="yarn-caret-box"><span class="yarn-caret"></span></span>
+              </div>
+            </summary>
+
+            <div class="yarn-section-body">
+              <div class="yarn-top-grid">
+                <div class="yarn-field is-readonly">
+                  <label>Inward No</label>
+                  <input type="text" value="{% if po.source_yarn_inward %}{{ po.source_yarn_inward.inward_number }}{% else %}—{% endif %}" readonly>
+                </div>
+
+                <div class="yarn-field is-readonly">
+                  <label>Inward Date</label>
+                  <input type="text" value="{% if po.source_yarn_inward %}{{ po.source_yarn_inward.inward_date|date:'d-m-Y'|default:'—' }}{% else %}—{% endif %}" readonly>
+                </div>
+
+                <div class="yarn-field is-readonly">
+                  <label>Vendor</label>
+                  <input type="text" value="{% if po.source_yarn_inward and po.source_yarn_inward.vendor %}{{ po.source_yarn_inward.vendor.name }}{% else %}—{% endif %}" readonly>
+                </div>
+
+                <div class="yarn-field is-readonly">
+                  <label>Total Rows</label>
+                  <input type="text" value="{% if po.source_yarn_inward %}{{ po.source_yarn_inward.items.count }}{% else %}0{% endif %}" readonly>
+                </div>
+              </div>
+
+              <div class="yarn-field is-readonly">
+                <label>Notes</label>
+                <textarea readonly>{% if po.source_yarn_inward %}{{ po.source_yarn_inward.notes|default:'—' }}{% else %}—{% endif %}</textarea>
+              </div>
+
+              <div class="yarn-table-wrap">
+                <table class="yarn-mini-table">
+                  <thead>
+                    <tr>
+                      <th>Yarn</th>
+                      <th>Yarn Type</th>
+                      <th>Unit</th>
+                      <th>Order Qty</th>
+                      <th>Received Qty</th>
+                      <th>Remark</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if po.source_yarn_inward %}
+                      {% for row in po.source_yarn_inward.items.all %}
+                      <tr>
+                        <td>{{ row.po_item.material.name|default:'—' }}</td>
+                        <td>{{ row.po_item.material_type.name|default:'—' }}</td>
+                        <td>{{ row.po_item.unit|default:'—' }}</td>
+                        <td>{{ row.po_item.quantity|default:'0.00' }}</td>
+                        <td>{{ row.quantity|default:'0.00' }}</td>
+                        <td>{{ row.remark|default:'—' }}</td>
+                      </tr>
+                      {% empty %}
+                      <tr>
+                        <td colspan="6" class="yarn-empty">No yarn inward rows found.</td>
+                      </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr>
+                        <td colspan="6" class="yarn-empty">Particular yarn inward not linked.</td>
+                      </tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="yarn-section" open>
+            <summary>
+              <div class="yarn-section-head">
+                <div>
+                  <div class="yarn-section-title">Greige PO Details</div>
+                   </div>
               </div>
 
               <div class="yarn-section-right">
@@ -514,6 +802,11 @@
             <div class="yarn-section-body">
               <div class="yarn-top-grid">
                 <div class="yarn-field is-readonly">
+                  <label>Greige PO Number</label>
+                  <input type="text" value="{{ po.system_number|default:'—' }}" readonly>
+                </div>
+
+                <div class="yarn-field is-readonly">
                   <label>Vendor</label>
                   <input type="text" value="{{ po.vendor.name|default:'—' }}" readonly>
                 </div>
@@ -521,11 +814,6 @@
                 <div class="yarn-field is-readonly">
                   <label>PO Date</label>
                   <input type="text" value="{{ po.po_date|date:'d-m-Y'|default:'—' }}" readonly>
-                </div>
-
-                <div class="yarn-field is-readonly">
-                  <label>Source Yarn PO</label>
-                  <input type="text" value="{% if po.source_yarn_po %}{{ po.source_yarn_po.system_number }}{% else %}—{% endif %}" readonly>
                 </div>
 
                 <div class="yarn-field is-readonly">
@@ -558,9 +846,7 @@
                     <tr>
                       <td>
                         <div class="yarn-material">{{ item.fabric_name|default:"—" }}</div>
-                        <div class="yarn-small">
-                          {% if item.remark %}{{ item.remark }}{% else %}Greige item{% endif %}
-                        </div>
+                        <div class="yarn-small">{% if item.remark %}{{ item.remark }}{% else %}Greige item{% endif %}</div>
                       </td>
                       <td>{{ item.yarn_name|default:"—" }}</td>
                       <td>{{ item.unit|default:"—" }}</td>
@@ -570,7 +856,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                      <td colspan="6" class="yarn-empty">No items found.</td>
+                      <td colspan="6" class="yarn-empty">No greige PO items found.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -579,13 +865,14 @@
             </div>
           </details>
 
+          
+
           <details class="yarn-section" open>
             <summary>
               <div class="yarn-section-head">
-                <div class="yarn-section-dot"></div>
                 <div>
                   <div class="yarn-section-title">Inward Details</div>
-                </div>
+                  </div>
               </div>
 
               <div class="yarn-section-right">
@@ -633,9 +920,7 @@
                     <tr>
                       <td>
                         <div class="yarn-material">{{ row.item.fabric_name|default:"—" }}</div>
-                        <div class="yarn-small">
-                          {% if row.item.remark %}{{ row.item.remark }}{% else %}Greige item{% endif %}
-                        </div>
+                        <div class="yarn-small">{% if row.item.remark %}{{ row.item.remark }}{% else %}Greige item{% endif %}</div>
                       </td>
                       <td>{{ row.item.yarn_name|default:"—" }}</td>
                       <td>{{ row.item.unit|default:"—" }}</td>
@@ -680,14 +965,12 @@
               </div>
             </div>
           </details>
-
           <details class="yarn-section">
             <summary>
               <div class="yarn-section-head">
-                <div class="yarn-section-dot"></div>
                 <div>
                   <div class="yarn-section-title">Inward History</div>
-                </div>
+                 </div>
               </div>
 
               <div class="yarn-section-right">

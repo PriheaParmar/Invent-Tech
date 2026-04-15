@@ -17,22 +17,25 @@
 
       <div class="card soft c1">
         <div class="card-head">
-          <div>
-            <div class="card-title">Inward (GRN)</div>
-            <div class="card-sub">Today’s incoming materials</div>
-          </div>
-          <span class="pill">Live</span>
-        </div>
+  <div>
+    <div class="card-title">Inward (GRN)</div>
+    <div class="card-sub">Live inward count across yarn and fabric stages</div>
+  </div>
+  <span class="pill">{{ current_date_label }}</span>
+</div>
 
-        <div class="kpi">
-          <div class="kpi-big">9</div>
-          <div class="kpi-sub">pending GRNs</div>
-        </div>
+<div class="kpi">
+  <div class="kpi-big">{{ total_inward_count }}</div>
+  <div class="kpi-sub">{{ today_inward_count }} added today</div>
+</div>
 
-        <div class="mini-bars">
-          <span style="height:18px"></span><span style="height:30px"></span><span style="height:14px"></span>
-          <span style="height:34px"></span><span style="height:22px"></span><span style="height:28px"></span>
-        </div>
+<div class="chips">
+  <span class="chip">All Fabrics: {{ fabric_inward_count }}</span>
+  <span class="chip">Yarn: {{ yarn_inward_count }}</span>
+  <span class="chip">Greige: {{ greige_inward_count }}</span>
+  <span class="chip">Dyeing: {{ dyeing_inward_count }}</span>
+  <span class="chip">Ready: {{ ready_inward_count }}</span>
+</div>
       </div>
 
       <div class="card soft c2">

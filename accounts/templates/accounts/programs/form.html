@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}{% if mode == "edit" %}Edit Program{% else %}Create Program{% endif %} - InventTech{% endblock %}
+{% block page_title %}{% if mode == "edit" %}Edit Program{% else %}Create Program{% endif %}{% endblock %}
+{% block page_subtitle %}Production program form with BOM-linked SKU details{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/programs/form_embed.html" with full_page=True %}
+</div>
+{% endblock %}

@@ -1,5 +1,48 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/bom.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=1">
+
+<style>
+  .bomu-price{
+    font-weight:800;
+    color:#111827;
+    white-space:nowrap;
+  }
+  .bomu-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:84px;
+    height:28px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+  .bomu-status--active{
+    background:rgba(17,138,75,.10);
+    color:#118a4b;
+  }
+  .bomu-status--inactive{
+    background:rgba(217,45,32,.10);
+    color:#b42318;
+  }
+  .bomu-product{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:0;
+  }
+  .bomu-product-main{
+    font-weight:800;
+    color:#111827;
+  }
+  .bomu-product-sub{
+    font-size:11px;
+    opacity:.65;
+  }
+</style>
 
 <div class="jobbers-embed">
   <section class="jb-panel">
@@ -8,7 +51,7 @@
     <div class="jb-head">
       <div>
         <div class="jb-title">Bill of Materials</div>
-        <div class="jb-sub">Manage all BOMs</div>
+        <div class="jb-sub">Manage product BOMs like the other utility sections</div>
       </div>
 
       {% if not full_page %}
@@ -22,16 +65,29 @@
     </div>
 
     <div class="jb-tools">
-      <form method="get" class="jb-search">
+      <form class="jb-search" method="get" action="{% url 'accounts:bom_list' %}">
         {% if not full_page %}
         <input type="hidden" name="embed" value="1">
         {% endif %}
-        <input type="text" name="q" value="{{ q }}" placeholder="Search BOM..." />
+        <input
+          type="search"
+          name="q"
+          value="{{ q }}"
+          placeholder="Search BOM code, SKU or product name"
+          autocomplete="off"
+          aria-label="Search BOM"
+        >
+        <button class="jb-search-btn" type="submit">Search</button>
       </form>
 
-      <a href="{% url 'accounts:bom_add' %}{% if not full_page %}?embed=1{% endif %}" class="jb-btn">
-        + Add BOM
-      </a>
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:bom_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </a>
+      </div>
     </div>
 
     <div class="jb-tablewrap">
@@ -39,12 +95,13 @@
         <thead>
           <tr>
             <th>BOM Code</th>
-            <th>SKU</th>
             <th>Product</th>
             <th>Catalogue</th>
             <th>Brand</th>
             <th>Category</th>
             <th>Size Type</th>
+            <th>Base Price</th>
+            <th>Final Price</th>
             <th>Status</th>
             <th style="width:140px;">Actions</th>
           </tr>
@@ -52,28 +109,42 @@
         <tbody>
           {% for b in boms %}
           <tr>
-            <td>{{ b.bom_code }}</td>
-            <td>{{ b.sku }}</td>
-            <td>{{ b.product_name }}</td>
-            <td>{{ b.catalogue|default:"-" }}</td>
-            <td>{{ b.brand|default:"-" }}</td>
-            <td>{{ b.category|default:"-" }}</td>
-            <td>{{ b.size_type|default:"-" }}</td>
-            <td>{{ b.status|title }}</td>
-            <td>
-              <div class="jb-row-actions">
-                <a href="{% url 'accounts:bom_edit' b.id %}{% if not full_page %}?embed=1{% endif %}" class="jb-actionlink">Edit</a>
+            <td>{{ b.bom_code|default:"—" }}</td>
 
-                <form method="post" action="{% url 'accounts:bom_delete' b.id %}{% if not full_page %}?embed=1{% endif %}" style="display:inline;">
-                  {% csrf_token %}
-                  <button type="submit" class="jb-actionlink jb-actionlink--danger">Delete</button>
-                </form>
+            <td>
+              <div class="bomu-product">
+                <div class="bomu-product-main">{{ b.product_name|default:"—" }}</div>
+                <div class="bomu-product-sub">SKU: {{ b.sku|default:"—" }}</div>
               </div>
+            </td>
+
+            <td>{{ b.catalogue.name|default:"—" }}</td>
+            <td>{{ b.brand.name|default:"—" }}</td>
+            <td>{{ b.category.name|default:"—" }}</td>
+            <td>{{ b.get_size_type_display|default:b.size_type|default:"—" }}</td>
+            <td class="bomu-price">₹ {{ b.price|default:"0.00" }}</td>
+            <td class="bomu-price">₹ {{ b.final_price|default:"0.00" }}</td>
+            <td>
+              <span class="bomu-status {% if b.status == 'active' %}bomu-status--active{% else %}bomu-status--inactive{% endif %}">
+                {{ b.status|default:"inactive" }}
+              </span>
+            </td>
+            <td class="jb-actions">
+              <a class="jb-link" href="{% url 'accounts:bom_edit' b.id %}{% if not full_page %}?embed=1{% endif %}">
+                Edit
+              </a>
+              <span class="jb-dot">•</span>
+              <form method="post"
+                    action="{% url 'accounts:bom_delete' b.id %}{% if not full_page %}?embed=1{% endif %}"
+                    class="jb-inline-delete">
+                {% csrf_token %}
+                <button type="submit" class="jb-link jb-link-danger jb-link-button">Delete</button>
+              </form>
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="9" class="jb-empty">No BOM found</td>
+            <td colspan="10" class="jb-empty">No BOM found.</td>
           </tr>
           {% endfor %}
         </tbody>

@@ -1,0 +1,7 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Select Program - Dispatch{% endblock %}
+{% block page_title %}Dispatch{% endblock %}
+{% block page_subtitle %}Select program for challan creation{% endblock %}
+{% block content %}
+  {% include "accounts/dispatch/program_picker_embed.html" with full_page=1 %}
+{% endblock %}

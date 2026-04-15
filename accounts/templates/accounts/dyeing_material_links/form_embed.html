@@ -20,7 +20,7 @@
   .dmlf-tools{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
   .dmlf-note{ color:#667085; font-size:12px; }
   .dmlf-tablewrap{ overflow:auto; }
-  .dmlf-table{ width:100%; min-width:980px; border-collapse:separate; border-spacing:0; }
+  .dmlf-table{ width:100%; min-width:1180px; border-collapse:separate; border-spacing:0; }
   .dmlf-table th{
     text-align:left; font-size:12px; font-weight:700; color:#475467;
     text-transform:uppercase; letter-spacing:.04em; padding:12px 10px;
@@ -45,7 +45,7 @@
         <div class="jb-title">
           {% if mode == "add" %}Add Dyeing Master{% else %}Edit Dyeing Master{% endif %}
         </div>
-        <div class="jb-sub">Link vendor with greige material and add multiple dyeing rows</div>
+        <div class="jb-sub">Link vendor with greige material and add multiple dyeing rows with finished material mapping</div>
       </div>
 
       <div class="jf-head-actions">
@@ -139,7 +139,7 @@
           </div>
           <div class="dmlf-card-body">
             <div class="dmlf-tools">
-              <div class="dmlf-note">You can add plain, print, wash, finish, reactive, pigment, or any custom dyeing row.</div>
+              <div class="dmlf-note">Map each dyeing row to a finished material so Dyeing PO can reflect the correct final material.</div>
             </div>
 
             {{ formset.management_form }}
@@ -148,6 +148,7 @@
               <table class="dmlf-table">
                 <thead>
                   <tr>
+                    <th>Finished Material</th>
                     <th>Dyeing Type</th>
                     <th>Dyeing Name</th>
                     <th>Colors / %</th>
@@ -163,6 +164,12 @@
                     {% for hidden in detail_form.hidden_fields %}
                       {{ hidden }}
                     {% endfor %}
+                    <td>
+                      {{ detail_form.finished_material }}
+                      {% if detail_form.finished_material.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.finished_material.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
                     <td>
                       {{ detail_form.dyeing_type }}
                       {% if detail_form.dyeing_type.errors %}
@@ -216,6 +223,7 @@
                 {% for hidden in formset.empty_form.hidden_fields %}
                   {{ hidden }}
                 {% endfor %}
+                <td>{{ formset.empty_form.finished_material }}</td>
                 <td>{{ formset.empty_form.dyeing_type }}</td>
                 <td>{{ formset.empty_form.dyeing_name }}</td>
                 <td>{{ formset.empty_form.percentage_no_of_colors }}</td>

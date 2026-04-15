@@ -1,0 +1,882 @@
+<style>
+  .yarn-review-inline{
+    width:100%;
+    background:#f8fafc;
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:18px;
+    box-shadow:0 14px 34px rgba(15,23,42,.08);
+    overflow:hidden;
+  }
+
+  .yarn-review-inline *{
+    box-sizing:border-box;
+  }
+
+  .yarn-review-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    padding:16px 16px 0;
+  }
+
+  .yarn-review-title{
+    font-size:24px;
+    line-height:1.1;
+    font-weight:900;
+    color:#0f172a;
+    letter-spacing:-.02em;
+  }
+
+  .yarn-review-sub{
+    margin-top:4px;
+    font-size:12px;
+    color:#64748b;
+    font-weight:600;
+    line-height:1.45;
+  }
+
+  .yarn-review-head-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .yarn-review-head-btn{
+    min-height:34px;
+    padding:0 14px;
+    border-radius:999px;
+    border:1px solid rgba(15,23,42,.10);
+    background:#fff;
+    color:#0f172a;
+    font-size:13px;
+    font-weight:800;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:.18s ease;
+  }
+
+  .yarn-review-head-btn:hover{
+    background:#0f172a;
+    color:#fff;
+    border-color:#0f172a;
+  }
+
+  .yarn-review-head-btn.primary{
+    background:#0b1736;
+    color:#fff;
+    border-color:#0b1736;
+  }
+
+  .yarn-review-head-btn.primary:hover{
+    background:#111827;
+    border-color:#111827;
+  }
+
+  .yarn-review-layout{
+    display:grid;
+    grid-template-columns:minmax(0, 1.4fr) 300px;
+    gap:14px;
+    padding:12px 16px 16px;
+    align-items:start;
+  }
+
+  .yarn-review-main{
+    min-width:0;
+  }
+
+  .yarn-review-card{
+    background:#fff;
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:16px;
+    box-shadow:0 6px 18px rgba(15,23,42,.05);
+    padding:16px;
+  }
+
+  .yarn-review-card + .yarn-review-card{
+    margin-top:12px;
+  }
+
+  .yarn-review-card-title{
+    font-size:16px;
+    font-weight:900;
+    color:#0f172a;
+    margin-bottom:12px;
+  }
+
+  .yarn-review-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+
+  .yarn-review-field{
+    min-width:0;
+  }
+
+  .yarn-review-field.full{
+    grid-column:1 / -1;
+  }
+
+  .yarn-review-label{
+    display:block;
+    margin-bottom:6px;
+    font-size:12px;
+    font-weight:800;
+    color:#0f172a;
+  }
+
+  .yarn-review-value{
+    min-height:38px;
+    display:flex;
+    align-items:center;
+    width:100%;
+    padding:9px 12px;
+    border:1px solid #d7dfeb;
+    background:#fff;
+    border-radius:12px;
+    font-size:13px;
+    color:#475569;
+    line-height:1.4;
+    word-break:break-word;
+  }
+
+  .yarn-review-value.multiline{
+    min-height:76px;
+    align-items:flex-start;
+    white-space:pre-wrap;
+  }
+
+  .yarn-review-table-wrap{
+    overflow:auto;
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:14px;
+    background:#fff;
+  }
+
+  .yarn-review-table{
+    width:100%;
+    min-width:780px;
+    border-collapse:collapse;
+  }
+
+  .yarn-review-table th,
+  .yarn-review-table td{
+    padding:10px 12px;
+    border-bottom:1px solid rgba(15,23,42,.07);
+    text-align:left;
+    vertical-align:top;
+    font-size:12px;
+    line-height:1.4;
+  }
+
+  .yarn-review-table th{
+    background:#f8fafc;
+    font-size:10px;
+    font-weight:900;
+    color:#64748b;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+    white-space:nowrap;
+  }
+
+  .yarn-review-table tbody tr:last-child td{
+    border-bottom:none;
+  }
+
+  .yarn-review-item-name{
+    font-weight:900;
+    color:#0f172a;
+  }
+
+  .yarn-review-item-sub{
+    margin-top:3px;
+    color:#64748b;
+    font-size:11px;
+    line-height:1.4;
+  }
+
+  .yarn-review-side{
+    position:sticky;
+    top:0;
+    min-width:0;
+  }
+
+  .yarn-review-panel{
+    background:#fff;
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:16px;
+    box-shadow:0 6px 18px rgba(15,23,42,.05);
+    padding:16px;
+  }
+
+  .yarn-review-panel-title{
+    font-size:16px;
+    font-weight:950;
+    color:#0f172a;
+    margin-bottom:12px;
+  }
+
+  .yarn-review-alert{
+    border-radius:12px;
+    padding:11px 12px;
+    font-size:12px;
+    font-weight:700;
+    line-height:1.45;
+    margin-bottom:12px;
+  }
+
+  .yarn-review-alert.ready{
+    background:#eaf7ef;
+    color:#137a4b;
+  }
+
+  .yarn-review-alert.pending{
+    background:#fff5e8;
+    color:#b76c00;
+  }
+
+  .yarn-review-alert.rejected{
+    background:#feeceb;
+    color:#b42318;
+  }
+
+  .yarn-review-status-list{
+    display:grid;
+    gap:8px;
+    margin-bottom:12px;
+  }
+
+  .yarn-review-status-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:0;
+    font-size:12px;
+    color:#334155;
+    line-height:1.35;
+  }
+
+  .yarn-review-status-row strong{
+    font-weight:900;
+  }
+
+  .yarn-review-ok{
+    color:#0f172a;
+  }
+
+  .yarn-review-warn{
+    color:#b76c00;
+  }
+
+  .yarn-review-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:24px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    white-space:nowrap;
+  }
+
+  .yarn-review-badge.pending{
+    background:rgba(250,189,100,.16);
+    color:#b76c00;
+  }
+
+  .yarn-review-badge.approved{
+    background:rgba(34,197,94,.14);
+    color:#15803d;
+  }
+
+  .yarn-review-badge.rejected{
+    background:rgba(239,68,68,.14);
+    color:#dc2626;
+  }
+
+  .yarn-review-divider{
+    height:1px;
+    background:rgba(15,23,42,.08);
+    margin:12px 0;
+  }
+
+  .yarn-review-note-box label{
+    display:block;
+    margin-bottom:6px;
+    font-size:12px;
+    font-weight:800;
+    color:#0f172a;
+  }
+
+  .yarn-review-note-box textarea{
+    width:100%;
+    min-height:96px;
+    border:1px solid #d7dfeb;
+    border-radius:12px;
+    padding:10px 12px;
+    resize:vertical;
+    font:inherit;
+    font-size:13px;
+    color:#0f172a;
+    background:#fff;
+    outline:none;
+  }
+
+  .yarn-review-note-box textarea:focus{
+    border-color:#0f172a;
+    box-shadow:0 0 0 4px rgba(15,23,42,.06);
+  }
+
+  .yarn-review-error{
+    margin-top:6px;
+    font-size:12px;
+    font-weight:700;
+    color:#b42318;
+  }
+
+  .yarn-review-existing-reason{
+    margin-top:8px;
+    border-radius:12px;
+    padding:10px 12px;
+    background:#fff5f5;
+    border:1px solid rgba(239,68,68,.14);
+    color:#b42318;
+    font-size:12px;
+    font-weight:700;
+    line-height:1.45;
+  }
+
+  .yarn-review-panel-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:12px;
+  }
+
+  .yarn-review-btn{
+    min-height:38px;
+    padding:0 14px;
+    border-radius:999px;
+    border:1px solid rgba(15,23,42,.10);
+    background:#fff;
+    color:#0f172a;
+    font-weight:900;
+    font-size:13px;
+    cursor:pointer;
+    transition:.18s ease;
+  }
+
+  .yarn-review-btn:hover{
+    transform:translateY(-1px);
+  }
+
+  .yarn-review-btn.primary{
+    background:#081330;
+    color:#fff;
+    border-color:#081330;
+  }
+
+  .yarn-review-btn.primary:hover{
+    background:#111827;
+    border-color:#111827;
+  }
+
+  .yarn-review-btn.reject{
+    background:#fff;
+    color:#475569;
+  }
+
+  .yarn-review-btn.reject:hover{
+    background:#feeceb;
+    color:#b42318;
+    border-color:#f1c5c1;
+  }
+
+  .yarn-review-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:0 16px 16px;
+  }
+
+  .yarn-review-footer-card{
+    flex:1 1 auto;
+    min-width:0;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:14px;
+    box-shadow:0 6px 18px rgba(15,23,42,.05);
+    padding:12px 14px;
+  }
+
+  .yarn-review-footer-title{
+    font-size:13px;
+    font-weight:900;
+    color:#0f172a;
+  }
+
+  .yarn-review-footer-sub{
+    margin-top:3px;
+    font-size:12px;
+    color:#64748b;
+    line-height:1.4;
+  }
+
+  .yarn-review-footer-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .yarn-review-footer-btn{
+    min-height:38px;
+    padding:0 14px;
+    border-radius:999px;
+    border:1px solid rgba(15,23,42,.10);
+    background:#fff;
+    color:#0f172a;
+    font-size:13px;
+    font-weight:900;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .yarn-review-footer-btn:hover{
+    background:#0f172a;
+    color:#fff;
+    border-color:#0f172a;
+  }
+
+  .yarn-review-footer-btn.primary{
+    background:#081330;
+    color:#fff;
+    border-color:#081330;
+  }
+
+  .yarn-review-footer-btn.primary:hover{
+    background:#111827;
+    border-color:#111827;
+  }
+
+  .yarn-review-footer-btn.reject:hover{
+    background:#feeceb;
+    color:#b42318;
+    border-color:#f1c5c1;
+  }
+
+  @media (max-width: 1080px){
+    .yarn-review-layout{
+      grid-template-columns:1fr;
+    }
+
+    .yarn-review-side{
+      position:static;
+    }
+  }
+
+  @media (max-width: 768px){
+    .yarn-review-head,
+    .yarn-review-footer{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .yarn-review-grid{
+      grid-template-columns:1fr;
+    }
+
+    .yarn-review-panel-actions,
+    .yarn-review-footer-actions{
+      grid-template-columns:1fr;
+      display:grid;
+    }
+
+    .yarn-review-head-actions{
+      width:100%;
+    }
+
+    .yarn-review-head-actions > *{
+      flex:1 1 auto;
+    }
+  }
+</style>
+
+<form
+  method="post"
+  action="{% url 'accounts:dyeingpo_review' po.id %}{% if embed_mode %}?embed=1{% endif %}"
+  class="yarn-review-inline"
+  data-yarn-review-form
+>
+  {% csrf_token %}
+
+  <div class="yarn-review-head">
+    <div>
+      <div class="yarn-review-title">Dyeing PO Review</div>
+      <div class="yarn-review-sub">
+        Compact review panel for {{ po.system_number }}.
+      </div>
+    </div>
+
+    <div class="yarn-review-head-actions">
+      {% if embed_mode %}
+        <button type="button" class="yarn-review-head-btn" data-review-close>Cancel</button>
+      {% else %}
+        <a href="{% url 'accounts:dyeingpo_list' %}" class="yarn-review-head-btn">Back to list</a>
+      {% endif %}
+
+      {% if can_review_dyeing_po %}
+        <button type="submit" name="decision" value="approve" class="yarn-review-head-btn primary">
+          Save review
+        </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="yarn-review-layout">
+    <div class="yarn-review-main">
+      <div class="yarn-review-card">
+        <div class="yarn-review-card-title">PO Details</div>
+
+        <div class="yarn-review-grid">
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">System PO Number</label>
+            <div class="yarn-review-value">{{ po.system_number|default:"—" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">PO Number</label>
+            <div class="yarn-review-value">{{ po.po_number|default:"—" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">PO Date</label>
+            <div class="yarn-review-value">{{ po.po_date|date:"d-m-Y" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Approval Status</label>
+            <div class="yarn-review-value">
+              <span class="yarn-review-badge {% if po.approval_status == 'approved' %}approved{% elif po.approval_status == 'rejected' %}rejected{% else %}pending{% endif %}">
+                {{ po.get_approval_status_display }}
+              </span>
+            </div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Vendor</label>
+            <div class="yarn-review-value">{{ po.vendor.name|default:"—" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Firm</label>
+            <div class="yarn-review-value">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Source Greige PO</label>
+            <div class="yarn-review-value">{{ po.source_greige_po.system_number|default:"—" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Source Greige Inward</label>
+            <div class="yarn-review-value">
+              {% if po.source_greige_inward %}
+                {{ po.source_greige_inward.inward_number }}
+              {% else %}
+                Full Greige PO
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Expected Delivery</label>
+            <div class="yarn-review-value">
+              {% if po.expected_delivery_date %}{{ po.expected_delivery_date|date:"d-m-Y" }}{% else %}—{% endif %}
+            </div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Cancel Date</label>
+            <div class="yarn-review-value">
+              {% if po.cancel_date %}{{ po.cancel_date|date:"d-m-Y" }}{% else %}—{% endif %}
+            </div>
+          </div>
+
+          <div class="yarn-review-field full">
+            <label class="yarn-review-label">Shipping Address</label>
+            <div class="yarn-review-value multiline">{{ po.shipping_address|default:"—" }}</div>
+          </div>
+
+          <div class="yarn-review-field full">
+            <label class="yarn-review-label">Remarks</label>
+            <div class="yarn-review-value multiline">{{ po.remarks|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="yarn-review-card">
+        <div class="yarn-review-card-title">Line Items</div>
+
+        <div class="yarn-review-table-wrap">
+          <table class="yarn-review-table">
+            <thead>
+              <tr>
+                <th>Fabric</th>
+                <th>Greige Name</th>
+                <th>Finished Material</th>
+                <th>Quantity</th>
+                <th>Inward</th>
+                <th>Remaining</th>
+                <th>Rate</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in po.items.all %}
+              <tr>
+                <td>
+                  <div class="yarn-review-item-name">{{ item.fabric_name|default:"Dyeing Item" }}</div>
+                  <div class="yarn-review-item-sub">
+                    {% if item.dyeing_name %}{{ item.dyeing_name }}{% else %}—{% endif %}
+                    {% if item.dyeing_type %} · {{ item.dyeing_type }}{% endif %}
+                  </div>
+                </td>
+                <td>{{ item.greige_name|default:"—" }}</td>
+                <td>
+                  {% if item.finished_material %}
+                    {{ item.finished_material.name }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>{{ item.quantity|default:item.total_qty|default:"0.00" }}</td>
+                <td>{{ item.inward_qty_total|default:"0.00" }}</td>
+                <td>{{ item.remaining_qty_total|default:item.remaining_qty|default:"0.00" }}</td>
+                <td>{{ item.rate|default:"0.00" }}</td>
+                <td>{{ item.line_final_amount|default:item.line_subtotal|default:"0.00" }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="8">No line items found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="yarn-review-card">
+        <div class="yarn-review-card-title">Dyeing Summary</div>
+
+        <div class="yarn-review-grid">
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Total Weight</label>
+            <div class="yarn-review-value">{{ po.total_weight|default:"0.00" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Subtotal</label>
+            <div class="yarn-review-value">{{ po.subtotal|default:"0.00" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Total Inward</label>
+            <div class="yarn-review-value">{{ po.total_inward_qty|default:"0.00" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Remaining Qty</label>
+            <div class="yarn-review-value">{{ po.remaining_qty_total|default:"0.00" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Discount %</label>
+            <div class="yarn-review-value">{{ po.discount_percent|default:"0.00" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">After Discount</label>
+            <div class="yarn-review-value">{{ po.after_discount_value|default:"0.00" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Others</label>
+            <div class="yarn-review-value">{{ po.others|default:"0.00" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">GST %</label>
+            <div class="yarn-review-value">{{ po.gst_percent|default:"0.00" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">TCS %</label>
+            <div class="yarn-review-value">{{ po.tcs_percent|default:"0.00" }}</div>
+          </div>
+
+          <div class="yarn-review-field">
+            <label class="yarn-review-label">Final Amount</label>
+            <div class="yarn-review-value">{{ po.final_amount|default:"0.00" }}</div>
+          </div>
+
+          <div class="yarn-review-field full">
+            <label class="yarn-review-label">Address</label>
+            <div class="yarn-review-value multiline">{{ po.address|default:"—" }}</div>
+          </div>
+
+          <div class="yarn-review-field full">
+            <label class="yarn-review-label">Terms & Conditions</label>
+            <div class="yarn-review-value multiline">{{ po.terms_conditions|default:"—" }}</div>
+          </div>
+
+          <div class="yarn-review-field full">
+            <label class="yarn-review-label">Description</label>
+            <div class="yarn-review-value multiline">{{ po.description|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="yarn-review-side">
+      <div class="yarn-review-panel">
+        <div class="yarn-review-panel-title">Review Panel</div>
+
+        {% if po.approval_status == 'approved' %}
+          <div class="yarn-review-alert ready">
+            This PO is already approved and was reviewed successfully.
+          </div>
+        {% elif po.approval_status == 'rejected' %}
+          <div class="yarn-review-alert rejected">
+            This PO is rejected. Check the rejection note before taking any further action.
+          </div>
+        {% else %}
+          <div class="yarn-review-alert pending">
+            {{ review_ready_count }} review checks are ready. This PO is waiting for final review.
+          </div>
+        {% endif %}
+
+        <div class="yarn-review-status-list">
+          <div class="yarn-review-status-row">
+            <span>Header details</span>
+            <strong class="{% if review_checks.has_header %}yarn-review-ok{% else %}yarn-review-warn{% endif %}">
+              {% if review_checks.has_header %}Complete{% else %}Missing{% endif %}
+            </strong>
+          </div>
+
+          <div class="yarn-review-status-row">
+            <span>Source linked</span>
+            <strong class="{% if review_checks.has_source %}yarn-review-ok{% else %}yarn-review-warn{% endif %}">
+              {% if review_checks.has_source %}Complete{% else %}Missing{% endif %}
+            </strong>
+          </div>
+
+          <div class="yarn-review-status-row">
+            <span>Line items</span>
+            <strong class="{% if review_checks.has_items %}yarn-review-ok{% else %}yarn-review-warn{% endif %}">
+              {% if review_checks.has_items %}{{ po.items.count }} item{{ po.items.count|pluralize }}{% else %}Missing{% endif %}
+            </strong>
+          </div>
+
+          <div class="yarn-review-status-row">
+            <span>Shipping address</span>
+            <strong class="{% if review_checks.has_shipping %}yarn-review-ok{% else %}yarn-review-warn{% endif %}">
+              {% if review_checks.has_shipping %}Available{% else %}Missing{% endif %}
+            </strong>
+          </div>
+
+          <div class="yarn-review-status-row">
+            <span>Approval status</span>
+            <strong class="{% if po.approval_status == 'approved' %}yarn-review-ok{% else %}yarn-review-warn{% endif %}">
+              {{ po.get_approval_status_display }}
+            </strong>
+          </div>
+        </div>
+
+        <div class="yarn-review-divider"></div>
+
+        <div class="yarn-review-note-box">
+          <label for="{{ review_form.rejection_reason.id_for_label }}">Rejection reason / review note</label>
+          {{ review_form.rejection_reason }}
+          {% for err in review_form.rejection_reason.errors %}
+            <div class="yarn-review-error">{{ err }}</div>
+          {% endfor %}
+
+          {% if po.rejection_reason %}
+            <div class="yarn-review-existing-reason">
+              Current reason: {{ po.rejection_reason }}
+            </div>
+          {% endif %}
+        </div>
+
+        {% if po.reviewed_by %}
+          <div class="yarn-review-divider"></div>
+          <div class="yarn-review-status-row">
+            <span>Reviewed by</span>
+            <strong class="yarn-review-ok">{{ po.reviewed_by.username }}</strong>
+          </div>
+          <div class="yarn-review-status-row">
+            <span>Reviewed at</span>
+            <strong class="yarn-review-ok">
+              {% if po.reviewed_at %}{{ po.reviewed_at|date:"d-m-Y H:i" }}{% else %}—{% endif %}
+            </strong>
+          </div>
+        {% endif %}
+
+        {% if can_review_dyeing_po %}
+          <div class="yarn-review-panel-actions">
+            <button type="submit" name="decision" value="approve" class="yarn-review-btn primary">
+              Approve
+            </button>
+            <button type="submit" name="decision" value="reject" class="yarn-review-btn reject">
+              Reject
+            </button>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="yarn-review-footer">
+    <div class="yarn-review-footer-card">
+      <div class="yarn-review-footer-title">Ready to submit</div>
+      <div class="yarn-review-footer-sub">
+        Review the details before continuing.
+        {% if po.approval_status == 'pending' %}
+          This order is currently waiting for admin review.
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="yarn-review-footer-actions">
+      {% if embed_mode %}
+        <button type="button" class="yarn-review-footer-btn" data-review-close>Cancel</button>
+      {% else %}
+        <a href="{% url 'accounts:dyeingpo_list' %}" class="yarn-review-footer-btn">Cancel</a>
+      {% endif %}
+
+      {% if can_review_dyeing_po %}
+        <button type="submit" name="decision" value="reject" class="yarn-review-footer-btn reject">
+          Reject
+        </button>
+        <button type="submit" name="decision" value="approve" class="yarn-review-footer-btn primary">
+          Approve PO
+        </button>
+      {% endif %}
+    </div>
+  </div>
+</form>

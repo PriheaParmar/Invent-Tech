@@ -6,6 +6,7 @@ APP_SIDEBAR_GROUPS = [
             {"label": "Utilities", "url_name": "accounts:utilities", "icon": "settings"},
             {"label": "PO", "url_name": "accounts:po_home", "icon": "po"},
             {"label": "Inventory", "url_name": None, "icon": "inventory", "is_placeholder": True},
+            {"label": "Program", "url_name": "accounts:program_list", "icon": "production"},
             {"label": "Production", "url_name": None, "icon": "production", "is_placeholder": True},
             {"label": "Dispatch", "url_name": None, "icon": "dispatch", "is_placeholder": True},
         ],
