@@ -83,6 +83,12 @@ UTILITIES_GROUPS = [
                 "kind": "embed",
             },
             {
+                "title": "Dyeing Master",
+                "subtitle": "Link vendors with greige materials and available dyeing options.",
+                "url_name": "accounts:dyeing_material_link_list",
+                "kind": "embed",
+            },
+            {
                 "title": "Locations",
                 "subtitle": "Define plant, warehouse, or delivery locations.",
                 "url_name": "accounts:location_list",

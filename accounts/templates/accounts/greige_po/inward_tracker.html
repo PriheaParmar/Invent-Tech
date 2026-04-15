@@ -639,22 +639,22 @@
                           {% endfor %}
 
                           <div class="git-inward-actions">
-  <a class="git-generated-link" href="{% url 'accounts:greigepo_inward' row.po.id %}?inward={{ inward_entry.inward.id }}">
-    Edit Inward
-  </a>
+                            <a class="git-generated-link" href="{% url 'accounts:greige_inward_edit' inward_entry.inward.id %}">
+                              Edit Inward
+                            </a>
 
-  {% if inward_entry.dyeing_po %}
-    <a class="git-generated-link" href="{% url 'accounts:dyeingpo_detail' inward_entry.dyeing_po.id %}">
-      View Dyeing PO
-    </a>
-  {% else %}
-    <form class="git-generate-form" method="post" action="{% url 'accounts:generate_dyeing_po_from_greige' row.po.id %}">
-      {% csrf_token %}
-      <input type="hidden" name="inward_id" value="{{ inward_entry.inward.id }}">
-      <button type="submit" class="git-generate-btn">Generate Dyeing PO</button>
-    </form>
-  {% endif %}
-</div>
+                            {% if inward_entry.dyeing_po %}
+                              <a class="git-generated-link" href="{% url 'accounts:dyeingpo_detail' inward_entry.dyeing_po.id %}">
+                                View Dyeing PO
+                              </a>
+                            {% else %}
+                              <form class="git-generate-form" method="post" action="{% url 'accounts:generate_dyeing_po_from_greige' row.po.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="inward_id" value="{{ inward_entry.inward.id }}">
+                                <button type="submit" class="git-generate-btn">Generate Dyeing PO</button>
+                              </form>
+                            {% endif %}
+                          </div>
                         </div>
                       {% endfor %}
                     </div>

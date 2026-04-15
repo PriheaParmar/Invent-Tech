@@ -84,7 +84,7 @@
   <span class="sb-text">Inventory</span>
 </a>
 
-        <a class="sb-link {% if request.path|slice:':21' == '/production/programs/' or request.resolver_match.url_name == 'program_list' or request.resolver_match.url_name == 'program_add' or request.resolver_match.url_name == 'program_edit' or request.resolver_match.url_name == 'program_delete' %}active{% endif %}" href="{% url 'accounts:program_list' %}">
+        <a >
           <span class="sb-ico">
             <svg class="ico" viewBox="0 0 24 24">
               <path d="M3 21V9l9-6 9 6v12M9 21v-8h6v8" />

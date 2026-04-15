@@ -1,0 +1,243 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=3">
+
+<style>
+  .dmlf-section{ margin-top:18px; }
+  .dmlf-card{
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    background:#fff;
+    overflow:hidden;
+  }
+  .dmlf-card-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 16px; border-bottom:1px solid #eef2f7; background:#fafbfc;
+  }
+  .dmlf-card-title{ font-weight:700; color:#111827; }
+  .dmlf-card-sub{ color:#667085; font-size:12px; margin-top:2px; }
+  .dmlf-card-body{ padding:14px 16px 16px; }
+  .dmlf-tools{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .dmlf-note{ color:#667085; font-size:12px; }
+  .dmlf-tablewrap{ overflow:auto; }
+  .dmlf-table{ width:100%; min-width:980px; border-collapse:separate; border-spacing:0; }
+  .dmlf-table th{
+    text-align:left; font-size:12px; font-weight:700; color:#475467;
+    text-transform:uppercase; letter-spacing:.04em; padding:12px 10px;
+    border-bottom:1px solid #e5e7eb; background:#f8fafc;
+  }
+  .dmlf-table td{ padding:10px; border-bottom:1px solid #eef2f7; vertical-align:top; }
+  .dmlf-table tr:last-child td{ border-bottom:none; }
+  .dmlf-table input, .dmlf-table select{ width:100%; }
+  .dmlf-remove-wrap{ display:flex; align-items:center; gap:8px; }
+  .dmlf-remove-wrap input[type="checkbox"]{ display:none; }
+  .dmlf-hidden-row{ display:none; }
+  .dmlf-inline-errors{ margin-top:6px; }
+  .dmlf-inline-errors p{ margin:0; color:#b42318; font-size:12px; }
+</style>
+
+<div class="jobbers-embed jobber-form-embed" data-dyeing-link-root="1">
+  <section class="jb-panel">
+    {% include "accounts/_messages_embed.html" %}
+
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">
+          {% if mode == "add" %}Add Dyeing Master{% else %}Edit Dyeing Master{% endif %}
+        </div>
+        <div class="jb-sub">Link vendor with greige material and add multiple dyeing rows</div>
+      </div>
+
+      <div class="jf-head-actions">
+        <a class="jb-iconbtn jb-back" href="{% url 'accounts:dyeing_material_link_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+          <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if mode == "add" %}
+      {% url "accounts:dyeing_material_link_add" as action_url %}
+    {% else %}
+      {% url "accounts:dyeing_material_link_edit" link_obj.id as action_url %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="jb-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if formset.non_form_errors %}
+    <div class="jb-errors">
+      {% for error in formset.non_form_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="jf-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="jf-grid">
+        <div class="jf-field">
+          <label for="{{ form.vendor.id_for_label }}">Vendor</label>
+          {{ form.vendor }}
+          {% if form.vendor.errors %}
+          <div class="jb-field-errors">{% for error in form.vendor.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field">
+          <label for="{{ form.material_type.id_for_label }}">Material Type</label>
+          {{ form.material_type }}
+          {% if form.material_type.errors %}
+          <div class="jb-field-errors">{% for error in form.material_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field jf-full">
+          <label for="{{ form.material.id_for_label }}">Greige Material</label>
+          {{ form.material }}
+          {% if form.material.errors %}
+          <div class="jb-field-errors">{% for error in form.material.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <div class="jf-field jf-full">
+          <label for="{{ form.notes.id_for_label }}">Notes</label>
+          {{ form.notes }}
+          {% if form.notes.errors %}
+          <div class="jb-field-errors">{% for error in form.notes.errors %}<p>{{ error }}</p>{% endfor %}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="dmlf-section">
+        <div class="dmlf-card">
+          <div class="dmlf-card-head">
+            <div>
+              <div class="dmlf-card-title">Dyeing Rows</div>
+              <div class="dmlf-card-sub">Add all dyeing processes available for this vendor-material link</div>
+            </div>
+            <button type="button" class="jb-add" data-dyeing-link-add-row="1">Add Row</button>
+          </div>
+          <div class="dmlf-card-body">
+            <div class="dmlf-tools">
+              <div class="dmlf-note">You can add plain, print, wash, finish, reactive, pigment, or any custom dyeing row.</div>
+            </div>
+
+            {{ formset.management_form }}
+
+            <div class="dmlf-tablewrap">
+              <table class="dmlf-table">
+                <thead>
+                  <tr>
+                    <th>Dyeing Type</th>
+                    <th>Dyeing Name</th>
+                    <th>Colors / %</th>
+                    <th>Weight Loss</th>
+                    <th>Price</th>
+                    <th>Sort Order</th>
+                    <th style="width:100px;">Remove</th>
+                  </tr>
+                </thead>
+                <tbody data-dyeing-link-body="1">
+                  {% for detail_form in formset.forms %}
+                  <tr data-dyeing-link-row="1">
+                    {% for hidden in detail_form.hidden_fields %}
+                      {{ hidden }}
+                    {% endfor %}
+                    <td>
+                      {{ detail_form.dyeing_type }}
+                      {% if detail_form.dyeing_type.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.dyeing_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ detail_form.dyeing_name }}
+                      {% if detail_form.dyeing_name.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.dyeing_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ detail_form.percentage_no_of_colors }}
+                      {% if detail_form.percentage_no_of_colors.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.percentage_no_of_colors.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ detail_form.weight_loss }}
+                      {% if detail_form.weight_loss.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.weight_loss.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ detail_form.price }}
+                      {% if detail_form.price.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.price.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ detail_form.sort_order }}
+                      {% if detail_form.sort_order.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.sort_order.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="dmlf-remove-wrap">
+                        {{ detail_form.DELETE }}
+                        <button type="button" class="jb-secondary" data-dyeing-link-remove-row="1">Remove</button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <template data-dyeing-link-empty-form="1">
+              <tr data-dyeing-link-row="1">
+                {% for hidden in formset.empty_form.hidden_fields %}
+                  {{ hidden }}
+                {% endfor %}
+                <td>{{ formset.empty_form.dyeing_type }}</td>
+                <td>{{ formset.empty_form.dyeing_name }}</td>
+                <td>{{ formset.empty_form.percentage_no_of_colors }}</td>
+                <td>{{ formset.empty_form.weight_loss }}</td>
+                <td>{{ formset.empty_form.price }}</td>
+                <td>{{ formset.empty_form.sort_order }}</td>
+                <td>
+                  <div class="dmlf-remove-wrap">
+                    {{ formset.empty_form.DELETE }}
+                    <button type="button" class="jb-secondary" data-dyeing-link-remove-row="1">Remove</button>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <div class="jf-footer">
+        <a class="jb-secondary" href="{% url 'accounts:dyeing_material_link_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="jb-add jb-save">Save Dyeing Master</button>
+      </div>
+    </form>
+  </section>
+</div>

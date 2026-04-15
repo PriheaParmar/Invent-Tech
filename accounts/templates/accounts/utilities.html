@@ -114,31 +114,32 @@
     Uploads: ["Material Bulk Upload"],
   };
 
-  const ROUTES = {
-    "Jobber": "{% url 'accounts:jobber_list' %}",
-    "Jobber Type": "{% url 'accounts:jobbertype_list' %}",
-    "Material / Trim": "{% url 'accounts:material_list' %}",
-    "Material Type": "{% url 'accounts:materialtype_list' %}",
-    "Material Shades": "{% url 'accounts:materialshade_list' %}",
-    "Material Sub Type": "{% url 'accounts:materialsubtype_list' %}",
-    "Brand": "{% url 'accounts:brand_list' %}",
-    "Party": "{% url 'accounts:party_list' %}",
-    "Client": "{% url 'accounts:client_list' %}",
-    "Vendor": "{% url 'accounts:vendor_list' %}",
-    "Location": "{% url 'accounts:location_list' %}",
-    "Material Unit": "{% url 'accounts:materialunit_list' %}",
-    "Category": "{% url 'accounts:category_list' %}",
-    "Main Category": "{% url 'accounts:maincategory_list' %}",
-    "Catalogue": "{% url 'accounts:catalogue_list' %}",
-    "Pattern Type": "{% url 'accounts:patterntype_list' %}",
-    "BOM": "{% url 'accounts:bom_list' %}",
-    "Expense": "{% url 'accounts:expense_list' %}",
-    "Terms & Conditions": "{% url 'accounts:termscondition_list' %}",
-    "Dyeing Other Charges": "{% url 'accounts:dyeing_other_charge_list' %}",
-    "Dyeing Other Charge Headers": "{% url 'accounts:dyeing_other_charge_list' %}",
-    "Inward Type": "{% url 'accounts:inwardtype_list' %}",
-"Sub Category": "{% url 'accounts:subcategory_list' %}",
-  };
+const ROUTES = {
+  "Jobber": "{% url 'accounts:jobber_list' %}",
+  "Jobber Type": "{% url 'accounts:jobbertype_list' %}",
+  "Material / Trim": "{% url 'accounts:material_list' %}",
+  "Material Type": "{% url 'accounts:materialtype_list' %}",
+  "Material Shades": "{% url 'accounts:materialshade_list' %}",
+  "Material Sub Type": "{% url 'accounts:materialsubtype_list' %}",
+  "Brand": "{% url 'accounts:brand_list' %}",
+  "Party": "{% url 'accounts:party_list' %}",
+  "Client": "{% url 'accounts:client_list' %}",
+  "Vendor": "{% url 'accounts:vendor_list' %}",
+  "Location": "{% url 'accounts:location_list' %}",
+  "Material Unit": "{% url 'accounts:materialunit_list' %}",
+  "Category": "{% url 'accounts:category_list' %}",
+  "Main Category": "{% url 'accounts:maincategory_list' %}",
+  "Catalogue": "{% url 'accounts:catalogue_list' %}",
+  "Pattern Type": "{% url 'accounts:patterntype_list' %}",
+  "Expense": "{% url 'accounts:expense_list' %}",
+  "Terms & Conditions": "{% url 'accounts:termscondition_list' %}",
+  "Dyeing Other Charges": "{% url 'accounts:dyeing_other_charge_list' %}",
+  "Dyeing Master": "{% url 'accounts:dyeing_material_link_list' %}",
+  "Dyeing Other Charge Headers": "{% url 'accounts:dyeing_other_charge_list' %}",
+  "Inward Type": "{% url 'accounts:inwardtype_list' %}",
+  "Sub Category": "{% url 'accounts:subcategory_list' %}",
+  "BOM": "{% url 'accounts:bom_list' %}",
+};
 
   const UTILITIES = [
     { name: "Material / Trim", tag: "Masters", icon: "material" },
@@ -235,7 +236,7 @@
   "BOM",
   "Expense",
   "Terms & Conditions",
-  "Inward Type",
+  "Inward Type","Dyeing Master",
   "Dyeing Other Charges",
   "Dyeing Other Charge Headers",
 ];
@@ -728,6 +729,7 @@
       mount.innerHTML = html;
       initMastersEmbed(mount);
       mount.scrollTop = 0;
+      runEmbedScripts(mount);
     } catch (err) {
       if (reqId !== MASTERS_REQUEST_SEQ) return;
       mount.innerHTML = `<div class="tiny-note">Unable to load this section.</div>`;
@@ -838,10 +840,199 @@ function closeMastersPanel() {
     syncTypes();
   }
 
-  function initMastersEmbed(mount) {
-    bindEmbedAutosubmit(mount);
-    bindMaterialSubtypeForm(mount);
+  function bindBomForm(mount) {
+  if (!mount) return;
+
+  const root = mount.querySelector("[data-bom-root]");
+  if (!root || root.dataset.bomBound === "1") return;
+
+  root.dataset.bomBound = "1";
+
+  function updateDeleteField(row) {
+    const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+    if (deleteInput) {
+      deleteInput.checked = true;
+      row.style.display = "none";
+    } else {
+      row.remove();
+    }
   }
+
+  function bindRemoveButtons(scope) {
+    scope.querySelectorAll(".bom-remove-btn").forEach(function (btn) {
+      if (btn.dataset.bound === "1") return;
+      btn.dataset.bound = "1";
+
+      btn.addEventListener("click", function () {
+        const row = btn.closest("tr");
+        if (!row) return;
+        updateDeleteField(row);
+      });
+    });
+  }
+
+  function recalcRow(row) {
+    const inputs = row.querySelectorAll("input");
+    let cpu = null;
+    let avg = null;
+    let cost = null;
+
+    inputs.forEach(function (input) {
+      const name = input.name || "";
+      if (name.includes("cost_per_unit")) cpu = input;
+      if (name.includes("avg")) avg = input;
+      if (name.includes("cost") && !name.includes("cost_per_unit")) cost = input;
+    });
+
+    if (!cpu || !avg || !cost) return;
+
+    const cpuVal = parseFloat(cpu.value || "0");
+    const avgVal = parseFloat(avg.value || "0");
+    const total = (isNaN(cpuVal) ? 0 : cpuVal) * (isNaN(avgVal) ? 0 : avgVal);
+    cost.value = total.toFixed(2);
+  }
+
+  function bindCalc(scope) {
+    scope.querySelectorAll("tr.bom-form-row").forEach(function (row) {
+      if (row.dataset.calcBound === "1") return;
+      row.dataset.calcBound = "1";
+
+      row.querySelectorAll("input").forEach(function (input) {
+        const name = input.name || "";
+        if (name.includes("cost_per_unit") || name.includes("avg")) {
+          input.addEventListener("input", function () {
+            recalcRow(row);
+          });
+        }
+      });
+
+      recalcRow(row);
+    });
+  }
+
+  function addForm(prefix, templateId, tbodyId) {
+    const totalInput = root.querySelector("#id_" + prefix + "-TOTAL_FORMS");
+    const tbody = root.querySelector("#" + tbodyId);
+    const template = root.querySelector("#" + templateId);
+
+    if (!totalInput || !tbody || !template) return;
+
+    const index = parseInt(totalInput.value, 10);
+    const html = template.innerHTML.replace(/__prefix__/g, index);
+
+    const wrapper = document.createElement("tbody");
+    wrapper.innerHTML = html.trim();
+
+    const row = wrapper.firstElementChild;
+    if (!row) return;
+
+    tbody.appendChild(row);
+    totalInput.value = index + 1;
+
+    bindRemoveButtons(row);
+    bindCalc(row);
+  }
+
+  const addMaterialBtn = root.querySelector("#add-material-row");
+  const addAccessoryBtn = root.querySelector("#add-accessory-row");
+
+  if (addMaterialBtn) {
+    addMaterialBtn.addEventListener("click", function () {
+      addForm("materials", "material-empty-form", "material-rows");
+    });
+  }
+
+  if (addAccessoryBtn) {
+    addAccessoryBtn.addEventListener("click", function () {
+      addForm("accessories", "accessory-empty-form", "accessory-rows");
+    });
+  }
+
+  bindRemoveButtons(root);
+  bindCalc(root);
+}
+
+
+
+function bindDyeingMasterForm(mount) {
+  if (!mount) return;
+
+  mount.querySelectorAll('[data-dyeing-link-root="1"]').forEach(function (root) {
+    if (root.dataset.dyeingLinkBound === "1") return;
+    root.dataset.dyeingLinkBound = "1";
+
+    const body = root.querySelector('[data-dyeing-link-body="1"]');
+    const template = root.querySelector('[data-dyeing-link-empty-form="1"]');
+    const totalForms = root.querySelector('input[name$="-TOTAL_FORMS"]');
+    const addBtn = root.querySelector('[data-dyeing-link-add-row="1"]');
+
+    if (!body || !template || !totalForms || !addBtn) return;
+
+    function bindRemoveButtons(scope) {
+      scope.querySelectorAll('[data-dyeing-link-remove-row="1"]').forEach(function (btn) {
+        if (btn.dataset.bound === "1") return;
+        btn.dataset.bound = "1";
+
+        btn.addEventListener("click", function () {
+          const row = btn.closest('[data-dyeing-link-row="1"]');
+          if (!row) return;
+
+          const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+          if (deleteInput) {
+            deleteInput.checked = true;
+            row.style.display = "none";
+          } else {
+            row.remove();
+          }
+        });
+      });
+    }
+
+    if (addBtn.dataset.bound !== "1") {
+      addBtn.dataset.bound = "1";
+      addBtn.addEventListener("click", function () {
+        const formIndex = parseInt(totalForms.value || "0", 10);
+        const html = template.innerHTML.replace(/__prefix__/g, formIndex);
+
+        const wrapper = document.createElement("tbody");
+        wrapper.innerHTML = html.trim();
+
+        const row = wrapper.firstElementChild;
+        if (!row) return;
+
+        body.appendChild(row);
+        totalForms.value = formIndex + 1;
+
+        bindRemoveButtons(row);
+      });
+    }
+
+    bindRemoveButtons(root);
+  });
+}
+
+function runEmbedScripts(container) {
+  if (!container) return;
+
+  const scripts = container.querySelectorAll("script");
+  scripts.forEach((oldScript) => {
+    const newScript = document.createElement("script");
+
+    for (const attr of oldScript.attributes) {
+      newScript.setAttribute(attr.name, attr.value);
+    }
+
+    newScript.textContent = oldScript.textContent;
+    oldScript.parentNode.replaceChild(newScript, oldScript);
+  });
+}
+
+  function initMastersEmbed(mount) {
+  bindEmbedAutosubmit(mount);
+  bindMaterialSubtypeForm(mount);
+  bindBomForm(mount);
+  bindDyeingMasterForm(mount);
+}
   
   
 

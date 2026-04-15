@@ -6,14 +6,15 @@
 {% block content %}
 <style>
   :root{
-    --blue:#1c6dd8;
-    --blue-soft:rgba(28,109,216,.10);
-    --blue-border:rgba(28,109,216,.14);
-    --text-main:#111827;
-    --text-soft:#667085;
-    --line:rgba(15,23,42,.08);
-    --bg-soft:#f8fbff;
-    --save:#ee3d85;
+    --yi-text:#111827;
+    --yi-text-soft:#6b7280;
+    --yi-muted:#9ca3af;
+    --yi-line:rgba(17,24,39,.10);
+    --yi-border:#d1d5db;
+    --yi-bg:#ffffff;
+    --yi-soft:#f9fafb;
+    --yi-dark:#111827;
+    --blue: rgba(28, 109, 216, 1);
   }
 
   .canvas{
@@ -22,458 +23,389 @@
     min-width:0;
   }
 
-  .flow-page{
+  .yarn-inward-page{
     width:100%;
     min-width:0;
   }
 
-  .flow-shell{
-    position:relative;
+  .yarn-inward-shell{
     width:100%;
     min-width:0;
-    padding:18px;
-    border-radius:24px;
-    border:2px dashed #000;
-    background:#fff;
+    padding:12px;
+    border: 2px dashed black;
+    background:white;
+    border-radius: 22px;
   }
 
-  .flow-form{
+  .yarn-inward-form{
     display:grid;
-    gap:16px;
+    gap:10px;
   }
 
-  .flow-head-card{
+  .yarn-head{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:16px;
+    gap:10px;
     flex-wrap:wrap;
-    padding:14px 8px;
-    border-radius:20px;
   }
 
-  .flow-head-main{
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
+  .yarn-head-left{
     min-width:0;
   }
 
-  .flow-head-icon{
-    width:46px;
-    height:46px;
-    border-radius:14px;
-    flex:0 0 auto;
-    display:grid;
-    place-items:center;
-  }
-
-  .flow-head-icon svg{
-    width:34px;
-    height:34px;
-    display:block;
-  }
-
-  .flow-head-title{
+  .yarn-head-title{
     margin:0;
-    font-size:24px;
-    font-weight:900;
+    font-size:20px;
     line-height:1.05;
-    color:var(--text-main);
-    letter-spacing:-.02em;
+    font-weight:900;
+    color:var(--yi-dark);
   }
 
-  .flow-head-subtitle{
-    margin-top:5px;
-    font-size:12px;
-    font-weight:500;
-    color:var(--text-soft);
+  .yarn-head-subtitle{
+    margin-top:4px;
+    font-size:11px;
     line-height:1.45;
+    font-weight:600;
+    color:var(--yi-text-soft);
   }
 
-  .flow-head-actions{
+  .yarn-head-right{
     display:flex;
     align-items:center;
     gap:8px;
     flex-wrap:wrap;
-    justify-content:flex-end;
   }
 
-  .flow-btn,
-  .flow-btn-primary{
+  .yarn-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:32px;
+    padding:0 10px;
+    border-radius:999px;
+    background:#d1e0ffd5;
+    color:var(--blue);
+    font-size:11px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .yarn-btn,
+  .yarn-btn-primary{
     appearance:none;
-    border:1px solid rgba(15,23,42,.10);
-    border-radius:11px;
-    min-height:38px;
-    padding:0 13px;
+    border:none;
+    border-radius:8px;
+    min-height:34px;
+    padding:0 12px;
     font-size:12px;
     font-weight:800;
     text-decoration:none;
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    gap:8px;
     cursor:pointer;
-    transition:all .18s ease;
-    background:#fff;
-    color:var(--text-main);
-    white-space:nowrap;
+    transition:.18s ease;
   }
 
-  .flow-btn:hover{
-    background:var(--bg-soft);
-    border-color:var(--blue-border);
-    color:var(--blue);
+  .yarn-btn{
+    background:#f3f4f6;
+    color:var(--yi-dark);
   }
 
-  .flow-btn-primary{
-    border-color:transparent;
+  .yarn-btn:hover{
+    background:#e5e7eb;
+  }
+
+  .yarn-btn-primary{
+    background:var(--blue);
     color:#fff;
-    background:var(--save);
-    box-shadow:0 10px 18px rgba(28,109,216,.12);
   }
 
-  .flow-btn-primary:hover{
-    color:#fff;
-    background:#d63377;
+  .yarn-btn-primary:hover{
+    background:#000;
   }
 
-  .flow-pill{
-    display:inline-flex;
-    align-items:center;
-    min-height:38px;
-    padding:0 13px;
-    border-radius:999px;
-    background:rgba(238,61,133,.08);
-    color:var(--save);
-    border:1px solid rgba(238,61,133,.12);
-    font-size:11px;
+  .yarn-form-card{
+    padding:0;
+    background:transparent;
+  }
+
+  .yarn-form-card-title{
+    font-size:12px;
     font-weight:900;
-    letter-spacing:.02em;
-    white-space:nowrap;
+    color:var(--yi-dark);
+    margin-bottom:8px;
   }
 
-  .flow-top-grid{
+  .yarn-top-grid{
     display:grid;
-    grid-template-columns:repeat(3, minmax(0, 1fr));
-    gap:12px;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:10px;
   }
 
-  .flow-field{
+  .yarn-field{
     display:flex;
     flex-direction:column;
-    gap:5px;
+    gap:4px;
     min-width:0;
   }
 
-  .flow-field label{
+  .yarn-field label{
     font-size:10px;
-    font-weight:800;
-    color:var(--text-soft);
+    font-weight:900;
+    color:var(--yi-text-soft);
     text-transform:uppercase;
     letter-spacing:.08em;
   }
 
-  .flow-field input,
-  .flow-field textarea,
-  .flow-field select{
+  .yarn-field input,
+  .yarn-field textarea,
+  .yarn-field select{
     width:100%;
-    min-height:40px;
-    border:1px solid rgba(15,23,42,.10);
-    border-radius:12px;
-    padding:8px 11px;
-    outline:none;
+    min-height:36px;
     box-sizing:border-box;
+    border:1px solid var(--yi-border);
+    border-radius:8px;
+    padding:7px 9px;
     background:#fff;
-    color:var(--text-main);
+    color:var(--yi-dark);
     font:inherit;
-    transition:border-color .18s ease, box-shadow .18s ease;
+    outline:none;
+    transition:.18s ease;
   }
 
-  .flow-field textarea{
-    min-height:78px;
+  .yarn-field textarea{
+    min-height:74px;
     resize:vertical;
   }
 
-  .flow-field input:focus,
-  .flow-field textarea:focus,
-  .flow-field select:focus,
-  .flow-inline-input:focus{
-    border-color:rgba(28,109,216,.32);
-    box-shadow:0 0 0 3px rgba(28,109,216,.10);
-    background:#fff;
+  .yarn-field input:focus,
+  .yarn-field textarea:focus,
+  .yarn-field select:focus,
+  .yarn-inline-input:focus{
+    border-color:#9ca3af;
+    box-shadow:none;
   }
 
-  .flow-field.is-readonly input{
-    background:#f8fbff;
-    color:var(--text-main);
+  .yarn-field.is-readonly input,
+  .yarn-field.is-readonly textarea{
+    background:#f9fafb;
+    color:var(--yi-dark);
     font-weight:500;
+    font-size:15px;
   }
 
-  .flow-err{
-    color:#dc2626;
+  .yarn-err{
     font-size:11px;
     font-weight:700;
+    color:#dc2626;
   }
 
-  .flow-section{
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:18px;
+  .yarn-section{
+    border:1px solid var(--yi-line);
+    border-radius:10px;
     overflow:hidden;
-    box-shadow:0 8px 20px rgba(15,23,42,.04);
+    background:#fff;
   }
 
-  .flow-section summary{
+  .yarn-section summary{
     list-style:none;
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:12px;
+    gap:10px;
+    padding:10px 12px;
     cursor:pointer;
-    user-select:none;
-    padding:14px 14px 13px;
-    background:#fff;
+    background:#ebebeb;
+    border-bottom:1px solid transparent;
   }
 
-  .flow-section summary::-webkit-details-marker{
+  .yarn-section[open] summary{
+    border-bottom-color:var(--yi-line);
+  }
+
+  .yarn-section summary::-webkit-details-marker{
     display:none;
   }
 
-  .flow-section-head{
+  .yarn-section-head{
     display:flex;
-    align-items:center;
-    gap:10px;
+    align-items:flex-start;
+    gap:8px;
     min-width:0;
   }
 
-  .flow-section-dot{
-    width:10px;
-    height:10px;
+  .yarn-section-dot{
+    width:7px;
+    height:7px;
+    margin-top:5px;
     border-radius:999px;
-    background:var(--blue);
-    box-shadow:0 0 0 5px rgba(28,109,216,.10);
+    background:var(--yi-dark);
     flex:0 0 auto;
   }
 
-  .flow-section-title{
-    font-size:14px;
+  .yarn-section-title{
+    font-size:15px;
     font-weight:900;
-    color:var(--text-main);
+    color:var(--yi-dark);
     line-height:1.2;
-    letter-spacing:-.01em;
   }
 
-  .flow-section-meta{
-    font-size:11px;
+  .yarn-section-sub{
+    margin-top:2px;
+    font-size:10px;
+    font-weight:700;
+    color:var(--yi-text-soft);
+    line-height:1.35;
+  }
+
+  .yarn-section-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex:0 0 auto;
+  }
+
+  .yarn-section-meta{
+    font-size:10px;
     font-weight:900;
-    color:var(--blue);
-    background:rgba(28,109,216,.08);
-    border:1px solid rgba(28,109,216,.12);
+    color:var(--yi-dark);
+    background:#f3f4f6;
     border-radius:999px;
-    padding:6px 10px;
+    padding:4px 8px;
     white-space:nowrap;
   }
 
-  .flow-section-right{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex:0 0 auto;
-  }
-
-  .flow-caret-box{
-    width:25px;
-    height:25px;
+  .yarn-caret-box{
+    width:22px;
+    height:22px;
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    border-radius:8px;
+    border-radius:6px;
     background:var(--blue);
-    box-shadow:0 8px 16px rgba(28,109,216,.18);
-    transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
   }
 
-  .flow-caret{
-    width:8px;
-    height:8px;
+  .yarn-caret{
+    width:7px;
+    height:7px;
     border-right:2px solid #fff;
     border-bottom:2px solid #fff;
     transform:rotate(45deg);
-    transition:transform .18s ease;
+    transition:.18s ease;
     margin-top:-2px;
   }
 
-  .flow-section[open] .flow-caret{
+  .yarn-section[open] .yarn-caret{
     transform:rotate(225deg);
     margin-top:3px;
   }
 
-  .flow-section-body{
+  .yarn-section-body{
     display:grid;
-    gap:12px;
-    padding:5px 15px 15px;
-  }
-
-  .flow-overview-grid{
-    display:grid;
-    grid-template-columns:repeat(5, minmax(0, 1fr));
     gap:10px;
+    padding:10px 12px 12px;
   }
 
-  .flow-soft-card{
-    border-radius:16px;
-    background:#fbfdff;
-    border:1px solid rgba(28,109,216,.08);
-    padding:12px 12px 11px;
-    overflow:hidden;
+  .yarn-error-box{
+    padding:9px 10px;
+    border-radius:8px;
+    border:1px solid rgba(220,38,38,.14);
+    background:rgba(220,38,38,.04);
   }
 
-  .flow-soft-label{
-    font-size:10px;
-    font-weight:800;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    color:var(--text-soft);
-  }
-
-  .flow-soft-value{
-    margin-top:6px;
-    font-size:13px;
-    font-weight:500;
-    color:var(--text-main);
-    line-height:1.35;
-    word-break:break-word;
-  }
-
-  .flow-note-card{
-    border-radius:16px;
-    padding:12px 14px;
-    background:#f8fbff;
-    border:1px solid rgba(28,109,216,.10);
-  }
-
-  .flow-note-title{
-    font-size:10px;
-    font-weight:800;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    color:var(--text-soft);
-  }
-
-  .flow-note-value{
-    margin-top:5px;
-    font-size:12px;
-    font-weight:700;
-    color:var(--text-main);
-    line-height:1.5;
-    word-break:break-word;
-  }
-
-  .flow-error-box{
-    padding:10px 12px;
-    border-radius:12px;
-    background:rgba(239,68,68,.08);
-    border:1px solid rgba(239,68,68,.14);
-  }
-
-  .flow-table-wrap{
+  .yarn-table-wrap{
     overflow:auto;
+    border:1px solid var(--yi-line);
+    border-radius:8px;
     background:#fff;
-    border-radius:16px;
-    border:1px solid var(--line);
   }
 
-  .flow-table,
-  .flow-mini-table,
-  .flow-history-table{
+  .yarn-table,
+  .yarn-mini-table,
+  .yarn-history-table{
     width:100%;
+    min-width:820px;
     border-collapse:collapse;
   }
 
-  .flow-table{
-    min-width:860px;
-  }
-
-  .flow-mini-table,
-  .flow-history-table{
-    min-width:720px;
-  }
-
-  .flow-table th,
-  .flow-table td,
-  .flow-mini-table th,
-  .flow-mini-table td,
-  .flow-history-table th,
-  .flow-history-table td{
-    padding:10px 10px;
-    border-bottom:1px solid rgba(15,23,42,.06);
+  .yarn-table th,
+  .yarn-table td,
+  .yarn-mini-table th,
+  .yarn-mini-table td,
+  .yarn-history-table th,
+  .yarn-history-table td{
+    padding:9px 9px;
+    border-bottom:1px solid rgba(17,24,39,.06);
     text-align:left;
     vertical-align:top;
     font-size:12px;
   }
 
-  .flow-table thead th,
-  .flow-mini-table thead th,
-  .flow-history-table thead th{
+  .yarn-table thead th,
+  .yarn-mini-table thead th,
+  .yarn-history-table thead th{
     font-size:10px;
     text-transform:uppercase;
-    letter-spacing:.06em;
-    color:#475467;
+    letter-spacing:.08em;
     font-weight:900;
-    background:#eef5ff;
+    color:var(--yi-text-soft);
+    background:#f3f4f6;
     white-space:nowrap;
   }
 
-  .flow-table tbody tr:hover,
-  .flow-mini-table tbody tr:hover,
-  .flow-history-table tbody tr:hover{
-    background:#fbfdff;
+  .yarn-table tbody tr:hover,
+  .yarn-mini-table tbody tr:hover,
+  .yarn-history-table tbody tr:hover{
+    background:#fafafa;
   }
 
-  .flow-table tfoot td,
-  .flow-mini-table tfoot td{
-    background:#f8fbff;
+  .yarn-table tfoot td,
+  .yarn-mini-table tfoot td{
+    background:#fafafa;
     font-weight:900;
   }
 
-  .flow-material{
+  .yarn-material{
+    font-size:12px;
     font-weight:900;
-    color:var(--text-main);
-    word-break:break-word;
-  }
-
-  .flow-small{
-    margin-top:2px;
-    font-size:10px;
-    font-weight:700;
-    color:var(--text-soft);
+    color:var(--yi-dark);
     line-height:1.4;
     word-break:break-word;
   }
 
-  .flow-inline-input{
-    width:100%;
-    min-height:36px;
-    border:1px solid rgba(15,23,42,.10);
-    border-radius:10px;
-    padding:7px 9px;
-    outline:none;
-    box-sizing:border-box;
-    background:#fff;
-    color:var(--text-main);
-    font:inherit;
+  .yarn-small{
+    margin-top:3px;
+    font-size:10px;
+    font-weight:700;
+    color:var(--yi-text-soft);
+    line-height:1.45;
+    word-break:break-word;
   }
 
-  .flow-empty{
-    padding:14px;
+  .yarn-inline-input{
+    width:100%;
+    min-height:32px;
+    box-sizing:border-box;
+    border:1px solid var(--yi-border);
+    border-radius:8px;
+    padding:6px 8px;
+    background:#fff;
+    color:var(--yi-dark);
+    font:inherit;
+    outline:none;
+  }
+
+  .yarn-empty{
+    padding:12px;
     text-align:center;
     font-size:12px;
     font-weight:700;
-    color:var(--text-soft);
+    color:var(--yi-text-soft);
   }
 
-  .flow-actions{
+  .yarn-actions{
     display:flex;
     justify-content:flex-end;
     gap:8px;
@@ -481,152 +413,140 @@
   }
 
   @media (max-width: 1100px){
-    .flow-top-grid{
+    .yarn-top-grid{
       grid-template-columns:repeat(2, minmax(0, 1fr));
-    }
-
-    .flow-overview-grid{
-      grid-template-columns:repeat(3, minmax(0, 1fr));
     }
   }
 
   @media (max-width: 760px){
-    .flow-shell{
-      padding:14px;
-      border-radius:18px;
-    }
-
-    .flow-head-card,
-    .flow-head-actions,
-    .flow-actions{
+    .yarn-head,
+    .yarn-head-right,
+    .yarn-actions{
       flex-direction:column;
       align-items:stretch;
     }
 
-    .flow-head-actions{
-      width:100%;
-      justify-content:stretch;
+    .yarn-top-grid{
+      grid-template-columns:1fr;
     }
 
-    .flow-btn,
-    .flow-btn-primary,
-    .flow-pill{
+    .yarn-btn,
+    .yarn-btn-primary,
+    .yarn-pill{
       width:100%;
       justify-content:center;
-    }
-
-    .flow-top-grid,
-    .flow-overview-grid{
-      grid-template-columns:1fr;
     }
   }
 </style>
 
 <section class="page-section is-active">
   <div class="canvas">
-    <div class="flow-page">
-      <div class="flow-shell">
-        <form method="post" class="flow-form">
+    <div class="yarn-inward-page">
+      <div class="yarn-inward-shell">
+        <form method="post" class="yarn-inward-form">
           {% csrf_token %}
 
-          <div class="flow-head-card">
-            <div class="flow-head-main">
-              <div class="flow-head-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M7 4.75h7.8l3.45 3.45V18.5a1.75 1.75 0 0 1-1.75 1.75H7A1.75 1.75 0 0 1 5.25 18.5v-12A1.75 1.75 0 0 1 7 4.75Z" stroke="var(--blue)" stroke-width="1.8" stroke-linejoin="round"/>
-                  <path d="M14.8 4.9v3a1 1 0 0 0 1 1h3" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M12 10v5.2" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M9.8 13.1 12 15.3l2.2-2.2" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+          <div class="yarn-head">
+            <div class="yarn-head-left">
+              <h1 class="yarn-head-title">Greige Inward</h1>
+              <div class="yarn-head-subtitle">
+                {% if editing_inward %}
+                  Edit inward {{ editing_inward.inward_number }} against {{ po.system_number }}{% if po.vendor %} · {{ po.vendor.name }}{% endif %}
+                {% else %}
+                  Add inward quantity against {{ po.system_number }}{% if po.vendor %} · {{ po.vendor.name }}{% endif %}
+                {% endif %}
               </div>
-              <div>
-                <h1 class="flow-head-title">Greige Inward</h1>
-                <div class="flow-head-subtitle">
-                  Add inward quantity against {{ po.system_number }}{% if po.vendor %} · {{ po.vendor.name }}{% endif %}{% if po.source_yarn_po %} · Source Yarn: {{ po.source_yarn_po.system_number }}{% endif %}
+            </div>
+
+            <div class="yarn-head-right">
+              <div class="yarn-pill">Remaining Qty: {{ po.remaining_qty_total|default:"0.00" }}</div>
+              <a class="yarn-btn" href="{% url 'accounts:greigepo_list' %}">Back</a>
+            </div>
+          </div>
+
+          <div class="yarn-form-card">
+            <div class="yarn-form-card-title">Inward Entry Information</div>
+
+            <div class="yarn-top-grid">
+              <div class="yarn-field is-readonly">
+                <label>PO Number</label>
+                <input type="text" value="{{ po.system_number }}" readonly>
+              </div>
+
+              <div class="yarn-field is-readonly">
+                <label>Greige Inward No</label>
+                <input type="text" value="{{ next_inward_number_preview|default:'Auto' }}" readonly>
+              </div>
+
+              <div class="yarn-field">
+                <label for="{{ inward_form.vendor.id_for_label }}">Inward Vendor</label>
+                {{ inward_form.vendor }}
+                {% for err in inward_form.vendor.errors %}
+                  <div class="yarn-err">{{ err }}</div>
+                {% endfor %}
+              </div>
+
+              <div class="yarn-field">
+                <label for="{{ inward_form.inward_date.id_for_label }}">Date</label>
+                {{ inward_form.inward_date }}
+                {% for err in inward_form.inward_date.errors %}
+                  <div class="yarn-err">{{ err }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <details class="yarn-section" open>
+            <summary>
+              <div class="yarn-section-head">
+                <div class="yarn-section-dot"></div>
+                <div>
+                  <div class="yarn-section-title">PO Details</div>
                 </div>
               </div>
-            </div>
 
-            <div class="flow-head-actions">
-              <div class="flow-pill">Remaining Qty: {{ po.remaining_qty_total|default:"0.00" }}</div>
-              <a class="flow-btn" href="{% url 'accounts:greigepo_list' %}">Back</a>
-            </div>
-          </div>
-
-          <div class="flow-top-grid">
-            <div class="flow-field is-readonly">
-              <label>PO Number</label>
-              <input type="text" value="{{ po.system_number }}" readonly>
-            </div>
-
-            <div class="flow-field is-readonly">
-              <label>Greige Inward No</label>
-              <input type="text" value="Auto Generated" readonly>
-            </div>
-
-            <div class="flow-field">
-              <label for="{{ inward_form.inward_date.id_for_label }}">Date</label>
-              {{ inward_form.inward_date }}
-              {% for err in inward_form.inward_date.errors %}
-                <div class="flow-err">{{ err }}</div>
-              {% endfor %}
-            </div>
-          </div>
-
-          <details class="flow-section" open>
-            <summary>
-              <div class="flow-section-head">
-                <div class="flow-section-dot"></div>
-                <div class="flow-section-title">PO Details</div>
-              </div>
-              <div class="flow-section-right">
-                <div class="flow-section-meta">{{ po.items.count }} item{{ po.items.count|pluralize }}</div>
-                <span class="flow-caret-box">
-                  <span class="flow-caret"></span>
-                </span>
+              <div class="yarn-section-right">
+                <div class="yarn-section-meta">{{ po.items.count }} item{{ po.items.count|pluralize }}</div>
+                <span class="yarn-caret-box"><span class="yarn-caret"></span></span>
               </div>
             </summary>
 
-            <div class="flow-section-body">
-              <div class="flow-overview-grid">
-                <div class="flow-soft-card">
-                  <div class="flow-soft-label">Vendor</div>
-                  <div class="flow-soft-value">{{ po.vendor.name|default:"—" }}</div>
+            <div class="yarn-section-body">
+              <div class="yarn-top-grid">
+                <div class="yarn-field is-readonly">
+                  <label>Vendor</label>
+                  <input type="text" value="{{ po.vendor.name|default:'—' }}" readonly>
                 </div>
 
-                <div class="flow-soft-card">
-                  <div class="flow-soft-label">PO Date</div>
-                  <div class="flow-soft-value">{{ po.po_date|date:"d-m-Y"|default:"—" }}</div>
+                <div class="yarn-field is-readonly">
+                  <label>PO Date</label>
+                  <input type="text" value="{{ po.po_date|date:'d-m-Y'|default:'—' }}" readonly>
                 </div>
 
-                <div class="flow-soft-card">
-                  <div class="flow-soft-label">Firm</div>
-                  <div class="flow-soft-value">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
+                <div class="yarn-field is-readonly">
+                  <label>Source Yarn PO</label>
+                  <input type="text" value="{% if po.source_yarn_po %}{{ po.source_yarn_po.system_number }}{% else %}—{% endif %}" readonly>
                 </div>
 
-                <div class="flow-soft-card">
-                  <div class="flow-soft-label">Ordered</div>
-                  <div class="flow-soft-value">{{ po.total_weight|default:"0.00" }}</div>
-                </div>
-
-                <div class="flow-soft-card">
-                  <div class="flow-soft-label">Received</div>
-                  <div class="flow-soft-value">{{ po.total_inward_qty|default:"0.00" }}</div>
+                <div class="yarn-field is-readonly">
+                  <label>Ordered Qty</label>
+                  <input type="text" value="{{ po.total_weight|default:'0.00' }}" readonly>
                 </div>
               </div>
 
               {% if po.shipping_address %}
-                <div class="flow-note-card">
-                  <div class="flow-note-title">Shipping Address</div>
-                  <div class="flow-note-value">{{ po.shipping_address }}</div>
-                </div>
+              <div class="yarn-field is-readonly">
+                <label>Shipping Address</label>
+                <textarea readonly>{{ po.shipping_address }}</textarea>
+              </div>
               {% endif %}
 
-              <div class="flow-table-wrap">
-                <table class="flow-mini-table">
+              <div class="yarn-table-wrap">
+                <table class="yarn-mini-table">
                   <thead>
                     <tr>
-                      <th>Fabric</th>
+                      <th>Greige</th>
+                      <th>Yarn Name</th>
                       <th>Unit</th>
                       <th>Ordered</th>
                       <th>Received</th>
@@ -637,8 +557,12 @@
                     {% for item in po.items.all %}
                     <tr>
                       <td>
-                        <div class="flow-material">{{ item.fabric_name|default:"Greige Item" }}</div>
+                        <div class="yarn-material">{{ item.fabric_name|default:"—" }}</div>
+                        <div class="yarn-small">
+                          {% if item.remark %}{{ item.remark }}{% else %}Greige item{% endif %}
+                        </div>
                       </td>
+                      <td>{{ item.yarn_name|default:"—" }}</td>
                       <td>{{ item.unit|default:"—" }}</td>
                       <td>{{ item.quantity|default:"0.00" }}</td>
                       <td>{{ item.inward_qty_total|default:"0.00" }}</td>
@@ -646,7 +570,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                      <td colspan="5" class="flow-empty">No items found.</td>
+                      <td colspan="6" class="yarn-empty">No items found.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -655,46 +579,47 @@
             </div>
           </details>
 
-          <details class="flow-section" open>
+          <details class="yarn-section" open>
             <summary>
-              <div class="flow-section-head">
-                <div class="flow-section-dot"></div>
-                <div class="flow-section-title">Inward Details</div>
+              <div class="yarn-section-head">
+                <div class="yarn-section-dot"></div>
+                <div>
+                  <div class="yarn-section-title">Inward Details</div>
+                </div>
               </div>
-              <div class="flow-section-right">
-                <span class="flow-caret-box">
-                  <span class="flow-caret"></span>
-                </span>
+
+              <div class="yarn-section-right">
+                <div class="yarn-section-meta">Entry Section</div>
+                <span class="yarn-caret-box"><span class="yarn-caret"></span></span>
               </div>
             </summary>
 
-            <div class="flow-section-body">
-              <div class="flow-field">
+            <div class="yarn-section-body">
+              <div class="yarn-field">
                 <label for="{{ inward_form.notes.id_for_label }}">Notes</label>
                 {{ inward_form.notes }}
                 {% for err in inward_form.notes.errors %}
-                  <div class="flow-err">{{ err }}</div>
+                  <div class="yarn-err">{{ err }}</div>
                 {% endfor %}
                 {% for err in inward_form.non_field_errors %}
-                  <div class="flow-err">{{ err }}</div>
+                  <div class="yarn-err">{{ err }}</div>
                 {% endfor %}
               </div>
 
-              {% if line_rows %}
-                {% for row in line_rows %}
-                  {% if row.error %}
-                    {% if forloop.first %}<div class="flow-error-box">{% endif %}
-                      <div class="flow-err">{{ row.error }}</div>
-                    {% if forloop.last %}</div>{% endif %}
-                  {% endif %}
+              {% if item_errors %}
+              <div class="yarn-error-box">
+                {% for item_id, err in item_errors.items %}
+                  <div class="yarn-err">{{ err }}</div>
                 {% endfor %}
+              </div>
               {% endif %}
 
-              <div class="flow-table-wrap">
-                <table class="flow-table">
+              <div class="yarn-table-wrap">
+                <table class="yarn-table">
                   <thead>
                     <tr>
-                      <th>Fabric</th>
+                      <th>Greige</th>
+                      <th>Yarn Name</th>
                       <th>Unit</th>
                       <th>Ordered</th>
                       <th>Received</th>
@@ -705,49 +630,47 @@
                   </thead>
                   <tbody>
                     {% for row in line_rows %}
-                    {% with item=row.item %}
                     <tr>
                       <td>
-                        <div class="flow-material">{{ item.fabric_name|default:"Greige Item" }}</div>
+                        <div class="yarn-material">{{ row.item.fabric_name|default:"—" }}</div>
+                        <div class="yarn-small">
+                          {% if row.item.remark %}{{ row.item.remark }}{% else %}Greige item{% endif %}
+                        </div>
                       </td>
-                      <td>{{ item.unit|default:"—" }}</td>
-                      <td>{{ item.quantity|default:"0.00" }}</td>
-                      <td>{{ item.inward_qty_total|default:"0.00" }}</td>
-                      <td>{{ item.remaining_qty_total|default:"0.00" }}</td>
+                      <td>{{ row.item.yarn_name|default:"—" }}</td>
+                      <td>{{ row.item.unit|default:"—" }}</td>
+                      <td>{{ row.item.quantity|default:"0.00" }}</td>
+                      <td>{{ row.item.inward_qty_total|default:"0.00" }}</td>
+                      <td>{{ row.item.remaining_qty_total|default:"0.00" }}</td>
                       <td>
                         <input
-                          class="flow-inline-input"
+                          class="yarn-inline-input"
                           type="number"
                           step="0.01"
                           min="0"
-                          name="qty_{{ item.id }}"
+                          name="qty_{{ row.item.id }}"
                           value="{{ row.qty_value }}"
                           placeholder="0.00"
                         >
                         {% if row.error %}
-                          <div class="flow-err" style="margin-top:6px;">{{ row.error }}</div>
+                          <div class="yarn-err" style="margin-top:6px;">{{ row.error }}</div>
                         {% endif %}
                       </td>
                       <td>
                         <input
-                          class="flow-inline-input"
+                          class="yarn-inline-input"
                           type="text"
-                          name="remark_{{ item.id }}"
+                          name="remark_{{ row.item.id }}"
                           value="{{ row.remark_value }}"
                           placeholder="Remark"
                         >
                       </td>
                     </tr>
-                    {% endwith %}
-                    {% empty %}
-                    <tr>
-                      <td colspan="7" class="flow-empty">No greige lines available for inward.</td>
-                    </tr>
                     {% endfor %}
                   </tbody>
                   <tfoot>
                     <tr>
-                      <td colspan="2">Totals</td>
+                      <td colspan="3">Totals</td>
                       <td>{{ po.total_weight|default:"0.00" }}</td>
                       <td>{{ po.total_inward_qty|default:"0.00" }}</td>
                       <td colspan="3">Remaining: {{ po.remaining_qty_total|default:"0.00" }}</td>
@@ -758,28 +681,31 @@
             </div>
           </details>
 
-          <details class="flow-section" open>
+          <details class="yarn-section">
             <summary>
-              <div class="flow-section-head">
-                <div class="flow-section-dot"></div>
-                <div class="flow-section-title">Inward History</div>
+              <div class="yarn-section-head">
+                <div class="yarn-section-dot"></div>
+                <div>
+                  <div class="yarn-section-title">Inward History</div>
+                </div>
               </div>
-              <div class="flow-section-right">
-                <span class="flow-caret-box">
-                  <span class="flow-caret"></span>
-                </span>
+
+              <div class="yarn-section-right">
+                <div class="yarn-section-meta">{{ existing_inwards|length }} record{{ existing_inwards|length|pluralize }}</div>
+                <span class="yarn-caret-box"><span class="yarn-caret"></span></span>
               </div>
             </summary>
 
-            <div class="flow-section-body">
-              <div class="flow-table-wrap">
-                <table class="flow-history-table">
+            <div class="yarn-section-body">
+              <div class="yarn-table-wrap">
+                <table class="yarn-history-table">
                   <thead>
                     <tr>
-                      <th>Fabric</th>
+                      <th>Greige</th>
                       <th>Order Qty</th>
                       <th>Inward No</th>
                       <th>Date</th>
+                      <th>Vendor</th>
                       <th>Notes</th>
                       <th>Received Qty</th>
                       <th>Remark</th>
@@ -787,20 +713,21 @@
                   </thead>
                   <tbody>
                     {% for inward in existing_inwards %}
-                      {% for inward_item in inward.items.all %}
+                      {% for row in inward.items.all %}
                       <tr>
-                        <td>{{ inward_item.po_item.fabric_name|default:"Greige Item" }}</td>
-                        <td>{{ inward_item.po_item.quantity|default:"0.00" }}</td>
+                        <td>{{ row.po_item.fabric_name|default:"Item" }}</td>
+                        <td>{{ row.po_item.quantity|default:"0.00" }}</td>
                         <td>{{ inward.inward_number }}</td>
                         <td>{{ inward.inward_date|date:"d-m-Y" }}</td>
+                        <td>{% if inward.vendor %}{{ inward.vendor.name }}{% else %}—{% endif %}</td>
                         <td>{{ inward.notes|default:"—" }}</td>
-                        <td>{{ inward_item.quantity }}</td>
-                        <td>{{ inward_item.remark|default:"—" }}</td>
+                        <td>{{ row.quantity }}</td>
+                        <td>{{ row.remark|default:"—" }}</td>
                       </tr>
                       {% endfor %}
                     {% empty %}
                     <tr>
-                      <td colspan="7" class="flow-empty">No inward history.</td>
+                      <td colspan="8" class="yarn-empty">No inward history.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -809,9 +736,11 @@
             </div>
           </details>
 
-          <div class="flow-actions">
-            <a class="flow-btn" href="{% url 'accounts:greigepo_list' %}">Cancel</a>
-            <button type="submit" class="flow-btn-primary">Save Greige Inward</button>
+          <div class="yarn-actions">
+            <a class="yarn-btn" href="{% url 'accounts:greigepo_list' %}">Cancel</a>
+            <button type="submit" class="yarn-btn-primary">
+              {% if editing_inward %}Update Inward{% else %}Save Inward{% endif %}
+            </button>
           </div>
         </form>
       </div>

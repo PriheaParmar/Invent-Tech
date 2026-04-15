@@ -124,10 +124,19 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
-LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "dashboard"
-LOGOUT_REDIRECT_URL = "login"
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "accounts:dashboard"
+LOGOUT_REDIRECT_URL = "accounts:login"
+
+# Email backend for real password reset emails
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "yourgmail@gmail.com"
+EMAIL_HOST_PASSWORD = "your-16-char-app-password"
+DEFAULT_FROM_EMAIL = f"InventTech <{EMAIL_HOST_USER}>"
+EMAIL_TIMEOUT = 20
 
 # Session cookie lives for 30 days
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days

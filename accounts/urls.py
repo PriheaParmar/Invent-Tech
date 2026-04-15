@@ -168,18 +168,6 @@ urlpatterns = [
     path("utilities/pattern-types/<int:pk>/edit/", views.patterntype_edit, name="patterntype_edit"),
     path("utilities/pattern-types/<int:pk>/delete/", views.patterntype_delete, name="patterntype_delete"),
 
-    # BOM
-    path("utilities/bom/", views.bom_list, name="bom_list"),
-    path("utilities/bom/add/", views.bom_create, name="bom_add"),
-    path("utilities/bom/<int:pk>/edit/", views.bom_update, name="bom_edit"),
-    path("utilities/bom/<int:pk>/delete/", views.bom_delete, name="bom_delete"),
-
-    # Programs
-    path("production/programs/", views.program_list, name="program_list"),
-    path("production/programs/add/", views.program_create, name="program_add"),
-    path("production/programs/<int:pk>/edit/", views.program_update, name="program_edit"),
-    path("production/programs/<int:pk>/delete/", views.program_delete, name="program_delete"),
-    path("production/programs/bom-summary/<int:bom_id>/", views.program_bom_summary, name="program_bom_summary"),
 
     # Expenses
     path("utilities/expenses/", views.expense_list_create, name="expense_list"),
@@ -215,4 +203,31 @@ urlpatterns = [
     path("utilities/sub-categories/add/", views.subcategory_create, name="subcategory_add"),
     path("utilities/sub-categories/<int:pk>/edit/", views.subcategory_edit, name="subcategory_edit"),
     path("utilities/sub-categories/<int:pk>/delete/", views.subcategory_delete, name="subcategory_delete"),
+
+    # BOM (Bill of Materials)
+ # BOM
+    path("utilities/bom/", views.bom_list, name="bom_list"),
+    path("utilities/bom/add/", views.bom_create, name="bom_add"),
+    path("utilities/bom/<int:pk>/edit/", views.bom_update, name="bom_edit"),
+    path("utilities/bom/<int:pk>/delete/", views.bom_delete, name="bom_delete"),
+
+        # Dyeing Material Linking
+    path("utilities/dyeing-material-links/", views.dyeing_material_link_list, name="dyeing_material_link_list"),
+    path("utilities/dyeing-material-links/add/", views.dyeing_material_link_create, name="dyeing_material_link_add"),
+    path("utilities/dyeing-material-links/<int:pk>/edit/", views.dyeing_material_link_update, name="dyeing_material_link_edit"),
+    path("utilities/dyeing-material-links/<int:pk>/delete/", views.dyeing_material_link_delete, name="dyeing_material_link_delete"),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ]

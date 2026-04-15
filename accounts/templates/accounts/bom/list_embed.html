@@ -1,0 +1,83 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/bom.css' %}?v=1">
+
+<div class="jobbers-embed">
+  <section class="jb-panel">
+    {% include "accounts/_messages_embed.html" %}
+
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Bill of Materials</div>
+        <div class="jb-sub">Manage all BOMs</div>
+      </div>
+
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+
+    <div class="jb-tools">
+      <form method="get" class="jb-search">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+        <input type="text" name="q" value="{{ q }}" placeholder="Search BOM..." />
+      </form>
+
+      <a href="{% url 'accounts:bom_add' %}{% if not full_page %}?embed=1{% endif %}" class="jb-btn">
+        + Add BOM
+      </a>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>BOM Code</th>
+            <th>SKU</th>
+            <th>Product</th>
+            <th>Catalogue</th>
+            <th>Brand</th>
+            <th>Category</th>
+            <th>Size Type</th>
+            <th>Status</th>
+            <th style="width:140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in boms %}
+          <tr>
+            <td>{{ b.bom_code }}</td>
+            <td>{{ b.sku }}</td>
+            <td>{{ b.product_name }}</td>
+            <td>{{ b.catalogue|default:"-" }}</td>
+            <td>{{ b.brand|default:"-" }}</td>
+            <td>{{ b.category|default:"-" }}</td>
+            <td>{{ b.size_type|default:"-" }}</td>
+            <td>{{ b.status|title }}</td>
+            <td>
+              <div class="jb-row-actions">
+                <a href="{% url 'accounts:bom_edit' b.id %}{% if not full_page %}?embed=1{% endif %}" class="jb-actionlink">Edit</a>
+
+                <form method="post" action="{% url 'accounts:bom_delete' b.id %}{% if not full_page %}?embed=1{% endif %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="jb-actionlink jb-actionlink--danger">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="jb-empty">No BOM found</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

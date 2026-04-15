@@ -1,0 +1,1081 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/bom.css' %}?v=4">
+
+<div class="jobbers-embed" data-bom-root>
+  <section class="jb-panel">
+    {% include "accounts/_messages_embed.html" %}
+
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">{% if mode == "edit" %}Edit BOM{% else %}Create BOM{% endif %}</div>
+        <div class="jb-sub">BOM master with product details, images, materials, accessories, and jobber mapping</div>
+      </div>
+
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+
+    <form method="post"
+          enctype="multipart/form-data"
+          action="{% if mode == 'edit' %}{% url 'accounts:bom_edit' bom.id %}{% else %}{% url 'accounts:bom_add' %}{% endif %}{% if not full_page %}?embed=1{% endif %}">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      {% if form.non_field_errors %}
+      <div class="mf-errors" style="margin-bottom:14px;">
+        {% for error in form.non_field_errors %}
+        <p>{{ error }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="bom-block">
+        <div class="bom-block-title">Product Details</div>
+
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.bom_code.id_for_label }}">BOM Code</label>
+            {{ form.bom_code }}
+            {% if form.bom_code.errors %}
+            <div class="mf-errors">{% for error in form.bom_code.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.sku.id_for_label }}">SKU</label>
+            {{ form.sku }}
+            {% if form.sku.errors %}
+            <div class="mf-errors">{% for error in form.sku.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.product_name.id_for_label }}">Product Name</label>
+            {{ form.product_name }}
+            {% if form.product_name.errors %}
+            <div class="mf-errors">{% for error in form.product_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.character_name.id_for_label }}">Character Name</label>
+            {{ form.character_name }}
+            {% if form.character_name.errors %}
+            <div class="mf-errors">{% for error in form.character_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.license_name.id_for_label }}">License Name</label>
+            {{ form.license_name }}
+            {% if form.license_name.errors %}
+            <div class="mf-errors">{% for error in form.license_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.gender.id_for_label }}">Gender</label>
+            {{ form.gender }}
+            {% if form.gender.errors %}
+            <div class="mf-errors">{% for error in form.gender.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.size_type.id_for_label }}">Size Type</label>
+            {{ form.size_type }}
+            {% if form.size_type.errors %}
+            <div class="mf-errors">{% for error in form.size_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.color.id_for_label }}">Color</label>
+            {{ form.color }}
+            {% if form.color.errors %}
+            <div class="mf-errors">{% for error in form.color.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.drawcord.id_for_label }}">Drawcord</label>
+            {{ form.drawcord }}
+            {% if form.drawcord.errors %}
+            <div class="mf-errors">{% for error in form.drawcord.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.status.id_for_label }}">Status</label>
+            {{ form.status }}
+            {% if form.status.errors %}
+            <div class="mf-errors">{% for error in form.status.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="bom-block" style="margin-top:18px;">
+        <div class="bom-block-title">Classification & Pricing</div>
+
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.catalogue.id_for_label }}">Catalogue</label>
+            {{ form.catalogue }}
+            {% if form.catalogue.errors %}
+            <div class="mf-errors">{% for error in form.catalogue.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.brand.id_for_label }}">Brand</label>
+            {{ form.brand }}
+            {% if form.brand.errors %}
+            <div class="mf-errors">{% for error in form.brand.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.category.id_for_label }}">Category</label>
+            {{ form.category }}
+            {% if form.category.errors %}
+            <div class="mf-errors">{% for error in form.category.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.main_category.id_for_label }}">Main Category</label>
+            {{ form.main_category }}
+            {% if form.main_category.errors %}
+            <div class="mf-errors">{% for error in form.main_category.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.sub_category.id_for_label }}">Sub Category</label>
+            {{ form.sub_category }}
+            {% if form.sub_category.errors %}
+            <div class="mf-errors">{% for error in form.sub_category.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.pattern_type.id_for_label }}">Pattern Type</label>
+            {{ form.pattern_type }}
+            {% if form.pattern_type.errors %}
+            <div class="mf-errors">{% for error in form.pattern_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.mrp.id_for_label }}">MRP</label>
+            {{ form.mrp }}
+            {% if form.mrp.errors %}
+            <div class="mf-errors">{% for error in form.mrp.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.tie_dye_price.id_for_label }}">Tie Dye Price</label>
+            {{ form.tie_dye_price }}
+            {% if form.tie_dye_price.errors %}
+            <div class="mf-errors">{% for error in form.tie_dye_price.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.price.id_for_label }}">Price</label>
+            {{ form.price }}
+            {% if form.price.errors %}
+            <div class="mf-errors">{% for error in form.price.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.selling_price.id_for_label }}">Selling Price</label>
+            {{ form.selling_price }}
+            {% if form.selling_price.errors %}
+            <div class="mf-errors">{% for error in form.selling_price.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.maintenance_price.id_for_label }}">Maintenance Price</label>
+            {{ form.maintenance_price }}
+            {% if form.maintenance_price.errors %}
+            <div class="mf-errors">{% for error in form.maintenance_price.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+          <div class="mf-field">
+  <label for="{{ form.damage_percent.id_for_label }}">Damage %</label>
+  {{ form.damage_percent }}
+  {% if form.damage_percent.errors %}
+  <div class="mf-errors">{% for error in form.damage_percent.errors %}<p>{{ error }}</p>{% endfor %}</div>
+  {% endif %}
+</div>
+        </div>
+      </div>
+
+      <div class="bom-block" style="margin-top:18px;">
+        <div class="bom-block-head">
+          <div class="bom-block-title">Product Images</div>
+          <button type="button" class="jb-btn-light bom-add-btn" id="add-image-row">+ Add Image</button>
+        </div>
+
+        {{ image_formset.management_form }}
+
+        {% if image_formset.non_form_errors %}
+        <div class="mf-errors" style="margin-bottom:14px;">
+          {% for error in image_formset.non_form_errors %}
+          <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="bom-tablewrap">
+          <table class="bom-table">
+            <thead>
+              <tr>
+                <th>Preview</th>
+                <th>Upload Image</th>
+                <th style="width:90px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="image-rows">
+              {% for row in image_formset %}
+              <tr class="bom-image-row">
+                <td style="display:none;">
+                  {{ row.id }}
+                  {{ row.sort_order }}
+                  {% if row.DELETE %}{{ row.DELETE }}{% endif %}
+                </td>
+
+                <td>
+                  {% if row.instance.pk and row.instance.image %}
+                    <img src="{{ row.instance.image.url }}" class="bom-image-preview" alt="BOM image preview" style="max-width:72px; max-height:72px; border-radius:10px; object-fit:cover;">
+                  {% else %}
+                    <img src="" class="bom-image-preview" alt="BOM image preview" style="display:none; max-width:72px; max-height:72px; border-radius:10px; object-fit:cover;">
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.image }}
+                  {% if row.image.errors %}
+                  <div class="mf-errors">{% for error in row.image.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <button type="button" class="bom-remove-btn">Remove</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bom-block" style="margin-top:18px;">
+        <div class="bom-block-head">
+          <div class="bom-block-title">Materials</div>
+          <button type="button" class="jb-btn-light bom-add-btn" id="add-material-row">+ Add Material</button>
+        </div>
+
+        {{ material_formset.management_form }}
+
+        {% if material_formset.non_form_errors %}
+        <div class="mf-errors" style="margin-bottom:14px;">
+          {% for error in material_formset.non_form_errors %}
+          <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="bom-tablewrap">
+          <table class="bom-table">
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Unit</th>
+                <th>Cost / Unit</th>
+                <th>Avg</th>
+                <th>Cost</th>
+                <th style="width:90px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="material-rows">
+              {% for row in material_formset %}
+              <tr class="bom-form-row">
+                <td style="display:none;">
+                  {{ row.id }}
+                  {{ row.sort_order }}
+                  {% if row.DELETE %}{{ row.DELETE }}{% endif %}
+                </td>
+
+                <td>
+                  {{ row.material }}
+                  {% if row.material.errors %}
+                  <div class="mf-errors">{% for error in row.material.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.unit }}
+                  {% if row.unit.errors %}
+                  <div class="mf-errors">{% for error in row.unit.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.cost_per_unit }}
+                  {% if row.cost_per_unit.errors %}
+                  <div class="mf-errors">{% for error in row.cost_per_unit.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.avg }}
+                  {% if row.avg.errors %}
+                  <div class="mf-errors">{% for error in row.avg.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.cost }}
+                  {% if row.cost.errors %}
+                  <div class="mf-errors">{% for error in row.cost.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <button type="button" class="bom-remove-btn">Remove</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bom-block" style="margin-top:18px;">
+        <div class="bom-block-head">
+          <div class="bom-block-title">Accessories</div>
+          <button type="button" class="jb-btn-light bom-add-btn" id="add-accessory-row">+ Add Accessory</button>
+        </div>
+
+        {{ accessory_formset.management_form }}
+
+        {% if accessory_formset.non_form_errors %}
+        <div class="mf-errors" style="margin-bottom:14px;">
+          {% for error in accessory_formset.non_form_errors %}
+          <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="bom-tablewrap">
+          <table class="bom-table">
+            <thead>
+              <tr>
+                <th>Accessory</th>
+                <th>Unit</th>
+                <th>Cost / Unit</th>
+                <th>Avg</th>
+                <th>Cost</th>
+                <th style="width:90px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="accessory-rows">
+              {% for row in accessory_formset %}
+              <tr class="bom-form-row">
+                <td style="display:none;">
+                  {{ row.id }}
+                  {{ row.sort_order }}
+                  {% if row.DELETE %}{{ row.DELETE }}{% endif %}
+                </td>
+
+                <td>
+                  {{ row.accessory }}
+                  {% if row.accessory.errors %}
+                  <div class="mf-errors">{% for error in row.accessory.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.unit }}
+                  {% if row.unit.errors %}
+                  <div class="mf-errors">{% for error in row.unit.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.cost_per_unit }}
+                  {% if row.cost_per_unit.errors %}
+                  <div class="mf-errors">{% for error in row.cost_per_unit.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.avg }}
+                  {% if row.avg.errors %}
+                  <div class="mf-errors">{% for error in row.avg.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.cost }}
+                  {% if row.cost.errors %}
+                  <div class="mf-errors">{% for error in row.cost.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <button type="button" class="bom-remove-btn">Remove</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bom-block" style="margin-top:18px;">
+        <div class="bom-block-head">
+          <div class="bom-block-title">Map Jobber Type Process</div>
+          <button type="button" class="jb-btn-light bom-add-btn" id="add-jobber-process-row">+ Add Process</button>
+        </div>
+
+        {{ jobber_process_formset.management_form }}
+
+        {% if jobber_process_formset.non_form_errors %}
+        <div class="mf-errors" style="margin-bottom:14px;">
+          {% for error in jobber_process_formset.non_form_errors %}
+          <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="bom-tablewrap">
+          <table class="bom-table">
+            <thead>
+              <tr>
+                <th>Jobber Type</th>
+                <th>Jobber Type Price (₹)</th>
+                <th style="width:90px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="jobber-process-rows">
+              {% for row in jobber_process_formset %}
+              <tr class="bom-jobber-process-row">
+                <td style="display:none;">
+                  {{ row.id }}
+                  {{ row.sort_order }}
+                  {% if row.DELETE %}{{ row.DELETE }}{% endif %}
+                </td>
+
+                <td>
+                  {{ row.jobber_type }}
+                  {% if row.jobber_type.errors %}
+                  <div class="mf-errors">{% for error in row.jobber_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.price }}
+                  {% if row.price.errors %}
+                  <div class="mf-errors">{% for error in row.price.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <button type="button" class="bom-remove-btn">Remove</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bom-block" style="margin-top:18px;">
+        <div class="bom-block-head">
+          <div class="bom-block-title">Jobber Details</div>
+          <button type="button" class="jb-btn-light bom-add-btn" id="add-jobber-detail-row">+ Add Jobber</button>
+        </div>
+
+        {{ jobber_detail_formset.management_form }}
+
+        {% if jobber_detail_formset.non_form_errors %}
+        <div class="mf-errors" style="margin-bottom:14px;">
+          {% for error in jobber_detail_formset.non_form_errors %}
+          <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="bom-tablewrap">
+          <table class="bom-table">
+            <thead>
+              <tr>
+                <th>Jobber Name</th>
+                <th>Jobber Type</th>
+                <th>Jobber Price (₹)</th>
+                <th style="width:90px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="jobber-detail-rows">
+              {% for row in jobber_detail_formset %}
+              <tr class="bom-jobber-detail-row">
+                <td style="display:none;">
+                  {{ row.id }}
+                  {{ row.sort_order }}
+                  {% if row.DELETE %}{{ row.DELETE }}{% endif %}
+                </td>
+
+                <td>
+                  {{ row.jobber }}
+                  {% if row.jobber.errors %}
+                  <div class="mf-errors">{% for error in row.jobber.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.jobber_type }}
+                  {% if row.jobber_type.errors %}
+                  <div class="mf-errors">{% for error in row.jobber_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {{ row.price }}
+                  {% if row.price.errors %}
+                  <div class="mf-errors">{% for error in row.price.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <button type="button" class="bom-remove-btn">Remove</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="bom-block" style="margin-top:18px;">
+  <div class="bom-block-head">
+    <div class="bom-block-title">Expense</div>
+    <button type="button" class="jb-btn-light bom-add-btn" id="add-expense-row">+ Add Expense</button>
+  </div>
+
+  {{ expense_formset.management_form }}
+
+  {% if expense_formset.non_form_errors %}
+  <div class="mf-errors" style="margin-bottom:14px;">
+    {% for error in expense_formset.non_form_errors %}
+    <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="bom-tablewrap">
+    <table class="bom-table">
+      <thead>
+        <tr>
+          <th>Factory Expense</th>
+          <th>Price (₹)</th>
+          <th style="width:90px;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="expense-rows">
+        {% for row in expense_formset %}
+        <tr class="bom-expense-row">
+          <td style="display:none;">
+            {{ row.id }}
+            {{ row.sort_order }}
+            {% if row.DELETE %}{{ row.DELETE }}{% endif %}
+          </td>
+
+          <td>
+            {{ row.expense }}
+            {% if row.expense.errors %}
+            <div class="mf-errors">{% for error in row.expense.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </td>
+
+          <td>
+            {{ row.price }}
+            {% if row.price.errors %}
+            <div class="mf-errors">{% for error in row.price.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </td>
+
+          <td>
+            <button type="button" class="bom-remove-btn">Remove</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="mf-grid" style="margin-top:16px;">
+  <div class="mf-field">
+    <label>Base Price (₹)</label>
+    <input type="number" id="bom-base-price-preview" value="{{ form.price.value|default_if_none:'0' }}" readonly>
+  </div>
+
+  <div class="mf-field">
+    <label>Total Expense (₹)</label>
+    <input type="number" id="bom-expense-total" value="0" readonly>
+  </div>
+
+  <div class="mf-field">
+    <label>Damage Amount (₹)</label>
+    <input type="number" id="bom-damage-amount" value="0" readonly>
+  </div>
+
+  <div class="mf-field">
+    <label for="{{ form.final_price.id_for_label }}">Final Price (₹)</label>
+    {{ form.final_price }}
+    {% if form.final_price.errors %}
+    <div class="mf-errors">{% for error in form.final_price.errors %}<p>{{ error }}</p>{% endfor %}</div>
+    {% endif %}
+  </div>
+</div>
+  </div>
+</div>
+      <div class="bom-block" style="margin-top:18px;">
+        <div class="bom-block-title">Notes</div>
+
+        <div class="mf-grid">
+          <div class="mf-field mf-field--full">
+            <label for="{{ form.notes.id_for_label }}">Notes</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+            <div class="mf-errors">{% for error in form.notes.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-actions">
+        <button type="submit" class="jb-btn">{% if mode == "edit" %}Update BOM{% else %}Save BOM{% endif %}</button>
+        <a href="{% url 'accounts:bom_list' %}{% if not full_page %}?embed=1{% endif %}" class="jb-btn-light">Cancel</a>
+      </div>
+    </form>
+  </section>
+
+  <template id="material-empty-form">
+    <tr class="bom-form-row">
+      <td style="display:none;">
+        {{ material_formset.empty_form.id }}
+        {{ material_formset.empty_form.sort_order }}
+        {% if material_formset.empty_form.DELETE %}{{ material_formset.empty_form.DELETE }}{% endif %}
+      </td>
+      <td>{{ material_formset.empty_form.material }}</td>
+      <td>{{ material_formset.empty_form.unit }}</td>
+      <td>{{ material_formset.empty_form.cost_per_unit }}</td>
+      <td>{{ material_formset.empty_form.avg }}</td>
+      <td>{{ material_formset.empty_form.cost }}</td>
+      <td><button type="button" class="bom-remove-btn">Remove</button></td>
+    </tr>
+  </template>
+
+  <template id="accessory-empty-form">
+    <tr class="bom-form-row">
+      <td style="display:none;">
+        {{ accessory_formset.empty_form.id }}
+        {{ accessory_formset.empty_form.sort_order }}
+        {% if accessory_formset.empty_form.DELETE %}{{ accessory_formset.empty_form.DELETE }}{% endif %}
+      </td>
+      <td>{{ accessory_formset.empty_form.accessory }}</td>
+      <td>{{ accessory_formset.empty_form.unit }}</td>
+      <td>{{ accessory_formset.empty_form.cost_per_unit }}</td>
+      <td>{{ accessory_formset.empty_form.avg }}</td>
+      <td>{{ accessory_formset.empty_form.cost }}</td>
+      <td><button type="button" class="bom-remove-btn">Remove</button></td>
+    </tr>
+  </template>
+
+  <template id="image-empty-form">
+    <tr class="bom-image-row">
+      <td style="display:none;">
+        {{ image_formset.empty_form.id }}
+        {{ image_formset.empty_form.sort_order }}
+        {% if image_formset.empty_form.DELETE %}{{ image_formset.empty_form.DELETE }}{% endif %}
+      </td>
+      <td>
+        <img src="" class="bom-image-preview" alt="BOM image preview" style="display:none; max-width:72px; max-height:72px; border-radius:10px; object-fit:cover;">
+      </td>
+      <td>{{ image_formset.empty_form.image }}</td>
+      <td><button type="button" class="bom-remove-btn">Remove</button></td>
+    </tr>
+  </template>
+
+  <template id="jobber-process-empty-form">
+    <tr class="bom-jobber-process-row">
+      <td style="display:none;">
+        {{ jobber_process_formset.empty_form.id }}
+        {{ jobber_process_formset.empty_form.sort_order }}
+        {% if jobber_process_formset.empty_form.DELETE %}{{ jobber_process_formset.empty_form.DELETE }}{% endif %}
+      </td>
+      <td>{{ jobber_process_formset.empty_form.jobber_type }}</td>
+      <td>{{ jobber_process_formset.empty_form.price }}</td>
+      <td><button type="button" class="bom-remove-btn">Remove</button></td>
+    </tr>
+  </template>
+
+  <template id="jobber-detail-empty-form">
+    <tr class="bom-jobber-detail-row">
+      <td style="display:none;">
+        {{ jobber_detail_formset.empty_form.id }}
+        {{ jobber_detail_formset.empty_form.sort_order }}
+        {% if jobber_detail_formset.empty_form.DELETE %}{{ jobber_detail_formset.empty_form.DELETE }}{% endif %}
+      </td>
+      <td>{{ jobber_detail_formset.empty_form.jobber }}</td>
+      <td>{{ jobber_detail_formset.empty_form.jobber_type }}</td>
+      <td>{{ jobber_detail_formset.empty_form.price }}</td>
+      <td><button type="button" class="bom-remove-btn">Remove</button></td>
+    </tr>
+  </template>
+  <template id="expense-empty-form">
+  <tr class="bom-expense-row">
+    <td style="display:none;">
+      {{ expense_formset.empty_form.id }}
+      {{ expense_formset.empty_form.sort_order }}
+      {% if expense_formset.empty_form.DELETE %}{{ expense_formset.empty_form.DELETE }}{% endif %}
+    </td>
+    <td>{{ expense_formset.empty_form.expense }}</td>
+    <td>{{ expense_formset.empty_form.price }}</td>
+    <td><button type="button" class="bom-remove-btn">Remove</button></td>
+  </tr>
+</template>
+</div>
+
+<script>
+(function () {
+  const root = document.querySelector("[data-bom-root]");
+  if (!root) return;
+
+  function updateDeleteField(row) {
+    const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+    if (deleteInput) {
+      deleteInput.checked = true;
+      row.style.display = "none";
+    } else {
+      row.remove();
+    }
+  }
+
+  function bindRemoveButtons(scope) {
+    scope.querySelectorAll(".bom-remove-btn").forEach((btn) => {
+      if (btn.dataset.bound === "1") return;
+      btn.dataset.bound = "1";
+
+      btn.addEventListener("click", function () {
+        const row = btn.closest("tr");
+        if (!row) return;
+        updateDeleteField(row);
+        refreshAllJobberDetailPrices();
+        refreshExpenseSummary();
+      });
+    });
+  }
+
+  function recalcRow(row) {
+    const cpu = row.querySelector('input[name*="cost_per_unit"]');
+    const avg = row.querySelector('input[name*="avg"]');
+    const cost = row.querySelector('input[name*="cost"]:not([name*="cost_per_unit"])');
+
+    if (!cpu || !avg || !cost) return;
+
+    const cpuVal = parseFloat(cpu.value || "0");
+    const avgVal = parseFloat(avg.value || "0");
+    const total = (isNaN(cpuVal) ? 0 : cpuVal) * (isNaN(avgVal) ? 0 : avgVal);
+    cost.value = total.toFixed(2);
+  }
+
+  function bindCalc(scope) {
+    scope.querySelectorAll("tr.bom-form-row").forEach((row) => {
+      if (row.dataset.calcBound === "1") return;
+      row.dataset.calcBound = "1";
+
+      const cpu = row.querySelector('input[name*="cost_per_unit"]');
+      const avg = row.querySelector('input[name*="avg"]');
+
+      if (cpu) {
+        cpu.addEventListener("input", function () {
+          recalcRow(row);
+        });
+      }
+      if (avg) {
+        avg.addEventListener("input", function () {
+          recalcRow(row);
+        });
+      }
+
+      recalcRow(row);
+    });
+  }
+
+  function bindImagePreview(scope) {
+    scope.querySelectorAll(".bom-image-input").forEach((input) => {
+      if (input.dataset.previewBound === "1") return;
+      input.dataset.previewBound = "1";
+
+      input.addEventListener("change", function () {
+        const row = input.closest("tr");
+        if (!row) return;
+
+        const preview = row.querySelector(".bom-image-preview");
+        if (!preview) return;
+
+        const file = input.files && input.files[0] ? input.files[0] : null;
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.src = e.target.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  }
+
+  function getProcessPriceMap() {
+    const map = {};
+
+    root.querySelectorAll("#jobber-process-rows tr.bom-jobber-process-row").forEach((row) => {
+      if (row.style.display === "none") return;
+
+      const typeSelect = row.querySelector('select[name*="jobber_processes"][name*="jobber_type"]');
+      const priceInput = row.querySelector('input[name*="jobber_processes"][name*="price"]');
+
+      if (!typeSelect || !priceInput) return;
+
+      const typeValue = (typeSelect.value || "").trim();
+      const priceValue = (priceInput.value || "").trim();
+
+      if (typeValue) {
+        map[typeValue] = priceValue;
+      }
+    });
+
+    return map;
+  }
+
+  function applyMappedPriceToRow(row) {
+    const priceMap = getProcessPriceMap();
+
+    const typeSelect = row.querySelector('select[name*="jobber_details"][name*="jobber_type"]');
+    const priceInput = row.querySelector('input[name*="jobber_details"][name*="price"]');
+
+    if (!typeSelect || !priceInput) return;
+
+    const selectedType = (typeSelect.value || "").trim();
+    if (selectedType && Object.prototype.hasOwnProperty.call(priceMap, selectedType)) {
+      priceInput.value = priceMap[selectedType];
+      priceInput.dispatchEvent(new Event("input", { bubbles: true }));
+      priceInput.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+
+  function refreshAllJobberDetailPrices() {
+    root.querySelectorAll("#jobber-detail-rows tr.bom-jobber-detail-row").forEach((row) => {
+      if (row.style.display === "none") return;
+      applyMappedPriceToRow(row);
+    });
+  }
+
+  function bindJobberProcessRows(scope) {
+    scope.querySelectorAll(".bom-jobber-process-row").forEach((row) => {
+      if (row.dataset.processBound === "1") return;
+      row.dataset.processBound = "1";
+
+      const typeSelect = row.querySelector('select[name*="jobber_processes"][name*="jobber_type"]');
+      const priceInput = row.querySelector('input[name*="jobber_processes"][name*="price"]');
+
+      if (typeSelect) {
+        typeSelect.addEventListener("change", refreshAllJobberDetailPrices);
+      }
+      if (priceInput) {
+        priceInput.addEventListener("input", refreshAllJobberDetailPrices);
+        priceInput.addEventListener("change", refreshAllJobberDetailPrices);
+      }
+    });
+  }
+
+  function bindJobberDetailRows(scope) {
+    scope.querySelectorAll(".bom-jobber-detail-row").forEach((row) => {
+      if (row.dataset.detailBound === "1") return;
+      row.dataset.detailBound = "1";
+
+      const typeSelect = row.querySelector('select[name*="jobber_details"][name*="jobber_type"]');
+
+      if (typeSelect) {
+        typeSelect.addEventListener("change", function () {
+          applyMappedPriceToRow(row);
+        });
+      }
+
+      applyMappedPriceToRow(row);
+    });
+  }
+
+  function getExpenseTotal() {
+    let total = 0;
+
+    root.querySelectorAll("#expense-rows tr.bom-expense-row").forEach((row) => {
+      if (row.style.display === "none") return;
+
+      const priceInput = row.querySelector('input[name*="expenses"][name*="price"]');
+      if (!priceInput) return;
+
+      const value = parseFloat(priceInput.value || "0");
+      total += isNaN(value) ? 0 : value;
+    });
+
+    return total;
+  }
+
+  function refreshExpenseSummary() {
+    const basePriceInput = root.querySelector("#id_price");
+    const damagePercentInput = root.querySelector("#id_damage_percent");
+    const finalPriceInput = root.querySelector("#id_final_price");
+    const expenseTotalInput = root.querySelector("#bom-expense-total");
+    const damageAmountInput = root.querySelector("#bom-damage-amount");
+    const basePricePreview = root.querySelector("#bom-base-price-preview");
+
+    const basePrice = parseFloat(basePriceInput?.value || "0");
+    const damagePercent = parseFloat(damagePercentInput?.value || "0");
+    const expenseTotal = getExpenseTotal();
+
+    const subtotal = (isNaN(basePrice) ? 0 : basePrice) + expenseTotal;
+    const damageAmount = subtotal * ((isNaN(damagePercent) ? 0 : damagePercent) / 100);
+    const finalPrice = subtotal + damageAmount;
+
+    if (expenseTotalInput) expenseTotalInput.value = expenseTotal.toFixed(2);
+    if (damageAmountInput) damageAmountInput.value = damageAmount.toFixed(2);
+    if (finalPriceInput) finalPriceInput.value = finalPrice.toFixed(2);
+    if (basePricePreview) basePricePreview.value = (isNaN(basePrice) ? 0 : basePrice).toFixed(2);
+  }
+
+  function bindExpenseRows(scope) {
+    scope.querySelectorAll(".bom-expense-row").forEach((row) => {
+      if (row.dataset.expenseBound === "1") return;
+      row.dataset.expenseBound = "1";
+
+      const priceInput = row.querySelector('input[name*="expenses"][name*="price"]');
+      if (priceInput) {
+        priceInput.addEventListener("input", refreshExpenseSummary);
+        priceInput.addEventListener("change", refreshExpenseSummary);
+      }
+    });
+  }
+
+  function bindPriceSummary() {
+    const basePriceInput = root.querySelector("#id_price");
+    const damagePercentInput = root.querySelector("#id_damage_percent");
+
+    if (basePriceInput && !basePriceInput.dataset.boundSummary) {
+      basePriceInput.dataset.boundSummary = "1";
+      basePriceInput.addEventListener("input", refreshExpenseSummary);
+      basePriceInput.addEventListener("change", refreshExpenseSummary);
+    }
+
+    if (damagePercentInput && !damagePercentInput.dataset.boundSummary) {
+      damagePercentInput.dataset.boundSummary = "1";
+      damagePercentInput.addEventListener("input", refreshExpenseSummary);
+      damagePercentInput.addEventListener("change", refreshExpenseSummary);
+    }
+  }
+
+  function addForm(prefix, templateId, tbodyId) {
+    const totalInput = root.querySelector(`#id_${prefix}-TOTAL_FORMS`);
+    const tbody = root.querySelector(`#${tbodyId}`);
+    const template = root.querySelector(`#${templateId}`);
+
+    if (!totalInput || !tbody || !template) return;
+
+    const index = parseInt(totalInput.value, 10);
+    const html = template.innerHTML.replace(/__prefix__/g, index);
+    const wrapper = document.createElement("tbody");
+    wrapper.innerHTML = html.trim();
+    const row = wrapper.firstElementChild;
+    if (!row) return;
+
+    tbody.appendChild(row);
+    totalInput.value = index + 1;
+
+    bindRemoveButtons(row);
+    bindCalc(row);
+    bindImagePreview(row);
+    bindJobberProcessRows(row);
+    bindJobberDetailRows(row);
+    bindExpenseRows(row);
+    refreshExpenseSummary();
+  }
+
+  const addMaterialBtn = root.querySelector("#add-material-row");
+  const addAccessoryBtn = root.querySelector("#add-accessory-row");
+  const addImageBtn = root.querySelector("#add-image-row");
+  const addJobberProcessBtn = root.querySelector("#add-jobber-process-row");
+  const addJobberDetailBtn = root.querySelector("#add-jobber-detail-row");
+  const addExpenseBtn = root.querySelector("#add-expense-row");
+
+  if (addMaterialBtn) {
+    addMaterialBtn.addEventListener("click", function () {
+      addForm("materials", "material-empty-form", "material-rows");
+    });
+  }
+
+  if (addAccessoryBtn) {
+    addAccessoryBtn.addEventListener("click", function () {
+      addForm("accessories", "accessory-empty-form", "accessory-rows");
+    });
+  }
+
+  if (addImageBtn) {
+    addImageBtn.addEventListener("click", function () {
+      addForm("images", "image-empty-form", "image-rows");
+    });
+  }
+
+  if (addJobberProcessBtn) {
+    addJobberProcessBtn.addEventListener("click", function () {
+      addForm("jobber_processes", "jobber-process-empty-form", "jobber-process-rows");
+      refreshAllJobberDetailPrices();
+    });
+  }
+
+  if (addJobberDetailBtn) {
+    addJobberDetailBtn.addEventListener("click", function () {
+      addForm("jobber_details", "jobber-detail-empty-form", "jobber-detail-rows");
+    });
+  }
+
+  if (addExpenseBtn) {
+    addExpenseBtn.addEventListener("click", function () {
+      addForm("expenses", "expense-empty-form", "expense-rows");
+    });
+  }
+
+  bindRemoveButtons(root);
+  bindCalc(root);
+  bindImagePreview(root);
+  bindJobberProcessRows(root);
+  bindJobberDetailRows(root);
+  bindExpenseRows(root);
+  bindPriceSummary();
+  refreshAllJobberDetailPrices();
+  refreshExpenseSummary();
+})();
+</script>

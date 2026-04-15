@@ -6,14 +6,15 @@
 {% block content %}
 <style>
   :root{
-    --blue: rgba(28, 109, 216, 1);
-    --blue-soft: rgba(28, 109, 216, .10);
-    --blue-soft-2: rgba(28, 109, 216, .06);
-    --blue-border: rgba(28, 109, 216, .14);
-    --text-main:#111827;
-    --text-soft:#667085;
-    --line:rgba(15,23,42,.08);
-    --bg-soft:#f8fbff;
+    --yi-text:#111827;
+    --yi-text-soft:#6b7280;
+    --yi-muted:#9ca3af;
+    --yi-line:rgba(17,24,39,.10);
+    --yi-border:#d1d5db;
+    --yi-bg:#ffffff;
+    --yi-soft:#f9fafb;
+    --yi-dark:#111827;
+  --blue: rgba(28, 109, 216, 1);
   }
 
   .canvas{
@@ -28,148 +29,132 @@
   }
 
   .yarn-inward-shell{
-    position:relative;
     width:100%;
     min-width:0;
-    padding:18px;
-    border-radius:24px;
-    border:2px dashed rgb(0, 0, 0);
-    background:#fff;
+    padding:12px;
+    border: 2px dashed black;
+    background:white;
+    border-radius: 22px;
   }
 
   .yarn-inward-form{
     display:grid;
-    gap:16px;
+    gap:10px;
   }
 
-  .yarn-head-card{
+  .yarn-head{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:16px;
+    gap:10px;
     flex-wrap:wrap;
-    padding:14px 8px;
-    border-radius:20px;
   }
 
-  .yarn-head-main{
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
+  .yarn-head-left{
     min-width:0;
-  }
-
-  .yarn-head-icon{
-    width:46px;
-    height:46px;
-    border-radius:14px;
-    flex:0 0 auto;
-    display:grid;
-    place-items:center;
-  }
-
-  .yarn-head-icon svg{
-    width:34px;
-    height:34px;
-    display:block;
   }
 
   .yarn-head-title{
     margin:0;
-    font-size:24px;
-    font-weight:900;
+    font-size:20px;
     line-height:1.05;
-    color:var(--text-main);
-    letter-spacing:-.02em;
+    font-weight:900;
+    color:var(--yi-dark);
   }
 
   .yarn-head-subtitle{
-    margin-top:5px;
-    font-size:12px;
-    font-weight:500;
-    color:var(--text-soft);
+    margin-top:4px;
+    font-size:11px;
     line-height:1.45;
+    font-weight:600;
+    color:var(--yi-text-soft);
   }
 
-  .yarn-head-actions{
+  .yarn-head-right{
     display:flex;
     align-items:center;
     gap:8px;
     flex-wrap:wrap;
-    justify-content:flex-end;
+  }
+
+  .yarn-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:32px;
+    padding:0 10px;
+    border-radius:999px;
+    background:#d1e0ffd5;
+    color:var(--blue);
+    font-size:11px;
+    font-weight:900;
+    white-space:nowrap;
   }
 
   .yarn-btn,
   .yarn-btn-primary{
     appearance:none;
-    border:1px solid rgba(15,23,42,.10);
-    border-radius:11px;
-    min-height:38px;
-    padding:0 13px;
+    border:none;
+    border-radius:8px;
+    min-height:34px;
+    padding:0 12px;
     font-size:12px;
     font-weight:800;
     text-decoration:none;
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    gap:8px;
     cursor:pointer;
-    transition:all .18s ease;
-    background:#fff;
-    color:var(--text-main);
-    white-space:nowrap;
+    transition:.18s ease;
+  }
+
+  .yarn-btn{
+    background:#f3f4f6;
+    color:var(--yi-dark);
   }
 
   .yarn-btn:hover{
-    background:var(--bg-soft);
-    border-color:var(--blue-border);
-    color:var(--blue);
+    background:#e5e7eb;
   }
 
   .yarn-btn-primary{
-    border-color:transparent;
+    background:var(--blue);
     color:#fff;
-    background:var(--pink);
-    box-shadow:0 10px 18px rgba(28,109,216,.16);
   }
 
   .yarn-btn-primary:hover{
-    color:#fff;
-    background:#d63377;
+    background:#000;
   }
 
-  .yarn-pill{
-    display:inline-flex;
-    align-items:center;
-    min-height:38px;
-    padding:0 13px;
-    border-radius:999px;
-    background:rgba(238,61,133,.08);
-    color:var(--pink);
-    border:1px solid rgba(238,61,133,.12);
-    font-size:11px;
+  .yarn-form-card{
+    padding:0;
+    background:transparent;
+  }
+
+  .yarn-form-card-title{
+    font-size:12px;
     font-weight:900;
-    letter-spacing:.02em;
-    white-space:nowrap;
+    color:var(--yi-dark);
+    margin-bottom:8px;
   }
 
   .yarn-top-grid{
     display:grid;
     grid-template-columns:repeat(4, minmax(0, 1fr));
-    gap:12px;
+    gap:10px;
   }
 
   .yarn-field{
     display:flex;
     flex-direction:column;
-    gap:5px;
+    gap:4px;
     min-width:0;
   }
 
   .yarn-field label{
     font-size:10px;
-    font-weight:800;
-    color:var(--text-soft);
+    font-weight:900;
+    color:var(--yi-text-soft);
     text-transform:uppercase;
     letter-spacing:.08em;
   }
@@ -178,20 +163,20 @@
   .yarn-field textarea,
   .yarn-field select{
     width:100%;
-    min-height:40px;
-    border:1px solid rgba(15,23,42,.10);
-    border-radius:12px;
-    padding:8px 11px;
-    outline:none;
+    min-height:36px;
     box-sizing:border-box;
+    border:1px solid var(--yi-border);
+    border-radius:8px;
+    padding:7px 9px;
     background:#fff;
-    color:var(--text-main);
+    color:var(--yi-dark);
     font:inherit;
-    transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    outline:none;
+    transition:.18s ease;
   }
 
   .yarn-field textarea{
-    min-height:78px;
+    min-height:74px;
     resize:vertical;
   }
 
@@ -199,29 +184,29 @@
   .yarn-field textarea:focus,
   .yarn-field select:focus,
   .yarn-inline-input:focus{
-    border-color:rgba(28,109,216,.32);
-    box-shadow:0 0 0 3px rgba(28,109,216,.10);
-    background:#fff;
+    border-color:#9ca3af;
+    box-shadow:none;
   }
 
-  .yarn-field.is-readonly input{
-    background:#f8fbff;
-    color:var(--text-main);
+  .yarn-field.is-readonly input,
+  .yarn-field.is-readonly textarea{
+    background:#f9fafb;
+    color:var(--yi-dark);
     font-weight:500;
+    font-size: 15px;
   }
 
   .yarn-err{
-    color:#dc2626;
     font-size:11px;
     font-weight:700;
+    color:#dc2626;
   }
 
   .yarn-section{
-    background:#ffffff;
-    border:1px solid var(--line);
-    border-radius:18px;
+    border:1px solid var(--yi-line);
+    border-radius:10px;
     overflow:hidden;
-    box-shadow:0 8px 20px rgba(15,23,42,.04);
+    background:#fff;
   }
 
   .yarn-section summary{
@@ -229,11 +214,15 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:12px;
+    gap:10px;
+    padding:10px 12px;
     cursor:pointer;
-    user-select:none;
-    padding:14px 14px 13px;
-    background:#ffffff;
+    background: #ebebeb;;
+    border-bottom:1px solid transparent;
+  }
+
+  .yarn-section[open] summary{
+    border-bottom-color:var(--yi-line);
   }
 
   .yarn-section summary::-webkit-details-marker{
@@ -242,65 +231,69 @@
 
   .yarn-section-head{
     display:flex;
-    align-items:center;
-    gap:10px;
+    align-items:flex-start;
+    gap:8px;
     min-width:0;
   }
 
   .yarn-section-dot{
-    width:10px;
-    height:10px;
+    width:7px;
+    height:7px;
+    margin-top:5px;
     border-radius:999px;
-    background:var(--blue);
-    box-shadow:0 0 0 5px rgba(28,109,216,.10);
+    background:var(--yi-dark);
     flex:0 0 auto;
   }
 
   .yarn-section-title{
-    font-size:14px;
+    font-size:15px;
     font-weight:900;
-    color:var(--text-main);
+    color:var(--yi-dark);
     line-height:1.2;
-    letter-spacing:-.01em;
   }
 
-  .yarn-section-meta{
-    font-size:11px;
-    font-weight:900;
-    color:var(--blue);
-    background:rgba(28,109,216,.08);
-    border:1px solid rgba(28,109,216,.12);
-    border-radius:999px;
-    padding:6px 10px;
-    white-space:nowrap;
+  .yarn-section-sub{
+    margin-top:2px;
+    font-size:10px;
+    font-weight:700;
+    color:var(--yi-text-soft);
+    line-height:1.35;
   }
 
   .yarn-section-right{
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:8px;
     flex:0 0 auto;
   }
 
+  .yarn-section-meta{
+    font-size:10px;
+    font-weight:900;
+    color:var(--yi-dark);
+    background:#f3f4f6;
+    border-radius:999px;
+    padding:4px 8px;
+    white-space:nowrap;
+  }
+
   .yarn-caret-box{
-    width:25px;
-    height:25px;
+    width:22px;
+    height:22px;
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    border-radius:8px;
+    border-radius:6px;
     background:var(--blue);
-    box-shadow:0 8px 16px rgba(28,109,216,.18);
-    transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
   }
 
   .yarn-caret{
-    width:8px;
-    height:8px;
+    width:7px;
+    height:7px;
     border-right:2px solid #fff;
     border-bottom:2px solid #fff;
     transform:rotate(45deg);
-    transition:transform .18s ease;
+    transition:.18s ease;
     margin-top:-2px;
   }
 
@@ -309,100 +302,32 @@
     margin-top:3px;
   }
 
-  .yarn-section[open] .yarn-caret-box{
-    background:#1c6dd8;
-  }
-
   .yarn-section-body{
     display:grid;
-    gap:12px;
-    padding:5px 15px 15px;
-  }
-
-  .yarn-overview-grid{
-    display:grid;
-    grid-template-columns:repeat(5, minmax(0, 1fr));
     gap:10px;
-  }
-
-  .yarn-soft-card{
-    position:relative;
-    border-radius:16px;
-    background:#fbfdff;
-    border:1px solid rgba(28,109,216,.08);
-    padding:12px 12px 11px;
-    overflow:hidden;
-  }
-
-  .yarn-soft-label{
-    font-size:10px;
-    font-weight:800;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    color:var(--text-soft);
-  }
-
-  .yarn-soft-value{
-    margin-top:6px;
-    font-size:13px;
-    font-weight:500;
-    color:var(--text-main);
-    line-height:1.35;
-    word-break:break-word;
-  }
-
-  .yarn-note-card{
-    border-radius:16px;
-    padding:12px 14px;
-    background:#f8fbff;
-    border:1px solid rgba(28,109,216,.10);
-  }
-
-  .yarn-note-title{
-    font-size:10px;
-    font-weight:800;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    color:var(--text-soft);
-  }
-
-  .yarn-note-value{
-    margin-top:5px;
-    font-size:12px;
-    font-weight:700;
-    color:var(--text-main);
-    line-height:1.5;
-    word-break:break-word;
+    padding:10px 12px 12px;
   }
 
   .yarn-error-box{
-    padding:10px 12px;
-    border-radius:12px;
-    background:rgba(239,68,68,.08);
-    border:1px solid rgba(239,68,68,.14);
+    padding:9px 10px;
+    border-radius:8px;
+    border:1px solid rgba(220,38,38,.14);
+    background:rgba(220,38,38,.04);
   }
 
   .yarn-table-wrap{
     overflow:auto;
+    border:1px solid var(--yi-line);
+    border-radius:8px;
     background:#fff;
-    border-radius:16px;
-    border:1px solid var(--line);
   }
 
   .yarn-table,
   .yarn-mini-table,
   .yarn-history-table{
     width:100%;
-    border-collapse:collapse;
-  }
-
-  .yarn-table{
-    min-width:860px;
-  }
-
-  .yarn-mini-table,
-  .yarn-history-table{
     min-width:820px;
+    border-collapse:collapse;
   }
 
   .yarn-table th,
@@ -411,8 +336,8 @@
   .yarn-mini-table td,
   .yarn-history-table th,
   .yarn-history-table td{
-    padding:10px 10px;
-    border-bottom:1px solid rgba(15,23,42,.06);
+    padding:9px 9px;
+    border-bottom:1px solid rgba(17,24,39,.06);
     text-align:left;
     vertical-align:top;
     font-size:12px;
@@ -423,59 +348,61 @@
   .yarn-history-table thead th{
     font-size:10px;
     text-transform:uppercase;
-    letter-spacing:.06em;
-    color:#475467;
+    letter-spacing:.08em;
     font-weight:900;
-    background:#eef5ff;
+    color:var(--yi-text-soft);
+    background:#f3f4f6;
     white-space:nowrap;
   }
 
   .yarn-table tbody tr:hover,
   .yarn-mini-table tbody tr:hover,
   .yarn-history-table tbody tr:hover{
-    background:#fbfdff;
+    background:#fafafa;
   }
 
   .yarn-table tfoot td,
   .yarn-mini-table tfoot td{
-    background:#f8fbff;
+    background:#fafafa;
     font-weight:900;
   }
 
   .yarn-material{
+    font-size:12px;
     font-weight:900;
-    color:var(--text-main);
+    color:var(--yi-dark);
+    line-height:1.4;
     word-break:break-word;
   }
 
   .yarn-small{
-    margin-top:2px;
+    margin-top:3px;
     font-size:10px;
     font-weight:700;
-    color:var(--text-soft);
-    line-height:1.4;
+    color:var(--yi-text-soft);
+    line-height:1.45;
     word-break:break-word;
   }
 
   .yarn-inline-input{
     width:100%;
-    min-height:36px;
-    border:1px solid rgba(15,23,42,.10);
-    border-radius:10px;
-    padding:7px 9px;
-    outline:none;
+    min-height:32px;
     box-sizing:border-box;
+    border:1px solid var(--yi-border);
+    border-radius:8px;
+    padding:6px 8px;
     background:#fff;
-    color:var(--text-main);
+    color:var(--yi-dark);
     font:inherit;
+    outline:none;
   }
 
   .yarn-empty{
-    padding:14px;
+    padding:12px;
     text-align:center;
     font-size:12px;
     font-weight:700;
-    color:var(--text-soft);
+    color:var(--yi-text-soft);
   }
 
   .yarn-actions{
@@ -489,28 +416,18 @@
     .yarn-top-grid{
       grid-template-columns:repeat(2, minmax(0, 1fr));
     }
-
-    .yarn-overview-grid{
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-    }
   }
 
   @media (max-width: 760px){
-    .yarn-inward-shell{
-      padding:14px;
-      border-radius:18px;
-    }
-
-    .yarn-head-card,
-    .yarn-head-actions,
+    .yarn-head,
+    .yarn-head-right,
     .yarn-actions{
       flex-direction:column;
       align-items:stretch;
     }
 
-    .yarn-head-actions{
-      width:100%;
-      justify-content:stretch;
+    .yarn-top-grid{
+      grid-template-columns:1fr;
     }
 
     .yarn-btn,
@@ -518,11 +435,6 @@
     .yarn-pill{
       width:100%;
       justify-content:center;
-    }
-
-    .yarn-top-grid,
-    .yarn-overview-grid{
-      grid-template-columns:1fr;
     }
   }
 </style>
@@ -534,104 +446,103 @@
         <form method="post" class="yarn-inward-form">
           {% csrf_token %}
 
-          <div class="yarn-head-card">
-            <div class="yarn-head-main">
-              <div class="yarn-head-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M7 4.75h7.8l3.45 3.45V18.5a1.75 1.75 0 0 1-1.75 1.75H7A1.75 1.75 0 0 1 5.25 18.5v-12A1.75 1.75 0 0 1 7 4.75Z" stroke="var(--blue)" stroke-width="1.8" stroke-linejoin="round"/>
-                  <path d="M14.8 4.9v3a1 1 0 0 0 1 1h3" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M12 10v5.2" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M9.8 13.1 12 15.3l2.2-2.2" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <div>
-                <h1 class="yarn-head-title">Yarn Inward</h1>
-                <div class="yarn-head-subtitle">
-                  Add inward quantity against {{ po.system_number }}{% if po.vendor %} · {{ po.vendor.name }}{% endif %}
-                </div>
+          <div class="yarn-head">
+            <div class="yarn-head-left">
+              <h1 class="yarn-head-title">Yarn Inward</h1>
+              <div class="yarn-head-subtitle">
+                Add inward quantity against {{ po.system_number }}{% if po.vendor %} · {{ po.vendor.name }}{% endif %}
               </div>
             </div>
 
-            <div class="yarn-head-actions">
+            <div class="yarn-head-right">
               <div class="yarn-pill">Remaining Qty: {{ po.remaining_qty_total|default:"0.00" }}</div>
               <a class="yarn-btn" href="{% url 'accounts:yarnpo_list' %}">Back</a>
             </div>
           </div>
 
-          <div class="yarn-top-grid">
-            <div class="yarn-field is-readonly">
-              <label>PO Number</label>
-              <input type="text" value="{{ po.system_number }}" readonly>
-            </div>
+          <div class="yarn-form-card">
+            <div class="yarn-form-card-title">Inward Entry Information</div>
 
-            <div class="yarn-field is-readonly">
-              <label>Yarn Inward No</label>
-              <input type="text" value="{{ next_inward_number_preview|default:'Auto' }}" readonly>
-            </div>
+            <div class="yarn-top-grid">
+  <div class="yarn-field is-readonly">
+    <label>PO Number</label>
+    <input type="text" value="{{ po.system_number }}" readonly>
+  </div>
 
-            <div class="yarn-field">
-              <label for="{{ inward_form.vendor.id_for_label }}">Inward Vendor</label>
-              {{ inward_form.vendor }}
-              {% for err in inward_form.vendor.errors %}
-                <div class="yarn-err">{{ err }}</div>
-              {% endfor %}
-            </div>
+  <div class="yarn-field is-readonly">
+    <label>Yarn Inward No</label>
+    <input type="text" value="{{ next_inward_number_preview|default:'Auto' }}" readonly>
+  </div>
 
-            <div class="yarn-field">
-              <label for="{{ inward_form.inward_date.id_for_label }}">Date</label>
-              {{ inward_form.inward_date }}
-              {% for err in inward_form.inward_date.errors %}
-                <div class="yarn-err">{{ err }}</div>
-              {% endfor %}
-            </div>
+  <div class="yarn-field">
+    <label for="{{ inward_form.vendor.id_for_label }}">Inward Vendor</label>
+    {{ inward_form.vendor }}
+    {% for err in inward_form.vendor.errors %}
+      <div class="yarn-err">{{ err }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="yarn-field">
+    <label for="{{ inward_form.inward_type.id_for_label }}">Inward Type</label>
+    {{ inward_form.inward_type }}
+    {% for err in inward_form.inward_type.errors %}
+      <div class="yarn-err">{{ err }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="yarn-field">
+    <label for="{{ inward_form.inward_date.id_for_label }}">Date</label>
+    {{ inward_form.inward_date }}
+    {% for err in inward_form.inward_date.errors %}
+      <div class="yarn-err">{{ err }}</div>
+    {% endfor %}
+  </div>
+</div>
           </div>
 
           <details class="yarn-section" open>
             <summary>
               <div class="yarn-section-head">
-                <div class="yarn-section-title">PO Details</div>
+                <div class="yarn-section-dot"></div>
+                <div>
+                  <div class="yarn-section-title">PO Details</div>
+                </div>
               </div>
+
               <div class="yarn-section-right">
                 <div class="yarn-section-meta">{{ po.items.count }} item{{ po.items.count|pluralize }}</div>
-                <span class="yarn-caret-box">
-                  <span class="yarn-caret"></span>
-                </span>
+                <span class="yarn-caret-box"><span class="yarn-caret"></span></span>
               </div>
             </summary>
 
             <div class="yarn-section-body">
-              <div class="yarn-overview-grid">
-                <div class="yarn-soft-card">
-                  <div class="yarn-soft-label">Vendor</div>
-                  <div class="yarn-soft-value">{{ po.vendor.name|default:"—" }}</div>
+              <div class="yarn-top-grid">
+                <div class="yarn-field is-readonly">
+                  <label>Vendor</label>
+                  <input type="text" value="{{ po.vendor.name|default:'—' }}" readonly>
                 </div>
 
-                <div class="yarn-soft-card">
-                  <div class="yarn-soft-label">PO Date</div>
-                  <div class="yarn-soft-value">{{ po.po_date|date:"d-m-Y"|default:"—" }}</div>
+                <div class="yarn-field is-readonly">
+                  <label>PO Date</label>
+                  <input type="text" value="{{ po.po_date|date:'d-m-Y'|default:'—' }}" readonly>
                 </div>
 
-                <div class="yarn-soft-card">
-                  <div class="yarn-soft-label">Firm</div>
-                  <div class="yarn-soft-value">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
+                <div class="yarn-field is-readonly">
+                  <label>Firm</label>
+                  <input type="text" value="{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}" readonly>
                 </div>
 
-                <div class="yarn-soft-card">
-                  <div class="yarn-soft-label">Ordered</div>
-                  <div class="yarn-soft-value">{{ po.total_weight|default:"0.00" }}</div>
-                </div>
-
-                <div class="yarn-soft-card">
-                  <div class="yarn-soft-label">Received</div>
-                  <div class="yarn-soft-value">{{ po.total_inward_qty|default:"0.00" }}</div>
+                <div class="yarn-field is-readonly">
+                  <label>Ordered Qty</label>
+                  <input type="text" value="{{ po.total_weight|default:'0.00' }}" readonly>
                 </div>
               </div>
 
               {% if po.shipping_address %}
-                <div class="yarn-note-card">
-                  <div class="yarn-note-title">Shipping Address</div>
-                  <div class="yarn-note-value">{{ po.shipping_address }}</div>
-                </div>
+              <div class="yarn-field is-readonly">
+                <label>Shipping Address</label>
+                <textarea readonly>{{ po.shipping_address }}</textarea>
+              </div>
               {% endif %}
 
               <div class="yarn-table-wrap">
@@ -683,12 +594,15 @@
           <details class="yarn-section" open>
             <summary>
               <div class="yarn-section-head">
-                <div class="yarn-section-title">Inward Details</div>
+                <div class="yarn-section-dot"></div>
+                <div>
+                  <div class="yarn-section-title">Inward Details</div>
+                </div>
               </div>
+
               <div class="yarn-section-right">
-                <span class="yarn-caret-box">
-                  <span class="yarn-caret"></span>
-                </span>
+                <div class="yarn-section-meta">Entry Section</div>
+                <span class="yarn-caret-box"><span class="yarn-caret"></span></span>
               </div>
             </summary>
 
@@ -705,11 +619,11 @@
               </div>
 
               {% if item_errors %}
-                <div class="yarn-error-box">
-                  {% for item_id, err in item_errors.items %}
-                    <div class="yarn-err">{{ err }}</div>
-                  {% endfor %}
-                </div>
+              <div class="yarn-error-box">
+                {% for item_id, err in item_errors.items %}
+                  <div class="yarn-err">{{ err }}</div>
+                {% endfor %}
+              </div>
               {% endif %}
 
               <div class="yarn-table-wrap">
@@ -726,45 +640,48 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for item in po.items.all %}
+                    {% for row in line_rows %}
                     <tr>
                       <td>
                         <div class="yarn-material">
-                          {% if item.material_type %}
-                            {{ item.material_type.name }}
-                          {% elif item.material %}
-                            {{ item.material.name }}
+                          {% if row.item.material_type %}
+                            {{ row.item.material_type.name }}
+                          {% elif row.item.material %}
+                            {{ row.item.material.name }}
                           {% else %}
                             —
                           {% endif %}
                         </div>
                         <div class="yarn-small">
-                          {% if item.count %}Count: {{ item.count }}{% endif %}
-                          {% if item.gsm %} · GSM: {{ item.gsm }}{% endif %}
-                          {% if item.rate %} · Rate: ₹{{ item.rate }}{% endif %}
+                          {% if row.item.count %}Count: {{ row.item.count }}{% endif %}
+                          {% if row.item.gsm %} · GSM: {{ row.item.gsm }}{% endif %}
+                          {% if row.item.rate %} · Rate: ₹{{ row.item.rate }}{% endif %}
                         </div>
                       </td>
-                      <td>{{ item.unit|default:"—" }}</td>
-                      <td>{{ item.quantity|default:"0.00" }}</td>
-                      <td>{{ item.inward_qty_total|default:"0.00" }}</td>
-                      <td>{{ item.remaining_qty_total|default:"0.00" }}</td>
+                      <td>{{ row.item.unit|default:"—" }}</td>
+                      <td>{{ row.item.quantity|default:"0.00" }}</td>
+                      <td>{{ row.item.inward_qty_total|default:"0.00" }}</td>
+                      <td>{{ row.item.remaining_qty_total|default:"0.00" }}</td>
                       <td>
                         <input
                           class="yarn-inline-input"
                           type="number"
                           step="0.01"
                           min="0"
-                          name="qty_{{ item.id }}"
-                          value=""
+                          name="qty_{{ row.item.id }}"
+                          value="{{ row.qty_value }}"
                           placeholder="0.00"
                         >
+                        {% if row.error %}
+                          <div class="yarn-err" style="margin-top:6px;">{{ row.error }}</div>
+                        {% endif %}
                       </td>
                       <td>
                         <input
                           class="yarn-inline-input"
                           type="text"
-                          name="remark_{{ item.id }}"
-                          value=""
+                          name="remark_{{ row.item.id }}"
+                          value="{{ row.remark_value }}"
                           placeholder="Remark"
                         >
                       </td>
@@ -784,15 +701,18 @@
             </div>
           </details>
 
-          <details class="yarn-section" open>
+          <details class="yarn-section">
             <summary>
               <div class="yarn-section-head">
-                <div class="yarn-section-title">Inward History</div>
+                <div class="yarn-section-dot"></div>
+                <div>
+                  <div class="yarn-section-title">Inward History</div>
+                </div>
               </div>
+
               <div class="yarn-section-right">
-                <span class="yarn-caret-box">
-                  <span class="yarn-caret"></span>
-                </span>
+                <div class="yarn-section-meta">{{ existing_inwards|length }} record{{ existing_inwards|length|pluralize }}</div>
+                <span class="yarn-caret-box"><span class="yarn-caret"></span></span>
               </div>
             </summary>
 

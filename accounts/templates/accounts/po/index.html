@@ -8,23 +8,26 @@
   .po-wrap{
     grid-column:1 / -1;
   }
-
-  .po-shell{
-    position:relative;
-    overflow:hidden;
-    padding:24px;
-    border-radius:32px;
-    background:
-      radial-gradient(circle at 10% 12%, rgba(255, 210, 95, .22), transparent 22%),
-      radial-gradient(circle at 88% 16%, rgba(108, 170, 255, .18), transparent 24%),
-      radial-gradient(circle at 82% 86%, rgba(238, 61, 133, .16), transparent 22%),
-      linear-gradient(135deg, rgba(255,248,250,.98) 0%, rgba(255,251,240,.98) 34%, rgba(244,248,255,.98) 68%, rgba(250,244,255,.98) 100%);
-    border:1px solid rgba(15,23,42,.08);
-    box-shadow:
-      0 22px 54px rgba(15,23,42,.07),
-      inset 0 1px 0 rgba(255,255,255,.85);
-  }
-
+  .po-wrap{
+  grid-column:1 / -1;
+  min-height: calc(100vh - 140px);
+}
+.po-shell{
+  position:relative;
+  overflow:hidden;
+  padding:24px;
+  border-radius:32px;
+  background:
+    radial-gradient(circle at 10% 12%, rgba(255, 210, 95, .22), transparent 22%),
+    radial-gradient(circle at 88% 16%, rgba(108, 170, 255, .18), transparent 24%),
+    radial-gradient(circle at 82% 86%, rgba(238, 61, 133, .16), transparent 22%),
+    linear-gradient(135deg, rgba(255,248,250,.98) 0%, rgba(255,251,240,.98) 34%, rgba(244,248,255,.98) 68%, rgba(250,244,255,.98) 100%);
+  border:1px solid rgba(15,23,42,.08);
+  box-shadow:
+    0 22px 54px rgba(15,23,42,.07),
+    inset 0 1px 0 rgba(255,255,255,.85);
+  min-height: calc(100vh - 140px);
+}
   
 
   .po-shell::before{
@@ -400,7 +403,7 @@
       <div class="card soft big c8 po-shell">
 
         <div class="po-topbar">
-          <h2 class="po-title">Purchase Order Workflow</h2>
+          <h2 class="po-title">Purchase Orders</h2>
 
           <label class="po-search" aria-label="Search purchase order modules">
             <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

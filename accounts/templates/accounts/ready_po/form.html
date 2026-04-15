@@ -1,37 +1,1180 @@
 {% extends "accounts/base_app.html" %}
-{% block title %}{% if mode == 'edit' %}Edit Ready PO{% else %}Create Ready PO{% endif %} - InventTech{% endblock %}
-{% block page_title %}PO / Ready / {% if mode == 'edit' %}Edit{% else %}Create{% endif %}{% endblock %}
-{% block page_subtitle %}Generate Ready PO from Dyeing inward data{% endblock %}
+{% block title %}{% if mode == 'edit' %}Edit Yarn PO{% else %}Generate Yarn PO{% endif %} - InventTech{% endblock %}
+{% block page_title %}{% if mode == 'edit' %}Edit Yarn PO{% else %}Generate Yarn PO{% endif %}{% endblock %}
+{% block page_subtitle %}Create and manage yarn purchase orders{% endblock %}
 
 {% block content %}
 <style>
-  .rpf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}.rpf-field{display:flex;flex-direction:column;gap:6px}.rpf-field label{font-size:12px;font-weight:700;color:rgba(15,23,42,.72)}.rpf-field input,.rpf-field select,.rpf-field textarea{width:100%;min-height:42px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff;font:inherit}.rpf-field textarea{min-height:84px;resize:vertical}.rpf-span-2{grid-column:span 2}.rpf-span-3{grid-column:span 3}.rpf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}.rpf-block{margin-top:16px;border:1px solid rgba(15,23,42,.08);border-radius:18px;background:rgba(255,255,255,.72);overflow:hidden}.rpf-block summary{cursor:pointer;list-style:none;padding:16px 18px;font-weight:800}.rpf-block-body{padding:0 18px 18px;border-top:1px solid rgba(15,23,42,.08)}.rpf-mini-table{width:100%;border-collapse:collapse}.rpf-mini-table th,.rpf-mini-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:13px;vertical-align:top}.rpf-errors{margin:0 18px 18px;padding:12px 14px;border-radius:12px;background:rgba(239,68,68,.08);color:#991b1b;font-size:13px}@media (max-width:1100px){.rpf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rpf-span-3{grid-column:span 2}}@media (max-width:760px){.rpf-grid{grid-template-columns:1fr}.rpf-span-2,.rpf-span-3{grid-column:span 1}}
-</style>
-<section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
-  <div class="jb-head"><div><div class="jb-title">{% if mode == 'edit' %}Edit Ready PO{% else %}Purchase Order for Ready{% endif %}</div><div class="jb-sub">Continue the dyeing inward stage into ready production and ready inward tracking.</div></div></div>
-  {% if form.non_field_errors %}<div class="rpf-errors">{{ form.non_field_errors }}</div>{% endif %}
-  {% if existing_po and mode != 'edit' %}<div class="rpf-errors">Ready PO already exists for this Dyeing PO. <a href="{% url 'accounts:readypo_detail' existing_po.id %}">Open existing Ready PO</a></div>{% endif %}
-  <form method="post">{% csrf_token %}<div style="padding:18px;"><div class="rpf-grid">
-    <div class="rpf-field"><label>Ready PO No</label><input type="text" value="{% if po_obj %}{{ po_obj.system_number }}{% else %}Auto Generated{% endif %}" disabled></div>
-    <div class="rpf-field"><label>Internal PO Number</label>{{ form.internal_po_number }}</div>
-    <div class="rpf-field"><label>Source Dyeing PO</label>{{ form.source_dyeing_po }}{{ form.source_dyeing_po.errors }}</div>
-    <div class="rpf-field"><label>PO Number</label>{{ form.po_number }}</div>
-    <div class="rpf-field"><label>Date</label>{{ form.po_date }}</div>
-    <div class="rpf-field"><label>Available Qty</label>{{ form.available_qty }}</div>
-    <div class="rpf-field"><label>Vendor</label>{{ form.vendor }}</div>
-    <div class="rpf-field"><label>Firm</label>{{ form.firm }}</div>
-    <div class="rpf-field"><label>Cancel Date</label>{{ form.cancel_date }}</div>
-    <div class="rpf-field"><label>Director</label>{{ form.director }}</div>
-    <div class="rpf-field"><label>Validity Period</label>{{ form.validity_period }}</div>
-    <div class="rpf-field"><label>Delivery Period</label>{{ form.delivery_period }}</div>
-    <div class="rpf-field rpf-span-2"><label>Shipping Address</label>{{ form.shipping_address }}</div>
-    <div class="rpf-field rpf-span-2"><label>Address</label>{{ form.address }}</div>
-    <div class="rpf-field"><label>Expected Delivery Date</label>{{ form.expected_delivery_date }}</div>
-    <div class="rpf-field rpf-span-2"><label>Delivery Schedule</label>{{ form.delivery_schedule }}</div>
-    <div class="rpf-field rpf-span-3"><label>Remarks</label>{{ form.remarks }}</div>
-  </div><div class="rpf-actions"><a class="jb-secondary" href="{% url 'accounts:readypo_list' %}">Back to Ready PO</a>{% if po_obj %}<a class="jb-secondary" href="{% url 'accounts:readypo_inward' po_obj.id %}">Ready Inward</a>{% endif %}<button type="submit" class="jb-add">{% if mode == 'edit' %}Update{% else %}Save{% endif %} Ready PO</button></div></div></form>
+  :root{
+    --bg:#0b0f14;
+    --panel:#11161d;
+    --panel-2:#151b23;
+    --panel-3:#0f141b;
+    --line:#232b36;
+    --line-2:#2d3744;
+    --text:#e5e7eb;
+    --muted:#98a2b3;
+    --soft:#c7ced8;
+    --accent:#f3f4f6;
+    --danger:#ef4444;
+    --shadow:0 14px 32px rgba(0,0,0,.24);
+  }
 
-  <details class="rpf-block" open><summary>Source Dyeing PO Details</summary><div class="rpf-block-body">{% if source_dyeing_po %}<table class="rpf-mini-table"><tr><th>Dyeing PO</th><td>{{ source_dyeing_po.system_number }}</td><th>Vendor</th><td>{{ source_dyeing_po.vendor.name }}</td></tr><tr><th>PO No</th><td>{{ source_dyeing_po.po_number|default:'—' }}</td><th>Firm</th><td>{% if source_dyeing_po.firm %}{{ source_dyeing_po.firm.firm_name }}{% else %}—{% endif %}</td></tr><tr><th>Total Ordered</th><td>{{ source_dyeing_po.total_weight|default:'0.00' }}</td><th>Total Inward</th><td>{{ source_dyeing_po.total_inward_qty|default:'0.00' }}</td></tr></table>{% else %}<div class="jb-empty">Choose a source Dyeing PO to see linked inward information.</div>{% endif %}</div></details>
-  <details class="rpf-block" open><summary>Source Dyeing Inwards</summary><div class="rpf-block-body">{% if source_inwards %}<table class="rpf-mini-table"><thead><tr><th>Inward No</th><th>Date</th><th>Item</th><th>Qty</th></tr></thead><tbody>{% for inward in source_inwards %}{% for inward_item in inward.items.all %}<tr><td>{{ inward.inward_number }}</td><td>{{ inward.inward_date|date:'d-m-Y' }}</td><td>{{ inward_item.po_item.fabric_name }}</td><td>{{ inward_item.quantity }}</td></tr>{% endfor %}{% endfor %}</tbody></table>{% else %}<div class="jb-empty">No Dyeing inward data found yet.</div>{% endif %}</div></details>
-</div></div></div></div></section>
+  .canvas{
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
+  }
+
+  .yp-page{
+    width:100%;
+    min-width:0;
+  }
+
+  .jobbers-embed{
+    padding:10px 6px;
+  }
+
+  .yp-shell{
+    width:100%;
+    min-width:0;
+    padding:14px;
+    border-radius:16px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    box-shadow:var(--shadow);
+  }
+
+  .yp-form{
+    display:grid;
+    gap:12px;
+  }
+
+  .yp-headbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    padding:2px 2px 4px;
+  }
+
+  .yp-head-main{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+  }
+
+  .yp-head-icon{
+    width:40px;
+    height:40px;
+    flex:0 0 auto;
+    border-radius:10px;
+    display:grid;
+    place-items:center;
+    background:var(--panel);
+    border:1px solid var(--line);
+  }
+
+  .yp-head-icon svg{
+    width:24px;
+    height:24px;
+    display:block;
+  }
+
+  .yp-head-copy{
+    min-width:0;
+  }
+
+  .yp-title{
+    font-size:18px;
+    font-weight:900;
+    line-height:1.05;
+    letter-spacing:-.02em;
+    color:var(--text);
+    margin:0;
+  }
+
+  .yp-subtitle{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:700;
+    line-height:1.45;
+  }
+
+  .yp-head-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .yp-btn,
+  .yp-btn-primary,
+  .yp-btn-secondary{
+    appearance:none;
+    border:1px solid var(--line-2);
+    min-height:34px;
+    padding:0 12px;
+    border-radius:9px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+    cursor:pointer;
+    transition:.18s ease;
+    white-space:nowrap;
+  }
+
+  .yp-btn,
+  .yp-btn-secondary{
+    background:var(--panel);
+    color:var(--text);
+  }
+
+  .yp-btn:hover,
+  .yp-btn-secondary:hover{
+    background:var(--panel-2);
+    border-color:#3a4656;
+  }
+
+  .yp-btn-primary{
+    background:#e5e7eb;
+    color:#0b0f14;
+    border-color:#e5e7eb;
+  }
+
+  .yp-btn-primary:hover{
+    background:#fff;
+    color:#000;
+    border-color:#fff;
+  }
+
+  .yp-errors{
+    padding:10px 12px;
+    border-radius:10px;
+    background:rgba(239,68,68,.08);
+    border:1px solid rgba(239,68,68,.22);
+    font-weight:800;
+    color:#fecaca;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .yp-chipbar{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .yp-chip{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    min-width:0;
+    padding:10px 12px;
+    border-radius:12px;
+    background:var(--panel);
+    border:1px solid var(--line);
+  }
+
+  .yp-chip.highlight{
+    background:var(--panel-2);
+  }
+
+  .yp-chip-label{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:900;
+    color:var(--muted);
+  }
+
+  .yp-chip-value{
+    font-size:15px;
+    font-weight:900;
+    line-height:1.1;
+    color:var(--text);
+    word-break:break-word;
+  }
+
+  .yp-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 300px;
+    gap:12px;
+    align-items:start;
+  }
+
+  .yp-main,
+  .yp-side{
+    min-width:0;
+    display:grid;
+    gap:12px;
+  }
+
+  .yp-summary,
+  .yp-card,
+  .yp-accordion{
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--panel);
+    overflow:hidden;
+  }
+
+  .yp-accordion summary{
+    list-style:none;
+    cursor:pointer;
+    user-select:none;
+    padding:12px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    background:var(--panel);
+    border-bottom:1px solid transparent;
+  }
+
+  .yp-accordion[open] summary{
+    border-bottom-color:var(--line);
+  }
+
+  .yp-accordion summary::-webkit-details-marker{
+    display:none;
+  }
+
+  .yp-accordion-head{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    min-width:0;
+  }
+
+  .yp-accordion-dot{
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background:#d1d5db;
+    margin-top:6px;
+    flex:0 0 auto;
+  }
+
+  .yp-accordion-copy{
+    min-width:0;
+  }
+
+  .yp-panel-kicker{
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+    font-weight:900;
+  }
+
+  .yp-panel-title{
+    margin-top:2px;
+    font-size:14px;
+    font-weight:900;
+    line-height:1.1;
+    color:var(--text);
+  }
+
+  .yp-panel-sub{
+    margin-top:4px;
+    font-size:10px;
+    font-weight:700;
+    color:var(--muted);
+    line-height:1.45;
+  }
+
+  .yp-accordion-meta{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex:0 0 auto;
+  }
+
+  .yp-accordion-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--soft);
+    font-size:10px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .yp-caret-box{
+    width:26px;
+    height:26px;
+    border-radius:8px;
+    display:grid;
+    place-items:center;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+  }
+
+  .yp-caret{
+    width:8px;
+    height:8px;
+    border-right:2px solid var(--text);
+    border-bottom:2px solid var(--text);
+    transform:rotate(45deg);
+    margin-top:-3px;
+    transition:.18s ease;
+  }
+
+  .yp-accordion[open] .yp-caret{
+    transform:rotate(225deg);
+    margin-top:3px;
+  }
+
+  .yp-summary-head,
+  .yp-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    padding:12px 12px 0;
+  }
+
+  .yp-accordion-body,
+  .yp-summary-body,
+  .yp-card-body{
+    padding:12px;
+  }
+
+  .yp-grid{
+    display:grid;
+    gap:10px;
+  }
+
+  .yp-header-grid{
+    grid-template-columns:1.15fr .9fr .9fr .9fr;
+  }
+
+  .yp-field{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    min-width:0;
+  }
+
+  .yp-field.span-2{
+    grid-column:span 2;
+  }
+
+  .yp-field.span-4{
+    grid-column:span 4;
+  }
+
+  .yp-field label{
+    font-size:9px;
+    font-weight:900;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .yp-field input,
+  .yp-field select,
+  .yp-field textarea{
+    width:100%;
+    box-sizing:border-box;
+    min-height:36px;
+    padding:7px 10px;
+    border-radius:10px;
+    border:1px solid var(--line-2);
+    background:var(--panel-3);
+    outline:none;
+    color:var(--text);
+    font:inherit;
+    font-size:12px;
+    appearance:none;
+    transition:.18s ease;
+  }
+
+  .yp-field textarea{
+    min-height:78px;
+    resize:vertical;
+  }
+
+  .yp-field select{
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgba(255,255,255,.55) 50%),
+      linear-gradient(135deg, rgba(255,255,255,.55) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 15px, calc(100% - 12px) 15px;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right:34px;
+  }
+
+  .yp-field input:focus,
+  .yp-field select:focus,
+  .yp-field textarea:focus{
+    border-color:#475467;
+    background:#121821;
+  }
+
+  .yp-err{
+    color:#fca5a5;
+    font-size:10px;
+    font-weight:800;
+  }
+
+  .yp-lines{
+    padding:0 12px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .yp-row{
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--panel-2);
+    overflow:hidden;
+  }
+
+  .yp-row-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:10px 10px 8px;
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+  }
+
+  .yp-row-chips{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+
+  .yp-row-badge,
+  .yp-row-meta{
+    display:inline-flex;
+    align-items:center;
+    min-height:22px;
+    padding:0 8px;
+    border-radius:999px;
+    background:var(--panel-2);
+    color:var(--soft);
+    border:1px solid var(--line);
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+
+  .yp-row-remove{
+    width:28px;
+    height:28px;
+    border-radius:999px;
+    border:1px solid #5b2330;
+    background:transparent;
+    color:#fca5a5;
+    font-size:15px;
+    line-height:1;
+    cursor:pointer;
+    display:grid;
+    place-items:center;
+    transition:.18s ease;
+  }
+
+  .yp-row-remove:hover{
+    background:#7f1d1d;
+    color:#fff;
+    border-color:#7f1d1d;
+  }
+
+  .yp-row-body{
+    padding:10px;
+    display:grid;
+    gap:10px;
+  }
+
+  .yp-row-main{
+    display:grid;
+    grid-template-columns:2fr .8fr .9fr .9fr .9fr;
+    gap:8px;
+    align-items:end;
+  }
+
+  .yp-row-block{
+    background:var(--panel-3);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px;
+  }
+
+  .yp-row-block-title{
+    margin-bottom:8px;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  .yp-row-specs{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+    gap:8px;
+    align-items:end;
+  }
+
+  .yp-side-stack{
+    position:sticky;
+    top:14px;
+    display:grid;
+    gap:12px;
+  }
+
+  .yp-summary-total{
+    margin:12px 12px 0;
+    padding:12px;
+    background:var(--panel-3);
+    border:1px solid var(--line);
+    border-radius:12px;
+  }
+
+  .yp-summary-total-label{
+    font-size:9px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+  }
+
+  .yp-summary-total-value{
+    margin-top:4px;
+    font-size:24px;
+    font-weight:950;
+    line-height:1;
+    color:var(--text);
+    letter-spacing:-.03em;
+  }
+
+  .yp-summary .yp-field input[readonly]{
+    background:var(--panel-3);
+    font-weight:900;
+  }
+
+  .yp-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .yp-actions .yp-btn-primary,
+  .yp-actions .yp-btn-secondary{
+    flex:1 1 0;
+  }
+
+  @media (max-width: 1280px){
+    .yp-row-main{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+
+    .yp-row-specs{
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 1100px){
+    .yp-layout,
+    .yp-header-grid,
+    .yp-chipbar{
+      grid-template-columns:1fr;
+    }
+
+    .yp-side-stack{
+      position:static;
+    }
+
+    .yp-field.span-2,
+    .yp-field.span-4{
+      grid-column:span 1;
+    }
+
+    .yp-row-specs{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px){
+    .yp-shell{
+      padding:12px;
+      border-radius:14px;
+    }
+
+    .yp-headbar,
+    .yp-row-topbar,
+    .yp-actions{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .yp-head-actions,
+    .yp-btn,
+    .yp-btn-primary,
+    .yp-btn-secondary{
+      width:100%;
+    }
+
+    .yp-row-main,
+    .yp-row-specs{
+      grid-template-columns:1fr;
+    }
+
+    .yp-summary-total-value{
+      font-size:22px;
+    }
+
+    .yp-accordion summary{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .yp-accordion-meta{
+      justify-content:space-between;
+    }
+  }
+</style>
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="yp-page">
+      <div class="jobbers-embed">
+        <div class="yp-shell">
+          <form method="post" class="yp-form">
+            {% csrf_token %}
+            {{ formset.management_form }}
+
+            <div class="yp-headbar">
+              <div class="yp-head-main">
+                <div class="yp-head-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M4.75 7.25A1.5 1.5 0 0 1 6.25 5.75h8.2l4.8 4.8v7.2a1.5 1.5 0 0 1-1.5 1.5h-11.5a1.5 1.5 0 0 1-1.5-1.5v-10.5Z" stroke="#e5e7eb" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M14.45 5.9v3.35a1 1 0 0 0 1 1h3.35" stroke="#e5e7eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8 14.25h5.5" stroke="#e5e7eb" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8 11.25h3.5" stroke="#e5e7eb" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
+
+                <div class="yp-head-copy">
+                  <h1 class="yp-title">{% if mode == 'edit' %}Edit Yarn PO{% else %}Yarn Purchase Order{% endif %}</h1>
+                  <div class="yp-subtitle">Compact purchase order form with clean dark UI.</div>
+                </div>
+              </div>
+
+              <div class="yp-head-actions">
+                <a class="yp-btn" href="{% url 'accounts:yarnpo_list' %}">Back to List</a>
+              </div>
+            </div>
+
+            {% if form.non_field_errors or formset.non_form_errors %}
+            <div class="yp-errors">
+              {{ form.non_field_errors }}
+              {{ formset.non_form_errors }}
+            </div>
+            {% endif %}
+
+            <div class="yp-chipbar">
+              <div class="yp-chip highlight">
+                <div class="yp-chip-label">System Number</div>
+                <div class="yp-chip-value">{{ system_number_preview }}</div>
+              </div>
+
+              <div class="yp-chip">
+                <div class="yp-chip-label">Firm</div>
+                <div class="yp-chip-value">{% if auto_firm_name %}{{ auto_firm_name }}{% else %}No firm found{% endif %}</div>
+                {{ form.firm.as_hidden }}
+              </div>
+
+              <div class="yp-chip">
+                <div class="yp-chip-label">Total Quantity</div>
+                <div class="yp-chip-value" id="totalQtyText">{{ po_obj.total_weight|default:"0.00" }}</div>
+              </div>
+            </div>
+
+            <div class="yp-layout">
+              <div class="yp-main">
+
+                <details class="yp-accordion" open>
+                  <summary>
+                    <div class="yp-accordion-head">
+                      <div class="yp-accordion-dot"></div>
+                      <div class="yp-accordion-copy">
+                        <div class="yp-panel-kicker">Header</div>
+                        <div class="yp-panel-title">Order Details</div>
+                        <div class="yp-panel-sub">Vendor, PO number, date, and shipping address.</div>
+                      </div>
+                    </div>
+
+                    <div class="yp-accordion-meta">
+                      <div class="yp-accordion-chip">Basic Info</div>
+                      <div class="yp-caret-box"><div class="yp-caret"></div></div>
+                    </div>
+                  </summary>
+
+                  <div class="yp-accordion-body">
+                    <div class="yp-grid yp-header-grid">
+                      <div class="yp-field">
+                        <label for="{{ form.vendor.id_for_label }}">Vendor</label>
+                        {{ form.vendor }}
+                        {% for err in form.vendor.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.po_number.id_for_label }}">PO Number</label>
+                        {{ form.po_number }}
+                        {% for err in form.po_number.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.po_date.id_for_label }}">PO Date</label>
+                        {{ form.po_date }}
+                        {% for err in form.po_date.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.cancel_date.id_for_label }}">Cancel Date</label>
+                        {{ form.cancel_date }}
+                        {% for err in form.cancel_date.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+
+                      <div class="yp-field span-4">
+                        <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
+                        {{ form.shipping_address }}
+                        {% for err in form.shipping_address.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="yp-accordion" open>
+                  <summary>
+                    <div class="yp-accordion-head">
+                      <div class="yp-accordion-dot"></div>
+                      <div class="yp-accordion-copy">
+                        <div class="yp-panel-kicker">Lines</div>
+                        <div class="yp-panel-title">Yarn Line Items</div>
+                        <div class="yp-panel-sub">Add compact rows with rates and specifications.</div>
+                      </div>
+                    </div>
+
+                    <div class="yp-accordion-meta">
+                      <div class="yp-accordion-chip">Dynamic Rows</div>
+                      <div class="yp-caret-box"><div class="yp-caret"></div></div>
+                    </div>
+                  </summary>
+
+                  <div style="padding:0 12px 10px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <div class="yp-panel-sub" style="margin:0;">Small and compact row cards.</div>
+
+                    <button type="button" class="yp-btn-primary" id="addYarnRow">
+                      <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5v14"></path>
+                        <path d="M5 12h14"></path>
+                      </svg>
+                      Add Row
+                    </button>
+                  </div>
+
+                  <div id="poRows" class="yp-lines">
+                    {% for item_form in formset.forms %}
+                    <div class="yp-row" data-row>
+                      {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                      <div class="yp-row-topbar">
+                        <div class="yp-row-chips">
+                          <span class="yp-row-badge">Line {{ forloop.counter }}</span>
+                          <span class="yp-row-meta">Yarn Item</span>
+                        </div>
+
+                        <div>
+                          <button type="button" class="yp-row-remove po-row-remove" title="Remove row">×</button>
+                          <div style="display:none;">{{ item_form.DELETE }}</div>
+                        </div>
+                      </div>
+
+                      <div class="yp-row-body">
+                        <div class="yp-row-main">
+                          <div class="yp-field">
+                            <label>Yarn Type</label>
+                            {{ item_form.material_type }}
+                            {% for err in item_form.material_type.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Unit</label>
+                            {{ item_form.unit }}
+                            {% for err in item_form.unit.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Quantity</label>
+                            {{ item_form.quantity }}
+                            {% for err in item_form.quantity.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Rate</label>
+                            {{ item_form.rate }}
+                            {% for err in item_form.rate.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Final Amount</label>
+                            {{ item_form.final_amount }}
+                            {% for err in item_form.final_amount.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                          </div>
+                        </div>
+
+                        <div class="yp-row-block">
+                          <div class="yp-row-block-title">Additional Specifications</div>
+
+                          <div class="yp-row-specs">
+                            <div class="yp-field">
+                              <label>Value</label>
+                              {{ item_form.value }}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Count</label>
+                              {{ item_form.count }}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>GSM</label>
+                              {{ item_form.gsm }}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Dia</label>
+                              {{ item_form.dia }}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Gauge</label>
+                              {{ item_form.gauge }}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Rolls</label>
+                              {{ item_form.rolls }}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>S/L</label>
+                              {{ item_form.sl }}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>HSN Code</label>
+                              {{ item_form.hsn_code }}
+                            </div>
+
+                            <div class="yp-field span-2">
+                              <label>Remark</label>
+                              {{ item_form.remark }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+
+                  <template id="emptyYarnRowTemplate">
+                    <div class="yp-row" data-row>
+                      {% with item_form=formset.empty_form %}
+                      {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                      <div class="yp-row-topbar">
+                        <div class="yp-row-chips">
+                          <span class="yp-row-badge">Line</span>
+                          <span class="yp-row-meta">Yarn Item</span>
+                        </div>
+
+                        <div>
+                          <button type="button" class="yp-row-remove po-row-remove" title="Remove row">×</button>
+                          <div style="display:none;">{{ item_form.DELETE }}</div>
+                        </div>
+                      </div>
+
+                      <div class="yp-row-body">
+                        <div class="yp-row-main">
+                          <div class="yp-field">
+                            <label>Yarn Type</label>
+                            {{ item_form.material_type }}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Unit</label>
+                            {{ item_form.unit }}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Quantity</label>
+                            {{ item_form.quantity }}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Rate</label>
+                            {{ item_form.rate }}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Final Amount</label>
+                            {{ item_form.final_amount }}
+                          </div>
+                        </div>
+
+                        <div class="yp-row-block">
+                          <div class="yp-row-block-title">Additional Specifications</div>
+
+                          <div class="yp-row-specs">
+                            <div class="yp-field"><label>Value</label>{{ item_form.value }}</div>
+                            <div class="yp-field"><label>Count</label>{{ item_form.count }}</div>
+                            <div class="yp-field"><label>GSM</label>{{ item_form.gsm }}</div>
+                            <div class="yp-field"><label>Dia</label>{{ item_form.dia }}</div>
+                            <div class="yp-field"><label>Gauge</label>{{ item_form.gauge }}</div>
+                            <div class="yp-field"><label>Rolls</label>{{ item_form.rolls }}</div>
+                            <div class="yp-field"><label>S/L</label>{{ item_form.sl }}</div>
+                            <div class="yp-field"><label>HSN Code</label>{{ item_form.hsn_code }}</div>
+                            <div class="yp-field span-2"><label>Remark</label>{{ item_form.remark }}</div>
+                          </div>
+                        </div>
+                      </div>
+                      {% endwith %}
+                    </div>
+                  </template>
+                </details>
+              </div>
+
+              <div class="yp-side">
+                <div class="yp-side-stack">
+                  <div class="yp-summary">
+                    <div class="yp-summary-head">
+                      <div>
+                        <div class="yp-panel-kicker">Totals</div>
+                        <div class="yp-panel-title">Summary</div>
+                        <div class="yp-panel-sub">Live compact totals.</div>
+                      </div>
+                    </div>
+
+                    <div class="yp-summary-total">
+                      <div class="yp-summary-total-label">Grand Total</div>
+                      <div class="yp-summary-total-value" id="grandTotalTextMirror">₹{{ po_obj.grand_total|default:"0.00" }}</div>
+                    </div>
+
+                    <div class="yp-summary-body">
+                      <div class="yp-field">
+                        <label>Sub Total</label>
+                        <input type="text" id="subtotalPreview" value="{{ po_obj.subtotal|default:'0.00' }}" readonly>
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.discount_percent.id_for_label }}">Discount (%)</label>
+                        {{ form.discount_percent }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label>After Discount</label>
+                        <input type="text" id="afterDiscountPreview" value="{{ po_obj.after_discount_value|default:'0.00' }}" readonly>
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.others.id_for_label }}">Others</label>
+                        {{ form.others }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.cgst_percent.id_for_label }}">CGST %</label>
+                        {{ form.cgst_percent }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.sgst_percent.id_for_label }}">SGST %</label>
+                        {{ form.sgst_percent }}
+                      </div>
+
+                      <div class="yp-field">
+                        <label>Grand Total</label>
+                        <input type="text" id="grandTotalPreview" value="{{ po_obj.grand_total|default:'0.00' }}" readonly>
+                      </div>
+                    </div>
+                  </div>
+
+                  <details class="yp-accordion" open>
+                    <summary>
+                      <div class="yp-accordion-head">
+                        <div class="yp-accordion-dot"></div>
+                        <div class="yp-accordion-copy">
+                          <div class="yp-panel-kicker">Notes</div>
+                          <div class="yp-panel-title">Remarks & Terms</div>
+                          <div class="yp-panel-sub">Final comments before save.</div>
+                        </div>
+                      </div>
+
+                      <div class="yp-accordion-meta">
+                        <div class="yp-accordion-chip">Final Step</div>
+                        <div class="yp-caret-box"><div class="yp-caret"></div></div>
+                      </div>
+                    </summary>
+
+                    <div class="yp-accordion-body">
+                      <div class="yp-field">
+                        <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+                        {{ form.remarks }}
+                        {% for err in form.remarks.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.terms_conditions.id_for_label }}">Terms &amp; Conditions</label>
+                        {{ form.terms_conditions }}
+                        {% for err in form.terms_conditions.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+
+                      <div class="yp-actions">
+                        <button type="submit" class="yp-btn-primary">Save Yarn PO</button>
+                        <a class="yp-btn-secondary" href="{% url 'accounts:yarnpo_list' %}">Cancel</a>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const totalForms = document.getElementById("id_items-TOTAL_FORMS");
+    const rowsWrap = document.getElementById("poRows");
+    const addBtn = document.getElementById("addYarnRow");
+    const template = document.getElementById("emptyYarnRowTemplate");
+
+    function num(v) {
+      const n = parseFloat(v || 0);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function refreshRowLabels() {
+      const visibleRows = [...rowsWrap.querySelectorAll("[data-row]")].filter((row) => row.style.display !== "none");
+      visibleRows.forEach((row, index) => {
+        const badge = row.querySelector(".yp-row-badge");
+        if (badge) badge.textContent = `Line ${index + 1}`;
+      });
+    }
+
+    function refreshTotals() {
+      let subtotal = 0;
+      let totalQty = 0;
+
+      rowsWrap.querySelectorAll("[data-row]").forEach((row) => {
+        if (row.style.display === "none") return;
+
+        const qty = row.querySelector('input[name$="-quantity"]');
+        const rate = row.querySelector('input[name$="-rate"]');
+        const finalAmount = row.querySelector('input[name$="-final_amount"]');
+
+        const qtyVal = num(qty && qty.value);
+        const rateVal = num(rate && rate.value);
+
+        if (finalAmount && (!finalAmount.value || document.activeElement !== finalAmount)) {
+          finalAmount.value = (qtyVal * rateVal).toFixed(2);
+        }
+
+        subtotal += num(finalAmount && finalAmount.value);
+        totalQty += qtyVal;
+      });
+
+      const discountEl = document.getElementById("{{ form.discount_percent.id_for_label }}");
+      const othersEl = document.getElementById("{{ form.others.id_for_label }}");
+      const cgstEl = document.getElementById("{{ form.cgst_percent.id_for_label }}");
+      const sgstEl = document.getElementById("{{ form.sgst_percent.id_for_label }}");
+
+      const discount = num(discountEl && discountEl.value);
+      const others = num(othersEl && othersEl.value);
+      const cgst = num(cgstEl && cgstEl.value);
+      const sgst = num(sgstEl && sgstEl.value);
+
+      const afterDiscount = subtotal - (subtotal * discount / 100);
+      const grandTotal = afterDiscount + others + (afterDiscount * (cgst + sgst) / 100);
+
+      document.getElementById("subtotalPreview").value = subtotal.toFixed(2);
+      document.getElementById("afterDiscountPreview").value = afterDiscount.toFixed(2);
+      document.getElementById("grandTotalPreview").value = grandTotal.toFixed(2);
+      document.getElementById("totalQtyText").textContent = totalQty.toFixed(2);
+
+      const grandTotalTextMirror = document.getElementById("grandTotalTextMirror");
+      if (grandTotalTextMirror) {
+        grandTotalTextMirror.textContent = `₹${grandTotal.toFixed(2)}`;
+      }
+
+      refreshRowLabels();
+    }
+
+    function bindRow(row) {
+      row.querySelectorAll("input, select, textarea").forEach((field) => {
+        field.addEventListener("input", refreshTotals);
+        field.addEventListener("change", refreshTotals);
+      });
+
+      const removeBtn = row.querySelector(".po-row-remove");
+      const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+
+      removeBtn?.addEventListener("click", () => {
+        if (deleteInput) deleteInput.checked = true;
+        row.style.display = "none";
+        refreshTotals();
+      });
+    }
+
+    rowsWrap.querySelectorAll("[data-row]").forEach(bindRow);
+
+    addBtn?.addEventListener("click", () => {
+      const idx = parseInt(totalForms.value, 10);
+      const html = template.innerHTML.replaceAll("__prefix__", idx);
+      const temp = document.createElement("div");
+      temp.innerHTML = html.trim();
+      const row = temp.firstElementChild;
+      rowsWrap.appendChild(row);
+      totalForms.value = idx + 1;
+      bindRow(row);
+      refreshTotals();
+    });
+
+    [
+      "{{ form.discount_percent.id_for_label }}",
+      "{{ form.others.id_for_label }}",
+      "{{ form.cgst_percent.id_for_label }}",
+      "{{ form.sgst_percent.id_for_label }}"
+    ].forEach((id) => {
+      document.getElementById(id)?.addEventListener("input", refreshTotals);
+    });
+
+    refreshTotals();
+  })();
+</script>
 {% endblock %}

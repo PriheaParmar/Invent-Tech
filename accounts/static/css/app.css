@@ -12,7 +12,7 @@
 :root{
   /* InventTech accents */
   --blue: rgba(28, 109, 216, 1);
-  --pink: rgba(238, 61, 133, 1);
+  --pink: rgb(238, 61, 133);
   --orange: rgba(250, 189, 100, 1);
 
   /* Minimalist neutrals */

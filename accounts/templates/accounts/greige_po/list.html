@@ -701,8 +701,7 @@
                         <a class="jb-link" href="{% url 'accounts:dyeingpo_detail' dyeing_po.id %}">View Dyeing PO</a>
                       {% elif po.total_inward_qty and po.total_inward_qty > 0 %}
                         <a class="jb-link" href="{% url 'accounts:generate_dyeing_po_from_greige' po.id %}">Generate Dyeing PO</a>
-                      {% else %}
-                        <span class="jb-link jb-link-disabled" title="Generate Greige inward first">Generate Dyeing PO</span>
+                      
                       {% endif %}
                     {% endwith %}
 

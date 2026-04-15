@@ -1,0 +1,9 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}
+  {% if mode == "edit" %}Edit Dyeing Master{% else %}Create Dyeing Master{% endif %} - InventTech
+{% endblock %}
+
+{% block content %}
+  {% include "accounts/dyeing_material_links/form_embed.html" with full_page=1 %}
+{% endblock %}

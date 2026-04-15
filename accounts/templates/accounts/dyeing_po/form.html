@@ -1,38 +1,1111 @@
 {% extends "accounts/base_app.html" %}
-{% block title %}{% if mode == 'edit' %}Edit Dyeing PO{% else %}Create Dyeing PO{% endif %} - InventTech{% endblock %}
-{% block page_title %}PO / Dyeing / {% if mode == 'edit' %}Edit{% else %}Create{% endif %}{% endblock %}
-{% block page_subtitle %}Generate Dyeing PO from Greige inward data{% endblock %}
+{% block title %}{% if mode == 'edit' %}Edit Dyeing PO{% else %}Generate Dyeing PO{% endif %} - InventTech{% endblock %}
+{% block page_title %}{% if mode == 'edit' %}Edit Dyeing PO{% else %}Generate Dyeing PO{% endif %}{% endblock %}
+{% block page_subtitle %}Create and manage dyeing purchase orders{% endblock %}
 
 {% block content %}
-
 <style>
-  .dpf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}.dpf-field{display:flex;flex-direction:column;gap:6px}.dpf-field label{font-size:12px;font-weight:700;color:rgba(15,23,42,.72)}.dpf-field input,.dpf-field select,.dpf-field textarea{width:100%;min-height:42px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff;font:inherit}.dpf-field textarea{min-height:84px;resize:vertical}.dpf-span-2{grid-column:span 2}.dpf-span-3{grid-column:span 3}.dpf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}.dpf-block{margin-top:16px;border:1px solid rgba(15,23,42,.08);border-radius:18px;background:rgba(255,255,255,.72);overflow:hidden}.dpf-block summary{cursor:pointer;list-style:none;padding:16px 18px;font-weight:800}.dpf-block-body{padding:0 18px 18px;border-top:1px solid rgba(15,23,42,.08)}.dpf-mini-table{width:100%;border-collapse:collapse}.dpf-mini-table th,.dpf-mini-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:13px;vertical-align:top}.dpf-errors{margin:0 18px 18px;padding:12px 14px;border-radius:12px;background:rgba(239,68,68,.08);color:#991b1b;font-size:13px}@media (max-width:1100px){.dpf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dpf-span-3{grid-column:span 2}}@media (max-width:760px){.dpf-grid{grid-template-columns:1fr}.dpf-span-2,.dpf-span-3{grid-column:span 1}}
-</style>
-<section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
-  <div class="jb-head"><div><div class="jb-title">{% if mode == 'edit' %}Edit Dyeing PO{% else %}Purchase Order for Dyeing{% endif %}</div><div class="jb-sub">Continue the greige inward stage into dyeing and then into ready inward handling.</div></div></div>
-  {% if form.non_field_errors %}<div class="dpf-errors">{{ form.non_field_errors }}</div>{% endif %}
-  {% if existing_po and mode != 'edit' %}<div class="dpf-errors">Dyeing PO already exists for this Greige PO. <a href="{% url 'accounts:dyeingpo_detail' existing_po.id %}">Open existing Dyeing PO</a></div>{% endif %}
-  <form method="post">{% csrf_token %}<div style="padding:18px;"><div class="dpf-grid">
-    <div class="dpf-field"><label>Dyeing PO No</label><input type="text" value="{% if po_obj %}{{ po_obj.system_number }}{% else %}Auto Generated{% endif %}" disabled></div>
-    <div class="dpf-field"><label>Internal PO Number</label>{{ form.internal_po_number }}</div>
-    <div class="dpf-field"><label>Source Greige PO</label>{{ form.source_greige_po }}{{ form.source_greige_po.errors }}</div>
-    <div class="dpf-field"><label>PO Number</label>{{ form.po_number }}</div>
-    <div class="dpf-field"><label>Date</label>{{ form.po_date }}</div>
-    <div class="dpf-field"><label>Available Qty</label>{{ form.available_qty }}</div>
-    <div class="dpf-field"><label>Vendor</label>{{ form.vendor }}</div>
-    <div class="dpf-field"><label>Firm</label>{{ form.firm }}</div>
-    <div class="dpf-field"><label>Cancel Date</label>{{ form.cancel_date }}</div>
-    <div class="dpf-field"><label>Director</label>{{ form.director }}</div>
-    <div class="dpf-field"><label>Validity Period</label>{{ form.validity_period }}</div>
-    <div class="dpf-field"><label>Delivery Period</label>{{ form.delivery_period }}</div>
-    <div class="dpf-field dpf-span-2"><label>Shipping Address</label>{{ form.shipping_address }}</div>
-    <div class="dpf-field dpf-span-2"><label>Address</label>{{ form.address }}</div>
-    <div class="dpf-field"><label>Expected Delivery Date</label>{{ form.expected_delivery_date }}</div>
-    <div class="dpf-field dpf-span-2"><label>Delivery Schedule</label>{{ form.delivery_schedule }}</div>
-    <div class="dpf-field dpf-span-3"><label>Remarks</label>{{ form.remarks }}</div>
-  </div><div class="dpf-actions"><a class="jb-secondary" href="{% url 'accounts:dyeingpo_list' %}">Back to Dyeing PO</a>{% if po_obj %}<a class="jb-secondary" href="{% url 'accounts:dyeingpo_inward' po_obj.id %}">Dyeing Inward</a>{% endif %}<button type="submit" class="jb-add">{% if mode == 'edit' %}Update{% else %}Save{% endif %} Dyeing PO</button></div></div></form>
+  :root{
+    --bg:#f6f7f9;
+    --panel:#ffffff;
+    --panel-2:#fafafa;
+    --panel-3:#f3f4f6;
+    --line:#e5e7eb;
+    --line-2:#d1d5db;
+    --text:#111827;
+    --muted:#6b7280;
+    --soft:#374151;
+    --accent:#111827;
+    --danger:#dc2626;
+    --shadow:0 8px 24px rgba(17,24,39,.06);
+  }
 
-  <details class="dpf-block" open><summary>Source Greige PO Details</summary><div class="dpf-block-body">{% if source_greige_po %}<table class="dpf-mini-table"><tr><th>Greige PO</th><td>{{ source_greige_po.system_number }}</td><th>Vendor</th><td>{{ source_greige_po.vendor.name }}</td></tr><tr><th>PO No</th><td>{{ source_greige_po.po_number|default:'—' }}</td><th>Firm</th><td>{% if source_greige_po.firm %}{{ source_greige_po.firm.firm_name }}{% else %}—{% endif %}</td></tr><tr><th>Total Ordered</th><td>{{ source_greige_po.total_weight|default:'0.00' }}</td><th>Total Inward</th><td>{{ source_greige_po.total_inward_qty|default:'0.00' }}</td></tr></table>{% else %}<div class="jb-empty">Choose a source Greige PO to see linked inward information.</div>{% endif %}</div></details>
-  <details class="dpf-block" open><summary>Source Greige Inwards</summary><div class="dpf-block-body">{% if source_inwards %}<table class="dpf-mini-table"><thead><tr><th>Inward No</th><th>Date</th><th>Item</th><th>Qty</th></tr></thead><tbody>{% for inward in source_inwards %}{% for inward_item in inward.items.all %}<tr><td>{{ inward.inward_number }}</td><td>{{ inward.inward_date|date:'d-m-Y' }}</td><td>{{ inward_item.po_item.fabric_name }}</td><td>{{ inward_item.quantity }}</td></tr>{% endfor %}{% endfor %}</tbody></table>{% else %}<div class="jb-empty">No Greige inward data found yet.</div>{% endif %}</div></details>
-</div></div></div></div></section>
+  .canvas{
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
+  }
+
+  .dp-page{
+    width:100%;
+    min-width:0;
+  }
+
+  .jobbers-embed{
+    padding:10px 6px;
+  }
+
+  .dp-shell{
+    width:100%;
+    min-width:0;
+    padding:14px;
+    border-radius:16px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    box-shadow:var(--shadow);
+  }
+
+  .dp-form{
+    display:grid;
+    gap:12px;
+  }
+
+  .dp-headbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    padding:2px 2px 4px;
+  }
+
+  .dp-head-main{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+  }
+
+  .dp-head-icon{
+    width:40px;
+    height:40px;
+    flex:0 0 auto;
+    border-radius:10px;
+    display:grid;
+    place-items:center;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+  }
+
+  .dp-head-icon svg{
+    width:24px;
+    height:24px;
+    display:block;
+  }
+
+  .dp-head-copy{
+    min-width:0;
+  }
+
+  .dp-title{
+    font-size:18px;
+    font-weight:900;
+    line-height:1.05;
+    letter-spacing:-.02em;
+    color:var(--text);
+    margin:0;
+  }
+
+  .dp-subtitle{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:700;
+    line-height:1.45;
+  }
+
+  .dp-head-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .dp-btn,
+  .dp-btn-primary,
+  .dp-btn-secondary{
+    appearance:none;
+    border:1px solid var(--line-2);
+    min-height:34px;
+    padding:0 12px;
+    border-radius:9px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+    cursor:pointer;
+    transition:.18s ease;
+    white-space:nowrap;
+  }
+
+  .dp-btn,
+  .dp-btn-secondary{
+    background:#fff;
+    color:var(--text);
+  }
+
+  .dp-btn:hover,
+  .dp-btn-secondary:hover{
+    background:var(--panel-2);
+    border-color:#bfc6cf;
+  }
+
+  .dp-btn-primary{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+
+  .dp-btn-primary:hover{
+    background:#000;
+    border-color:#000;
+    color:#fff;
+  }
+
+  .dp-errors{
+    padding:10px 12px;
+    border-radius:10px;
+    background:#fef2f2;
+    border:1px solid #fecaca;
+    font-weight:800;
+    color:#991b1b;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .dp-chipbar{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .dp-chip{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    min-width:0;
+    padding:10px 12px;
+    border-radius:12px;
+    background:var(--panel);
+    border:1px solid var(--line);
+  }
+
+  .dp-chip.highlight{
+    background:var(--panel-2);
+  }
+
+  .dp-chip-label{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:900;
+    color:var(--muted);
+  }
+
+  .dp-chip-value{
+    font-size:15px;
+    font-weight:900;
+    line-height:1.1;
+    color:var(--text);
+    word-break:break-word;
+  }
+
+  .dp-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 300px;
+    gap:12px;
+    align-items:start;
+  }
+
+  .dp-main,
+  .dp-side{
+    min-width:0;
+    display:grid;
+    gap:12px;
+  }
+
+  .dp-summary,
+  .dp-card,
+  .dp-accordion{
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--panel);
+    overflow:hidden;
+  }
+
+  .dp-accordion summary{
+    list-style:none;
+    cursor:pointer;
+    user-select:none;
+    padding:12px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    background:var(--panel);
+    border-bottom:1px solid transparent;
+  }
+
+  .dp-accordion[open] summary{
+    border-bottom-color:var(--line);
+  }
+
+  .dp-accordion summary::-webkit-details-marker{
+    display:none;
+  }
+
+  .dp-accordion-head{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    min-width:0;
+  }
+
+  .dp-accordion-dot{
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background:#111827;
+    margin-top:6px;
+    flex:0 0 auto;
+  }
+
+  .dp-accordion-copy{
+    min-width:0;
+  }
+
+  .dp-panel-kicker{
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+    font-weight:900;
+  }
+
+  .dp-panel-title{
+    margin-top:2px;
+    font-size:14px;
+    font-weight:900;
+    line-height:1.1;
+    color:var(--text);
+  }
+
+  .dp-panel-sub{
+    margin-top:4px;
+    font-size:10px;
+    font-weight:700;
+    color:var(--muted);
+    line-height:1.45;
+  }
+
+  .dp-accordion-meta{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex:0 0 auto;
+  }
+
+  .dp-accordion-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--soft);
+    font-size:10px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .dp-caret-box{
+    width:26px;
+    height:26px;
+    border-radius:8px;
+    display:grid;
+    place-items:center;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+  }
+
+  .dp-caret{
+    width:8px;
+    height:8px;
+    border-right:2px solid var(--text);
+    border-bottom:2px solid var(--text);
+    transform:rotate(45deg);
+    margin-top:-3px;
+    transition:.18s ease;
+  }
+
+  .dp-accordion[open] .dp-caret{
+    transform:rotate(225deg);
+    margin-top:3px;
+  }
+
+  .dp-summary-head,
+  .dp-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    padding:12px 12px 0;
+  }
+
+  .dp-accordion-body,
+  .dp-summary-body,
+  .dp-card-body{
+    padding:12px;
+  }
+
+  .dp-grid{
+    display:grid;
+    gap:10px;
+  }
+
+  .dp-header-grid{
+    grid-template-columns:1.1fr .9fr .9fr .9fr;
+  }
+
+  .dp-field{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    min-width:0;
+  }
+
+  .dp-field.span-2{
+    grid-column:span 2;
+  }
+
+  .dp-field.span-4{
+    grid-column:span 4;
+  }
+
+  .dp-field label{
+    font-size:9px;
+    font-weight:900;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .dp-field input,
+  .dp-field select,
+  .dp-field textarea{
+    width:100%;
+    box-sizing:border-box;
+    min-height:36px;
+    padding:7px 10px;
+    border-radius:10px;
+    border:1px solid var(--line-2);
+    background:#fff;
+    outline:none;
+    color:var(--text);
+    font:inherit;
+    font-size:12px;
+    appearance:none;
+    transition:.18s ease;
+  }
+
+  .dp-field textarea{
+    min-height:78px;
+    resize:vertical;
+  }
+
+  .dp-field select{
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgba(0,0,0,.45) 50%),
+      linear-gradient(135deg, rgba(0,0,0,.45) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 15px, calc(100% - 12px) 15px;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right:34px;
+  }
+
+  .dp-field input:focus,
+  .dp-field select:focus,
+  .dp-field textarea:focus{
+    border-color:#9ca3af;
+    background:#fff;
+  }
+
+  .dp-err{
+    color:#b91c1c;
+    font-size:10px;
+    font-weight:800;
+  }
+
+  .dp-source-grid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:10px;
+  }
+
+  .dp-source-box{
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--panel-2);
+    padding:10px;
+    min-width:0;
+  }
+
+  .dp-source-label{
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:900;
+    color:var(--muted);
+    margin-bottom:5px;
+  }
+
+  .dp-source-value{
+    font-size:12px;
+    font-weight:800;
+    line-height:1.4;
+    color:var(--text);
+    word-break:break-word;
+  }
+
+  .dp-items{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .dp-item{
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--panel-2);
+    overflow:hidden;
+  }
+
+  .dp-item-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px 8px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+
+  .dp-item-title{
+    font-size:12px;
+    font-weight:900;
+    color:var(--text);
+  }
+
+  .dp-item-badge{
+    display:inline-flex;
+    align-items:center;
+    min-height:22px;
+    padding:0 8px;
+    border-radius:999px;
+    background:#fff;
+    color:var(--soft);
+    border:1px solid var(--line);
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+
+  .dp-item-body{
+    padding:10px 12px;
+    display:grid;
+    gap:10px;
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+  }
+
+  .dp-meta{
+    min-width:0;
+  }
+
+  .dp-meta-label{
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:900;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+
+  .dp-meta-value{
+    font-size:12px;
+    font-weight:700;
+    line-height:1.45;
+    color:var(--text);
+    word-break:break-word;
+  }
+
+  .dp-side-stack{
+    position:sticky;
+    top:14px;
+    display:grid;
+    gap:12px;
+  }
+
+  .dp-summary-total{
+    margin:12px 12px 0;
+    padding:12px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+  }
+
+  .dp-summary-total-label{
+    font-size:9px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+  }
+
+  .dp-summary-total-value{
+    margin-top:4px;
+    font-size:24px;
+    font-weight:950;
+    line-height:1;
+    color:var(--text);
+    letter-spacing:-.03em;
+  }
+
+  .dp-summary-note{
+    margin-top:6px;
+    font-size:10px;
+    color:var(--muted);
+    font-weight:700;
+    line-height:1.5;
+  }
+
+  .dp-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .dp-actions .dp-btn-primary,
+  .dp-actions .dp-btn-secondary{
+    flex:1 1 0;
+  }
+
+  .dp-alert{
+    padding:10px 12px;
+    border-radius:10px;
+    background:#fff7ed;
+    border:1px solid #fed7aa;
+    color:#9a3412;
+    font-size:12px;
+    font-weight:800;
+    line-height:1.5;
+  }
+
+  @media (max-width: 1280px){
+    .dp-item-body,
+    .dp-source-grid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 1100px){
+    .dp-layout,
+    .dp-header-grid,
+    .dp-chipbar{
+      grid-template-columns:1fr;
+    }
+
+    .dp-side-stack{
+      position:static;
+    }
+
+    .dp-field.span-2,
+    .dp-field.span-4{
+      grid-column:span 1;
+    }
+
+    .dp-item-body,
+    .dp-source-grid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px){
+    .dp-shell{
+      padding:12px;
+      border-radius:14px;
+    }
+
+    .dp-headbar,
+    .dp-actions{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .dp-head-actions,
+    .dp-btn,
+    .dp-btn-primary,
+    .dp-btn-secondary{
+      width:100%;
+    }
+
+    .dp-item-body,
+    .dp-source-grid{
+      grid-template-columns:1fr;
+    }
+
+    .dp-summary-total-value{
+      font-size:22px;
+    }
+
+    .dp-accordion summary{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .dp-accordion-meta{
+      justify-content:space-between;
+    }
+  }
+</style>
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="dp-page">
+      <div class="jobbers-embed">
+        <div class="dp-shell">
+          <form method="post" class="dp-form">
+            {% csrf_token %}
+
+            <div class="dp-headbar">
+              <div class="dp-head-main">
+                <div class="dp-head-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M4.75 7.25A1.5 1.5 0 0 1 6.25 5.75h8.2l4.8 4.8v7.2a1.5 1.5 0 0 1-1.5 1.5h-11.5a1.5 1.5 0 0 1-1.5-1.5v-10.5Z" stroke="#111827" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M14.45 5.9v3.35a1 1 0 0 0 1 1h3.35" stroke="#111827" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8 14.25h5.5" stroke="#111827" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8 11.25h3.5" stroke="#111827" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
+
+                <div class="dp-head-copy">
+                  <h1 class="dp-title">{% if mode == 'edit' %}Edit Dyeing PO{% else %}Dyeing Purchase Order{% endif %}</h1>
+                  <div class="dp-subtitle">Same clean UI language, adapted for the dyeing flow.</div>
+                </div>
+              </div>
+
+              <div class="dp-head-actions">
+                <a class="dp-btn" href="{% url 'accounts:dyeingpo_list' %}">Back to List</a>
+              </div>
+            </div>
+
+            {% if form.non_field_errors %}
+            <div class="dp-errors">
+              {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            {% if existing_po and mode == 'add' %}
+            <div class="dp-alert">
+              A Dyeing PO already exists for this source.
+              <a href="{% url 'accounts:dyeingpo_detail' existing_po.id %}" style="color:inherit; text-decoration:underline;">Open existing PO</a>
+            </div>
+            {% endif %}
+
+            <div class="dp-chipbar">
+              <div class="dp-chip highlight">
+                <div class="dp-chip-label">System Number</div>
+                <div class="dp-chip-value">{% if po_obj and po_obj.system_number %}{{ po_obj.system_number }}{% else %}Auto Generated{% endif %}</div>
+              </div>
+
+              <div class="dp-chip">
+                <div class="dp-chip-label">Source Greige PO</div>
+                <div class="dp-chip-value">{% if source_greige_po %}{{ source_greige_po.system_number }}{% else %}Select source{% endif %}</div>
+              </div>
+
+              <div class="dp-chip">
+                <div class="dp-chip-label">Vendor</div>
+                <div class="dp-chip-value">
+                  {% if po_obj and po_obj.vendor %}
+                    {{ po_obj.vendor.name }}
+                  {% elif source_greige_po and source_greige_po.vendor %}
+                    {{ source_greige_po.vendor.name }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="dp-layout">
+              <div class="dp-main">
+
+                <details class="dp-accordion" open>
+                  <summary>
+                    <div class="dp-accordion-head">
+                      <div class="dp-accordion-dot"></div>
+                      <div class="dp-accordion-copy">
+                        <div class="dp-panel-kicker">Header</div>
+                        <div class="dp-panel-title">Dyeing PO Details</div>
+                        <div class="dp-panel-sub">Source selection, vendor, dates, quantity, and address.</div>
+                      </div>
+                    </div>
+
+                    <div class="dp-accordion-meta">
+                      <div class="dp-accordion-chip">Basic Info</div>
+                      <div class="dp-caret-box"><div class="dp-caret"></div></div>
+                    </div>
+                  </summary>
+
+                  <div class="dp-accordion-body">
+                    <div class="dp-grid dp-header-grid">
+                      {% if form.source_greige_po %}
+                      <div class="dp-field">
+                        <label for="{{ form.source_greige_po.id_for_label }}">Source Greige PO</label>
+                        {{ form.source_greige_po }}
+                        {% for err in form.source_greige_po.errors %}<div class="dp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                      {% endif %}
+
+                      {% if form.source_greige_inward %}
+                      <div class="dp-field">
+                        <label for="{{ form.source_greige_inward.id_for_label }}">Source Greige Inward</label>
+                        {{ form.source_greige_inward }}
+                        {% for err in form.source_greige_inward.errors %}<div class="dp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                      {% endif %}
+
+                      {% if form.vendor %}
+                      <div class="dp-field">
+                        <label for="{{ form.vendor.id_for_label }}">Vendor</label>
+                        {{ form.vendor }}
+                        {% for err in form.vendor.errors %}<div class="dp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                      {% endif %}
+
+                      {% if form.firm %}
+                      <div class="dp-field">
+                        <label for="{{ form.firm.id_for_label }}">Firm</label>
+                        {{ form.firm }}
+                        {% for err in form.firm.errors %}<div class="dp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                      {% endif %}
+
+                      {% if form.po_number %}
+                      <div class="dp-field">
+                        <label for="{{ form.po_number.id_for_label }}">PO Number</label>
+                        {{ form.po_number }}
+                        {% for err in form.po_number.errors %}<div class="dp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                      {% endif %}
+
+                      {% if form.po_date %}
+                      <div class="dp-field">
+                        <label for="{{ form.po_date.id_for_label }}">PO Date</label>
+                        {{ form.po_date }}
+                        {% for err in form.po_date.errors %}<div class="dp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                      {% endif %}
+
+                      {% if form.available_qty %}
+                      <div class="dp-field">
+                        <label for="{{ form.available_qty.id_for_label }}">Available Qty</label>
+                        {{ form.available_qty }}
+                        {% for err in form.available_qty.errors %}<div class="dp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                      {% endif %}
+
+                      {% if form.shipping_address %}
+                      <div class="dp-field span-4">
+                        <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
+                        {{ form.shipping_address }}
+                        {% for err in form.shipping_address.errors %}<div class="dp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </details>
+
+                <details class="dp-accordion" open>
+                  <summary>
+                    <div class="dp-accordion-head">
+                      <div class="dp-accordion-dot"></div>
+                      <div class="dp-accordion-copy">
+                        <div class="dp-panel-kicker">Source</div>
+                        <div class="dp-panel-title">Greige Source Details</div>
+                        <div class="dp-panel-sub">Reference information from the linked Greige PO and inward.</div>
+                      </div>
+                    </div>
+
+                    <div class="dp-accordion-meta">
+                      <div class="dp-accordion-chip">Source Flow</div>
+                      <div class="dp-caret-box"><div class="dp-caret"></div></div>
+                    </div>
+                  </summary>
+
+                  <div class="dp-accordion-body">
+                    <div class="dp-source-grid">
+                      <div class="dp-source-box">
+                        <div class="dp-source-label">Greige PO</div>
+                        <div class="dp-source-value">{% if source_greige_po %}{{ source_greige_po.system_number }}{% else %}—{% endif %}</div>
+                      </div>
+
+                      <div class="dp-source-box">
+                        <div class="dp-source-label">Greige Inward</div>
+                        <div class="dp-source-value">{% if selected_source_inward %}{{ selected_source_inward.inward_number }}{% else %}Full Greige PO{% endif %}</div>
+                      </div>
+
+                      <div class="dp-source-box">
+                        <div class="dp-source-label">Vendor</div>
+                        <div class="dp-source-value">{% if source_greige_po and source_greige_po.vendor %}{{ source_greige_po.vendor.name }}{% else %}—{% endif %}</div>
+                      </div>
+
+                      <div class="dp-source-box">
+                        <div class="dp-source-label">Firm</div>
+                        <div class="dp-source-value">{% if source_greige_po and source_greige_po.firm %}{{ source_greige_po.firm.firm_name }}{% else %}—{% endif %}</div>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="dp-accordion" open>
+                  <summary>
+                    <div class="dp-accordion-head">
+                      <div class="dp-accordion-dot"></div>
+                      <div class="dp-accordion-copy">
+                        <div class="dp-panel-kicker">Items</div>
+                        <div class="dp-panel-title">Generated Dyeing Items</div>
+                        <div class="dp-panel-sub">Preview of items that will flow into the dyeing purchase order.</div>
+                      </div>
+                    </div>
+
+                    <div class="dp-accordion-meta">
+                      <div class="dp-accordion-chip">Auto Generated</div>
+                      <div class="dp-caret-box"><div class="dp-caret"></div></div>
+                    </div>
+                  </summary>
+
+                  <div class="dp-accordion-body">
+                    <div class="dp-items">
+                      {% if po_obj and po_obj.items.all %}
+                        {% for item in po_obj.items.all %}
+                        <div class="dp-item">
+                          <div class="dp-item-head">
+                            <div class="dp-item-title">{{ item.fabric_name|default:"Dyeing Item" }}</div>
+                            <div class="dp-item-badge">Saved Item</div>
+                          </div>
+
+                          <div class="dp-item-body">
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Greige Name</div>
+                              <div class="dp-meta-value">{{ item.greige_name|default:"—" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Unit</div>
+                              <div class="dp-meta-value">{{ item.unit|default:"—" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Quantity</div>
+                              <div class="dp-meta-value">{{ item.quantity|default:"0.00" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Received</div>
+                              <div class="dp-meta-value">{{ item.inward_qty_total|default:"0.00" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Remark</div>
+                              <div class="dp-meta-value">{{ item.remark|default:"—" }}</div>
+                            </div>
+                          </div>
+                        </div>
+                        {% endfor %}
+
+                      {% elif selected_source_inward %}
+                        {% for inward_item in selected_source_inward.items.all %}
+                        <div class="dp-item">
+                          <div class="dp-item-head">
+                            <div class="dp-item-title">{{ inward_item.po_item.fabric_name|default:"Greige Item" }}</div>
+                            <div class="dp-item-badge">From Inward</div>
+                          </div>
+
+                          <div class="dp-item-body">
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Greige Name</div>
+                              <div class="dp-meta-value">{{ inward_item.po_item.fabric_name|default:"—" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Unit</div>
+                              <div class="dp-meta-value">{{ inward_item.po_item.unit|default:"—" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Quantity</div>
+                              <div class="dp-meta-value">{{ inward_item.quantity|default:"0.00" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Source PO Qty</div>
+                              <div class="dp-meta-value">{{ inward_item.po_item.quantity|default:"0.00" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Remark</div>
+                              <div class="dp-meta-value">{{ inward_item.remark|default:"—" }}</div>
+                            </div>
+                          </div>
+                        </div>
+                        {% endfor %}
+
+                      {% elif source_greige_po %}
+                        {% for item in source_greige_po.items.all %}
+                        <div class="dp-item">
+                          <div class="dp-item-head">
+                            <div class="dp-item-title">{{ item.fabric_name|default:"Greige Item" }}</div>
+                            <div class="dp-item-badge">From Greige PO</div>
+                          </div>
+
+                          <div class="dp-item-body">
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Greige Name</div>
+                              <div class="dp-meta-value">{{ item.fabric_name|default:"—" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Source Yarn</div>
+                              <div class="dp-meta-value">{{ item.yarn_name|default:"—" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Unit</div>
+                              <div class="dp-meta-value">{{ item.unit|default:"—" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Available Qty</div>
+                              <div class="dp-meta-value">{{ item.inward_qty_total|default:item.quantity|default:"0.00" }}</div>
+                            </div>
+                            <div class="dp-meta">
+                              <div class="dp-meta-label">Remark</div>
+                              <div class="dp-meta-value">{{ item.remark|default:"—" }}</div>
+                            </div>
+                          </div>
+                        </div>
+                        {% empty %}
+                        <div class="dp-item">
+                          <div class="dp-item-body" style="grid-template-columns:1fr;">
+                            <div class="dp-meta-value">No greige items available.</div>
+                          </div>
+                        </div>
+                        {% endfor %}
+                      {% else %}
+                        <div class="dp-item">
+                          <div class="dp-item-body" style="grid-template-columns:1fr;">
+                            <div class="dp-meta-value">Select source Greige PO to preview dyeing items.</div>
+                          </div>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              <div class="dp-side">
+                <div class="dp-side-stack">
+                  <div class="dp-summary">
+                    <div class="dp-summary-head">
+                      <div>
+                        <div class="dp-panel-kicker">Summary</div>
+                        <div class="dp-panel-title">Dyeing PO</div>
+                        <div class="dp-panel-sub">Quick reference before save.</div>
+                      </div>
+                    </div>
+
+                    <div class="dp-summary-total">
+                      <div class="dp-summary-total-label">Available Qty</div>
+                      <div class="dp-summary-total-value">
+                        {% if form.available_qty.value %}
+                          {{ form.available_qty.value }}
+                        {% elif po_obj and po_obj.available_qty %}
+                          {{ po_obj.available_qty }}
+                        {% else %}
+                          0.00
+                        {% endif %}
+                      </div>
+                      <div class="dp-summary-note">
+                        {% if selected_source_inward %}
+                          Source inward: {{ selected_source_inward.inward_number }}
+                        {% elif source_greige_po %}
+                          Source: {{ source_greige_po.system_number }}
+                        {% else %}
+                          Waiting for source selection
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="dp-summary-body">
+                      <div class="dp-source-box" style="padding:10px 0 0; border:none; background:transparent;">
+                        <div class="dp-source-label">PO Number</div>
+                        <div class="dp-source-value">
+                          {% if po_obj and po_obj.po_number %}
+                            {{ po_obj.po_number }}
+                          {% elif form.po_number.value %}
+                            {{ form.po_number.value }}
+                          {% else %}
+                            —
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="dp-source-box" style="padding:10px 0 0; border:none; background:transparent;">
+                        <div class="dp-source-label">PO Date</div>
+                        <div class="dp-source-value">
+                          {% if po_obj and po_obj.po_date %}
+                            {{ po_obj.po_date|date:"d-m-Y" }}
+                          {% elif form.po_date.value %}
+                            {{ form.po_date.value }}
+                          {% else %}
+                            —
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <details class="dp-accordion" open>
+                    <summary>
+                      <div class="dp-accordion-head">
+                        <div class="dp-accordion-dot"></div>
+                        <div class="dp-accordion-copy">
+                          <div class="dp-panel-kicker">Notes</div>
+                          <div class="dp-panel-title">Remarks & Save</div>
+                          <div class="dp-panel-sub">Final comments before saving this dyeing PO.</div>
+                        </div>
+                      </div>
+
+                      <div class="dp-accordion-meta">
+                        <div class="dp-accordion-chip">Final Step</div>
+                        <div class="dp-caret-box"><div class="dp-caret"></div></div>
+                      </div>
+                    </summary>
+
+                    <div class="dp-accordion-body">
+                      {% if form.remarks %}
+                      <div class="dp-field">
+                        <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+                        {{ form.remarks }}
+                        {% for err in form.remarks.errors %}<div class="dp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                      {% endif %}
+
+                      {% if form.terms_conditions %}
+                      <div class="dp-field">
+                        <label for="{{ form.terms_conditions.id_for_label }}">Terms &amp; Conditions</label>
+                        {{ form.terms_conditions }}
+                        {% for err in form.terms_conditions.errors %}<div class="dp-err">{{ err }}</div>{% endfor %}
+                      </div>
+                      {% endif %}
+
+                      <div class="dp-actions">
+                        <button type="submit" class="dp-btn-primary">Save Dyeing PO</button>
+                        <a class="dp-btn-secondary" href="{% url 'accounts:dyeingpo_list' %}">Cancel</a>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}

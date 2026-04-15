@@ -1,0 +1,149 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=3">
+
+<style>
+  .dml-notes{ color:#64748b; font-size:12px; }
+  .dml-details{ display:flex; flex-direction:column; gap:8px; min-width:280px; }
+  .dml-detail-card{
+    border:1px solid #e7edf5;
+    background:#f8fafc;
+    border-radius:12px;
+    padding:10px 12px;
+  }
+  .dml-detail-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .dml-detail-title{ font-weight:700; color:#111827; }
+  .dml-detail-type{ font-size:12px; color:#475467; }
+  .dml-detail-meta{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .dml-chip{
+    display:inline-flex; align-items:center; padding:4px 8px;
+    border-radius:999px; background:#fff; border:1px solid #e2e8f0;
+    color:#334155; font-size:12px; font-weight:600;
+  }
+</style>
+
+<div class="jobbers-embed material-subtype-list-embed">
+  <section class="jb-panel">
+    {% include "accounts/_messages_embed.html" %}
+
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Dyeing Master</div>
+        <div class="jb-sub">Link vendors with greige materials and define multiple dyeing options for each vendor-material combination</div>
+      </div>
+
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:dyeing_material_link_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search vendor, greige material, dyeing type or dyeing name"
+          autocomplete="off"
+        >
+
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:dyeing_material_link_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Vendor</th>
+            <th>Material Type</th>
+            <th>Greige Material</th>
+            <th>Dyeing Details</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for link in links %}
+          <tr>
+            <td>
+              <div>{{ link.vendor.name }}</div>
+              {% if link.vendor.contact_person %}
+                <div class="dml-notes">{{ link.vendor.contact_person }}</div>
+              {% endif %}
+            </td>
+            <td>{{ link.material_type.name|default:"—" }}</td>
+            <td>
+              <div>{{ link.material.name|default:"—" }}</div>
+              {% if link.notes %}
+                <div class="dml-notes">{{ link.notes }}</div>
+              {% endif %}
+            </td>
+            <td>
+              {% if link.details.all %}
+                <div class="dml-details">
+                  {% for detail in link.details.all %}
+                    <div class="dml-detail-card">
+                      <div class="dml-detail-head">
+                        <div>
+                          <div class="dml-detail-title">{{ detail.dyeing_name }}</div>
+                          <div class="dml-detail-type">{{ detail.get_dyeing_type_display|default:detail.dyeing_type }}</div>
+                        </div>
+                      </div>
+                      <div class="dml-detail-meta">
+                        <span class="dml-chip">Colors / %: {{ detail.percentage_no_of_colors|default:"0" }}</span>
+                        <span class="dml-chip">Weight Loss: {{ detail.weight_loss|default:"0" }}</span>
+                        <span class="dml-chip">Price: {{ detail.price|default:"0" }}</span>
+                        <span class="dml-chip">Sort: {{ detail.sort_order|default:"0" }}</span>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td class="jb-actions">
+              <a class="jb-link" href="{% url 'accounts:dyeing_material_link_edit' link.id %}{% if not full_page %}?embed=1{% endif %}">Edit</a>
+              <span class="jb-dot">•</span>
+              <form
+                method="post"
+                action="{% url 'accounts:dyeing_material_link_delete' link.id %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="dyeing master for &quot;{{ link.material.name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                {% if not full_page %}
+                <input type="hidden" name="embed" value="1">
+                {% endif %}
+                <button class="jb-link jb-link-danger jb-link-button" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="jb-empty">No dyeing master records found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

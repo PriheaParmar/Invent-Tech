@@ -5,45 +5,117 @@
 
 {% block content %}
 <style>
-  .rit-tools{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}.rit-search{display:flex;gap:10px;flex:1 1 320px}.rit-search input{width:100%;height:38px;border:1px solid rgba(0,0,0,.1);border-radius:999px;padding:0 12px;background:#fff}.rit-table{width:100%;border-collapse:collapse}.rit-table th,.rit-table td{padding:14px 12px;border-top:1px solid rgba(15,23,42,.08);text-align:left;vertical-align:top}.rit-table thead th{border-top:none;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#667085}.rit-card{display:grid;gap:8px}.rit-pill{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(16,185,129,.12);color:#047857;font-size:11px;font-weight:900}.rit-mini{display:grid;gap:8px}.rit-mini-card{border:1px solid rgba(15,23,42,.08);border-radius:12px;padding:10px;background:rgba(255,255,255,.72)}.rit-mini-title{font-size:12px;font-weight:800;color:#111827}.rit-mini-sub{font-size:12px;color:#667085;margin-top:3px}.rit-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-start}.rit-empty{text-align:center;padding:24px 12px;color:#667085}@media (max-width:980px){.rit-wrap{overflow:auto;}.rit-table{min-width:980px}}
+  .rit-tools{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .rit-search{display:flex;gap:10px;flex:1 1 320px}
+  .rit-search input{width:100%;height:38px;border:1px solid rgba(0,0,0,.1);border-radius:999px;padding:0 12px;background:#fff}
+  .rit-table{width:100%;border-collapse:collapse}
+  .rit-table th,.rit-table td{padding:14px 12px;border-top:1px solid rgba(15,23,42,.08);text-align:left;vertical-align:top}
+  .rit-table thead th{border-top:none;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#667085}
+  .rit-card{display:grid;gap:8px}
+  .rit-pill{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(16,185,129,.12);color:#047857;font-size:11px;font-weight:900}
+  .rit-mini{display:grid;gap:8px}
+  .rit-mini-card{border:1px solid rgba(15,23,42,.08);border-radius:12px;padding:10px;background:rgba(255,255,255,.72)}
+  .rit-mini-card.target{border-color:rgba(59,130,246,.45);box-shadow:0 0 0 3px rgba(59,130,246,.10)}
+  .rit-mini-title{font-size:12px;font-weight:800;color:#111827}
+  .rit-mini-sub{font-size:12px;color:#667085;margin-top:3px}
+  .rit-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+  .rit-empty{text-align:center;padding:24px 12px;color:#667085}
+  @media (max-width:980px){.rit-wrap{overflow:auto;}.rit-table{min-width:980px}}
 </style>
-<section class="page-section is-active"><div class="canvas"><div class="jb-page"><div class="jobbers-embed"><div class="jb-panel">
-  <div class="jb-head"><div><div class="jb-title">Ready Inwards</div><div class="jb-sub">Track inwarded Ready POs and final stock movement.</div></div></div>
-  <div class="rit-tools"><form class="rit-search" method="get"><input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search by ready PO, vendor, firm..."><button class="jb-add" type="submit">Search</button></form><a class="jb-secondary" href="{% url 'accounts:readypo_list' %}">Back to Ready PO</a></div>
-  <div class="rit-wrap"><table class="rit-table"><thead><tr><th>Ready Inward Details</th><th>Status / Actions</th></tr></thead><tbody>
-    {% for row in rows %}
-    <tr>
-      <td>
-        <div class="rit-card">
-          <div class="rit-pill">{{ row.po.system_number }}</div>
-          <div class="rit-mini-title">{{ row.po.po_number|default:'No PO Number' }}</div>
-          <div class="rit-mini-sub">Vendor: {{ row.po.vendor.name }} · Firm: {% if row.po.firm %}{{ row.po.firm.firm_name }}{% else %}—{% endif %}</div>
-          <div class="rit-mini-sub">Available Ready Qty: {{ row.po.remaining_qty_total|default:'0.00' }}</div>
-          <div class="rit-mini">
-            {% for inward_entry in row.inward_entries %}
-            <div class="rit-mini-card">
-              <div class="rit-mini-title">{{ inward_entry.inward.inward_number }} · {{ inward_entry.inward.inward_date|date:'d-m-Y' }}</div>
-              {% for item in inward_entry.items %}<div class="rit-mini-sub">{{ item.fabric_name }} — Ordered {{ item.ordered_qty }} / Inward {{ item.inward_qty }}{% if item.unit %} {{ item.unit }}{% endif %}</div>{% endfor %}
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="jb-page">
+      <div class="jobbers-embed">
+        <div class="jb-panel">
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">Ready Inwards</div>
+              <div class="jb-sub">Track inwarded Ready POs and final stock movement.</div>
             </div>
-            {% endfor %}
+          </div>
+
+          <div class="rit-tools">
+            <form class="rit-search" method="get">
+              <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search by ready PO, vendor, firm...">
+              <button class="jb-add" type="submit">Search</button>
+            </form>
+            <a class="jb-secondary" href="{% url 'accounts:readypo_list' %}">Back to Ready PO</a>
+          </div>
+
+          <div class="rit-wrap">
+            <table class="rit-table">
+              <thead>
+                <tr>
+                  <th>Ready Inward Details</th>
+                  <th>Status / Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in rows %}
+                <tr>
+                  <td>
+                    <div class="rit-card">
+                      <div class="rit-pill">{{ row.po.system_number }}</div>
+                      <div class="rit-mini-title">{{ row.po.po_number|default:'No PO Number' }}</div>
+                      <div class="rit-mini-sub">Vendor: {{ row.po.vendor.name }} · Firm: {% if row.po.firm %}{{ row.po.firm.firm_name }}{% else %}—{% endif %}</div>
+                      <div class="rit-mini-sub">Available Ready Qty: {{ row.po.remaining_qty_total|default:'0.00' }}</div>
+
+                      <div class="rit-mini">
+                        {% for inward_entry in row.inward_entries %}
+                        <div class="rit-mini-card{% if inward_entry.is_target %} target{% endif %}" id="ready-inward-{{ inward_entry.inward.id }}">
+                          <div class="rit-mini-title">{{ inward_entry.inward.inward_number }} · {{ inward_entry.inward.inward_date|date:'d-m-Y' }}</div>
+
+                          {% for item in inward_entry.items %}
+                            <div class="rit-mini-sub">
+                              {{ item.fabric_name }} — Ordered {{ item.ordered_qty }} / Inward {{ item.inward_qty }}{% if item.unit %} {{ item.unit }}{% endif %}
+                            </div>
+                          {% endfor %}
+
+                          <div class="rit-actions" style="margin-top:10px;">
+                            <a class="jb-secondary" href="{% url 'accounts:ready_inward_edit' inward_entry.inward.id %}">Edit Inward</a>
+                          </div>
+                        </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="rit-card">
+                      <div class="rit-pill" style="background:rgba(59,130,246,.12);color:#1d4ed8;">Final Stage</div>
+                      <div class="rit-mini-title">Ready inward stock captured</div>
+                      <div class="rit-mini-sub">This ready inward is now part of final ready stock tracking.</div>
+
+                      <div class="rit-actions">
+                        <a class="jb-secondary" href="{% url 'accounts:readypo_detail' row.po.id %}">View Ready PO</a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="2" class="rit-empty">No inwarded Ready POs found yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
         </div>
-      </td>
-      <td>
-        <div class="rit-card">
-          <div class="rit-pill" style="background:rgba(59,130,246,.12);color:#1d4ed8;">Final Stage</div>
-          <div class="rit-mini-title">Ready inward stock captured</div>
-          <div class="rit-mini-sub">This ready inward is now part of final ready stock tracking.</div>
-          <div class="rit-actions">
-            <a class="jb-secondary" href="{% url 'accounts:readypo_detail' row.po.id %}">View Ready PO</a>
-            <a class="jb-secondary" href="{% url 'accounts:readypo_inward' row.po.id %}">Add More Inward</a>
-          </div>
-        </div>
-      </td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="2" class="rit-empty">No inwarded Ready POs found yet.</td></tr>
-    {% endfor %}
-  </tbody></table></div>
-</div></div></div></div></section>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function(){
+    var targetId = "{{ target_inward_id|default:'' }}";
+    if (!targetId) return;
+    var el = document.getElementById("ready-inward-" + targetId);
+    if (!el) return;
+    window.setTimeout(function(){
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+  })();
+</script>
 {% endblock %}
