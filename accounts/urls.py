@@ -220,7 +220,6 @@ urlpatterns = [
     path("po/dyeing/inwards/<int:pk>/edit/", views.dyeing_inward_edit, name="dyeing_inward_edit"),
     path("po/dyeing/inwards/", views.dyeing_inward_tracker, name="dyeing_inward_tracker"),
     path("po/dyeing/<int:pk>/generate-ready/", views.generate_ready_po_from_dyeing, name="generate_ready_po_from_dyeing"),
-    path("po/dyeing/<int:pk>/review/", views.dyeingpo_review, name="dyeingpo_review"),
 
     # =========================================================
     # Ready Purchase Orders

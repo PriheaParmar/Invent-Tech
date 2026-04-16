@@ -5,6 +5,7 @@ from io import BytesIO
 import logging
 from zoneinfo import ZoneInfo
 
+from django import forms
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -38,11 +39,12 @@ from .forms import (
     CategoryForm,
     ClientForm,
     DashboardProfileForm,
-    DispatchChallanForm,
+    DyeingMaterialLinkDetailFormSet,
+    DyeingMaterialLinkForm,
+    DyeingOtherChargeForm,
     DyeingPOInwardForm,
     DyeingPurchaseOrderForm,
     DyeingPurchaseOrderItemFormSet,
-    DyeingPOReviewForm,
     ExpenseForm,
     FirmForm,
     GreigePOInwardForm,
@@ -74,6 +76,14 @@ from .forms import (
     YarnPurchaseOrderItemFormSet,
 )
 
+DyeingPOReviewForm = GreigePOReviewForm
+
+try:
+    from .forms import DispatchChallanForm
+except ImportError:
+    class DispatchChallanForm(forms.Form):
+        pass
+
 from .models import (
     Accessory,
     BOM,
@@ -88,7 +98,6 @@ from .models import (
     Catalogue,
     Category,
     Client,
-    DispatchChallan,
     DyeingMaterialLink,
     DyeingMaterialLinkDetail,
     DyeingOtherCharge,
@@ -128,6 +137,11 @@ from .models import (
     YarnPurchaseOrderItem,
 )
 from .navigation import UTILITIES_GROUPS
+
+try:
+    from .models import DispatchChallan
+except ImportError:
+    DispatchChallan = None
 
 
 logger = logging.getLogger(__name__)
@@ -2702,15 +2716,22 @@ def _build_greige_po_pdf_response(po):
     story.append(Spacer(1, 8))
 
     notes_parts = []
-    if po.remarks:
-        notes_parts.append(f"<font color='#0F172A'><b>Remarks</b></font><br/>{escape(po.remarks).replace(chr(10), '<br/>')}")
+    if po.address:
+        notes_parts.append(
+            f"<font color='#0F172A'><b>Address</b></font><br/>{escape(po.address).replace(chr(10), '<br/>')}"
+        )
     if po.delivery_schedule:
-        notes_parts.append(f"<font color='#0F172A'><b>Delivery Schedule</b></font><br/>{escape(po.delivery_schedule).replace(chr(10), '<br/>')}")
+        notes_parts.append(
+            f"<font color='#0F172A'><b>Delivery Schedule</b></font><br/>{escape(po.delivery_schedule).replace(chr(10), '<br/>')}"
+        )
     if po.shipping_address:
-        notes_parts.append(f"<font color='#0F172A'><b>Shipping Address</b></font><br/>{escape(po.shipping_address).replace(chr(10), '<br/>')}")
+        notes_parts.append(
+            f"<font color='#0F172A'><b>Shipping Address</b></font><br/>{escape(po.shipping_address).replace(chr(10), '<br/>')}"
+        )
     if po.source_yarn_po:
-        notes_parts.append(f"<font color='#0F172A'><b>Source Yarn PO</b></font><br/>{escape(text_or_dash(po.source_yarn_po.system_number))}")
-
+        notes_parts.append(
+            f"<font color='#0F172A'><b>Source Yarn PO</b></font><br/>{escape(text_or_dash(po.source_yarn_po.system_number))}"
+        )
     if not notes_parts:
         notes_parts.append("<font color='#0F172A'><b>Notes</b></font><br/>Standard terms and conditions apply.")
 
@@ -2826,8 +2847,12 @@ def greigepo_pdf(request, pk: int):
     try:
         response = _build_greige_po_pdf_response(po)
     except Exception:
-        logger.exception("Branded Greige PO PDF generation failed for PO id=%s system_no=%s", po.pk, po.system_number)
-        return HttpResponse("Unable to generate Greige PO PDF.", status=500)
+        logger.exception(
+            "Branded Greige PO PDF generation failed for PO id=%s system_no=%s",
+            po.pk,
+            po.system_number,
+        )
+        response = _build_simple_greige_po_pdf_response(po)
 
     if response.status_code == 200 and response.get("Content-Type", "").startswith("application/pdf"):
         filename = f'{po.system_number or "greige_po"}.pdf'
@@ -3347,38 +3372,6 @@ def _build_simple_greige_po_pdf_response(po):
 
     return HttpResponse(buffer.getvalue(), content_type="application/pdf")
 
-
-@login_required
-def greigepo_pdf(request, pk: int):
-    po = get_object_or_404(
-        GreigePurchaseOrder.objects
-        .select_related("vendor", "source_yarn_po", "source_yarn_po__firm", "reviewed_by", "owner")
-        .prefetch_related(
-            Prefetch(
-                "items",
-                queryset=GreigePurchaseOrderItem.objects.select_related("material", "source_yarn_po_item")
-            )
-        ),
-        pk=pk,
-    )
-
-    if not _can_access_greige_po(request.user, po):
-        raise PermissionDenied("You do not have access to this Greige PO.")
-
-    response = _build_simple_greige_po_pdf_response(po)
-
-    if response.status_code == 200 and response.get("Content-Type", "").startswith("application/pdf"):
-        filename = f'{po.system_number or "greige_po"}.pdf'
-        disposition = "attachment" if request.GET.get("download") == "1" else "inline"
-        response["Content-Disposition"] = f'{disposition}; filename="{filename}"'
-        response["Cache-Control"] = "no-store"
-        response["X-Content-Type-Options"] = "nosniff"
-        try:
-            response["Content-Length"] = str(len(response.content))
-        except Exception:
-            pass
-
-    return response
 
 def _build_yarn_inward_line_rows(po, line_inputs=None, item_errors=None):
     line_inputs = line_inputs or {}
@@ -4081,7 +4074,6 @@ def _sync_greige_po_items_from_source(
                 )
             )
             total_weight += inward_qty
-            subtotal += Decimal(getattr(greige_item, "final_amount", 0) or 0)
     else:
         for yarn_item in yarn_po.items.all():
             inward_qty = yarn_item.inward_qty_total or Decimal("0")
@@ -5167,19 +5159,20 @@ def dyeingpo_create(request, greige_po_id=None):
         )
 
     return render(
-        request,
-        "accounts/dyeing_po/form.html",
-        {
-            "form": form,
-            "formset": formset,
-            "mode": "add",
-            "po_obj": None,
-            "source_greige_po": source_greige_po,
-            "selected_source_inward": selected_source_inward,
-            "source_inwards": [selected_source_inward] if selected_source_inward else (list(source_greige_po.inwards.all()) if source_greige_po else []),
-            "existing_po": selected_source_inward.generated_dyeing_pos.order_by("-id").first() if selected_source_inward else (source_greige_po.dyeing_pos.order_by("-id").first() if source_greige_po else None),
-        },
-    )
+    request,
+    "accounts/dyeing_po/form.html",
+    {
+        "form": form,
+        "formset": formset,
+        "mode": "add",
+        "po_obj": None,
+        "source_greige_po": source_greige_po,
+        "selected_source_inward": selected_source_inward,
+        "source_inwards": [selected_source_inward] if selected_source_inward else (list(source_greige_po.inwards.all()) if source_greige_po else []),
+        "existing_po": selected_source_inward.generated_dyeing_pos.order_by("-id").first() if selected_source_inward else (source_greige_po.dyeing_pos.order_by("-id").first() if source_greige_po else None),
+        "system_number_preview": _next_dyeing_po_number(),
+    },
+)
 
 
 @login_required
@@ -5277,6 +5270,7 @@ def dyeingpo_update(request, pk: int):
             "selected_source_inward": po.source_greige_inward,
             "source_inwards": list(po.source_greige_po.inwards.all()) if po.source_greige_po else [],
             "existing_po": None,
+            "system_number_preview": po.system_number,
         },
     )
 
@@ -5430,9 +5424,6 @@ def dyeingpo_inward(request, pk: int):
         messages.error(request, "Dyeing PO must be approved before inward can be generated.")
         return redirect("accounts:dyeingpo_list")
 
-    if not _is_po_approved_for_inward(po):
-        messages.error(request, "You cannot create inward before Dyeing PO review approval.")
-        return redirect("accounts:dyeingpo_list")
     item_errors = {}
     line_inputs = {}
     inward_form = DyeingPOInwardForm(request.POST or None, user=request.user)
@@ -8091,8 +8082,23 @@ def _dispatch_list_url(request):
     return url
 
 
+def _dispatch_feature_available() -> bool:
+    return DispatchChallan is not None
+
+
+def _dispatch_feature_unavailable_response(request):
+    message = "Dispatch module is not available because DispatchChallan model/form is missing."
+    if _is_embed(request):
+        return JsonResponse({"ok": False, "message": message}, status=400)
+    messages.error(request, message)
+    return redirect("accounts:dashboard")
+
+
 @login_required
 def dispatch_list(request):
+    if not _dispatch_feature_available():
+        return _dispatch_feature_unavailable_response(request)
+
     q = (request.GET.get("q") or "").strip()
 
     challans = (
@@ -8165,6 +8171,9 @@ def dispatch_program_picker(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def dispatch_create(request, program_id: int):
+    if not _dispatch_feature_available():
+        return _dispatch_feature_unavailable_response(request)
+
     program = get_object_or_404(
         Program.objects.select_related("bom", "firm"),
         pk=program_id,
@@ -8222,6 +8231,9 @@ def dispatch_create(request, program_id: int):
 
 @login_required
 def dispatch_detail(request, pk: int):
+    if not _dispatch_feature_available():
+        return _dispatch_feature_unavailable_response(request)
+
     challan = get_object_or_404(
         DispatchChallan.objects.select_related("program", "program__bom", "program__firm", "client", "firm"),
         pk=pk,
@@ -8713,6 +8725,9 @@ def _build_dispatch_challan_pdf_response(challan):
 
 @login_required
 def dispatch_print(request, pk: int):
+    if not _dispatch_feature_available():
+        return _dispatch_feature_unavailable_response(request)
+
     challan = get_object_or_404(
         DispatchChallan.objects.select_related(
             "program",

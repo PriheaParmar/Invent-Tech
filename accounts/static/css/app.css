@@ -1089,8 +1089,14 @@ body.sb-collapsed .sb-toggle-ico{
 /* =======================
    SECTION TOGGLING
 ======================= */
-.page-section { display: none; }
-.page-section.is-active { display: block; }
+.page-section {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.page-section.is-active {
+  display: block !important;
+}
 
 /* =======================
    UTILITIES (BASE UI)

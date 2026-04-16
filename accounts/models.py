@@ -592,6 +592,13 @@ class GreigePurchaseOrder(OwnedModel):
         related_name="generated_greige_pos",
     )
     vendor = models.ForeignKey("Vendor", on_delete=models.PROTECT, related_name="greige_purchase_orders")
+    firm = models.ForeignKey(
+        "Firm",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="greige_purchase_orders",
+    )
     approval_status = models.CharField(max_length=20, choices=APPROVAL_STATUS_CHOICES, default="pending")
     rejection_reason = models.TextField(blank=True, default="")
     reviewed_by = models.ForeignKey(
@@ -602,6 +609,24 @@ class GreigePurchaseOrder(OwnedModel):
         related_name="reviewed_greige_purchase_orders",
     )
     reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.po_date:
+            self.po_date = timezone.localdate()
+
+        if self.source_yarn_po_id:
+            source_po = self.source_yarn_po
+
+            if not self.vendor_id and getattr(source_po, "vendor_id", None):
+                self.vendor = source_po.vendor
+
+            if not self.firm_id and getattr(source_po, "firm_id", None):
+                self.firm = source_po.firm
+
+            if not self.shipping_address and getattr(source_po, "firm", None):
+                self.shipping_address = source_po.firm.full_address
+
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["-id"]
@@ -757,6 +782,25 @@ class DyeingPurchaseOrder(OwnedModel):
     tcs_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
+    def save(self, *args, **kwargs):
+        if not self.po_date:
+            self.po_date = timezone.localdate()
+
+        if self.source_greige_po_id:
+            source_po = self.source_greige_po
+
+            if not self.vendor_id and getattr(source_po, "vendor_id", None):
+                self.vendor = source_po.vendor
+
+            source_firm = getattr(source_po, "firm", None) or getattr(getattr(source_po, "source_yarn_po", None), "firm", None)
+            if not self.firm_id and source_firm is not None:
+                self.firm = source_firm
+
+            if not self.shipping_address and self.firm_id:
+                self.shipping_address = self.firm.full_address
+
+        super().save(*args, **kwargs)
+
     @property
     def total_inward_qty(self):
         total = self.inwards.aggregate(total=Sum("items__quantity")).get("total") or Decimal("0")
@@ -894,6 +938,26 @@ class ReadyPurchaseOrder(OwnedModel):
     )
     remarks = models.TextField(blank=True, default="")
     total_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    def save(self, *args, **kwargs):
+        if not self.po_date:
+            self.po_date = timezone.localdate()
+
+        if self.source_dyeing_po_id:
+            source_po = self.source_dyeing_po
+
+            if not self.vendor_id and getattr(source_po, "vendor_id", None):
+                self.vendor = source_po.vendor
+
+            if not self.firm_id and getattr(source_po, "firm_id", None):
+                self.firm = source_po.firm
+
+            if not self.shipping_address and getattr(source_po, "shipping_address", ""):
+                self.shipping_address = source_po.shipping_address
+            elif not self.shipping_address and self.firm_id:
+                self.shipping_address = self.firm.full_address
+
+        super().save(*args, **kwargs)
 
     @property
     def total_inward_qty(self):

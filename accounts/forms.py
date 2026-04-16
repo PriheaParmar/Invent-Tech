@@ -2171,23 +2171,6 @@ class GreigePOReviewForm(forms.Form):
         return cleaned
 
 
-class DyeingPOReviewForm(forms.Form):
-    decision = forms.ChoiceField(
-        choices=[("approve", "Approve"), ("reject", "Reject")],
-        widget=forms.HiddenInput,
-    )
-    rejection_reason = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Reason for rejection"}),
-    )
-
-    def clean(self):
-        cleaned = super().clean()
-        if cleaned.get("decision") == "reject" and not (cleaned.get("rejection_reason") or "").strip():
-            self.add_error("rejection_reason", "Rejection reason is required.")
-        return cleaned
-
-
 class GreigePOInwardForm(forms.ModelForm):
     class Meta:
         model = GreigePOInward
@@ -2321,6 +2304,7 @@ class DyeingPurchaseOrderForm(forms.ModelForm):
 
         return cleaned_data
 
+
 class DyeingPOReviewForm(forms.Form):
     decision = forms.ChoiceField(
         choices=[("approve", "Approve"), ("reject", "Reject")],
@@ -2336,6 +2320,18 @@ class DyeingPOReviewForm(forms.Form):
         if cleaned.get("decision") == "reject" and not (cleaned.get("rejection_reason") or "").strip():
             self.add_error("rejection_reason", "Rejection reason is required.")
         return cleaned
+
+class DyeingPOInwardForm(forms.ModelForm):
+    class Meta:
+        model = DyeingPOInward
+        fields = ["inward_date", "notes"]
+        widgets = {
+            "inward_date": forms.DateInput(attrs={"type": "date"}),
+            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
 
 class DyeingPurchaseOrderItemForm(forms.ModelForm):
     class Meta:
@@ -2426,9 +2422,6 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        if cleaned_data.get("DELETE"):
-            return cleaned_data
-
         master_detail = cleaned_data.get("dyeing_master_detail")
         finished_material = cleaned_data.get("finished_material")
 
@@ -2448,19 +2441,9 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
         other_charge_amount = cleaned_data.get("other_charge_amount") or Decimal("0")
         job_work_charges = cleaned_data.get("job_work_charges") or Decimal("0")
 
-        if total_qty < 0:
-            self.add_error("total_qty", "Quantity cannot be negative.")
-        if rate < 0:
-            self.add_error("rate", "Rate cannot be negative.")
-        if other_charge_amount < 0:
-            self.add_error("other_charge_amount", "Other charges cannot be negative.")
-        if job_work_charges < 0:
-            self.add_error("job_work_charges", "Job work charges cannot be negative.")
-
         line_subtotal = total_qty * rate
         line_final_amount = line_subtotal + other_charge_amount + job_work_charges
 
-        cleaned_data["remaining_qty"] = total_qty
         cleaned_data["line_subtotal"] = line_subtotal
         cleaned_data["line_final_amount"] = line_final_amount
 
@@ -2494,17 +2477,6 @@ DyeingPurchaseOrderItemFormSet = inlineformset_factory(
     can_delete=True,
 )
 
-class DyeingPOInwardForm(forms.ModelForm):
-    class Meta:
-        model = DyeingPOInward
-        fields = ["inward_date", "notes"]
-        widgets = {
-            "inward_date": forms.DateInput(attrs={"type": "date"}),
-            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
-        }
-
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
 
 
 # ============================================================
@@ -2552,10 +2524,7 @@ class ReadyPurchaseOrderForm(forms.ModelForm):
             if user else Firm.objects.none()
         )
 
-        source_ids_qs = DyeingPurchaseOrder.objects.filter(
-            approval_status="approved",
-            items__inward_items__isnull=False
-        )
+        source_ids_qs = DyeingPurchaseOrder.objects.filter(items__inward_items__isnull=False)
         if user is not None:
             source_ids_qs = source_ids_qs.filter(owner=user)
 
@@ -3237,7 +3206,6 @@ class ProgramForm(forms.ModelForm):
         fields = [
             "program_no",
             "program_date",
-            "finishing_date",
             "total_qty",
             "ratio",
             "firm",
@@ -3255,11 +3223,6 @@ class ProgramForm(forms.ModelForm):
                 attrs={
                     "type": "date",
                     "readonly": "readonly",
-                }
-            ),
-            "finishing_date": forms.DateInput(
-                attrs={
-                    "type": "date",
                 }
             ),
             "total_qty": forms.NumberInput(
@@ -3308,7 +3271,6 @@ class ProgramForm(forms.ModelForm):
 
         self.fields["firm"].empty_label = "Select firm"
         self.fields["bom"].empty_label = "Select SKU"
-        self.fields["finishing_date"].required = False
 
         if not self.instance.pk and user:
             self.initial.setdefault("program_no", Program.next_program_no(user))
@@ -3332,9 +3294,6 @@ class ProgramForm(forms.ModelForm):
             return self.cleaned_data.get("program_date") or self.instance.program_date
         return timezone.localdate()
 
-    def clean_finishing_date(self):
-        return self.cleaned_data.get("finishing_date")
-
     def clean_total_qty(self):
         value = self.cleaned_data.get("total_qty") or Decimal("0")
         if value <= 0:
@@ -3350,14 +3309,15 @@ class ProgramForm(forms.ModelForm):
             raise forms.ValidationError("Damage cannot be negative.")
         return value
 
-
 class DispatchChallanForm(forms.ModelForm):
     class Meta:
         model = DispatchChallan
         fields = [
             "challan_no",
             "challan_date",
+            "program",
             "client",
+            "firm",
             "driver_name",
             "lr_no",
             "transport_name",
@@ -3365,73 +3325,55 @@ class DispatchChallanForm(forms.ModelForm):
             "remarks",
         ]
         widgets = {
-            "challan_no": forms.TextInput(
-                attrs={
-                    "readonly": "readonly",
-                    "placeholder": "Auto generated",
-                }
-            ),
-            "challan_date": forms.DateInput(
-                attrs={
-                    "type": "date",
-                }
-            ),
+            "challan_no": forms.TextInput(attrs={"placeholder": "Auto / challan number"}),
+            "challan_date": forms.DateInput(attrs={"type": "date"}),
+            "program": forms.Select(),
             "client": forms.Select(),
-            "driver_name": forms.TextInput(attrs={"placeholder": "Enter driver name"}),
-            "lr_no": forms.TextInput(attrs={"placeholder": "Enter LR No."}),
-            "transport_name": forms.TextInput(attrs={"placeholder": "Enter transport name"}),
-            "vehicle_no": forms.TextInput(attrs={"placeholder": "Enter vehicle number"}),
-            "remarks": forms.Textarea(attrs={"rows": 3, "placeholder": "Enter remarks"}),
+            "firm": forms.Select(),
+            "driver_name": forms.TextInput(attrs={"placeholder": "Driver name"}),
+            "lr_no": forms.TextInput(attrs={"placeholder": "LR number"}),
+            "transport_name": forms.TextInput(attrs={"placeholder": "Transport name"}),
+            "vehicle_no": forms.TextInput(attrs={"placeholder": "Vehicle number"}),
+            "remarks": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional remarks"}),
         }
 
-    def __init__(self, *args, user=None, program=None, **kwargs):
-        self.user = user
-        self.program = program
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fields["program"].queryset = (
+            Program.objects.filter(owner=user).select_related("bom", "firm").order_by("-id")
+            if user else Program.objects.none()
+        )
         self.fields["client"].queryset = (
             Client.objects.filter(owner=user, is_active=True).order_by("name")
             if user else Client.objects.none()
         )
+        self.fields["firm"].queryset = (
+            Firm.objects.filter(owner=user).order_by("firm_name")
+            if user else Firm.objects.none()
+        )
+
+        self.fields["program"].empty_label = "Select program"
         self.fields["client"].empty_label = "Select client"
+        self.fields["firm"].empty_label = "Select firm"
 
-        if not self.instance.pk and user:
-            self.initial.setdefault("challan_no", DispatchChallan.next_challan_no(user))
-            self.initial.setdefault("challan_date", timezone.localdate())
-
-    def clean_challan_no(self):
-        if self.instance.pk:
-            return (self.cleaned_data.get("challan_no") or self.instance.challan_no or "").strip().upper()
-
-        if self.user:
-            return DispatchChallan.next_challan_no(self.user)
-
-        return (self.cleaned_data.get("challan_no") or "").strip().upper()
+        if not self.is_bound:
+            self.fields["challan_date"].initial = timezone.localdate()
 
     def clean_driver_name(self):
-        value = _compact_spaces(self.cleaned_data.get("driver_name"))
-        if value and not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,119}", value):
-            raise forms.ValidationError("Driver name can contain only letters, spaces, dot, apostrophe, and hyphen.")
-        return value
+        return (self.cleaned_data.get("driver_name") or "").strip()
 
     def clean_lr_no(self):
-        return _compact_spaces(self.cleaned_data.get("lr_no"))
+        return (self.cleaned_data.get("lr_no") or "").strip()
 
     def clean_transport_name(self):
-        value = _compact_spaces(self.cleaned_data.get("transport_name"))
-        if value and len(value) < 2:
-            raise forms.ValidationError("Transport name must be at least 2 characters long.")
-        return value
+        return (self.cleaned_data.get("transport_name") or "").strip()
 
     def clean_vehicle_no(self):
-        value = _compact_spaces(self.cleaned_data.get("vehicle_no")).upper()
-        if value and not re.fullmatch(r"[A-Z0-9\- ]{6,30}", value):
-            raise forms.ValidationError("Enter a valid vehicle number.")
-        return value
+        return (self.cleaned_data.get("vehicle_no") or "").strip().upper()
 
     def clean_remarks(self):
-        return _compact_spaces(self.cleaned_data.get("remarks"))
-
+        return (self.cleaned_data.get("remarks") or "").strip()
 
 class ProgramJobberDetailForm(forms.ModelForm):
     class Meta:
