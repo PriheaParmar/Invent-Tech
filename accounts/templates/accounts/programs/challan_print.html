@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ challan.challan_no }} - Program Challan Print</title>
+  <style>
+    :root{
+      --cp-blue:rgba(28,109,216,1);
+      --cp-pink:rgb(238,61,133);
+      --cp-orange:rgba(250,189,100,1);
+      --cp-black:#111111;
+      --cp-text:#1f2937;
+      --cp-soft:#667085;
+      --cp-line:#dbe2ea;
+      --cp-bg:#f8fafc;
+      --cp-white:#ffffff;
+      --cp-green:#118a4b;
+      --cp-red:#b42318;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    html,body{
+      margin:0;
+      padding:0;
+      background:#eef2f6;
+      color:var(--cp-text);
+      font-family:Arial, Helvetica, sans-serif;
+    }
+
+    .print-shell{
+      width:210mm;
+      min-height:297mm;
+      margin:0 auto;
+      background:var(--cp-white);
+      padding:10mm;
+    }
+
+    .print-sheet{
+      border:1px solid var(--cp-line);
+      min-height:calc(297mm - 20mm);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .brand-strips{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      height:6px;
+    }
+
+    .brand-strips span:nth-child(1){ background:var(--cp-pink); }
+    .brand-strips span:nth-child(2){ background:var(--cp-orange); }
+    .brand-strips span:nth-child(3){ background:var(--cp-blue); }
+
+    .sheet-pad{
+      padding:12px;
+    }
+
+    .header{
+      display:grid;
+      grid-template-columns:1.35fr .95fr;
+      gap:12px;
+      align-items:stretch;
+    }
+
+    .brand-box{
+      border:1px solid var(--cp-line);
+      background:var(--cp-black);
+      color:#fff;
+      border-radius:10px;
+      padding:12px;
+    }
+
+    .brand-title{
+      font-size:22px;
+      font-weight:800;
+      line-height:1.1;
+      letter-spacing:-.03em;
+    }
+
+    .brand-sub{
+      margin-top:4px;
+      font-size:11px;
+      font-weight:700;
+      color:rgba(255,255,255,.78);
+    }
+
+    .brand-meta{
+      margin-top:10px;
+      display:grid;
+      gap:4px;
+      font-size:11px;
+      font-weight:700;
+      color:rgba(255,255,255,.9);
+    }
+
+    .doc-box{
+      border:1px solid rgba(28,109,216,.16);
+      background:#f5f8ff;
+      border-radius:10px;
+      padding:12px;
+    }
+
+    .doc-title{
+      text-align:right;
+      font-size:20px;
+      font-weight:900;
+      line-height:1.1;
+      color:var(--cp-black);
+      letter-spacing:-.03em;
+    }
+
+    .doc-meta{
+      margin-top:8px;
+      display:grid;
+      gap:5px;
+      font-size:11px;
+      font-weight:700;
+      color:var(--cp-text);
+      text-align:right;
+    }
+
+    .two-col{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .panel{
+      border:1px solid var(--cp-line);
+      border-radius:10px;
+      overflow:hidden;
+      background:#fff;
+    }
+
+    .panel-head{
+      min-height:32px;
+      display:flex;
+      align-items:center;
+      padding:0 10px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#fff;
+    }
+
+    .panel-head.orange{ background:var(--cp-orange); color:#6b4b00; }
+    .panel-head.blue{ background:var(--cp-blue); }
+    .panel-body{
+      padding:10px;
+      font-size:11px;
+      line-height:1.6;
+    }
+
+    .panel-body b{
+      color:var(--cp-black);
+    }
+
+    .meta-grid{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+    }
+
+    .meta-card{
+      border:1px solid var(--cp-line);
+      border-radius:10px;
+      background:var(--cp-bg);
+      padding:10px;
+    }
+
+    .meta-label{
+      font-size:9px;
+      font-weight:900;
+      color:var(--cp-soft);
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .meta-value{
+      margin-top:4px;
+      font-size:13px;
+      font-weight:900;
+      color:var(--cp-black);
+      line-height:1.2;
+      word-break:break-word;
+    }
+
+    .table-wrap{
+      margin-top:10px;
+      border:1px solid var(--cp-line);
+      border-radius:10px;
+      overflow:hidden;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    thead th{
+      background:var(--cp-black);
+      color:#fff;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      text-align:left;
+      padding:9px 10px;
+      border-right:1px solid rgba(255,255,255,.08);
+    }
+
+    thead th:last-child{
+      border-right:0;
+    }
+
+    tbody td{
+      padding:10px;
+      border-top:1px solid var(--cp-line);
+      font-size:11px;
+      font-weight:700;
+      color:var(--cp-text);
+      vertical-align:middle;
+    }
+
+    tbody tr:nth-child(even) td{
+      background:#fafbfd;
+    }
+
+    .qty{
+      font-weight:900;
+      color:var(--cp-black);
+    }
+
+    .notes-row{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:10px;
+    }
+
+    .remarks-box{
+      border:1px solid var(--cp-line);
+      border-radius:10px;
+      background:#fdf2f8;
+      padding:10px;
+      min-height:110px;
+    }
+
+    .remarks-title{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--cp-black);
+      margin-bottom:6px;
+    }
+
+    .remarks-copy{
+      font-size:11px;
+      font-weight:700;
+      color:var(--cp-text);
+      line-height:1.7;
+      white-space:pre-wrap;
+    }
+
+    .totals-box{
+      border:1px solid var(--cp-line);
+      border-radius:10px;
+      overflow:hidden;
+      background:#fff;
+    }
+
+    .totals-head{
+      min-height:34px;
+      display:flex;
+      align-items:center;
+      padding:0 10px;
+      background:#eff6ff;
+      color:var(--cp-black);
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      border-bottom:1px solid var(--cp-line);
+    }
+
+    .totals-table td{
+      border-top:1px solid var(--cp-line);
+      padding:9px 10px;
+      font-size:11px;
+      font-weight:800;
+    }
+
+    .totals-table tr:first-child td{
+      border-top:0;
+    }
+
+    .totals-label{
+      color:var(--cp-soft);
+    }
+
+    .totals-value{
+      text-align:right;
+      color:var(--cp-black);
+      font-weight:900;
+    }
+
+    .approval-strip{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .approval-box{
+      border:1px solid var(--cp-line);
+      border-radius:10px;
+      background:#fff;
+      padding:10px;
+      min-height:88px;
+    }
+
+    .approval-title{
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--cp-soft);
+      margin-bottom:8px;
+    }
+
+    .approval-value{
+      font-size:12px;
+      font-weight:900;
+      color:var(--cp-black);
+      line-height:1.5;
+    }
+
+    .status-approved{ color:var(--cp-green); }
+    .status-rejected{ color:var(--cp-red); }
+
+    .footer-note{
+      margin-top:10px;
+      border:1px solid var(--cp-line);
+      border-radius:10px;
+      background:var(--cp-bg);
+      padding:8px 10px;
+      text-align:center;
+      font-size:10px;
+      font-weight:900;
+      color:var(--cp-soft);
+      letter-spacing:.05em;
+      text-transform:uppercase;
+    }
+
+    .watermark{
+      position:absolute;
+      bottom:14px;
+      left:50%;
+      transform:translateX(-50%);
+      font-size:28px;
+      font-weight:900;
+      color:rgba(17,17,17,.05);
+      letter-spacing:.12em;
+      pointer-events:none;
+      user-select:none;
+      white-space:nowrap;
+    }
+
+    @media print{
+      html,body{
+        background:#fff;
+      }
+      .print-shell{
+        width:auto;
+        min-height:auto;
+        margin:0;
+        padding:0;
+      }
+      .print-sheet{
+        border:0;
+      }
+    }
+  </style>
+</head>
+<body onload="window.print()">
+  <div class="print-shell">
+    <div class="print-sheet">
+      <div class="brand-strips">
+        <span></span><span></span><span></span>
+      </div>
+
+      <div class="sheet-pad">
+        <div class="header">
+          <div class="brand-box">
+            <div class="brand-title">
+              {% if challan.firm %}{{ challan.firm.firm_name }}{% else %}InventTech{% endif %}
+            </div>
+            <div class="brand-sub">Production Issue Challan</div>
+
+            <div class="brand-meta">
+              <div><b>Program No:</b> {{ program.program_no|default:"-" }}</div>
+              <div><b>SKU:</b> {{ challan.production_sku|default:"-" }}</div>
+              <div><b>Product:</b> {{ challan.product_name|default:"-" }}</div>
+              <div><b>Jobber:</b> {% if challan.jobber %}{{ challan.jobber.name }}{% else %}-{% endif %}</div>
+              <div><b>Type:</b> {% if challan.jobber_type %}{{ challan.jobber_type.name }}{% else %}-{% endif %}</div>
+            </div>
+          </div>
+
+          <div class="doc-box">
+            <div class="doc-title">JOBBER CHALLAN</div>
+            <div class="doc-meta">
+              <div><b>Challan No:</b> {{ challan.challan_no }}</div>
+              <div><b>Challan Date:</b> {{ challan.challan_date|date:"d-m-Y"|default:"-" }}</div>
+              <div><b>Status:</b> {{ challan.get_status_display }}</div>
+              <div><b>Created By:</b> {{ challan.created_by_name }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-head orange">Issue To</div>
+            <div class="panel-body">
+              <div><b>Jobber Name:</b> {% if challan.jobber %}{{ challan.jobber.name }}{% else %}-{% endif %}</div>
+              <div><b>Jobber Type:</b> {% if challan.jobber_type %}{{ challan.jobber_type.name }}{% else %}-{% endif %}</div>
+              <div><b>Program No:</b> {{ program.program_no|default:"-" }}</div>
+              <div><b>SKU:</b> {{ challan.production_sku|default:"-" }}</div>
+              <div><b>Product:</b> {{ challan.product_name|default:"-" }}</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head blue">Transport Details</div>
+            <div class="panel-body">
+              <div><b>Driver Name:</b> {{ challan.driver_name|default:"-" }}</div>
+              <div><b>LR No:</b> {{ challan.lr_no|default:"-" }}</div>
+              <div><b>Transport:</b> {{ challan.transport_name|default:"-" }}</div>
+              <div><b>Vehicle No:</b> {{ challan.vehicle_no|default:"-" }}</div>
+              <div><b>Gate Pass No:</b> {{ challan.gate_pass_no|default:"-" }}</div>
+              <div><b>Expected Return:</b> {{ challan.expected_return_date|date:"d-m-Y"|default:"-" }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="meta-grid">
+          <div class="meta-card">
+            <div class="meta-label">Program Number</div>
+            <div class="meta-value">{{ program.program_no|default:"-" }}</div>
+          </div>
+
+          <div class="meta-card">
+            <div class="meta-label">Challan Date</div>
+            <div class="meta-value">{{ challan.challan_date|date:"d-m-Y"|default:"-" }}</div>
+          </div>
+
+          <div class="meta-card">
+            <div class="meta-label">Total Issued Qty</div>
+            <div class="meta-value">{{ challan.total_issued_qty|default:"0.00" }}</div>
+          </div>
+
+          <div class="meta-card">
+            <div class="meta-label">Inward Qty</div>
+            <div class="meta-value">{{ challan.inward_qty|default:"0.00" }}</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:42%;">Size</th>
+                <th style="width:29%;">Issued Qty</th>
+                <th style="width:29%;">Inward Qty</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in size_rows %}
+                <tr>
+                  <td>{{ row.size_name }}</td>
+                  <td class="qty">{{ row.issued_qty|default:"0.00" }}</td>
+                  <td class="qty">{{ row.inward_qty|default:"0.00" }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="3">No size rows found.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="notes-row">
+          <div class="remarks-box">
+            <div class="remarks-title">Remarks</div>
+            <div class="remarks-copy">
+              {% if challan.remarks %}
+                {{ challan.remarks }}
+              {% else %}
+                No remarks added.
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="totals-box">
+            <div class="totals-head">Summary</div>
+            <table class="totals-table" style="width:100%; border-collapse:collapse;">
+              <tr>
+                <td class="totals-label">Total Issued Qty</td>
+                <td class="totals-value">{{ challan.total_issued_qty|default:"0.00" }}</td>
+              </tr>
+              <tr>
+                <td class="totals-label">Inward Qty</td>
+                <td class="totals-value">{{ challan.inward_qty|default:"0.00" }}</td>
+              </tr>
+              <tr>
+                <td class="totals-label">Balance Qty</td>
+                <td class="totals-value">
+                  {% widthratio challan.total_issued_qty 1 1 as issued_qty_text %}
+                  {% widthratio challan.inward_qty 1 1 as inward_qty_text %}
+                  {{ challan.total_issued_qty|default:"0.00" }}
+                </td>
+              </tr>
+              <tr>
+                <td class="totals-label">Status</td>
+                <td class="totals-value">{{ challan.get_status_display }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="approval-strip">
+          <div class="approval-box">
+            <div class="approval-title">Approval</div>
+            <div class="approval-value {% if challan.status == 'approved' %}status-approved{% elif challan.status == 'rejected' %}status-rejected{% endif %}">
+              {{ challan.get_status_display }}
+            </div>
+            <div class="approval-value" style="font-size:11px; margin-top:6px; font-weight:700;">
+              {% if challan.approved_by %}
+                By {{ challan.approved_by.get_full_name|default:challan.approved_by.username }}
+              {% else %}
+                Pending action
+              {% endif %}
+            </div>
+            <div class="approval-value" style="font-size:11px; margin-top:4px; font-weight:700;">
+              {% if challan.approved_at %}
+                {{ challan.approved_at|date:"d-m-Y H:i" }}
+              {% else %}
+                -
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="approval-box">
+            <div class="approval-title">Signature</div>
+            <div class="approval-value" style="margin-top:18px;">Authorised Signatory</div>
+            <div class="approval-value" style="margin-top:24px; font-weight:700;">_________________________</div>
+          </div>
+        </div>
+
+        {% if challan.rejection_reason %}
+          <div class="remarks-box" style="margin-top:10px; background:#fff4f2;">
+            <div class="remarks-title">Rejection Reason</div>
+            <div class="remarks-copy">{{ challan.rejection_reason }}</div>
+          </div>
+        {% endif %}
+
+        <div class="footer-note">
+          This challan is computer generated and intended for production issue tracking.
+        </div>
+      </div>
+
+      <div class="watermark">INVENTTECH</div>
+    </div>
+  </div>
+</body>
+</html>

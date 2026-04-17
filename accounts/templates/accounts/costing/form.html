@@ -1,0 +1,1 @@
+{% extends "accounts/base_app.html" %}{% block title %}Costing Snapshot{% endblock %}{% block page_title %}Costing Snapshot{% endblock %}{% block content %}<div class="page-section is-active"><div class="canvas"><div style="padding:20px"><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Save Snapshot</button></form></div></div></div>{% endblock %}

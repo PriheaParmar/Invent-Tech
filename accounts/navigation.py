@@ -8,7 +8,9 @@ APP_SIDEBAR_GROUPS = [
             {"label": "Inventory", "url_name": None, "icon": "inventory", "is_placeholder": True},
             {"label": "Program", "url_name": "accounts:program_list", "icon": "production"},
             {"label": "Production", "url_name": None, "icon": "production", "is_placeholder": True},
-            {"label": "Dispatch", "url_name": None, "icon": "dispatch", "is_placeholder": True},
+            {"label": "Dispatch", "url_name": "accounts:dispatch_list", "icon": "dispatch"},
+            {"label": "Invoices", "url_name": "accounts:invoice_list", "icon": "dispatch"},
+            {"label": "Maintenance", "url_name": "accounts:maintenance_list", "icon": "settings"},
         ],
     },
     {

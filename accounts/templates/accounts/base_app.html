@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}InventTech{% endblock %}</title>
 
-  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=6010">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=6011">
   <link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'css/jobbers.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'css/vendors.css' %}?v=2">
@@ -14,146 +14,7 @@
   <link rel="stylesheet" href="{% static 'css/search_clear.css' %}?v=1">
 
   <script src="{% static 'js/dashboard.js' %}?v=6003"></script>
-  <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    min-height: 100%;
-    background: #f3f4f6;
-    color: #111827;
-  }
-    .app-header {
-    display: flex !important;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 18px 24px;
-    background: #ffffff;
-    border-bottom: 1px solid rgba(17, 24, 39, 0.08);
-    position: sticky;
-    top: 0;
-    z-index: 20;
-  }
-
-  .h-left, .h-center, .h-right {
-    display: flex;
-    align-items: center;
-  }
-
-  .h-left {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .h-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: #111827;
-  }
-
-  .h-sub {
-    font-size: 13px;
-    color: #6b7280;
-  }
-
-  .h-center {
-    flex: 1 1 auto;
-    justify-content: center;
-  }
-
-  .h-search {
-    width: 100%;
-    max-width: 760px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 10px 14px;
-  }
-
-  .h-search input {
-    flex: 1 1 auto;
-    min-width: 0;
-    border: 0;
-    background: transparent;
-    outline: none;
-    font-size: 14px;
-  }
-
-  .h-tabs {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .h-tab {
-    border: 1px solid #d1d5db;
-    background: #fff;
-    border-radius: 999px;
-    padding: 6px 10px;
-    cursor: pointer;
-  }
-
-  .h-tab.active {
-    background: #111827;
-    color: #fff;
-    border-color: #111827;
-  }
-
-  .h-right {
-    gap: 10px;
-    position: relative;
-  }
-  body.app {
-    min-height: 100vh;
-    overflow: hidden;
-  }
-
-  .layout {
-    display: flex;
-    min-height: 100vh;
-    width: 100%;
-  }
-
-  .sidebar {
-    width: 290px;
-    flex: 0 0 290px;
-    min-height: 100vh;
-    overflow-y: auto;
-  }
-
-  .main {
-    flex: 1 1 auto;
-    min-width: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #f3f4f6;
-  }
-
-  .app-content-scroll {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: auto;
-    padding: 24px;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  .page-section {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  .top-pop[hidden] {
-    display: none !important;
-  }
-</style>
+  
   {% block extra_css %}{% endblock %}
   {% block extra_head %}{% endblock %}
 </head>
@@ -221,7 +82,64 @@
           </span>
           <span class="sb-text">Inventory</span>
         </a>
+        <div class="sb-label">Quality &amp; Traceability</div>
 
+<a class="sb-link {% if request.resolver_match.url_name == 'qc_list' or request.resolver_match.url_name == 'qc_detail' or request.resolver_match.url_name == 'qc_create' %}active{% endif %}" href="#">
+  <span class="sb-ico">
+    <svg class="ico" viewBox="0 0 24 24">
+      <path d="M9 12l2 2 4-4"></path>
+      <path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path>
+    </svg>
+  </span>
+  <span class="sb-text">QC Register</span>
+</a>
+
+<a class="sb-link {% if request.resolver_match.url_name == 'lot_list' or request.resolver_match.url_name == 'lot_detail' %}active{% endif %}" href="#">
+  <span class="sb-ico">
+    <svg class="ico" viewBox="0 0 24 24">
+      <path d="M21 8l-9-5-9 5v10l9 5 9-5V8z"></path>
+      <path d="M3 8l9 5 9-5"></path>
+    </svg>
+  </span>
+  <span class="sb-text">Lot Register</span>
+</a>
+
+<a class="sb-link {% if request.resolver_match.url_name == 'roll_list' or request.resolver_match.url_name == 'roll_detail' %}active{% endif %}" href="#">
+  <span class="sb-ico">
+    <svg class="ico" viewBox="0 0 24 24">
+      <path d="M6 12a6 6 0 1 1 12 0c0 3.314-2.686 6-6 6H6z"></path>
+      <path d="M12 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"></path>
+    </svg>
+  </span>
+  <span class="sb-text">Roll Register</span>
+</a>
+
+<a class="sb-link {% if request.resolver_match.url_name == 'qr_list' or request.resolver_match.url_name == 'qr_detail' %}active{% endif %}" href="#">
+  <span class="sb-ico">
+    <svg class="ico" viewBox="0 0 24 24">
+      <path d="M4 4h6v6H4z"></path>
+      <path d="M14 4h6v6h-6z"></path>
+      <path d="M4 14h6v6H4z"></path>
+      <path d="M14 14h2v2h-2z"></path>
+      <path d="M18 14h2v6h-6v-2h4z"></path>
+      <path d="M14 18h2v2h-2z"></path>
+    </svg>
+  </span>
+  <span class="sb-text">QR Labels</span>
+</a>
+
+<a class="sb-link {% if request.resolver_match.url_name == 'qr_scan' %}active{% endif %}" href="#">
+  <span class="sb-ico">
+    <svg class="ico" viewBox="0 0 24 24">
+      <path d="M4 7V4h3"></path>
+      <path d="M17 4h3v3"></path>
+      <path d="M20 17v3h-3"></path>
+      <path d="M7 20H4v-3"></path>
+      <path d="M8 12h8"></path>
+    </svg>
+  </span>
+  <span class="sb-text">QR Scan</span>
+</a>
         <a class="sb-link {% if request.resolver_match.url_name == 'program_list' or request.resolver_match.url_name == 'program_add' or request.resolver_match.url_name == 'program_edit' or request.resolver_match.url_name == 'program_print' %}active{% endif %}" href="{% url 'accounts:program_list' %}">
           <span class="sb-ico">
             <svg class="ico" viewBox="0 0 24 24">

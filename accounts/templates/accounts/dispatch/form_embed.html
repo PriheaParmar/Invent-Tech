@@ -1,133 +1,542 @@
 <style>
   :root{
-    --df-card:#fff;--df-line:#e5e7eb;--df-text:#0f172a;--df-soft:#64748b;
-    --df-blue:rgba(28,109,216,1);--df-pink:rgb(238,61,133);--df-orange:rgba(250,189,100,1);
-    --df-shadow:0 16px 40px rgba(15,23,42,.08);
+    --df-card:#ffffff;
+    --df-card-soft:#fbfdff;
+    --df-line:rgba(15,23,42,.08);
+    --df-line-strong:rgba(15,23,42,.12);
+    --df-text:#0f172a;
+    --df-soft:#64748b;
+    --df-faint:#94a3b8;
+    --df-blue:rgba(28,109,216,1);
+    --df-pink:rgb(238,61,133);
+    --df-orange:rgba(250,189,100,1);
+    --df-danger:#be123c;
+    --df-shadow:0 14px 34px rgba(15,23,42,.06);
+    --df-radius-xl:22px;
+    --df-radius-lg:16px;
+    --df-radius-md:12px;
+    --df-radius-sm:10px;
+    --df-font-display:"Plus Jakarta Sans","Inter","Segoe UI",Arial,sans-serif;
+    --df-font-body:"Inter","Segoe UI",Arial,sans-serif;
+    --df-font-data:"IBM Plex Sans","Inter","Segoe UI",Arial,sans-serif;
   }
-  .df-shell{display:flex;flex-direction:column;gap:18px;}
-  .df-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:start;}
-  .df-card{background:var(--df-card);border:1px solid var(--df-line);border-radius:18px;box-shadow:var(--df-shadow);padding:18px;}
-  .df-card h3{margin:0 0 14px;font-size:1rem;font-weight:800;color:var(--df-text);}
-  .df-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
-  .df-meta{padding:13px 14px;border:1px solid var(--df-line);border-radius:14px;background:#f8fafc;}
-  .df-label{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--df-soft);margin-bottom:5px;}
-  .df-value{font-size:.95rem;font-weight:700;color:var(--df-text);word-break:break-word;}
-  .df-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
-  .df-field{display:flex;flex-direction:column;gap:6px;min-width:0;}
-  .df-field label{font-size:.85rem;font-weight:700;color:var(--df-text);}
-  .df-field input,.df-field select,.df-field textarea{width:100%;border:1px solid var(--df-line);border-radius:12px;padding:11px 12px;font-size:.94rem;outline:none;background:#fff;color:var(--df-text);}
-  .df-field textarea{min-height:112px;resize:vertical;}
-  .df-field input:focus,.df-field select:focus,.df-field textarea:focus{border-color:var(--df-blue);box-shadow:0 0 0 4px rgba(28,109,216,.10);}
-  .df-field-full{grid-column:1 / -1;}
-  .df-help{font-size:.78rem;color:var(--df-soft);}
-  .df-errors{margin:0 0 14px;padding:12px 14px;border:1px solid rgba(238,61,133,.18);background:rgba(238,61,133,.06);border-radius:14px;color:#9f1239;}
-  .df-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
-  .df-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:12px;border:1px solid var(--df-line);text-decoration:none;background:#fff;color:var(--df-text);font-weight:800;}
-  .df-btn-primary{background:var(--df-blue);border-color:var(--df-blue);color:#fff;}
-  .df-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-  .df-badge{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:.78rem;font-weight:800;background:rgba(250,189,100,.16);color:#9a6700;}
-  @media (max-width:980px){.df-grid{grid-template-columns:1fr;}.df-form-grid,.df-meta-grid{grid-template-columns:1fr;}}
+
+  .df-shell{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    min-width:0;
+    color:var(--df-text);
+    font-family:var(--df-font-body);
+  }
+
+  .df-header{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:14px;
+    align-items:start;
+    background:linear-gradient(180deg,#fff 0%,#fcfdff 100%);
+    border:1px solid var(--df-line);
+    border-radius:var(--df-radius-xl);
+    box-shadow:var(--df-shadow);
+    padding:18px 18px 16px;
+  }
+
+  .df-titlebox{
+    min-width:0;
+  }
+
+  .df-kicker{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:7px;
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--df-pink);
+    font-family:var(--df-font-display);
+  }
+
+  .df-kicker::before{
+    content:"";
+    width:18px;
+    height:2px;
+    border-radius:999px;
+    background:var(--df-pink);
+    display:block;
+  }
+
+  .df-title{
+    margin:0;
+    font-size:24px;
+    line-height:1.05;
+    color:var(--df-text);
+    font-weight:800;
+    letter-spacing:-.04em;
+    font-family:var(--df-font-display);
+  }
+
+  .df-sub{
+    margin:8px 0 0;
+    max-width:760px;
+    color:var(--df-soft);
+    font-size:12.6px;
+    line-height:1.65;
+    font-weight:500;
+  }
+
+  .df-badges{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    align-items:flex-start;
+  }
+
+  .df-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:28px;
+    padding:0 11px;
+    border-radius:999px;
+    font-size:10.5px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    background:rgba(28,109,216,.08);
+    color:var(--df-blue);
+    white-space:nowrap;
+    font-family:var(--df-font-display);
+  }
+
+  .df-badge-warm{
+    background:rgba(250,189,100,.16);
+    color:#9a6700;
+  }
+
+  .df-grid{
+    display:grid;
+    grid-template-columns:minmax(320px,.92fr) minmax(420px,1.08fr);
+    gap:14px;
+    align-items:start;
+  }
+
+  .df-card{
+    background:var(--df-card);
+    border:1px solid var(--df-line);
+    border-radius:20px;
+    box-shadow:var(--df-shadow);
+    overflow:hidden;
+  }
+
+  .df-card-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    padding:16px 16px 12px;
+    border-bottom:1px solid var(--df-line);
+    background:linear-gradient(180deg,#ffffff 0%,#fcfdff 100%);
+  }
+
+  .df-card-head h3{
+    margin:0;
+    font-size:14px;
+    line-height:1.1;
+    font-weight:800;
+    letter-spacing:-.02em;
+    color:var(--df-text);
+    font-family:var(--df-font-display);
+  }
+
+  .df-card-head p{
+    margin:4px 0 0;
+    font-size:11px;
+    line-height:1.5;
+    color:var(--df-soft);
+    font-weight:500;
+  }
+
+  .df-card-body{
+    padding:14px 16px 16px;
+  }
+
+  .df-meta-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .df-meta{
+    padding:11px 12px;
+    border-radius:14px;
+    background:linear-gradient(180deg,#fbfdff 0%,#ffffff 100%);
+    box-shadow:inset 0 0 0 1px rgba(15,23,42,.06);
+    min-width:0;
+  }
+
+  .df-label{
+    margin-bottom:6px;
+    font-size:9.5px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--df-faint);
+    font-family:var(--df-font-display);
+  }
+
+  .df-value{
+    font-size:13px;
+    line-height:1.45;
+    font-weight:700;
+    color:var(--df-text);
+    word-break:break-word;
+  }
+
+  .df-value-code{
+    font-family:var(--df-font-display);
+    letter-spacing:-.02em;
+    font-weight:800;
+  }
+
+  .df-value-data{
+    font-family:var(--df-font-data);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .df-errors{
+    margin:0 0 12px;
+    padding:11px 12px;
+    border:1px solid rgba(190,18,60,.14);
+    background:rgba(190,18,60,.05);
+    border-radius:14px;
+    color:var(--df-danger);
+    font-size:12px;
+    line-height:1.5;
+    font-weight:600;
+  }
+
+  .df-form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .df-field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+  }
+
+  .df-field-full{
+    grid-column:1 / -1;
+  }
+
+  .df-field label{
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--df-faint);
+    font-family:var(--df-font-display);
+  }
+
+  .df-field input,
+  .df-field select,
+  .df-field textarea{
+    width:100%;
+    border:none;
+    outline:none;
+    border-radius:12px;
+    padding:0 12px;
+    min-height:40px;
+    background:#f8fafc;
+    color:var(--df-text);
+    box-shadow:inset 0 0 0 1px var(--df-line);
+    font-size:12.8px;
+    font-weight:600;
+    font-family:var(--df-font-body);
+    transition:all .18s ease;
+  }
+
+  .df-field textarea{
+    min-height:94px;
+    resize:vertical;
+    padding:11px 12px;
+  }
+
+  .df-field select{
+    appearance:none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgba(15,23,42,.45) 50%),
+      linear-gradient(135deg, rgba(15,23,42,.45) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 17px, calc(100% - 11px) 17px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+    padding-right:34px;
+  }
+
+  .df-field input::placeholder,
+  .df-field textarea::placeholder{
+    color:var(--df-faint);
+    font-weight:500;
+  }
+
+  .df-field input:focus,
+  .df-field select:focus,
+  .df-field textarea:focus{
+    background:#fff;
+    box-shadow:inset 0 0 0 1px rgba(28,109,216,.22), 0 0 0 4px rgba(28,109,216,.08);
+  }
+
+  .df-help{
+    font-size:11px;
+    line-height:1.45;
+    color:var(--df-danger);
+    font-weight:600;
+  }
+
+  .df-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px solid var(--df-line);
+  }
+
+  .df-btn{
+    appearance:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:36px;
+    padding:0 14px;
+    border-radius:12px;
+    border:none;
+    background:#fff;
+    color:var(--df-text);
+    text-decoration:none;
+    font-weight:700;
+    font-size:12px;
+    line-height:1;
+    font-family:var(--df-font-body);
+    box-shadow:inset 0 0 0 1px var(--df-line);
+    transition:all .18s ease;
+    white-space:nowrap;
+    cursor:pointer;
+    gap:8px;
+  }
+
+  .df-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:inset 0 0 0 1px rgba(15,23,42,.14), 0 10px 22px rgba(15,23,42,.06);
+  }
+
+  .df-btn-primary{
+    background:var(--df-blue);
+    color:#fff;
+    box-shadow:none;
+  }
+
+  .df-btn-primary:hover{
+    background:var(--df-text);
+    color:#fff;
+    box-shadow:0 10px 20px rgba(28,109,216,.18);
+  }
+
+  .df-btn-svg{
+    width:16px;
+    height:16px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    flex:0 0 auto;
+  }
+
+  @media (max-width:1080px){
+    .df-grid{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width:760px){
+    .df-header{
+      grid-template-columns:1fr;
+    }
+
+    .df-badges{
+      justify-content:flex-start;
+    }
+
+    .df-form-grid,
+    .df-meta-grid{
+      grid-template-columns:1fr;
+    }
+
+    .df-actions > *{
+      flex:1 1 auto;
+    }
+  }
 </style>
 
 <div class="df-shell">
-  <div class="df-badges">
-    <span class="df-badge">Program Linked Challan</span>
-    <span class="df-badge">Program No: {{ program.program_no }}</span>
+  <div class="df-header">
+    <div class="df-titlebox">
+      <div class="dp-kicker">Dispatch Desk</div>
+      <h2 class="df-title">Create Dispatch Challan</h2>
+      <p class="df-sub">Generate a challan directly from the selected program with compact business details and a cleaner entry flow.</p>
+    </div>
+
+    
   </div>
 
   <div class="df-grid">
     <div class="df-card">
-      <h3>Program Details</h3>
-      <div class="df-meta-grid">
-        <div class="df-meta">
-          <div class="df-label">Program Number</div>
-          <div class="df-value">{{ program.program_no }}</div>
+      <div class="df-card-head">
+        <div>
+          <h3>Program Details</h3>
         </div>
-        <div class="df-meta">
-          <div class="df-label">Finishing Date</div>
-          <div class="df-value">{{ program.finishing_date|date:"d-m-Y"|default:"-" }}</div>
-        </div>
-        <div class="df-meta">
-          <div class="df-label">SKU Name</div>
-          <div class="df-value">{{ program.bom.sku|default:"-" }}</div>
-        </div>
-        <div class="df-meta">
-          <div class="df-label">Product Name</div>
-          <div class="df-value">{{ program.bom.product_name|default:"-" }}</div>
-        </div>
-        <div class="df-meta">
-          <div class="df-label">Firm</div>
-          <div class="df-value">{{ program.firm.firm_name|default:"-" }}</div>
-        </div>
-        <div class="df-meta">
-          <div class="df-label">Total Qty</div>
-          <div class="df-value">{{ program.total_qty|default:"0" }}</div>
-        </div>
-        <div class="df-meta">
-          <div class="df-label">Cost Price</div>
-          <div class="df-value">{{ program.cost_price|default:"0" }}</div>
-        </div>
-        <div class="df-meta">
-          <div class="df-label">Avg</div>
-          <div class="df-value">{{ program.avg_price|default:"0" }}</div>
+      </div>
+
+      <div class="df-card-body">
+        <div class="df-meta-grid">
+          <div class="df-meta">
+            <div class="df-label">Program Number</div>
+            <div class="df-value df-value-code">{{ program.program_no }}</div>
+          </div>
+
+          <div class="df-meta">
+            <div class="df-label">Finishing Date</div>
+            <div class="df-value df-value-data">{{ program.finishing_date|date:"d M Y"|default:"-" }}</div>
+          </div>
+
+          <div class="df-meta">
+            <div class="df-label">SKU</div>
+            <div class="df-value df-value-code">{{ program.bom.sku|default:"-" }}</div>
+          </div>
+
+          <div class="df-meta">
+            <div class="df-label">Product Name</div>
+            <div class="df-value">{{ program.bom.product_name|default:"-" }}</div>
+          </div>
+
+          <div class="df-meta">
+            <div class="df-label">Firm</div>
+            <div class="df-value">{{ program.firm.firm_name|default:"-" }}</div>
+          </div>
+
+          <div class="df-meta">
+            <div class="df-label">Total Qty</div>
+            <div class="df-value df-value-data">{{ program.total_qty|default:"0" }}</div>
+          </div>
+
+          <div class="df-meta">
+            <div class="df-label">Cost Price</div>
+            <div class="df-value df-value-data">{{ program.cost_price|default:"0" }}</div>
+          </div>
+
+          <div class="df-meta">
+            <div class="df-label">Avg</div>
+            <div class="df-value df-value-data">{{ program.avg_price|default:"0" }}</div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="df-card">
-      <h3>Challan Details</h3>
-      {% if form.non_field_errors %}
-        <div class="df-errors">{{ form.non_field_errors }}</div>
-      {% endif %}
-      <form method="post">
-        {% csrf_token %}
-        <div class="df-form-grid">
-          <div class="df-field">
-            <label for="{{ form.challan_no.id_for_label }}">Challan No</label>
-            {{ form.challan_no }}
-            {% if form.challan_no.errors %}<div class="df-help">{{ form.challan_no.errors|striptags }}</div>{% endif %}
-          </div>
-          <div class="df-field">
-            <label for="{{ form.challan_date.id_for_label }}">Challan Date</label>
-            {{ form.challan_date }}
-            {% if form.challan_date.errors %}<div class="df-help">{{ form.challan_date.errors|striptags }}</div>{% endif %}
-          </div>
-          <div class="df-field df-field-full">
-            <label for="{{ form.client.id_for_label }}">Client</label>
-            {{ form.client }}
-            {% if form.client.errors %}<div class="df-help">{{ form.client.errors|striptags }}</div>{% endif %}
-          </div>
-          <div class="df-field">
-            <label for="{{ form.driver_name.id_for_label }}">Driver Name</label>
-            {{ form.driver_name }}
-            {% if form.driver_name.errors %}<div class="df-help">{{ form.driver_name.errors|striptags }}</div>{% endif %}
-          </div>
-          <div class="df-field">
-            <label for="{{ form.lr_no.id_for_label }}">LR No</label>
-            {{ form.lr_no }}
-            {% if form.lr_no.errors %}<div class="df-help">{{ form.lr_no.errors|striptags }}</div>{% endif %}
-          </div>
-          <div class="df-field">
-            <label for="{{ form.transport_name.id_for_label }}">Transport</label>
-            {{ form.transport_name }}
-            {% if form.transport_name.errors %}<div class="df-help">{{ form.transport_name.errors|striptags }}</div>{% endif %}
-          </div>
-          <div class="df-field">
-            <label for="{{ form.vehicle_no.id_for_label }}">Vehicle No</label>
-            {{ form.vehicle_no }}
-            {% if form.vehicle_no.errors %}<div class="df-help">{{ form.vehicle_no.errors|striptags }}</div>{% endif %}
-          </div>
-          <div class="df-field df-field-full">
-            <label for="{{ form.remarks.id_for_label }}">Remarks</label>
-            {{ form.remarks }}
-            {% if form.remarks.errors %}<div class="df-help">{{ form.remarks.errors|striptags }}</div>{% endif %}
-          </div>
+      <div class="df-card-head">
+        <div>
+          <h3>Challan Details</h3>
+          <p>Enter dispatch information.</p>
         </div>
-        <div class="df-actions">
-          <button type="submit" class="df-btn df-btn-primary">Save Challan</button>
-          <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="df-btn">Back</a>
-        </div>
-      </form>
+      </div>
+
+      <div class="df-card-body">
+        {% if form.non_field_errors %}
+          <div class="df-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="df-form-grid">
+            <div class="df-field">
+              <label for="{{ form.challan_no.id_for_label }}">Challan No</label>
+              {{ form.challan_no }}
+              {% if form.challan_no.errors %}<div class="df-help">{{ form.challan_no.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="df-field">
+              <label for="{{ form.challan_date.id_for_label }}">Challan Date</label>
+              {{ form.challan_date }}
+              {% if form.challan_date.errors %}<div class="df-help">{{ form.challan_date.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="df-field df-field-full">
+              <label for="{{ form.client.id_for_label }}">Client</label>
+              {{ form.client }}
+              {% if form.client.errors %}<div class="df-help">{{ form.client.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="df-field">
+              <label for="{{ form.driver_name.id_for_label }}">Driver Name</label>
+              {{ form.driver_name }}
+              {% if form.driver_name.errors %}<div class="df-help">{{ form.driver_name.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="df-field">
+              <label for="{{ form.lr_no.id_for_label }}">LR No</label>
+              {{ form.lr_no }}
+              {% if form.lr_no.errors %}<div class="df-help">{{ form.lr_no.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="df-field">
+              <label for="{{ form.transport_name.id_for_label }}">Transport</label>
+              {{ form.transport_name }}
+              {% if form.transport_name.errors %}<div class="df-help">{{ form.transport_name.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="df-field">
+              <label for="{{ form.vehicle_no.id_for_label }}">Vehicle No</label>
+              {{ form.vehicle_no }}
+              {% if form.vehicle_no.errors %}<div class="df-help">{{ form.vehicle_no.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="df-field df-field-full">
+              <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+              {{ form.remarks }}
+              {% if form.remarks.errors %}<div class="df-help">{{ form.remarks.errors|striptags }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="df-actions">
+            <button type="submit" class="df-btn df-btn-primary">
+              <svg class="df-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12l5 5L20 7"></path>
+              </svg>
+              <span>Save Challan</span>
+            </button>
+
+            <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="df-btn">
+              <svg class="df-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6"></path>
+              </svg>
+              <span>Back</span>
+            </a>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>

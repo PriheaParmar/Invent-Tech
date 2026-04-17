@@ -1,0 +1,110 @@
+<style>
+  :root{
+    --pif-text:#111111;--pif-soft:#5f6b7a;--pif-muted:#8b95a7;--pif-line:#e8ecf2;--pif-line-2:#f1f3f7;
+    --pif-blue:rgba(28,109,216,1);--pif-pink:rgb(238,61,133);--pif-orange:rgba(250,189,100,1);--pif-black:#111111;
+    --pif-blue-soft:rgba(28,109,216,.08);--pif-pink-soft:rgba(238,61,133,.08);--pif-orange-soft:rgba(250,189,100,.16);
+    --pif-shadow:0 2px 8px rgba(15,23,42,.04);
+  }
+  .pif-page{display:flex;flex-direction:column;gap:10px;padding:10px;color:var(--pif-text)}
+  .pif-topbar,.pif-card{background:#fff;border:1px solid var(--pif-line);border-radius:14px;box-shadow:var(--pif-shadow)}
+  .pif-topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px}
+  .pif-topbar-left,.pif-topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pif-btn{min-height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--pif-line);background:#fff;color:var(--pif-text);display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;font-size:10px;font-weight:900;white-space:nowrap;cursor:pointer}
+  .pif-btn--dark{background:var(--pif-black);color:#fff;border-color:var(--pif-black)}
+  .pif-btn--soft{background:#fafbfc;color:var(--pif-soft)}
+  .pif-pill{min-height:20px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:900;white-space:nowrap;background:var(--pif-blue-soft);color:var(--pif-blue);border:1px solid rgba(28,109,216,.10)}
+  .pif-head{display:grid;grid-template-columns:minmax(300px,1.2fr) minmax(260px,.8fr);gap:10px;padding:11px;border-bottom:1px solid var(--pif-line-2)}
+  .pif-title{font-size:18px;font-weight:950;line-height:1.05;letter-spacing:-.03em}.pif-kicker{font-size:8px;font-weight:900;color:var(--pif-muted);text-transform:uppercase;letter-spacing:.09em}
+  .pif-sub{display:flex;gap:6px;flex-wrap:wrap;font-size:10px;font-weight:700;color:var(--pif-soft)}
+  .pif-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .pif-stat{min-height:58px;padding:9px 10px;border-radius:10px;background:#fafbfc;border:1px solid var(--pif-line);display:flex;flex-direction:column;justify-content:center;gap:4px}
+  .pif-stat-label{font-size:8px;font-weight:900;color:var(--pif-muted);text-transform:uppercase;letter-spacing:.08em}
+  .pif-stat-value{font-size:13px;font-weight:950;color:var(--pif-text)}
+  .pif-block{padding:10px 11px 11px}.pif-block + .pif-block{border-top:1px solid var(--pif-line-2)}
+  .pif-block-title{font-size:10px;font-weight:900;color:var(--pif-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+  .pif-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .pif-field label{display:block;margin:0 0 4px;font-size:10px;font-weight:800;color:#4b5563}
+  .pif-field input,.pif-field select{width:100%;min-height:38px;padding:8px 10px;border-radius:9px;border:1px solid #d7dde5;background:#fff;font-size:12px;box-sizing:border-box}
+  .pif-field input[readonly]{background:#f8fafc;color:#475467}
+  .pif-table-wrap{width:100%;overflow:auto}.pif-table{width:100%;min-width:720px;border-collapse:separate;border-spacing:0}
+  .pif-table th,.pif-table td{padding:9px;border-bottom:1px solid var(--pif-line-2);vertical-align:middle}.pif-table thead th{text-align:left;background:#fff;color:var(--pif-muted);font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+  .pif-size-name{font-size:11px;font-weight:900;color:var(--pif-text)}.pif-help{margin-top:8px;font-size:10px;font-weight:700;color:var(--pif-soft)}
+  .pif-banner{padding:10px 12px;border-radius:10px;border:1px solid rgba(250,189,100,.18);background:var(--pif-orange-soft);color:#8a5a00;font-size:11px;font-weight:800}
+  .pif-footer{padding:11px;border-top:1px solid var(--pif-line-2);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+  @media (max-width:980px){.pif-head{grid-template-columns:1fr}.pif-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pif-summary{grid-template-columns:1fr}}
+  @media (max-width:640px){.pif-grid{grid-template-columns:1fr}.pif-topbar-left,.pif-topbar-right,.pif-btn{width:100%}}
+</style>
+<div class="pif-page">
+  <div class="pif-topbar">
+    <div class="pif-topbar-left">
+      <button type="button" class="pif-btn pif-btn--soft" data-challan-popup-close="1">Close</button>
+      <span class="pif-pill">{{ challan.challan_no }}</span>
+      <span class="pif-pill">{{ program.program_no }}</span>
+    </div>
+    <div class="pif-topbar-right">
+      <a href="{% url 'accounts:program_challan_detail' challan.id %}" class="pif-btn pif-btn--soft" data-challan-popup="1" data-popup-title="Challan Detail">View Challan</a>
+    </div>
+  </div>
+  <section class="pif-card">
+    <div class="pif-head">
+      <div>
+        <div class="pif-kicker">Program Inward</div>
+        <div class="pif-title">{{ challan.challan_no }}</div>
+        <div class="pif-sub">
+          <span>{{ program.program_no }}</span>
+          <span>• {{ challan.production_sku|default:'-' }}</span>
+          <span>• {% if challan.jobber %}{{ challan.jobber.name }}{% else %}-{% endif %}</span>
+        </div>
+      </div>
+      <div class="pif-summary">
+        <div class="pif-stat"><div class="pif-stat-label">Jobber Type</div><div class="pif-stat-value">{% if challan.jobber_type %}{{ challan.jobber_type.name }}{% else %}-{% endif %}</div></div>
+        <div class="pif-stat"><div class="pif-stat-label">Delivery Challan</div><div class="pif-stat-value">{{ challan.challan_no }}</div></div>
+        <div class="pif-stat"><div class="pif-stat-label">Total Issued Qty</div><div class="pif-stat-value">{{ challan.total_issued_qty|default:'0.00' }}</div></div>
+        <div class="pif-stat"><div class="pif-stat-label">Current Inward Qty</div><div class="pif-stat-value">{{ challan.inward_qty|default:'0.00' }}</div></div>
+      </div>
+    </div>
+    <div class="pif-block">
+      <div class="pif-banner">UI is ready here. To save inward entries permanently, you still need a real Program Inward model/formset layer in the backend.</div>
+    </div>
+    <div class="pif-block">
+      <div class="pif-block-title">Program Inward Details</div>
+      <div class="pif-grid">
+        <div class="pif-field"><label>Program No</label><input type="text" value="{{ program.program_no }}" readonly></div>
+        <div class="pif-field"><label>Delivery Challan</label><input type="text" value="{{ challan.challan_no }}" readonly></div>
+        <div class="pif-field"><label>Jobber Type</label><input type="text" value="{% if challan.jobber_type %}{{ challan.jobber_type.name }}{% else %}-{% endif %}" readonly></div>
+        <div class="pif-field"><label>Inward Type</label>
+          <select>
+            <option value="">Select inward type</option>
+            {% for inward_type in inward_type_options %}
+              <option value="{{ inward_type.id }}">{{ inward_type.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="pif-block">
+      <div class="pif-block-title">Program Size Details</div>
+      <div class="pif-table-wrap">
+        <table class="pif-table">
+          <thead><tr><th>Size</th><th>Issued Qty</th><th>Inward Qty</th></tr></thead>
+          <tbody>
+          {% for row in size_rows %}
+            <tr>
+              <td><div class="pif-size-name">{{ row.size_name }}</div></td>
+              <td>{{ row.issued_qty|default:'0.00' }}</td>
+              <td><input type="number" step="0.01" min="0" placeholder="Enter inward qty"></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3">No size rows found.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="pif-help">Use the same approved challan sizes here. This popup is ready for the real inward model wiring.</div>
+    </div>
+    <div class="pif-footer">
+      <button type="button" class="pif-btn pif-btn--soft" data-challan-popup-close="1">Cancel</button>
+      <button type="button" class="pif-btn pif-btn--dark" disabled>Save Inward</button>
+    </div>
+  </section>
+</div>

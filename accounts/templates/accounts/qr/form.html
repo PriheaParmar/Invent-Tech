@@ -1,0 +1,1 @@
+{% extends "accounts/base_app.html" %}{% block title %}QR Code{% endblock %}{% block page_title %}QR Code{% endblock %}{% block content %}<div class="page-section is-active"><div class="canvas"><div style="padding:20px"><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Save QR</button></form></div></div></div>{% endblock %}

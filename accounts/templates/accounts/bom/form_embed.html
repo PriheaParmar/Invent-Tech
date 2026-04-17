@@ -379,6 +379,47 @@
     border-radius:8px;
     border:1px solid #e5e7eb;
     background:#fff;
+    flex:0 0 auto;
+  }
+
+  .bom-file-card{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+    padding:8px 10px;
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    background:#f8fafc;
+  }
+
+  .bom-file-meta{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+
+  .bom-file-label{
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:#64748b;
+  }
+
+  .bom-file-name{
+    font-size:11px;
+    font-weight:700;
+    color:#111827;
+    line-height:1.35;
+    word-break:break-word;
+  }
+
+  .bom-file-note{
+    font-size:10px;
+    color:#6b7280;
+    line-height:1.35;
   }
 
   .bom-file-preview a{
@@ -524,6 +565,24 @@
     {% endif %}
     {% if expense_formset.non_form_errors %}
     <div class="jb-errors">{% for error in expense_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}</div>
+    {% endif %}
+        {% if bom_debug_errors %}
+    <div class="jb-errors">
+      <div><strong>BOM save is blocked.</strong></div>
+      {% for item in bom_debug_errors %}
+        <div>
+          {{ item.section }}
+          {% if item.row %} - Row {{ item.row }}{% endif %}
+          {% if item.field %} - {{ item.field }}{% endif %}: {{ item.message }}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if form.errors or material_formset.errors or accessory_formset.errors or image_formset.errors or jobber_process_formset.errors or jobber_detail_formset.errors or expense_formset.errors %}
+    <div class="jb-errors">
+      <div><strong>Note:</strong> If save fails, browser file inputs are cleared automatically. Please choose the image again before resubmitting.</div>
+    </div>
     {% endif %}
 
     <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" enctype="multipart/form-data" class="jf-form" novalidate>
@@ -887,12 +946,27 @@
                       {% if item_form.image.errors %}<div class="bom-inline-errors">{% for error in item_form.image.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
 
                       <div class="bom-file-preview">
-                        {% if item_form.instance.pk and item_form.instance.image %}
-                          <img src="{{ item_form.instance.image.url }}" alt="BOM image preview" data-bom-preview-image>
-                          <a href="{{ item_form.instance.image.url }}" target="_blank">View current image</a>
-                        {% else %}
-                          <img src="" alt="Preview" data-bom-preview-image style="display:none;">
-                        {% endif %}
+                        <div class="bom-file-card">
+                          {% if item_form.instance.pk and item_form.instance.image %}
+                            <img src="{{ item_form.instance.image.url }}" alt="BOM image preview" data-bom-preview-image>
+                          {% else %}
+                            <img src="" alt="Preview" data-bom-preview-image style="display:none;">
+                          {% endif %}
+
+                          <div class="bom-file-meta">
+                            {% if item_form.instance.pk and item_form.instance.image %}
+                              <div class="bom-file-label" data-bom-preview-label>Current saved image</div>
+                              <div class="bom-file-name" data-bom-preview-name>{{ item_form.instance.image.name|cut:"bom/" }}</div>
+                              <a href="{{ item_form.instance.image.url }}" target="_blank" data-bom-preview-link>View current image</a>
+                              <div class="bom-file-note">The file input stays blank on edit. Choose a new image only if you want to replace the current saved image.</div>
+                            {% else %}
+                              <div class="bom-file-label" data-bom-preview-label>Selected image</div>
+                              <div class="bom-file-name" data-bom-preview-name>No image selected yet</div>
+                              <a href="#" target="_blank" data-bom-preview-link style="display:none;">View selected image</a>
+                              <div class="bom-file-note">After successful save, the uploaded image will appear here as the current saved image.</div>
+                            {% endif %}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -920,7 +994,15 @@
                       <label>Image</label>
                       {{ image_formset.empty_form.image }}
                       <div class="bom-file-preview">
-                        <img src="" alt="Preview" data-bom-preview-image style="display:none;">
+                        <div class="bom-file-card">
+                          <img src="" alt="Preview" data-bom-preview-image style="display:none;">
+                          <div class="bom-file-meta">
+                            <div class="bom-file-label" data-bom-preview-label>Selected image</div>
+                            <div class="bom-file-name" data-bom-preview-name>No image selected yet</div>
+                            <a href="#" target="_blank" data-bom-preview-link style="display:none;">View selected image</a>
+                            <div class="bom-file-note">After successful save, the uploaded image will appear here as the current saved image.</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div class="bom-row-field">
@@ -1445,16 +1527,37 @@
           input.addEventListener("change", function () {
             const row = input.closest("[data-bom-row]");
             if (!row) return;
+
             const img = row.querySelector("[data-bom-preview-image]");
-            if (!img) return;
+            const name = row.querySelector("[data-bom-preview-name]");
+            const label = row.querySelector("[data-bom-preview-label]");
+            const link = row.querySelector("[data-bom-preview-link]");
 
             const file = input.files && input.files[0];
-            if (!file) return;
+            if (!file) {
+              if (name) name.textContent = "No image selected yet";
+              if (label) label.textContent = "Selected image";
+              if (link) {
+                link.style.display = "none";
+                link.removeAttribute("href");
+              }
+              return;
+            }
+
+            if (name) name.textContent = file.name;
+            if (label) label.textContent = "Selected image";
 
             const reader = new FileReader();
             reader.onload = function (e) {
-              img.src = e.target.result;
-              img.style.display = "block";
+              if (img) {
+                img.src = e.target.result;
+                img.style.display = "block";
+              }
+              if (link) {
+                link.href = e.target.result;
+                link.style.display = "inline-flex";
+                link.textContent = "View selected image";
+              }
             };
             reader.readAsDataURL(file);
           });

@@ -1,0 +1,16 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Program Costings - InventTech{% endblock %}
+{% block page_title %}Program Costings{% endblock %}
+{% block page_subtitle %}See all the costings for the selected program{% endblock %}
+{% block content %}
+<style>.pc-page{display:flex;flex-direction:column;gap:14px}.pc-card{background:#fff;border:1px solid #e6ebf2;border-radius:20px;box-shadow:0 12px 30px rgba(15,23,42,.06)}.pc-head{padding:16px 18px;border-bottom:1px solid #eef2f6;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.pc-title{font-size:20px;font-weight:900;color:#111827}.pc-sub{font-size:13px;color:#667085;margin-top:4px}.pc-btn{min-height:44px;padding:0 16px;border-radius:14px;border:1px solid #dbe2ea;background:#fff;color:#111827;text-decoration:none;font-weight:800}.pc-body{padding:16px 18px}.pc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.pc-box{border:1px solid #e6ebf2;border-radius:16px;background:#fafbfd;padding:14px}.pc-label{font-size:11px;color:#667085;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.pc-value{font-size:18px;color:#111827;font-weight:900;margin-top:6px}.pc-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:16px}.pc-table th,.pc-table td{padding:12px 10px;border-bottom:1px solid #eef2f6;text-align:left}.pc-table th{font-size:11px;color:#667085;font-weight:900;text-transform:uppercase;letter-spacing:.08em}@media(max-width:900px){.pc-grid{grid-template-columns:1fr}}</style>
+<div class="pc-page">
+  <section class="pc-card">
+    <div class="pc-head"><div><div class="pc-title">{{ program.program_no }}</div><div class="pc-sub">{{ program.bom.sku }} • {{ program.bom.product_name|default:'-' }}</div></div><a href="{% url 'accounts:program_list' %}" class="pc-btn">Back</a></div>
+    <div class="pc-body">
+      <div class="pc-grid">{% for label,value in costing_rows %}<div class="pc-box"><div class="pc-label">{{ label }}</div><div class="pc-value">₹ {{ value|default:'0.00' }}</div></div>{% endfor %}</div>
+      <table class="pc-table"><thead><tr><th>Snapshot</th><th>Total Cost</th><th>Target Selling Price</th><th>MRP</th><th>Notes</th></tr></thead><tbody>{% for snap in snapshots %}<tr><td>#{{ snap.id }}</td><td>₹ {{ snap.total_cost }}</td><td>₹ {{ snap.target_selling_price }}</td><td>₹ {{ snap.mrp }}</td><td>{{ snap.notes|default:'-' }}</td></tr>{% empty %}<tr><td colspan="5">No costing snapshots found.</td></tr>{% endfor %}</tbody></table>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,927 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Stock Lot Wise - InventTech{% endblock %}
+{% block page_title %}Stock Lot Wise{% endblock %}
+{% block page_subtitle %}Accepted ready material stock received from dyeing inward{% endblock %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Sora:wght@600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
+
+  :root{
+    --slx-blue: rgba(28, 109, 216, 1);
+    --slx-pink: rgb(238, 61, 133);
+    --slx-orange: rgba(250, 189, 100, 1);
+
+    --slx-bg:#f5f7fb;
+    --slx-surface:#ffffff;
+    --slx-surface-soft:#fbfcfe;
+    --slx-surface-2:#f8fafc;
+    --slx-line:#e8edf4;
+    --slx-line-strong:#d7dfeb;
+    --slx-text:#0f172a;
+    --slx-soft:#64748b;
+    --slx-muted:#94a3b8;
+    --slx-success:#15803d;
+    --slx-danger:#dc2626;
+    --slx-warning:#b45309;
+    --slx-violet:#7c3aed;
+
+    --slx-shadow:0 18px 40px rgba(15,23,42,.06);
+    --slx-shadow-soft:0 10px 24px rgba(15,23,42,.04);
+
+    --slx-radius-2xl:28px;
+    --slx-radius-xl:22px;
+    --slx-radius-lg:18px;
+    --slx-radius-md:14px;
+    --slx-radius-sm:12px;
+
+    --slx-display:"Sora", "Inter", ui-sans-serif, system-ui, sans-serif;
+    --slx-body:"Inter", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+    --slx-mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  .canvas{
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
+  }
+
+  .slx-page{
+    width:100%;
+    min-width:0;
+    font-family:var(--slx-body);
+    color:var(--slx-text);
+  }
+
+  .slx-shell{
+    padding:8px 6px;
+  }
+
+  .slx-board{
+    width:100%;
+    min-width:0;
+    border:1px solid var(--slx-line);
+    border-radius:var(--slx-radius-2xl);
+    background:
+      radial-gradient(circle at top right, rgba(28,109,216,.06), transparent 26%),
+      radial-gradient(circle at left bottom, rgba(238,61,133,.04), transparent 20%),
+      linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+    box-shadow:var(--slx-shadow);
+    overflow:hidden;
+  }
+
+  .slx-hero{
+    padding:22px 24px 18px;
+    border-bottom:1px solid var(--slx-line);
+  }
+
+  .slx-hero-top{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) auto;
+    gap:14px;
+    align-items:start;
+    margin-bottom:18px;
+  }
+
+  .slx-kicker{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+    color:var(--slx-pink);
+    font-family:var(--slx-display);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    line-height:1;
+  }
+
+  .slx-kicker::before{
+    content:"";
+    width:20px;
+    height:2px;
+    border-radius:999px;
+    background:var(--slx-pink);
+    display:block;
+  }
+
+  .slx-title{
+    margin:0;
+    font-family:var(--slx-display);
+    font-size:30px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:-.05em;
+    color:var(--slx-text);
+  }
+
+  .slx-sub{
+    margin:10px 0 0;
+    max-width:980px;
+    color:var(--slx-soft);
+    font-size:13px;
+    line-height:1.75;
+    font-weight:600;
+  }
+
+  .slx-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .slx-btn,
+  .slx-btn:visited{
+    appearance:none;
+    border:none;
+    outline:none;
+    text-decoration:none;
+    cursor:pointer;
+    min-height:40px;
+    padding:0 14px;
+    border-radius:13px;
+    background:#fff;
+    color:var(--slx-text);
+    box-shadow:inset 0 0 0 1px var(--slx-line);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    white-space:nowrap;
+    font-size:12px;
+    font-weight:700;
+    transition:all .18s ease;
+  }
+
+  .slx-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:inset 0 0 0 1px rgba(15,23,42,.14), 0 8px 18px rgba(15,23,42,.06);
+  }
+
+  .slx-btn-primary,
+  .slx-btn-primary:visited{
+    background:var(--slx-text);
+    color:#fff !important;
+    box-shadow:none;
+  }
+
+  .slx-btn-primary:hover{
+    background:var(--slx-blue);
+    box-shadow:0 10px 20px rgba(28,109,216,.18);
+  }
+
+  .slx-toolbar{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) auto;
+    gap:14px;
+    align-items:stretch;
+  }
+
+  .slx-filter-card{
+    padding:12px;
+    border:1px solid var(--slx-line);
+    border-radius:20px;
+    background:rgba(255,255,255,.78);
+    box-shadow:var(--slx-shadow-soft);
+    backdrop-filter:blur(8px);
+  }
+
+  .slx-filters{
+    display:grid;
+    grid-template-columns:minmax(280px, 1.25fr) minmax(220px, .75fr) auto auto;
+    gap:8px;
+    align-items:center;
+    min-width:0;
+  }
+
+  .slx-field,
+  .slx-select{
+    width:100%;
+    min-width:0;
+    height:42px;
+    padding:0 14px;
+    border:none;
+    outline:none;
+    border-radius:13px;
+    background:var(--slx-surface-2);
+    box-shadow:inset 0 0 0 1px rgba(15,23,42,.08);
+    color:var(--slx-text);
+    font-family:var(--slx-body);
+    font-size:12.8px;
+    font-weight:600;
+    transition:all .18s ease;
+  }
+
+  .slx-field::placeholder{
+    color:var(--slx-muted);
+    font-weight:600;
+  }
+
+  .slx-field:focus,
+  .slx-select:focus{
+    background:#fff;
+    box-shadow:
+      inset 0 0 0 1px rgba(28,109,216,.22),
+      0 0 0 4px rgba(28,109,216,.08);
+  }
+
+  .slx-stats{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(126px, 1fr));
+    gap:10px;
+  }
+
+  .slx-stat{
+    position:relative;
+    padding:14px 14px 12px;
+    border:1px solid var(--slx-line);
+    border-radius:18px;
+    background:linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(249,251,255,1) 100%);
+    box-shadow:var(--slx-shadow-soft);
+    overflow:hidden;
+  }
+
+  .slx-stat::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:3px;
+    background:var(--slx-blue);
+    opacity:.9;
+  }
+
+  .slx-stat:nth-child(2)::before{ background:var(--slx-orange); }
+  .slx-stat:nth-child(3)::before{ background:var(--slx-pink); }
+  .slx-stat:nth-child(4)::before{ background:var(--slx-violet); }
+
+  .slx-stat-label{
+    color:var(--slx-muted);
+    font-family:var(--slx-display);
+    font-size:10px;
+    font-weight:800;
+    line-height:1;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+
+  .slx-stat-value{
+    margin-top:12px;
+    color:var(--slx-text);
+    font-family:var(--slx-display);
+    font-size:22px;
+    font-weight:800;
+    line-height:1;
+    letter-spacing:-.05em;
+  }
+
+  .slx-stat-sub{
+    margin-top:7px;
+    color:var(--slx-soft);
+    font-size:11px;
+    line-height:1.45;
+    font-weight:600;
+  }
+
+  .slx-note{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:15px 24px;
+    border-bottom:1px solid var(--slx-line);
+    background:rgba(248,250,252,.9);
+    color:var(--slx-soft);
+    font-size:12.2px;
+    line-height:1.75;
+    font-weight:600;
+  }
+
+  .slx-note-icon{
+    width:28px;
+    height:28px;
+    border-radius:999px;
+    background:rgba(28,109,216,.08);
+    color:var(--slx-blue);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:var(--slx-display);
+    font-size:12px;
+    font-weight:800;
+    flex:0 0 auto;
+    margin-top:2px;
+  }
+
+  .slx-main{
+    padding:18px 24px 20px;
+  }
+
+  .slx-table-top{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .slx-table-title{
+    color:var(--slx-text);
+    font-family:var(--slx-display);
+    font-size:15px;
+    font-weight:800;
+    line-height:1.1;
+    letter-spacing:-.02em;
+  }
+
+  .slx-table-sub{
+    margin-top:4px;
+    color:var(--slx-soft);
+    font-size:11px;
+    line-height:1.55;
+    font-weight:600;
+  }
+
+  .slx-table-count{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:34px;
+    padding:0 12px;
+    border-radius:999px;
+    background:rgba(28,109,216,.08);
+    color:var(--slx-blue);
+    font-size:11px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  .slx-table-wrap{
+    width:100%;
+    min-width:0;
+    overflow:auto;
+    border:1px solid var(--slx-line);
+    border-radius:20px;
+    background:#fff;
+  }
+
+  .slx-table{
+    width:100%;
+    min-width:1640px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .slx-table thead th{
+    position:sticky;
+    top:0;
+    z-index:2;
+    background:rgba(255,255,255,.96);
+    backdrop-filter:blur(8px);
+    padding:13px 14px;
+    text-align:left;
+    white-space:nowrap;
+    border-bottom:1px solid var(--slx-line-strong);
+    color:var(--slx-muted);
+    font-family:var(--slx-display);
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+
+  .slx-table tbody td{
+    padding:15px 14px;
+    vertical-align:top;
+    border-bottom:1px solid rgba(15,23,42,.055);
+    background:transparent;
+    color:var(--slx-text);
+    font-size:12px;
+    line-height:1.55;
+  }
+
+  .slx-table tbody tr:last-child td{
+    border-bottom:none;
+  }
+
+  .slx-table tbody tr:hover td{
+    background:#fbfdff;
+  }
+
+  .slx-right{
+    text-align:right !important;
+  }
+
+  .slx-lot{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .slx-lot-no{
+    color:var(--slx-text);
+    font-family:var(--slx-display);
+    font-size:13px;
+    font-weight:800;
+    line-height:1.2;
+    letter-spacing:-.02em;
+  }
+
+  .slx-meta{
+    display:block;
+    color:var(--slx-soft);
+    font-size:11px;
+    line-height:1.55;
+    font-weight:500;
+  }
+
+  .slx-chip{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:28px;
+    padding:0 11px;
+    border-radius:999px;
+    background:rgba(28,109,216,.08);
+    color:var(--slx-blue);
+    font-family:var(--slx-display);
+    font-size:10px;
+    font-weight:800;
+    line-height:1;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  .slx-mat{
+    color:var(--slx-text);
+    font-size:12.8px;
+    line-height:1.5;
+    font-weight:700;
+  }
+
+  .slx-raw{
+    color:#334155;
+    font-size:12px;
+    line-height:1.55;
+    font-weight:600;
+  }
+
+  .slx-vendor{
+    color:var(--slx-text);
+    font-size:12.4px;
+    line-height:1.45;
+    font-weight:700;
+  }
+
+  .slx-po{
+    font-family:var(--slx-mono);
+    font-size:12px;
+    line-height:1.45;
+    font-weight:600;
+    color:#1e293b;
+  }
+
+  .slx-date{
+    font-family:var(--slx-mono);
+    font-size:12px;
+    line-height:1.4;
+    font-weight:600;
+    color:#334155;
+  }
+
+  .slx-num{
+    font-family:var(--slx-mono);
+    font-size:13px;
+    line-height:1.15;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    color:var(--slx-text);
+  }
+
+  .slx-num--good{
+    color:var(--slx-success);
+    font-weight:800;
+  }
+
+  .slx-num--bad{
+    color:var(--slx-danger);
+    font-weight:800;
+  }
+
+  .slx-num--hold{
+    color:var(--slx-violet);
+    font-weight:800;
+  }
+
+  .slx-unit{
+    margin-left:4px;
+    color:var(--slx-muted);
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .slx-muted{
+    color:var(--slx-muted);
+    font-size:11px;
+    line-height:1.4;
+    font-weight:600;
+  }
+
+  .slx-link,
+  .slx-link:visited{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:33px;
+    padding:0 12px;
+    border-radius:11px;
+    background:var(--slx-surface-2);
+    color:var(--slx-text);
+    text-decoration:none;
+    box-shadow:inset 0 0 0 1px rgba(15,23,42,.08);
+    font-size:11.5px;
+    line-height:1;
+    font-weight:700;
+    white-space:nowrap;
+    transition:all .18s ease;
+  }
+
+  .slx-link:hover{
+    background:#fff;
+    transform:translateY(-1px);
+    box-shadow:inset 0 0 0 1px rgba(15,23,42,.12), 0 8px 18px rgba(15,23,42,.05);
+  }
+
+  .slx-empty{
+    padding:62px 18px;
+    text-align:center;
+  }
+
+  .slx-empty h3{
+    margin:0 0 10px;
+    color:var(--slx-text);
+    font-family:var(--slx-display);
+    font-size:20px;
+    font-weight:800;
+    line-height:1.1;
+    letter-spacing:-.04em;
+  }
+
+  .slx-empty p{
+    margin:0;
+    color:var(--slx-soft);
+    font-size:12.8px;
+    line-height:1.75;
+    font-weight:600;
+  }
+
+  .slx-pagination{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px solid var(--slx-line);
+  }
+
+  .slx-page-text{
+    color:var(--slx-soft);
+    font-size:12px;
+    line-height:1;
+    font-weight:600;
+  }
+
+  @media (max-width: 1280px){
+    .slx-toolbar{
+      grid-template-columns:1fr;
+    }
+
+    .slx-stats{
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 980px){
+    .slx-filters{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .slx-stats{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px){
+    .slx-shell{
+      padding:6px 2px;
+    }
+
+    .slx-hero{
+      padding:16px 14px 14px;
+    }
+
+    .slx-main{
+      padding:14px;
+    }
+
+    .slx-note{
+      padding:13px 14px;
+    }
+
+    .slx-hero-top{
+      grid-template-columns:1fr;
+    }
+
+    .slx-actions{
+      width:100%;
+    }
+
+    .slx-actions > *{
+      flex:1 1 auto;
+    }
+
+    .slx-filters{
+      grid-template-columns:1fr;
+    }
+
+    .slx-stats{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .slx-btn,
+    .slx-btn-primary{
+      width:100%;
+    }
+  }
+
+  @media (max-width: 520px){
+    .slx-title{
+      font-size:24px;
+    }
+
+    .slx-stats{
+      grid-template-columns:1fr;
+    }
+
+    .slx-table-top{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+  }
+</style>
+
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="slx-page">
+      <div class="slx-shell">
+        <div class="slx-board">
+
+          <div class="slx-hero">
+            <div class="slx-hero-top">
+              <div>
+                <div class="slx-kicker">Inventory Register</div>
+                <h1 class="slx-title">Stock Lot Wise</h1>
+                <p class="slx-sub">
+                  Track accepted ready material lots received from dyeing inward with source fabric, dyeing process,
+                  vendor details, received quantity, accepted stock, rejected quantity, hold quantity, and live usable stock.
+                </p>
+              </div>
+
+              <div class="slx-actions">
+                <a href="{% url 'accounts:dashboard' %}" class="slx-btn">Dashboard</a>
+                <a href="{% url 'accounts:dyeing_inward_tracker' %}" class="slx-btn">Dyeing Inwards</a>
+              </div>
+            </div>
+
+            <div class="slx-toolbar">
+              <div class="slx-filter-card">
+                <form method="get" class="slx-filters">
+                  <input
+                    type="text"
+                    name="q"
+                    value="{{ q }}"
+                    class="slx-field"
+                    placeholder="Search lot, ready material, raw fabric, vendor, firm, source"
+                  >
+
+                  <select name="material" class="slx-select">
+                    <option value="">All Ready Materials</option>
+                    {% for material in material_choices %}
+                      <option value="{{ material }}" {% if selected_material == material %}selected{% endif %}>
+                        {{ material }}
+                      </option>
+                    {% endfor %}
+                  </select>
+
+                  <button type="submit" class="slx-btn slx-btn-primary">Apply Filters</button>
+                  <a href="{% url 'accounts:stock_lot_wise' %}" class="slx-btn">Reset</a>
+                </form>
+              </div>
+
+              <div class="slx-stats">
+                <div class="slx-stat">
+                  <div class="slx-stat-label">Total Lots</div>
+                  <div class="slx-stat-value">{{ summary.total_lots }}</div>
+                  <div class="slx-stat-sub">All ready lots</div>
+                </div>
+
+                <div class="slx-stat">
+                  <div class="slx-stat-label">Received Qty</div>
+                  <div class="slx-stat-value">{{ summary.total_quantity }}</div>
+                  <div class="slx-stat-sub">Total inward quantity</div>
+                </div>
+
+                <div class="slx-stat">
+                  <div class="slx-stat-label">Used Qty</div>
+                  <div class="slx-stat-value">
+                    {% if summary.total_used_quantity %}
+                      {{ summary.total_used_quantity }}
+                    {% else %}
+                      0
+                    {% endif %}
+                  </div>
+                  <div class="slx-stat-sub">Consumption linking pending</div>
+                </div>
+
+                <div class="slx-stat">
+                  <div class="slx-stat-label">Usable Stock</div>
+                  <div class="slx-stat-value">{{ summary.total_final_stock }}</div>
+                  <div class="slx-stat-sub">Accepted closing stock</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="slx-note">
+            <div class="slx-note-icon">i</div>
+            <div>
+              This screen is now based on <strong>accepted dyed output</strong>. Received quantity, accepted quantity,
+              rejected quantity, and hold quantity are separated so only <strong>accepted stock</strong> is treated as usable inventory.
+            </div>
+          </div>
+
+          <div class="slx-main">
+            {% if rows %}
+              <div class="slx-table-top">
+                <div>
+                  <div class="slx-table-title">Accepted Ready Material Lot Register</div>
+                  <div class="slx-table-sub">Lot-wise accepted stock from dyeing section</div>
+                </div>
+                <div class="slx-table-count">{{ page_obj.paginator.count }} Row{{ page_obj.paginator.count|pluralize }}</div>
+              </div>
+
+              <div class="slx-table-wrap">
+                <table class="slx-table">
+                  <thead>
+                    <tr>
+                      <th>Lot</th>
+                      <th>Stage</th>
+                      <th>Ready Material</th>
+                      <th>Raw Fabric</th>
+                      <th>Vendor / Firm</th>
+                      <th>Dyeing</th>
+                      <th>Source PO</th>
+                      <th>Date</th>
+                      <th class="slx-right">Received Qty</th>
+                      <th class="slx-right">Accepted Qty</th>
+                      <th class="slx-right">Rejected Qty</th>
+                      <th class="slx-right">Hold Qty</th>
+                      <th class="slx-right">Used Qty</th>
+                      <th class="slx-right">Usable Stock</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for row in rows %}
+                      <tr>
+                        <td>
+                          <div class="slx-lot">
+                            <div class="slx-lot-no">{{ row.lot_number }}</div>
+                            {% if row.remark %}
+                              <span class="slx-meta">{{ row.remark }}</span>
+                            {% endif %}
+                          </div>
+                        </td>
+
+                        <td>
+                          <span class="slx-chip">{{ row.stage_label }}</span>
+                        </td>
+
+                        <td>
+                          <div class="slx-mat">
+                            {% if row.ready_material_name %}
+                              {{ row.ready_material_name }}
+                            {% else %}
+                              {{ row.material_name }}
+                            {% endif %}
+                          </div>
+                        </td>
+
+                        <td>
+                          <div class="slx-raw">{{ row.raw_material_name|default:"-" }}</div>
+                        </td>
+
+                        <td>
+                          <div class="slx-vendor">{{ row.vendor_name }}</div>
+                          <span class="slx-meta">{{ row.firm_name }}</span>
+                        </td>
+
+                        <td>
+                          <div class="slx-raw">{{ row.dyeing_name|default:"-" }}</div>
+                          <span class="slx-meta">{{ row.dyeing_type|default:"-" }}</span>
+                        </td>
+
+                        <td>
+                          <div class="slx-po">{{ row.source_number }}</div>
+                        </td>
+
+                        <td>
+                          {% if row.lot_date %}
+                            <div class="slx-date">{{ row.lot_date|date:"d M Y" }}</div>
+                          {% else %}
+                            <span class="slx-muted">-</span>
+                          {% endif %}
+                        </td>
+
+                        <td class="slx-right">
+                          <span class="slx-num">{{ row.quantity }}</span><span class="slx-unit">{{ row.unit }}</span>
+                        </td>
+
+                        <td class="slx-right">
+                          <span class="slx-num slx-num--good">{{ row.accepted_quantity|default:"0.00" }}</span><span class="slx-unit">{{ row.unit }}</span>
+                        </td>
+
+                        <td class="slx-right">
+                          <span class="slx-num slx-num--bad">{{ row.rejected_quantity|default:"0.00" }}</span><span class="slx-unit">{{ row.unit }}</span>
+                        </td>
+
+                        <td class="slx-right">
+                          <span class="slx-num slx-num--hold">{{ row.hold_quantity|default:"0.00" }}</span><span class="slx-unit">{{ row.unit }}</span>
+                        </td>
+
+                        <td class="slx-right">
+                          {% if row.used_quantity is None %}
+                            <span class="slx-muted">Not tracked</span>
+                          {% else %}
+                            <span class="slx-num">{{ row.used_quantity }}</span><span class="slx-unit">{{ row.unit }}</span>
+                          {% endif %}
+                        </td>
+
+                        <td class="slx-right">
+                          <span class="slx-num slx-num--good">{{ row.final_stock }}</span><span class="slx-unit">{{ row.unit }}</span>
+                        </td>
+
+                        <td>
+                          {% if row.detail_url %}
+                            <a href="{{ row.detail_url }}" class="slx-link">{{ row.detail_label }}</a>
+                          {% else %}
+                            <span class="slx-muted">-</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+
+              {% if page_obj.has_other_pages %}
+                <div class="slx-pagination">
+                  {% if page_obj.has_previous %}
+                    <a class="slx-btn" href="?q={{ q }}&material={{ selected_material }}&page={{ page_obj.previous_page_number }}">
+                      Previous
+                    </a>
+                  {% endif %}
+
+                  <span class="slx-page-text">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                  </span>
+
+                  {% if page_obj.has_next %}
+                    <a class="slx-btn" href="?q={{ q }}&material={{ selected_material }}&page={{ page_obj.next_page_number }}">
+                      Next
+                    </a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            {% else %}
+              <div class="slx-empty">
+                <h3>No stock lots found</h3>
+                <p>Try changing the filters or add dyeing inward entries first.</p>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

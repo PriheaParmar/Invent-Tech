@@ -1,40 +1,478 @@
 <style>
   :root{
-    --dp-bg:#ffffff;--dp-line:#e5e7eb;--dp-text:#0f172a;--dp-soft:#64748b;
-    --dp-blue:rgba(28,109,216,1);--dp-pink:rgb(238,61,133);--dp-orange:rgba(250,189,100,1);
-    --dp-shadow:0 16px 40px rgba(15,23,42,.08);
+    --dp-card:#ffffff;
+    --dp-card-soft:#fbfdff;
+    --dp-line:rgba(15,23,42,.08);
+    --dp-line-strong:rgba(15,23,42,.12);
+    --dp-text:#0f172a;
+    --dp-soft:#64748b;
+    --dp-faint:#94a3b8;
+    --dp-blue:rgba(28,109,216,1);
+    --dp-pink:rgb(238,61,133);
+    --dp-orange:rgba(250,189,100,1);
+    --dp-shadow:0 14px 34px rgba(15,23,42,.06);
+    --dp-radius-xl:22px;
+    --dp-radius-lg:16px;
+    --dp-radius-md:12px;
+    --dp-radius-sm:10px;
+    --dp-font-display:"Plus Jakarta Sans","Inter","Segoe UI",Arial,sans-serif;
+    --dp-font-body:"Inter","Segoe UI",Arial,sans-serif;
+    --dp-font-data:"IBM Plex Sans","Inter","Segoe UI",Arial,sans-serif;
   }
-  .dp-shell{display:flex;flex-direction:column;gap:18px;}
-  .dp-toolbar,.dp-list{background:var(--dp-bg);border:1px solid var(--dp-line);border-radius:18px;box-shadow:var(--dp-shadow);}
-  .dp-toolbar{padding:16px;}
-  .dp-toolbar form{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:10px;}
-  .dp-input{height:44px;border:1px solid var(--dp-line);border-radius:12px;padding:0 14px;font-size:.94rem;outline:none;}
-  .dp-input:focus{border-color:var(--dp-blue);box-shadow:0 0 0 4px rgba(28,109,216,.10);}
-  .dp-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;border:1px solid var(--dp-line);background:#fff;color:var(--dp-text);text-decoration:none;font-weight:700;font-size:.9rem;}
-  .dp-btn-primary{background:var(--dp-blue);border-color:var(--dp-blue);color:#fff;}
-  .dp-list{overflow:hidden;}
-  .dp-table-wrap{overflow:auto;}
-  .dp-table{width:100%;border-collapse:collapse;min-width:900px;}
-  .dp-table th{padding:14px 12px;background:#f8fafc;border-bottom:1px solid var(--dp-line);text-align:left;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:#334155;}
-  .dp-table td{padding:14px 12px;border-bottom:1px solid var(--dp-line);vertical-align:top;color:var(--dp-text);}
-  .dp-main{font-weight:800;}
-  .dp-sub{font-size:.82rem;color:var(--dp-soft);margin-top:3px;}
-  .dp-count{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(238,61,133,.08);color:var(--dp-pink);font-weight:800;font-size:.78rem;}
-  .dp-empty{text-align:center;padding:34px 18px;color:var(--dp-soft);}
-  @media (max-width:900px){.dp-toolbar form{grid-template-columns:1fr;}}
+
+  .dp-shell{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    min-width:0;
+    color:var(--dp-text);
+    font-family:var(--dp-font-body);
+  }
+
+  .dp-header{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:14px;
+    align-items:start;
+    background:linear-gradient(180deg,#fff 0%,#fcfdff 100%);
+    border:1px solid var(--dp-line);
+    border-radius:var(--dp-radius-xl);
+    box-shadow:var(--dp-shadow);
+    padding:18px 18px 16px;
+  }
+
+  .dp-titlebox{
+    min-width:0;
+  }
+
+  .dp-kicker{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:7px;
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--dp-pink);
+    font-family:var(--dp-font-display);
+  }
+
+  .dp-kicker::before{
+    content:"";
+    width:18px;
+    height:2px;
+    border-radius:999px;
+    background:var(--dp-pink);
+    display:block;
+  }
+
+  .dp-title{
+    margin:0;
+    font-size:24px;
+    line-height:1.05;
+    color:var(--dp-text);
+    font-weight:800;
+    letter-spacing:-.04em;
+    font-family:var(--dp-font-display);
+  }
+
+  .dp-sub{
+    margin:8px 0 0;
+    max-width:760px;
+    color:var(--dp-soft);
+    font-size:12.6px;
+    line-height:1.65;
+    font-weight:500;
+  }
+
+  .dp-toolbar{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px;
+    align-items:center;
+    background:#fff;
+    border:1px solid var(--dp-line);
+    border-radius:18px;
+    box-shadow:var(--dp-shadow);
+    padding:12px;
+  }
+
+  .dp-search-form{
+    display:grid;
+    grid-template-columns:minmax(250px,1fr) auto auto;
+    gap:8px;
+    align-items:center;
+    min-width:0;
+  }
+
+  .dp-input{
+    width:100%;
+    min-width:0;
+    height:38px;
+    border:none;
+    outline:none;
+    border-radius:12px;
+    padding:0 13px;
+    font-size:12.6px;
+    font-weight:600;
+    color:var(--dp-text);
+    background:#f8fafc;
+    box-shadow:inset 0 0 0 1px var(--dp-line);
+    transition:all .18s ease;
+    font-family:var(--dp-font-body);
+  }
+
+  .dp-input::placeholder{
+    color:var(--dp-faint);
+    font-weight:500;
+  }
+
+  .dp-input:focus{
+    background:#fff;
+    box-shadow:inset 0 0 0 1px rgba(28,109,216,.22), 0 0 0 4px rgba(28,109,216,.08);
+  }
+
+  .dp-btn{
+    appearance:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:36px;
+    padding:0 13px;
+    border-radius:12px;
+    border:none;
+    background:#fff;
+    color:var(--dp-text);
+    text-decoration:none;
+    font-weight:700;
+    font-size:12px;
+    line-height:1;
+    font-family:var(--dp-font-body);
+    box-shadow:inset 0 0 0 1px var(--dp-line);
+    transition:all .18s ease;
+    white-space:nowrap;
+    cursor:pointer;
+    gap:8px;
+  }
+
+  .dp-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:inset 0 0 0 1px rgba(15,23,42,.14), 0 10px 22px rgba(15,23,42,.06);
+  }
+
+  .dp-btn-primary{
+    background:var(--dp-blue);
+    color:#fff;
+    box-shadow:none;
+  }
+
+  .dp-btn-primary:hover{
+    background:var(--dp-text);
+    color:#fff;
+    box-shadow:0 10px 20px rgba(28,109,216,.18);
+  }
+
+  .dp-btn-search{
+    width:38px;
+    min-width:38px;
+    padding:0;
+  }
+
+  .dp-btn-clear:hover{
+    color:var(--dp-pink);
+    box-shadow:inset 0 0 0 1px rgba(238,61,133,.18), 0 10px 20px rgba(238,61,133,.08);
+  }
+
+  .dp-btn-svg{
+    width:16px;
+    height:16px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    flex:0 0 auto;
+  }
+
+  .dp-summary{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .dp-stat{
+    min-width:110px;
+    padding:9px 11px;
+    border-radius:14px;
+    background:linear-gradient(180deg,#fbfdff 0%,#ffffff 100%);
+    box-shadow:inset 0 0 0 1px rgba(15,23,42,.06);
+  }
+
+  .dp-stat-label{
+    margin-bottom:7px;
+    font-size:9px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--dp-faint);
+    font-family:var(--dp-font-display);
+  }
+
+  .dp-stat-value{
+    font-size:17px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:-.03em;
+    color:var(--dp-text);
+    font-family:var(--dp-font-display);
+  }
+
+  .dp-stat-sub{
+    margin-top:6px;
+    font-size:10.5px;
+    line-height:1.45;
+    color:var(--dp-soft);
+    font-weight:500;
+  }
+
+  .dp-list{
+    background:#fff;
+    border:1px solid var(--dp-line);
+    border-radius:20px;
+    box-shadow:var(--dp-shadow);
+    overflow:hidden;
+  }
+
+  .dp-list-top{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    padding:15px 16px 12px;
+    border-bottom:1px solid var(--dp-line);
+    background:linear-gradient(180deg,#ffffff 0%,#fcfdff 100%);
+  }
+
+  .dp-list-title{
+    font-size:14px;
+    line-height:1.1;
+    font-weight:800;
+    letter-spacing:-.02em;
+    color:var(--dp-text);
+    font-family:var(--dp-font-display);
+  }
+
+  .dp-list-sub{
+    margin-top:4px;
+    font-size:11px;
+    line-height:1.5;
+    color:var(--dp-soft);
+    font-weight:500;
+  }
+
+  .dp-list-count{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:30px;
+    padding:0 12px;
+    border-radius:999px;
+    background:rgba(238,61,133,.08);
+    color:var(--dp-pink);
+    font-size:11px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  .dp-table-wrap{
+    overflow:auto;
+  }
+
+  .dp-table{
+    width:100%;
+    min-width:980px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .dp-table th{
+    background:#fff;
+    color:var(--dp-faint);
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    padding:12px 12px;
+    border-bottom:1px solid var(--dp-line-strong);
+    text-align:left;
+    white-space:nowrap;
+    font-family:var(--dp-font-display);
+    position:sticky;
+    top:0;
+    z-index:2;
+  }
+
+  .dp-table td{
+    padding:13px 12px;
+    border-bottom:1px solid rgba(15,23,42,.06);
+    vertical-align:top;
+    color:var(--dp-text);
+    font-size:12px;
+    line-height:1.5;
+    background:transparent;
+  }
+
+  .dp-table tr:last-child td{
+    border-bottom:none;
+  }
+
+  .dp-table tbody tr:hover td{
+    background:#fbfdff;
+  }
+
+  .dp-meta{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    min-width:0;
+  }
+
+  .dp-main{
+    font-weight:700;
+    color:var(--dp-text);
+    font-size:12.6px;
+    line-height:1.35;
+  }
+
+  .dp-main-code{
+    font-family:var(--dp-font-display);
+    font-size:13px;
+    letter-spacing:-.02em;
+    font-weight:800;
+  }
+
+  .dp-subline{
+    font-size:11px;
+    line-height:1.45;
+    color:var(--dp-soft);
+    font-weight:500;
+  }
+
+  .dp-date{
+    font-family:var(--dp-font-data);
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--dp-text);
+  }
+
+  .dp-count{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    background:rgba(238,61,133,.08);
+    color:var(--dp-pink);
+    font-weight:800;
+    font-size:10.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-family:var(--dp-font-display);
+    white-space:nowrap;
+  }
+
+  .dp-empty{
+    text-align:center;
+    padding:48px 18px;
+    color:var(--dp-soft);
+    font-size:12.5px;
+    line-height:1.6;
+    font-weight:500;
+  }
+
+  @media (max-width:1100px){
+    .dp-toolbar{
+      grid-template-columns:1fr;
+    }
+
+    .dp-summary{
+      justify-content:flex-start;
+    }
+  }
+
+  @media (max-width:900px){
+    .dp-search-form{
+      grid-template-columns:1fr auto auto;
+    }
+  }
+
+  @media (max-width:640px){
+    .dp-search-form{
+      grid-template-columns:1fr;
+    }
+
+    .dp-btn-search,
+    .dp-btn-clear{
+      width:100%;
+    }
+
+    .dp-list-top{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+  }
 </style>
 
 <div class="dp-shell">
+  <div class="dp-header">
+    <div class="dp-titlebox">
+      <div class="dp-kicker">Dispatch Desk</div>
+      <h2 class="dp-title">Select Program</h2>
+      <p class="dp-sub">Choose a production program to create a dispatch challan with linked SKU, firm, and product details.</p>
+    </div>
+  </div>
+
   <div class="dp-toolbar">
-    <form method="get">
+    <form method="get" class="dp-search-form">
       {% if request.GET.embed == '1' %}<input type="hidden" name="embed" value="1">{% endif %}
+
       <input type="text" name="q" value="{{ q }}" class="dp-input" placeholder="Search program no, SKU, product name...">
-      <button type="submit" class="dp-btn dp-btn-primary">Search</button>
-      <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dp-btn">Clear</a>
+
+      <button type="submit" class="dp-btn dp-btn-primary dp-btn-search" aria-label="Search programs" title="Search programs">
+        <svg class="dp-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+      </button>
+
+      <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dp-btn dp-btn-clear" aria-label="Clear program search" title="Clear program search">
+        <svg class="dp-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+        <span>Clear Program</span>
+      </a>
     </form>
+
+    
   </div>
 
   <div class="dp-list">
+    <div class="dp-list-top">
+      <div>
+        <div class="dp-list-title">Program Register</div>
+        <div class="dp-list-sub">Programs available for dispatch challan creation</div>
+      </div>
+      <div class="dp-list-count">{{ programs|length }} Row{{ programs|length|pluralize }}</div>
+    </div>
+
     <div class="dp-table-wrap">
       <table class="dp-table">
         <thead>
@@ -52,17 +490,39 @@
           {% for program in programs %}
             <tr>
               <td>
-                <div class="dp-main">{{ program.program_no }}</div>
-                <div class="dp-sub">Program date: {{ program.program_date|date:"d-m-Y" }}</div>
+                <div class="dp-meta">
+                  <div class="dp-main dp-main-code">{{ program.program_no }}</div>
+                  <div class="dp-subline">Program date: {{ program.program_date|date:"d M Y" }}</div>
+                </div>
               </td>
-              <td>{{ program.finishing_date|date:"d-m-Y"|default:"-" }}</td>
-              <td>{{ program.bom.sku|default:"-" }}</td>
+
               <td>
-                <div class="dp-main">{{ program.bom.product_name|default:"-" }}</div>
-                <div class="dp-sub">Qty: {{ program.total_qty|default:"0" }}</div>
+                <span class="dp-date">{{ program.finishing_date|date:"d M Y"|default:"-" }}</span>
               </td>
-              <td>{{ program.firm.firm_name|default:"-" }}</td>
-              <td><span class="dp-count">{{ program.challan_count|default:0 }}</span></td>
+
+              <td>
+                <div class="dp-meta">
+                  <div class="dp-main dp-main-code">{{ program.bom.sku|default:"-" }}</div>
+                </div>
+              </td>
+
+              <td>
+                <div class="dp-meta">
+                  <div class="dp-main">{{ program.bom.product_name|default:"-" }}</div>
+                  <div class="dp-subline">Qty: {{ program.total_qty|default:"0" }}</div>
+                </div>
+              </td>
+
+              <td>
+                <div class="dp-meta">
+                  <div class="dp-main">{{ program.firm.firm_name|default:"-" }}</div>
+                </div>
+              </td>
+
+              <td>
+                <span class="dp-count">{{ program.challan_count|default:0 }}</span>
+              </td>
+
               <td>
                 <a href="{% url 'accounts:dispatch_create' program.pk %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dp-btn dp-btn-primary">Select</a>
               </td>

@@ -1,0 +1,653 @@
+<style>
+  :root{
+    --pcd-bg:#f6f7fb;
+    --pcd-surface:#ffffff;
+    --pcd-surface-2:#fafbfc;
+    --pcd-surface-3:#f3f5f8;
+
+    --pcd-text:#111111;
+    --pcd-text-soft:#5f6b7a;
+    --pcd-text-muted:#8b95a7;
+
+    --pcd-line:#e8ecf2;
+    --pcd-line-2:#f1f3f7;
+
+    --pcd-black:#111111;
+    --pcd-blue:rgba(28,109,216,1);
+    --pcd-pink:rgb(238,61,133);
+    --pcd-orange:rgba(250,189,100,1);
+    --pcd-green:#118a4b;
+    --pcd-red:#b42318;
+
+    --pcd-blue-soft:rgba(28,109,216,.08);
+    --pcd-pink-soft:rgba(238,61,133,.08);
+    --pcd-orange-soft:rgba(250,189,100,.16);
+    --pcd-green-soft:rgba(17,138,75,.10);
+    --pcd-red-soft:rgba(180,35,24,.10);
+    --pcd-black-soft:rgba(17,17,17,.05);
+
+    --pcd-shadow-sm:0 2px 8px rgba(15,23,42,.04);
+  }
+
+  .pcd-page{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    color:var(--pcd-text);
+    padding:10px;
+  }
+
+  .pcd-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    padding:10px 12px;
+    background:#fff;
+    border:1px solid var(--pcd-line);
+    border-radius:14px;
+    box-shadow:var(--pcd-shadow-sm);
+  }
+
+  .pcd-topbar-left,
+  .pcd-topbar-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .pcd-btn{
+    min-height:36px;
+    padding:0 12px;
+    border-radius:9px;
+    border:1px solid var(--pcd-line);
+    background:#fff;
+    color:var(--pcd-text);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    text-decoration:none;
+    font-size:10px;
+    font-weight:900;
+    white-space:nowrap;
+    cursor:pointer;
+    transition:.16s ease;
+  }
+
+  .pcd-btn:hover{
+    transform:translateY(-1px);
+  }
+
+  .pcd-btn svg{
+    width:13px;
+    height:13px;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .pcd-btn--dark{
+    background:var(--pcd-black);
+    color:#fff;
+    border-color:var(--pcd-black);
+  }
+
+  .pcd-btn--blue{
+    background:var(--pcd-blue-soft);
+    color:var(--pcd-blue);
+    border-color:rgba(28,109,216,.10);
+  }
+
+  .pcd-btn--pink{
+    background:var(--pcd-pink-soft);
+    color:var(--pcd-pink);
+    border-color:rgba(238,61,133,.10);
+  }
+
+  .pcd-btn--soft{
+    background:var(--pcd-surface-2);
+    color:var(--pcd-text-soft);
+  }
+
+  .pcd-pill{
+    min-height:20px;
+    padding:0 8px;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--pcd-black-soft);
+    color:var(--pcd-black);
+    font-size:8.5px;
+    font-weight:900;
+    white-space:nowrap;
+    border:1px solid transparent;
+  }
+
+  .pcd-pill--blue{
+    background:var(--pcd-blue-soft);
+    color:var(--pcd-blue);
+    border-color:rgba(28,109,216,.10);
+  }
+
+  .pcd-pill--pink{
+    background:var(--pcd-pink-soft);
+    color:var(--pcd-pink);
+    border-color:rgba(238,61,133,.10);
+  }
+
+  .pcd-pill--orange{
+    background:var(--pcd-orange-soft);
+    color:#9a6700;
+    border-color:rgba(250,189,100,.16);
+  }
+
+  .pcd-pill--green{
+    background:var(--pcd-green-soft);
+    color:var(--pcd-green);
+    border-color:rgba(17,138,75,.14);
+  }
+
+  .pcd-pill--red{
+    background:var(--pcd-red-soft);
+    color:var(--pcd-red);
+    border-color:rgba(180,35,24,.14);
+  }
+
+  .pcd-card{
+    background:#fff;
+    border:1px solid var(--pcd-line);
+    border-radius:14px;
+    box-shadow:var(--pcd-shadow-sm);
+    overflow:hidden;
+  }
+
+  .pcd-header{
+    display:grid;
+    grid-template-columns:minmax(300px,1.4fr) minmax(280px,1fr);
+    gap:10px;
+    padding:11px;
+    border-bottom:1px solid var(--pcd-line-2);
+  }
+
+  .pcd-main{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+  }
+
+  .pcd-kicker{
+    font-size:8px;
+    font-weight:900;
+    color:var(--pcd-text-muted);
+    text-transform:uppercase;
+    letter-spacing:.09em;
+  }
+
+  .pcd-title{
+    font-size:18px;
+    font-weight:950;
+    line-height:1.05;
+    letter-spacing:-.03em;
+    color:var(--pcd-text);
+  }
+
+  .pcd-sub{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    font-size:10px;
+    font-weight:700;
+    color:var(--pcd-text-soft);
+  }
+
+  .pcd-summary{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .pcd-stat{
+    min-height:58px;
+    padding:9px 10px;
+    border-radius:10px;
+    background:var(--pcd-surface-2);
+    border:1px solid var(--pcd-line);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:4px;
+  }
+
+  .pcd-stat-label{
+    font-size:8px;
+    font-weight:900;
+    color:var(--pcd-text-muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .pcd-stat-value{
+    font-size:13px;
+    font-weight:950;
+    line-height:1.1;
+    color:var(--pcd-text);
+  }
+
+  .pcd-stat-sub{
+    font-size:9px;
+    font-weight:700;
+    color:var(--pcd-text-soft);
+  }
+
+  .pcd-block{
+    padding:10px 11px 11px;
+  }
+
+  .pcd-block + .pcd-block{
+    border-top:1px solid var(--pcd-line-2);
+  }
+
+  .pcd-block-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+
+  .pcd-block-title{
+    font-size:10px;
+    font-weight:900;
+    color:var(--pcd-text-soft);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .pcd-meta{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .pcd-meta-box{
+    border:1px solid var(--pcd-line);
+    border-radius:10px;
+    background:var(--pcd-surface-2);
+    padding:9px 10px;
+  }
+
+  .pcd-meta-label{
+    font-size:8px;
+    font-weight:900;
+    color:var(--pcd-text-muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .pcd-meta-value{
+    margin-top:4px;
+    font-size:11px;
+    font-weight:950;
+    color:var(--pcd-text);
+    line-height:1.2;
+    word-break:break-word;
+  }
+
+  .pcd-table-wrap{
+    width:100%;
+    overflow:auto;
+  }
+
+  .pcd-table{
+    width:100%;
+    min-width:620px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .pcd-table th,
+  .pcd-table td{
+    padding:9px 9px;
+    border-bottom:1px solid var(--pcd-line-2);
+    vertical-align:middle;
+  }
+
+  .pcd-table thead th{
+    text-align:left;
+    white-space:nowrap;
+    background:#fff;
+    color:var(--pcd-text-muted);
+    font-size:8px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .pcd-table tbody tr:hover td{
+    background:#fcfdff;
+  }
+
+  .pcd-table tbody tr:last-child td{
+    border-bottom:0;
+  }
+
+  .pcd-size-name{
+    font-size:11px;
+    font-weight:900;
+    color:var(--pcd-text);
+  }
+
+  .pcd-size-sub{
+    font-size:9px;
+    font-weight:700;
+    color:var(--pcd-text-soft);
+  }
+
+  .pcd-strong{
+    font-size:11px;
+    font-weight:950;
+    color:var(--pcd-text);
+  }
+
+  .pcd-soft{
+    font-size:9px;
+    font-weight:700;
+    color:var(--pcd-text-soft);
+  }
+
+  .pcd-remarks{
+    min-height:90px;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid var(--pcd-line);
+    background:var(--pcd-surface-2);
+    font-size:11px;
+    font-weight:700;
+    color:var(--pcd-text);
+    line-height:1.6;
+    white-space:pre-wrap;
+  }
+
+  @media (max-width:1100px){
+    .pcd-header{
+      grid-template-columns:1fr;
+    }
+
+    .pcd-meta{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+  }
+
+  @media (max-width:720px){
+    .pcd-summary,
+    .pcd-meta{
+      grid-template-columns:1fr;
+    }
+
+    .pcd-topbar{
+      padding:9px;
+    }
+
+    .pcd-topbar-left,
+    .pcd-topbar-right{
+      width:100%;
+    }
+
+    .pcd-btn{
+      width:100%;
+    }
+  }
+</style>
+
+<div class="pcd-page">
+  <div class="pcd-topbar">
+    <div class="pcd-topbar-left">
+      <button type="button" class="pcd-btn pcd-btn--soft" data-challan-popup-close="1">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+        Close
+      </button>
+
+      <span class="pcd-pill pcd-pill--blue">{{ challan.challan_no }}</span>
+
+      {% if challan.status == "approved" %}
+        <span class="pcd-pill pcd-pill--green">{{ challan.get_status_display }}</span>
+      {% elif challan.status == "rejected" %}
+        <span class="pcd-pill pcd-pill--red">{{ challan.get_status_display }}</span>
+      {% elif challan.status == "pending" %}
+        <span class="pcd-pill pcd-pill--orange">{{ challan.get_status_display }}</span>
+      {% else %}
+        <span class="pcd-pill pcd-pill--pink">{{ challan.get_status_display }}</span>
+      {% endif %}
+    </div>
+
+    <div class="pcd-topbar-right">
+      {% if challan.status == "pending" %}
+        <a href="{% url 'accounts:program_challan_approve' challan.id %}"
+           class="pcd-btn pcd-btn--pink"
+           data-challan-popup="1"
+           data-popup-title="Approve Challan">
+          Approve
+        </a>
+      {% endif %}
+      <a href="{% url 'accounts:program_challan_print' challan.id %}" target="_blank" class="pcd-btn pcd-btn--dark">Print</a>
+    </div>
+  </div>
+
+  <section class="pcd-card">
+    <div class="pcd-header">
+      <div class="pcd-main">
+        <div class="pcd-kicker">Program Jobber Challan</div>
+        <div class="pcd-title">{{ challan.challan_no }}</div>
+
+        <div class="pcd-sub">
+          <span class="pcd-pill">{{ challan.production_sku|default:"-" }}</span>
+          <span>{{ challan.product_name|default:"-" }}</span>
+          {% if challan.jobber %}
+            <span>• {{ challan.jobber.name }}</span>
+          {% endif %}
+          {% if challan.jobber_type %}
+            <span>• {{ challan.jobber_type.name }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="pcd-summary">
+        <div class="pcd-stat">
+          <div class="pcd-stat-label">Program No</div>
+          <div class="pcd-stat-value">{{ program.program_no|default:"-" }}</div>
+          <div class="pcd-stat-sub">Linked production program</div>
+        </div>
+
+        <div class="pcd-stat">
+          <div class="pcd-stat-label">Challan Date</div>
+          <div class="pcd-stat-value">{{ challan.challan_date|date:"d-m-Y"|default:"-" }}</div>
+          <div class="pcd-stat-sub">Issue date</div>
+        </div>
+
+        <div class="pcd-stat">
+          <div class="pcd-stat-label">Total Issued Qty</div>
+          <div class="pcd-stat-value">{{ challan.total_issued_qty|default:"0.00" }}</div>
+          <div class="pcd-stat-sub">Size-wise total</div>
+        </div>
+
+        <div class="pcd-stat">
+          <div class="pcd-stat-label">Inward Qty</div>
+          <div class="pcd-stat-value">{{ challan.inward_qty|default:"0.00" }}</div>
+          <div class="pcd-stat-sub">Returned against challan</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcd-block">
+      <div class="pcd-block-head">
+        <div class="pcd-block-title">Primary Details</div>
+      </div>
+
+      <div class="pcd-meta">
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Program Number</div>
+          <div class="pcd-meta-value">{{ program.program_no|default:"-" }}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Jobber Name</div>
+          <div class="pcd-meta-value">{% if challan.jobber %}{{ challan.jobber.name }}{% else %}-{% endif %}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Jobber Type</div>
+          <div class="pcd-meta-value">{% if challan.jobber_type %}{{ challan.jobber_type.name }}{% else %}-{% endif %}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Firm</div>
+          <div class="pcd-meta-value">{% if challan.firm %}{{ challan.firm.firm_name }}{% else %}-{% endif %}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Production SKU</div>
+          <div class="pcd-meta-value">{{ challan.production_sku|default:"-" }}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Product Name</div>
+          <div class="pcd-meta-value">{{ challan.product_name|default:"-" }}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Created By</div>
+          <div class="pcd-meta-value">{{ challan.created_by_name }}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Status</div>
+          <div class="pcd-meta-value">{{ challan.get_status_display }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcd-block">
+      <div class="pcd-block-head">
+        <div class="pcd-block-title">Transport & Issue Details</div>
+      </div>
+
+      <div class="pcd-meta">
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Driver Name</div>
+          <div class="pcd-meta-value">{{ challan.driver_name|default:"-" }}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">LR No</div>
+          <div class="pcd-meta-value">{{ challan.lr_no|default:"-" }}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Transport</div>
+          <div class="pcd-meta-value">{{ challan.transport_name|default:"-" }}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Vehicle No</div>
+          <div class="pcd-meta-value">{{ challan.vehicle_no|default:"-" }}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Gate Pass No</div>
+          <div class="pcd-meta-value">{{ challan.gate_pass_no|default:"-" }}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Expected Return Date</div>
+          <div class="pcd-meta-value">{{ challan.expected_return_date|date:"d-m-Y"|default:"-" }}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Approved By</div>
+          <div class="pcd-meta-value">{% if challan.approved_by %}{{ challan.approved_by.get_full_name|default:challan.approved_by.username }}{% else %}-{% endif %}</div>
+        </div>
+
+        <div class="pcd-meta-box">
+          <div class="pcd-meta-label">Approved At</div>
+          <div class="pcd-meta-value">{{ challan.approved_at|date:"d-m-Y H:i"|default:"-" }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcd-block">
+      <div class="pcd-block-head">
+        <div class="pcd-block-title">Size Details</div>
+      </div>
+
+      <div class="pcd-table-wrap">
+        <table class="pcd-table">
+          <thead>
+            <tr>
+              <th>Size</th>
+              <th>Issued Qty</th>
+              <th>Inward Qty</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in size_rows %}
+              <tr>
+                <td>
+                  <div class="pcd-size-name">{{ row.size_name }}</div>
+                  <div class="pcd-size-sub">Size line</div>
+                </td>
+                <td>
+                  <div class="pcd-strong">{{ row.issued_qty|default:"0.00" }}</div>
+                </td>
+                <td>
+                  <div class="pcd-strong">{{ row.inward_qty|default:"0.00" }}</div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="3">
+                  <div class="pcd-size-name">No size rows found</div>
+                  <div class="pcd-size-sub">This challan has no size-wise issue rows.</div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pcd-block">
+      <div class="pcd-block-head">
+        <div class="pcd-block-title">Remarks</div>
+      </div>
+
+      <div class="pcd-remarks">
+        {% if challan.remarks %}
+          {{ challan.remarks }}
+        {% else %}
+          No remarks added.
+        {% endif %}
+      </div>
+    </div>
+
+    {% if challan.rejection_reason %}
+      <div class="pcd-block">
+        <div class="pcd-block-head">
+          <div class="pcd-block-title">Rejection Reason</div>
+        </div>
+
+        <div class="pcd-remarks">{{ challan.rejection_reason }}</div>
+      </div>
+    {% endif %}
+  </section>
+</div>

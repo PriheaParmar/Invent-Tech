@@ -1,7 +1,8 @@
 from calendar import monthcalendar
-from datetime import timedelta
+from datetime import timedelta, datetime
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
+import json
 import logging
 from zoneinfo import ZoneInfo
 
@@ -65,6 +66,16 @@ from .forms import (
     PatternTypeForm,
     ProgramForm,
     ProgramJobberDetailFormSet,
+    ProgramStartForm,
+    ProgramStartFabricFormSet,
+    ProgramStartSizeFormSet,
+    ProgramStartJobberFormSet,
+    ProgramJobberChallanForm,
+    ProgramJobberChallanSizeFormSet,
+    ProgramJobberChallanApprovalForm,
+    validate_program_jobber_challan_size_formset,
+    ProgramInvoiceForm,
+    MaintenanceRecordForm,
     ReadyPOInwardForm,
     ReadyPurchaseOrderForm,
     SubCategoryForm,
@@ -94,6 +105,15 @@ from .models import (
     Program,
     ProgramSizeDetail,
     ProgramJobberDetail,
+    ProgramStart,
+    ProgramStartFabric,
+    ProgramStartSize,
+    ProgramStartJobber,
+    ProgramJobberChallan,
+    ProgramJobberChallanSize,
+    ProgramInvoice,
+    ProgramInvoiceItem,
+    MaintenanceRecord,
     Brand,
     Catalogue,
     Category,
@@ -204,6 +224,86 @@ def _model_has_fields(model, *field_names: str) -> bool:
         return False
     return all(field_name in existing_fields for field_name in field_names)
 
+def _flatten_form_errors(form):
+    items = []
+    for field_name, errors in form.errors.items():
+        if field_name == "__all__":
+            label = "Form"
+        else:
+            try:
+                label = form.fields[field_name].label or field_name.replace("_", " ").title()
+            except Exception:
+                label = field_name.replace("_", " ").title()
+
+        for error in errors:
+            items.append(
+                {
+                    "section": "Main BOM Form",
+                    "row": "",
+                    "field": label,
+                    "message": str(error),
+                }
+            )
+    return items
+
+
+def _flatten_formset_errors(section_name, formset):
+    items = []
+
+    for error in formset.non_form_errors():
+        items.append(
+            {
+                "section": section_name,
+                "row": "",
+                "field": "Formset",
+                "message": str(error),
+            }
+        )
+
+    for index, form in enumerate(formset.forms, start=1):
+        if not form.errors:
+            continue
+
+        for field_name, errors in form.errors.items():
+            if field_name == "__all__":
+                label = "Row"
+            else:
+                try:
+                    label = form.fields[field_name].label or field_name.replace("_", " ").title()
+                except Exception:
+                    label = field_name.replace("_", " ").title()
+
+            for error in errors:
+                items.append(
+                    {
+                        "section": section_name,
+                        "row": index,
+                        "field": label,
+                        "message": str(error),
+                    }
+                )
+
+    return items
+
+
+def _collect_bom_debug_errors(
+    form,
+    material_formset,
+    accessory_formset,
+    image_formset,
+    jobber_process_formset,
+    jobber_detail_formset,
+    expense_formset,
+):
+    errors = []
+    errors.extend(_flatten_form_errors(form))
+    errors.extend(_flatten_formset_errors("Materials", material_formset))
+    errors.extend(_flatten_formset_errors("Accessories", accessory_formset))
+    errors.extend(_flatten_formset_errors("Images", image_formset))
+    errors.extend(_flatten_formset_errors("Jobber Processes", jobber_process_formset))
+    errors.extend(_flatten_formset_errors("Jobber Details", jobber_detail_formset))
+    errors.extend(_flatten_formset_errors("Expenses", expense_formset))
+    return errors
 
 @login_required
 def client_list(request):
@@ -2716,22 +2816,15 @@ def _build_greige_po_pdf_response(po):
     story.append(Spacer(1, 8))
 
     notes_parts = []
-    if po.address:
-        notes_parts.append(
-            f"<font color='#0F172A'><b>Address</b></font><br/>{escape(po.address).replace(chr(10), '<br/>')}"
-        )
+    if po.remarks:
+        notes_parts.append(f"<font color='#0F172A'><b>Remarks</b></font><br/>{escape(po.remarks).replace(chr(10), '<br/>')}")
     if po.delivery_schedule:
-        notes_parts.append(
-            f"<font color='#0F172A'><b>Delivery Schedule</b></font><br/>{escape(po.delivery_schedule).replace(chr(10), '<br/>')}"
-        )
+        notes_parts.append(f"<font color='#0F172A'><b>Delivery Schedule</b></font><br/>{escape(po.delivery_schedule).replace(chr(10), '<br/>')}")
     if po.shipping_address:
-        notes_parts.append(
-            f"<font color='#0F172A'><b>Shipping Address</b></font><br/>{escape(po.shipping_address).replace(chr(10), '<br/>')}"
-        )
+        notes_parts.append(f"<font color='#0F172A'><b>Shipping Address</b></font><br/>{escape(po.shipping_address).replace(chr(10), '<br/>')}")
     if po.source_yarn_po:
-        notes_parts.append(
-            f"<font color='#0F172A'><b>Source Yarn PO</b></font><br/>{escape(text_or_dash(po.source_yarn_po.system_number))}"
-        )
+        notes_parts.append(f"<font color='#0F172A'><b>Source Yarn PO</b></font><br/>{escape(text_or_dash(po.source_yarn_po.system_number))}")
+
     if not notes_parts:
         notes_parts.append("<font color='#0F172A'><b>Notes</b></font><br/>Standard terms and conditions apply.")
 
@@ -2847,12 +2940,8 @@ def greigepo_pdf(request, pk: int):
     try:
         response = _build_greige_po_pdf_response(po)
     except Exception:
-        logger.exception(
-            "Branded Greige PO PDF generation failed for PO id=%s system_no=%s",
-            po.pk,
-            po.system_number,
-        )
-        response = _build_simple_greige_po_pdf_response(po)
+        logger.exception("Branded Greige PO PDF generation failed for PO id=%s system_no=%s", po.pk, po.system_number)
+        return HttpResponse("Unable to generate Greige PO PDF.", status=500)
 
     if response.status_code == 200 and response.get("Content-Type", "").startswith("application/pdf"):
         filename = f'{po.system_number or "greige_po"}.pdf'
@@ -5159,20 +5248,19 @@ def dyeingpo_create(request, greige_po_id=None):
         )
 
     return render(
-    request,
-    "accounts/dyeing_po/form.html",
-    {
-        "form": form,
-        "formset": formset,
-        "mode": "add",
-        "po_obj": None,
-        "source_greige_po": source_greige_po,
-        "selected_source_inward": selected_source_inward,
-        "source_inwards": [selected_source_inward] if selected_source_inward else (list(source_greige_po.inwards.all()) if source_greige_po else []),
-        "existing_po": selected_source_inward.generated_dyeing_pos.order_by("-id").first() if selected_source_inward else (source_greige_po.dyeing_pos.order_by("-id").first() if source_greige_po else None),
-        "system_number_preview": _next_dyeing_po_number(),
-    },
-)
+        request,
+        "accounts/dyeing_po/form.html",
+        {
+            "form": form,
+            "formset": formset,
+            "mode": "add",
+            "po_obj": None,
+            "source_greige_po": source_greige_po,
+            "selected_source_inward": selected_source_inward,
+            "source_inwards": [selected_source_inward] if selected_source_inward else (list(source_greige_po.inwards.all()) if source_greige_po else []),
+            "existing_po": selected_source_inward.generated_dyeing_pos.order_by("-id").first() if selected_source_inward else (source_greige_po.dyeing_pos.order_by("-id").first() if source_greige_po else None),
+        },
+    )
 
 
 @login_required
@@ -5270,7 +5358,6 @@ def dyeingpo_update(request, pk: int):
             "selected_source_inward": po.source_greige_inward,
             "source_inwards": list(po.source_greige_po.inwards.all()) if po.source_greige_po else [],
             "existing_po": None,
-            "system_number_preview": po.system_number,
         },
     )
 
@@ -7477,6 +7564,7 @@ def bom_list(request):
 @require_http_methods(["GET", "POST"])
 def bom_create(request):
     bom = BOM(owner=request.user)
+    bom_debug_errors = []
 
     form = BOMForm(
         request.POST or None,
@@ -7521,15 +7609,27 @@ def bom_create(request):
             form_kwargs={"user": request.user},
         )
 
-        if (
-            form.is_valid()
-            and material_formset.is_valid()
-            and accessory_formset.is_valid()
-            and image_formset.is_valid()
-            and jobber_process_formset.is_valid()
-            and jobber_detail_formset.is_valid()
-            and expense_formset.is_valid()
-        ):
+        form_valid = form.is_valid()
+        material_formset_valid = material_formset.is_valid()
+        accessory_formset_valid = accessory_formset.is_valid()
+        image_formset_valid = image_formset.is_valid()
+        jobber_process_formset_valid = jobber_process_formset.is_valid()
+        jobber_detail_formset_valid = jobber_detail_formset.is_valid()
+        expense_formset_valid = expense_formset.is_valid()
+
+        is_valid = all(
+            [
+                form_valid,
+                material_formset_valid,
+                accessory_formset_valid,
+                image_formset_valid,
+                jobber_process_formset_valid,
+                jobber_detail_formset_valid,
+                expense_formset_valid,
+            ]
+        )
+
+        if is_valid:
             with transaction.atomic():
                 bom = form.save(commit=False)
                 bom.owner = request.user
@@ -7560,6 +7660,18 @@ def bom_create(request):
             if _is_embed(request):
                 return JsonResponse({"ok": True, "url": url})
             return redirect(url)
+
+        bom_debug_errors = _collect_bom_debug_errors(
+            form,
+            material_formset,
+            accessory_formset,
+            image_formset,
+            jobber_process_formset,
+            jobber_detail_formset,
+            expense_formset,
+        )
+        logger.warning("BOM create validation failed: %s", bom_debug_errors)
+
     else:
         material_formset = BOMMaterialItemFormSet(instance=bom, prefix="materials")
         accessory_formset = BOMAccessoryItemFormSet(instance=bom, prefix="accessories")
@@ -7592,6 +7704,7 @@ def bom_create(request):
             "jobber_process_formset": jobber_process_formset,
             "jobber_detail_formset": jobber_detail_formset,
             "expense_formset": expense_formset,
+            "bom_debug_errors": bom_debug_errors,
             "mode": "add",
             "full_page": not _is_embed(request),
             "action_url": reverse("accounts:bom_add"),
@@ -7603,6 +7716,7 @@ def bom_create(request):
 @require_http_methods(["GET", "POST"])
 def bom_update(request, pk: int):
     bom = get_object_or_404(BOM, pk=pk, owner=request.user)
+    bom_debug_errors = []
 
     form = BOMForm(
         request.POST or None,
@@ -7647,15 +7761,27 @@ def bom_update(request, pk: int):
             form_kwargs={"user": request.user},
         )
 
-        if (
-            form.is_valid()
-            and material_formset.is_valid()
-            and accessory_formset.is_valid()
-            and image_formset.is_valid()
-            and jobber_process_formset.is_valid()
-            and jobber_detail_formset.is_valid()
-            and expense_formset.is_valid()
-        ):
+        form_valid = form.is_valid()
+        material_formset_valid = material_formset.is_valid()
+        accessory_formset_valid = accessory_formset.is_valid()
+        image_formset_valid = image_formset.is_valid()
+        jobber_process_formset_valid = jobber_process_formset.is_valid()
+        jobber_detail_formset_valid = jobber_detail_formset.is_valid()
+        expense_formset_valid = expense_formset.is_valid()
+
+        is_valid = all(
+            [
+                form_valid,
+                material_formset_valid,
+                accessory_formset_valid,
+                image_formset_valid,
+                jobber_process_formset_valid,
+                jobber_detail_formset_valid,
+                expense_formset_valid,
+            ]
+        )
+
+        if is_valid:
             with transaction.atomic():
                 bom = form.save()
 
@@ -7673,6 +7799,18 @@ def bom_update(request, pk: int):
             if _is_embed(request):
                 return JsonResponse({"ok": True, "url": url})
             return redirect(url)
+
+        bom_debug_errors = _collect_bom_debug_errors(
+            form,
+            material_formset,
+            accessory_formset,
+            image_formset,
+            jobber_process_formset,
+            jobber_detail_formset,
+            expense_formset,
+        )
+        logger.warning("BOM update validation failed for BOM %s: %s", bom.pk, bom_debug_errors)
+
     else:
         material_formset = BOMMaterialItemFormSet(instance=bom, prefix="materials")
         accessory_formset = BOMAccessoryItemFormSet(instance=bom, prefix="accessories")
@@ -7705,6 +7843,7 @@ def bom_update(request, pk: int):
             "jobber_process_formset": jobber_process_formset,
             "jobber_detail_formset": jobber_detail_formset,
             "expense_formset": expense_formset,
+            "bom_debug_errors": bom_debug_errors,
             "mode": "edit",
             "bom": bom,
             "full_page": not _is_embed(request),
@@ -7980,9 +8119,17 @@ def program_update(request, pk: int):
 def program_list(request):
     q = (request.GET.get("q") or "").strip()
 
-    programs = (
+    qs = (
         Program.objects.filter(owner=request.user)
-        .select_related("bom", "firm", "bom__brand", "bom__category", "bom__main_category", "bom__sub_category")
+        .select_related(
+            "bom",
+            "firm",
+            "bom__brand",
+            "bom__category",
+            "bom__main_category",
+            "bom__sub_category",
+            "start_record",
+        )
         .prefetch_related(
             Prefetch(
                 "jobber_rows",
@@ -7996,20 +8143,24 @@ def program_list(request):
                 "bom__images",
                 queryset=BOMImage.objects.order_by("sort_order", "id"),
             ),
+            "start_record__jobber_rows__jobber",
+            "start_record__jobber_rows__jobber_type",
+            "jobber_challans",
         )
         .order_by("-created_at", "-id")
     )
 
     if q:
-        programs = programs.filter(
+        qs = qs.filter(
             Q(program_no__icontains=q)
             | Q(bom__sku__icontains=q)
             | Q(bom__product_name__icontains=q)
             | Q(firm__firm_name__icontains=q)
         )
 
-    verified_count = programs.filter(is_verified=True).count()
-    unverified_count = programs.filter(is_verified=False).count()
+    programs = list(qs)
+    verified_count = sum(1 for program in programs if program.is_verified)
+    unverified_count = len(programs) - verified_count
 
     return render(
         request,
@@ -8905,3 +9056,866 @@ def dyeing_material_link_delete(request, pk: int):
     if _is_embed(request):
         return JsonResponse({"ok": True, "url": url})
     return redirect(url)
+
+# ==========================================================
+# PHASE 2 - PROGRAM EXECUTION / QC / LOT / QR / COSTING
+# ==========================================================
+def _sync_phase2_lots_from_dyeing(owner):
+    created = 0
+    for item in DyeingPOInwardItem.objects.filter(inward__owner=owner):
+        accepted = item.accepted_qty or Decimal("0")
+        if accepted <= 0:
+            continue
+        material = item.po_item.finished_material if item.po_item and item.po_item.finished_material_id else None
+        if material is None and item.po_item and item.po_item.fabric_name:
+            material = Material.objects.filter(name__iexact=item.po_item.fabric_name).first()
+        if material is None:
+            continue
+        lot_code = item.dye_lot_no or item.batch_no or item.inward.inward_number
+        lot, was_created = InventoryLot.objects.get_or_create(
+            lot_code=lot_code,
+            defaults={
+                "owner": owner, "stage": "ready", "material": material, "unit": item.po_item.unit if item.po_item else "",
+                "dyeing_inward_item": item, "dye_lot_no": item.dye_lot_no or "", "batch_no": item.batch_no or "",
+                "shade_reference": item.shade_reference or "", "received_qty": item.received_qty or item.quantity or Decimal("0"),
+                "accepted_qty": accepted, "rejected_qty": item.rejected_qty or Decimal("0"), "hold_qty": item.hold_qty or Decimal("0"),
+                "qc_status": item.qc_status or "pending",
+            },
+        )
+        if not was_created:
+            lot.owner = owner
+            lot.stage = "ready"
+            lot.material = material
+            lot.unit = item.po_item.unit if item.po_item else lot.unit
+            lot.dyeing_inward_item = item
+            lot.dye_lot_no = item.dye_lot_no or lot.dye_lot_no
+            lot.batch_no = item.batch_no or lot.batch_no
+            lot.shade_reference = item.shade_reference or lot.shade_reference
+            lot.received_qty = item.received_qty or item.quantity or Decimal("0")
+            lot.accepted_qty = accepted
+            lot.rejected_qty = item.rejected_qty or Decimal("0")
+            lot.hold_qty = item.hold_qty or Decimal("0")
+            lot.qc_status = item.qc_status or "pending"
+            lot.save()
+        if was_created:
+            created += 1
+    return created
+
+@login_required
+def inventory_lot_list(request):
+    _sync_phase2_lots_from_dyeing(request.user)
+    q = (request.GET.get("q") or "").strip()
+    qs = InventoryLot.objects.filter(owner=request.user).select_related("material").order_by("-id")
+    if q:
+        qs = qs.filter(Q(lot_code__icontains=q) | Q(material__name__icontains=q) | Q(dye_lot_no__icontains=q) | Q(batch_no__icontains=q))
+    return render(request, "accounts/inventory/lot_list.html", {"lots": qs, "q": q})
+
+@login_required
+def inventory_lot_detail(request, pk):
+    lot = get_object_or_404(InventoryLot.objects.filter(owner=request.user).select_related("material"), pk=pk)
+    return render(request, "accounts/inventory/lot_detail.html", {"lot": lot})
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def quality_check_create(request):
+    form = QualityCheckForm(request.POST or None, user=request.user)
+    formset_params = QualityCheckParameterFormSet(request.POST or None, prefix="params")
+    formset_defects = QualityCheckDefectFormSet(request.POST or None, prefix="defects")
+    if request.method == "POST" and form.is_valid() and formset_params.is_valid() and formset_defects.is_valid():
+        qc = form.save(commit=False)
+        qc.owner = request.user
+        if not qc.qc_number:
+            qc.qc_number = next_quality_check_number()
+        qc.inspected_by = request.user
+        qc.save()
+        formset_params.instance = qc
+        formset_defects.instance = qc
+        formset_params.save()
+        formset_defects.save()
+        if qc.lot_id:
+            qc.lot.qc_status = qc.result
+            qc.lot.save(update_fields=["qc_status", "available_qty"])
+        messages.success(request, f"Quality Check {qc.qc_number} created successfully.")
+        return redirect("accounts:quality_check_detail", pk=qc.pk)
+    return render(request, "accounts/qc/form.html", {"form": form, "formset_params": formset_params, "formset_defects": formset_defects, "mode": "add"})
+
+@login_required
+def quality_check_list(request):
+    qs = QualityCheck.objects.filter(owner=request.user).select_related("lot", "roll").order_by("-inspection_date", "-id")
+    return render(request, "accounts/qc/list.html", {"checks": qs})
+
+@login_required
+def quality_check_detail(request, pk):
+    qc = get_object_or_404(QualityCheck.objects.filter(owner=request.user).select_related("lot", "roll"), pk=pk)
+    return render(request, "accounts/qc/detail.html", {"qc": qc})
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def qr_code_create(request):
+    form = QRCodeRecordForm(request.POST or None, user=request.user)
+    if request.method == "POST" and form.is_valid():
+        qr = form.save(commit=False)
+        qr.owner = request.user
+        if not qr.qr_code:
+            qr.qr_code = next_qr_code_number()
+        if not qr.payload_url and qr.lot_id:
+            qr.payload_url = reverse("accounts:inventory_lot_detail", args=[qr.lot_id])
+        qr.save()
+        return redirect("accounts:qr_code_detail", pk=qr.pk)
+    return render(request, "accounts/qr/form.html", {"form": form})
+
+@login_required
+def qr_code_detail(request, pk):
+    qr = get_object_or_404(QRCodeRecord.objects.filter(owner=request.user).select_related("lot", "roll"), pk=pk)
+    return render(request, "accounts/qr/detail.html", {"qr": qr})
+
+@login_required
+def costing_snapshot_list(request):
+    qs = CostingSnapshot.objects.filter(owner=request.user).select_related("bom", "program").order_by("-id")
+    return render(request, "accounts/costing/list.html", {"snapshots": qs})
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def costing_snapshot_create(request):
+    form = CostingSnapshotForm(request.POST or None, user=request.user)
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+        messages.success(request, "Costing snapshot saved successfully.")
+        return redirect("accounts:costing_snapshot_list")
+    return render(request, "accounts/costing/form.html", {"form": form})
+
+@login_required
+@require_http_methods(["GET"])
+def program_start_modal(request, pk):
+    program = get_object_or_404(
+        Program.objects.filter(owner=request.user).select_related("bom", "firm"),
+        pk=pk,
+    )
+
+    start_record, _ = ProgramStart.objects.get_or_create(
+        program=program,
+        defaults={"owner": request.user},
+    )
+
+    if start_record.owner_id is None:
+        start_record.owner = request.user
+        start_record.save(update_fields=["owner"])
+
+    if not start_record.fabric_rows.exists() and program.bom_id and hasattr(program.bom, "material_items"):
+        seed_rows = []
+        for idx, row in enumerate(program.bom.material_items.select_related("material", "unit").all(), start=1):
+            seed_rows.append(
+                ProgramStartFabric(
+                    start_record=start_record,
+                    material=row.material,
+                    unit=row.unit,
+                    avg=row.avg or Decimal("0"),
+                    used=row.cost_per_unit or Decimal("0"),
+                    sort_order=idx,
+                )
+            )
+        if seed_rows:
+            ProgramStartFabric.objects.bulk_create(seed_rows)
+
+    if not start_record.jobber_rows.exists():
+        for idx, row in enumerate(program.jobber_rows.all(), start=1):
+            ProgramStartJobber.objects.create(
+                start_record=start_record,
+                jobber=row.jobber,
+                jobber_type=row.jobber_type,
+                jobber_price=row.price,
+                sort_order=idx,
+            )
+
+    form = ProgramStartForm(instance=start_record)
+    fabric_formset = ProgramStartFabricFormSet(
+        instance=start_record,
+        prefix="fabrics",
+        form_kwargs={"user": request.user},
+    )
+    size_formset = ProgramStartSizeFormSet(
+        instance=start_record,
+        prefix="sizes",
+    )
+    jobber_formset = ProgramStartJobberFormSet(
+        instance=start_record,
+        prefix="jobbers",
+        form_kwargs={"user": request.user},
+    )
+
+    return render(
+        request,
+        "accounts/programs/start_program_modal.html",
+        {
+            "program": program,
+            "start_record": start_record,
+            "start_form": form,
+            "fabric_formset": fabric_formset,
+            "size_formset": size_formset,
+            "jobber_formset": jobber_formset,
+            "size_chart_image_url": "",
+            "program_meta": {
+                "program_no": program.program_no,
+                "program_date": program.program_date,
+                "style_code": program.bom.sku if program.bom else "",
+                "style_name": program.bom.product_name if program.bom else "",
+                "firm_name": program.firm.firm_name if program.firm else "",
+            },
+        },
+    )
+
+@login_required
+@require_POST
+def program_start_save(request, pk):
+    program = get_object_or_404(
+        Program.objects.filter(owner=request.user).select_related("bom", "firm"),
+        pk=pk,
+    )
+
+    start_record, _ = ProgramStart.objects.get_or_create(
+        program=program,
+        defaults={"owner": request.user},
+    )
+
+    if start_record.owner_id is None:
+        start_record.owner = request.user
+        start_record.save(update_fields=["owner"])
+
+    form = ProgramStartForm(request.POST, instance=start_record)
+    fabric_formset = ProgramStartFabricFormSet(
+        request.POST,
+        instance=start_record,
+        prefix="fabrics",
+        form_kwargs={"user": request.user},
+    )
+    size_formset = ProgramStartSizeFormSet(
+        request.POST,
+        instance=start_record,
+        prefix="sizes",
+    )
+    jobber_formset = ProgramStartJobberFormSet(
+        request.POST,
+        instance=start_record,
+        prefix="jobbers",
+        form_kwargs={"user": request.user},
+    )
+
+    if form.is_valid() and fabric_formset.is_valid() and size_formset.is_valid() and jobber_formset.is_valid():
+        with transaction.atomic():
+            start_record = form.save(commit=False)
+            start_record.owner = request.user
+            start_record.program = program
+            start_record.is_started = True
+            start_record.save()
+
+            fabric_formset.instance = start_record
+            size_formset.instance = start_record
+            jobber_formset.instance = start_record
+
+            fabric_formset.save()
+            size_formset.save()
+            jobber_formset.save()
+
+        return JsonResponse({
+            "ok": True,
+            "message": "Program started successfully.",
+            "redirect_url": reverse("accounts:program_list"),
+        })
+
+    return render(
+        request,
+        "accounts/programs/start_program_modal.html",
+        {
+            "program": program,
+            "start_record": start_record,
+            "start_form": form,
+            "fabric_formset": fabric_formset,
+            "size_formset": size_formset,
+            "jobber_formset": jobber_formset,
+            "size_chart_image_url": "",
+            "program_meta": {
+                "program_no": program.program_no,
+                "program_date": program.program_date,
+                "style_code": program.bom.sku if program.bom else "",
+                "style_name": program.bom.product_name if program.bom else "",
+                "firm_name": program.firm.firm_name if program.firm else "",
+            },
+        },
+        status=400,
+    )
+
+
+def _program_challan_manage_url(program_id):
+    return reverse("accounts:program_challan_manage", args=[program_id])
+
+
+def _is_program_popup(request):
+    return (
+        request.GET.get("popup") == "1"
+        or request.POST.get("popup") == "1"
+        or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    )
+
+
+def _can_approve_program_jobber_challan(user):
+    return bool(
+        user.is_superuser
+        or user.is_staff
+        or user.username.lower() == "admin"
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def program_challan_manage(request, program_id):
+    program = get_object_or_404(
+        Program.objects.filter(owner=request.user)
+        .select_related("bom", "firm", "start_record")
+        .prefetch_related(
+            "start_record__jobber_rows__jobber",
+            "start_record__jobber_rows__jobber_type",
+            "start_record__size_rows",
+            "jobber_challans__jobber",
+            "jobber_challans__jobber_type",
+            "jobber_challans__size_rows",
+        ),
+        pk=program_id,
+    )
+
+    start_record = getattr(program, "start_record", None)
+    assigned_jobbers = start_record.jobber_rows.all() if start_record else []
+    challans = program.jobber_challans.select_related(
+        "jobber",
+        "jobber_type",
+        "owner",
+        "approved_by",
+    ).prefetch_related("size_rows").order_by("-id")
+
+    return render(
+        request,
+        "accounts/programs/challan_manage.html",
+        {
+            "program": program,
+            "start_record": start_record,
+            "assigned_jobbers": assigned_jobbers,
+            "challans": challans,
+            "total_challans": challans.count(),
+            "total_issued_qty": challans.aggregate(total=Sum("total_issued_qty")).get("total") or Decimal("0"),
+            "total_inward_qty": challans.aggregate(total=Sum("inward_qty")).get("total") or Decimal("0"),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def program_challan_create(request, program_id, start_jobber_id):
+    program = get_object_or_404(
+        Program.objects.filter(owner=request.user).select_related("bom", "firm", "start_record"),
+        pk=program_id,
+    )
+
+    start_record = getattr(program, "start_record", None)
+    if not start_record or not start_record.is_started:
+        messages.error(request, "Start the program before creating a challan.")
+        return redirect("accounts:program_list")
+
+    start_jobber = get_object_or_404(
+        ProgramStartJobber.objects.select_related("start_record", "jobber", "jobber_type"),
+        pk=start_jobber_id,
+        start_record=start_record,
+    )
+
+    challan = ProgramJobberChallan(
+        owner=request.user,
+        program=program,
+        start_record=start_record,
+        start_jobber=start_jobber,
+        jobber=start_jobber.jobber,
+        jobber_type=start_jobber.jobber_type,
+        firm=program.firm,
+        production_sku=program.bom.sku if program.bom else "",
+        product_name=program.bom.product_name if program.bom else "",
+    )
+
+    if request.method == "POST":
+        form = ProgramJobberChallanForm(
+            request.POST,
+            instance=challan,
+            user=request.user,
+            program=program,
+            start_jobber=start_jobber,
+        )
+        size_formset = ProgramJobberChallanSizeFormSet(
+            request.POST,
+            instance=challan,
+            prefix="sizes",
+        )
+
+        if form.is_valid() and size_formset.is_valid():
+            total_issued_qty = validate_program_jobber_challan_size_formset(size_formset)
+
+            with transaction.atomic():
+                challan = form.save(commit=False)
+                challan.owner = request.user
+                challan.program = program
+                challan.start_record = start_record
+                challan.start_jobber = start_jobber
+                challan.jobber = start_jobber.jobber
+                challan.jobber_type = start_jobber.jobber_type
+                challan.firm = program.firm
+                challan.production_sku = program.bom.sku if program.bom else ""
+                challan.product_name = program.bom.product_name if program.bom else ""
+                challan.total_issued_qty = total_issued_qty
+                challan.save()
+
+                size_formset.instance = challan
+                size_formset.save()
+
+                challan.refresh_totals(save=True)
+
+            messages.success(request, "Program challan generated successfully.")
+            url = reverse("accounts:program_challan_manage", args=[program.id])
+            if _is_program_popup(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+    else:
+        form = ProgramJobberChallanForm(
+            instance=challan,
+            user=request.user,
+            program=program,
+            start_jobber=start_jobber,
+        )
+
+        challan.save()
+
+        size_seed_rows = []
+        for idx, row in enumerate(start_record.size_rows.all(), start=1):
+            size_seed_rows.append(
+                ProgramJobberChallanSize(
+                    challan=challan,
+                    size_name=row.size_name,
+                    issued_qty=row.qty or Decimal("0"),
+                    inward_qty=Decimal("0"),
+                    sort_order=idx,
+                )
+            )
+
+        if size_seed_rows:
+            ProgramJobberChallanSize.objects.bulk_create(size_seed_rows)
+
+        size_formset = ProgramJobberChallanSizeFormSet(
+            instance=challan,
+            prefix="sizes",
+        )
+
+    return render(
+        request,
+        "accounts/programs/challan_form.html",
+        {
+            "program": program,
+            "start_record": start_record,
+            "start_jobber": start_jobber,
+            "challan": challan,
+            "form": form,
+            "size_formset": size_formset,
+            "mode": "add",
+            "program_meta": {
+                "program_no": program.program_no,
+                "program_date": program.program_date,
+                "style_code": program.bom.sku if program.bom else "",
+                "style_name": program.bom.product_name if program.bom else "",
+                "firm_name": program.firm.firm_name if program.firm else "",
+                "jobber_name": start_jobber.jobber.name if start_jobber.jobber else "",
+                "jobber_type": start_jobber.jobber_type.name if start_jobber.jobber_type else "",
+            },
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def program_challan_detail(request, pk):
+    challan = get_object_or_404(
+        ProgramJobberChallan.objects.filter(owner=request.user)
+        .select_related(
+            "program",
+            "program__bom",
+            "firm",
+            "jobber",
+            "jobber_type",
+            "owner",
+            "approved_by",
+        )
+        .prefetch_related("size_rows"),
+        pk=pk,
+    )
+
+    return render(
+        request,
+        "accounts/programs/challan_detail.html",
+        {
+            "challan": challan,
+            "program": challan.program,
+            "size_rows": challan.size_rows.all(),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def program_challan_approve(request, pk):
+    challan = get_object_or_404(
+        ProgramJobberChallan.objects.select_related("program", "jobber", "jobber_type"),
+        pk=pk,
+    )
+
+    if not _can_approve_program_jobber_challan(request.user):
+        raise PermissionDenied("You do not have permission to approve challans.")
+
+    if request.method == "POST":
+        form = ProgramJobberChallanApprovalForm(request.POST, instance=challan)
+        if form.is_valid():
+            decision = form.cleaned_data["approve"]
+            rejection_reason = form.cleaned_data["rejection_reason"]
+
+            challan.status = decision
+            challan.rejection_reason = rejection_reason
+            challan.approved_by = request.user
+            challan.approved_at = timezone.now()
+            challan.save(
+                update_fields=[
+                    "status",
+                    "rejection_reason",
+                    "approved_by",
+                    "approved_at",
+                    "updated_at",
+                ]
+            )
+
+            if decision == "approved":
+                messages.success(request, "Program challan approved successfully.")
+            else:
+                messages.success(request, "Program challan rejected successfully.")
+
+            url = reverse("accounts:program_challan_manage", args=[challan.program_id])
+            if _is_program_popup(request):
+                return JsonResponse({"ok": True, "url": url})
+            return redirect(url)
+    else:
+        form = ProgramJobberChallanApprovalForm(instance=challan)
+
+    return render(
+        request,
+        "accounts/programs/challan_approve.html",
+        {
+            "challan": challan,
+            "form": form,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def program_challan_print(request, pk):
+    challan = get_object_or_404(
+        ProgramJobberChallan.objects.filter(owner=request.user)
+        .select_related("program", "program__bom", "firm", "jobber", "jobber_type")
+        .prefetch_related("size_rows"),
+        pk=pk,
+    )
+
+    return render(
+        request,
+        "accounts/programs/challan_print.html",
+        {
+            "challan": challan,
+            "program": challan.program,
+            "size_rows": challan.size_rows.all(),
+        },
+    )
+
+
+# =========================================================
+# Invoices
+# =========================================================
+
+def _invoice_month_range(month_key: str):
+    year, month = month_key.split("-")
+    year = int(year)
+    month = int(month)
+    start = datetime(year, month, 1).date()
+    if month == 12:
+        end = datetime(year + 1, 1, 1).date()
+    else:
+        end = datetime(year, month + 1, 1).date()
+    return start, end
+
+
+@login_required
+def invoice_list(request):
+    q = (request.GET.get("q") or "").strip()
+    invoices = ProgramInvoice.objects.filter(owner=request.user).select_related("firm", "client", "program", "program__bom").order_by("-invoice_date", "-id")
+    if q:
+        invoices = invoices.filter(
+            Q(invoice_no__icontains=q)
+            | Q(program__program_no__icontains=q)
+            | Q(program__bom__sku__icontains=q)
+            | Q(client__name__icontains=q)
+            | Q(firm__firm_name__icontains=q)
+        )
+    return render(request, "accounts/invoices/list.html", {"invoices": invoices, "q": q})
+
+
+@login_required
+@require_GET
+def invoice_program_payload(request, program_id):
+    program = get_object_or_404(Program.objects.filter(owner=request.user).select_related("bom", "firm"), pk=program_id)
+    challans = list(program.dispatch_challans.all().order_by("-challan_date", "-id")) if hasattr(program, 'dispatch_challans') else []
+    latest_snapshot = program.costing_snapshots.order_by("-id").first() if hasattr(program, 'costing_snapshots') else None
+    price = Decimal("0")
+    if latest_snapshot:
+        price = latest_snapshot.target_selling_price or latest_snapshot.total_cost or Decimal("0")
+    qty_default = program.total_qty or Decimal("0")
+    items = []
+    if challans:
+        for idx, challan in enumerate(challans, start=1):
+            amount = (qty_default * Decimal(price or 0)).quantize(Decimal("0.01"))
+            items.append({
+                "dispatch_challan_id": challan.id,
+                "program": program.program_no or "",
+                "sku": getattr(program.bom, "sku", "") or "",
+                "challan_no": challan.challan_no or "",
+                "quantity": str(qty_default),
+                "hsn_code": "",
+                "price": str(Decimal(price or 0).quantize(Decimal("0.01"))),
+                "amount": str(amount),
+                "vehicle_no": challan.vehicle_no or "",
+                "remarks": challan.remarks or "",
+            })
+    else:
+        amount = (qty_default * Decimal(price or 0)).quantize(Decimal("0.01"))
+        items.append({
+            "dispatch_challan_id": "",
+            "program": program.program_no or "",
+            "sku": getattr(program.bom, "sku", "") or "",
+            "challan_no": "",
+            "quantity": str(qty_default),
+            "hsn_code": "",
+            "price": str(Decimal(price or 0).quantize(Decimal("0.01"))),
+            "amount": str(amount),
+            "vehicle_no": "",
+            "remarks": "",
+        })
+    sub_total = sum(Decimal(item["amount"]) for item in items)
+    return JsonResponse({
+        "program_no": program.program_no or "",
+        "sku": getattr(program.bom, "sku", "") or "",
+        "product_name": getattr(program.bom, "product_name", "") or "",
+        "firm_id": program.firm_id or "",
+        "vehicle_no": items[0]["vehicle_no"] if items else "",
+        "remarks": items[0]["remarks"] if items else "",
+        "items": items,
+        "sub_total": str(sub_total.quantize(Decimal("0.01"))),
+    })
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def invoice_create(request):
+    invoice = ProgramInvoice(owner=request.user)
+    if request.method == "GET":
+        invoice.invoice_no = ProgramInvoice.next_invoice_no(request.user)
+        invoice.invoice_date = timezone.localdate()
+
+    form = ProgramInvoiceForm(request.POST or None, instance=invoice, user=request.user)
+
+    if request.method == "POST" and form.is_valid():
+        items_json = form.cleaned_data.get("items_json") or "[]"
+        try:
+            payload_items = json.loads(items_json)
+        except Exception:
+            payload_items = []
+
+        cleaned_items = []
+        for idx, item in enumerate(payload_items, start=1):
+            challan_id = item.get("dispatch_challan_id") or None
+            quantity = Decimal(str(item.get("quantity") or "0"))
+            price = Decimal(str(item.get("price") or "0"))
+            if quantity <= 0:
+                continue
+            amount = (quantity * price).quantize(Decimal("0.01"))
+            cleaned_items.append({
+                "dispatch_challan_id": challan_id,
+                "program_label": item.get("program") or "",
+                "sku": item.get("sku") or "",
+                "challan_no": item.get("challan_no") or "",
+                "quantity": quantity,
+                "hsn_code": item.get("hsn_code") or "",
+                "price": price,
+                "amount": amount,
+                "sort_order": idx,
+            })
+
+        if not cleaned_items:
+            form.add_error(None, "Add at least one invoice row with quantity greater than zero.")
+        else:
+            with transaction.atomic():
+                invoice = form.save(commit=False)
+                invoice.owner = request.user
+                if invoice.program_id and not invoice.firm_id and getattr(invoice.program, "firm_id", None):
+                    invoice.firm = invoice.program.firm
+                invoice.save()
+
+                item_objs = []
+                for item in cleaned_items:
+                    dispatch_challan = None
+                    if item["dispatch_challan_id"]:
+                        dispatch_challan = DispatchChallan.objects.filter(owner=request.user, pk=item["dispatch_challan_id"]).first()
+                    item_objs.append(ProgramInvoiceItem(invoice=invoice, dispatch_challan=dispatch_challan, **{k:v for k,v in item.items() if k != 'dispatch_challan_id'}))
+                ProgramInvoiceItem.objects.bulk_create(item_objs)
+                invoice.recompute_totals(save=True)
+
+                messages.success(request, f"Invoice {invoice.invoice_no} created successfully.")
+                return redirect("accounts:invoice_list")
+
+    return render(request, "accounts/invoices/form.html", {"form": form, "mode": "add"})
+
+
+@login_required
+def invoice_detail(request, pk):
+    invoice = get_object_or_404(ProgramInvoice.objects.filter(owner=request.user).select_related("firm", "client", "program", "program__bom").prefetch_related("items", "items__dispatch_challan"), pk=pk)
+    return render(request, "accounts/invoices/detail.html", {"invoice": invoice})
+
+
+def _build_program_invoice_pdf_response(invoice):
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+        from reportlab.lib.units import mm
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    except ImportError:
+        return HttpResponse("ReportLab is required for PDF generation. Install it with: pip install reportlab", status=500)
+
+    brand_pink = colors.HexColor("#ED2F8C")
+    brand_orange = colors.HexColor("#F6A33B")
+    brand_blue = colors.HexColor("#1976F3")
+    brand_navy = colors.HexColor("#0F172A")
+    ink = colors.HexColor("#1F2937")
+    border = colors.HexColor("#D0D5DD")
+    soft_bg = colors.HexColor("#F8FAFC")
+    white = colors.white
+    buf = BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=10*mm, rightMargin=10*mm, topMargin=14*mm, bottomMargin=14*mm)
+    styles = getSampleStyleSheet()
+    base = ParagraphStyle('base', parent=styles['BodyText'], fontName='Helvetica', fontSize=8.5, leading=10, textColor=ink)
+    head = ParagraphStyle('head', parent=base, fontName='Helvetica-Bold', fontSize=14, leading=16, textColor=brand_navy, alignment=TA_RIGHT)
+    white_left = ParagraphStyle('wl', parent=base, fontName='Helvetica', fontSize=8.5, leading=10, textColor=white)
+    meta = ParagraphStyle('meta', parent=base, alignment=TA_RIGHT)
+    table_head = ParagraphStyle('thead', parent=base, fontName='Helvetica-Bold', textColor=white, fontSize=7.8, alignment=TA_CENTER)
+    right = ParagraphStyle('right', parent=base, alignment=TA_RIGHT)
+    center = ParagraphStyle('center', parent=base, alignment=TA_CENTER)
+    story=[]
+    firm = invoice.firm
+    firm_html = f"<font size='13'><b>{firm.firm_name if firm else 'InventTech'}</b></font>"
+    if firm and firm.full_address:
+        firm_html += f"<br/>{firm.full_address}"
+    header = Table([[Paragraph(firm_html, white_left), Table([[Paragraph('<b>PROGRAM INVOICE</b>', head)], [Paragraph(f'<b>Invoice No:</b> {invoice.invoice_no}<br/><b>Date:</b> {invoice.invoice_date.strftime('%d-%m-%Y')}<br/><b>Program:</b> {invoice.program.program_no}<br/><b>Client:</b> {invoice.client.name}', meta)]], colWidths=[66*mm])]], colWidths=[124*mm,66*mm])
+    header.setStyle(TableStyle([('BACKGROUND',(0,0),(0,0),brand_navy),('BACKGROUND',(1,0),(1,0),colors.HexColor('#F5F8FF')),('BOX',(0,0),(-1,-1),0.9,border),('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),8),('RIGHTPADDING',(0,0),(-1,-1),8),('TOPPADDING',(0,0),(-1,-1),8),('BOTTOMPADDING',(0,0),(-1,-1),8)]))
+    story += [header, Spacer(1,6)]
+    rows = [[Paragraph('Program', table_head), Paragraph('SKU', table_head), Paragraph('Challan', table_head), Paragraph('Quantity', table_head), Paragraph('HSN', table_head), Paragraph('Price', table_head), Paragraph('Amount', table_head)]]
+    for item in invoice.items.all().order_by('sort_order','id'):
+        rows.append([Paragraph(item.program_label or '-', center), Paragraph(item.sku or '-', center), Paragraph(item.challan_no or '-', center), Paragraph(f'{item.quantity:.2f}', right), Paragraph(item.hsn_code or '-', center), Paragraph(f'{item.price:.2f}', right), Paragraph(f'{item.amount:.2f}', right)])
+    tbl = Table(rows, colWidths=[22*mm,36*mm,22*mm,24*mm,22*mm,28*mm,30*mm], repeatRows=1)
+    style = TableStyle([('BACKGROUND',(0,0),(-1,0),brand_navy),('TEXTCOLOR',(0,0),(-1,0),white),('BOX',(0,0),(-1,-1),0.9,border),('INNERGRID',(0,0),(-1,-1),0.5,border),('VALIGN',(0,0),(-1,-1),'MIDDLE'),('LEFTPADDING',(0,0),(-1,-1),4),('RIGHTPADDING',(0,0),(-1,-1),4),('TOPPADDING',(0,0),(-1,-1),5),('BOTTOMPADDING',(0,0),(-1,-1),5)])
+    for i in range(1,len(rows)):
+        if i % 2 == 0: style.add('BACKGROUND',(0,i),(-1,i),soft_bg)
+    tbl.setStyle(style)
+    story += [tbl, Spacer(1,8)]
+    totals = Table([[Paragraph('Sub Total', base), Paragraph(f'{invoice.sub_total:.2f}', right)], [Paragraph('Discount', base), Paragraph(f'{invoice.discount_amount:.2f}', right)], [Paragraph('After Discount', base), Paragraph(f'{invoice.after_discount_amount:.2f}', right)], [Paragraph('Others', base), Paragraph(f'{invoice.other_charges:.2f}', right)], [Paragraph('GST', base), Paragraph(f'{invoice.gst_amount:.2f}', right)], [Paragraph('IGST', base), Paragraph(f'{invoice.igst_amount:.2f}', right)], [Paragraph('<b>Final Amount</b>', base), Paragraph(f'<b>{invoice.final_amount:.2f}</b>', right)]], colWidths=[45*mm,35*mm])
+    totals.setStyle(TableStyle([('BOX',(0,0),(-1,-1),0.9,border),('INNERGRID',(0,0),(-1,-1),0.5,border),('BACKGROUND',(0,0),(-1,0),colors.HexColor('#EFF6FF')),('BACKGROUND',(0,-1),(-1,-1),colors.HexColor('#FFF7ED')),('LEFTPADDING',(0,0),(-1,-1),6),('RIGHTPADDING',(0,0),(-1,-1),6),('TOPPADDING',(0,0),(-1,-1),5),('BOTTOMPADDING',(0,0),(-1,-1),5)]))
+    story += [totals, Spacer(1,8), Paragraph('This invoice is computer generated.', ParagraphStyle('foot', parent=base, alignment=TA_CENTER, fontName='Helvetica-Bold', textColor=colors.HexColor('#667085')))]
+    doc.build(story)
+    buf.seek(0)
+    return HttpResponse(buf.getvalue(), content_type='application/pdf')
+
+
+@login_required
+def invoice_print(request, pk):
+    invoice = get_object_or_404(ProgramInvoice.objects.filter(owner=request.user).select_related('firm','client','program','program__bom').prefetch_related('items'), pk=pk)
+    response = _build_program_invoice_pdf_response(invoice)
+    if response.status_code == 200 and response.get('Content-Type','').startswith('application/pdf'):
+        filename = f'{invoice.invoice_no or "invoice"}.pdf'
+        disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
+        response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+    return response
+
+
+@login_required
+def program_costing_detail(request, program_id):
+    program = get_object_or_404(Program.objects.filter(owner=request.user).select_related('bom','firm'), pk=program_id)
+    snapshots = program.costing_snapshots.all().order_by('-id')
+    latest_snapshot = snapshots.first()
+    costing_rows = [
+        ("Material Cost", getattr(latest_snapshot, 'material_cost', 0) if latest_snapshot else 0),
+        ("Accessory Cost", getattr(latest_snapshot, 'accessory_cost', 0) if latest_snapshot else 0),
+        ("Process Cost", getattr(latest_snapshot, 'process_cost', 0) if latest_snapshot else 0),
+        ("Expense Cost", getattr(latest_snapshot, 'expense_cost', 0) if latest_snapshot else 0),
+        ("Overhead Cost", getattr(latest_snapshot, 'overhead_cost', 0) if latest_snapshot else 0),
+        ("Wastage Cost", getattr(latest_snapshot, 'wastage_cost', 0) if latest_snapshot else 0),
+        ("Total Cost", getattr(latest_snapshot, 'total_cost', 0) if latest_snapshot else 0),
+        ("Target Selling Price", getattr(latest_snapshot, 'target_selling_price', 0) if latest_snapshot else 0),
+        ("MRP", getattr(latest_snapshot, 'mrp', 0) if latest_snapshot else 0),
+    ]
+    return render(request, 'accounts/programs/costing_detail.html', {'program': program, 'snapshots': snapshots, 'latest_snapshot': latest_snapshot, 'costing_rows': costing_rows})
+
+
+# =========================================================
+# Maintenance
+# =========================================================
+
+@login_required
+def maintenance_list(request):
+    q = (request.GET.get('q') or '').strip()
+    records = MaintenanceRecord.objects.filter(owner=request.user).order_by('-month_key', '-id')
+    if q:
+        records = records.filter(Q(month_key__icontains=q) | Q(remarks__icontains=q))
+    return render(request, 'accounts/maintenance/list.html', {'records': records, 'q': q})
+
+
+@login_required
+@require_GET
+def maintenance_month_payload(request):
+    month_key = (request.GET.get('month_key') or '').strip()
+    inward_total = Decimal('0')
+    if month_key:
+        try:
+            start, end = _invoice_month_range(month_key)
+            inward_total = ReadyPOInwardItem.objects.filter(inward__po__owner=request.user, inward__inward_date__gte=start, inward__inward_date__lt=end).aggregate(total=Sum('quantity')).get('total') or Decimal('0')
+        except Exception:
+            inward_total = Decimal('0')
+    return JsonResponse({'inward_total': str(inward_total.quantize(Decimal('0.01'))), 'cost_total': str(inward_total.quantize(Decimal('0.01')))})
+
+
+@login_required
+@require_http_methods(["GET", "POST"] )
+def maintenance_create(request):
+    record = MaintenanceRecord(owner=request.user)
+    if request.method == 'GET':
+        record.entry_date = timezone.localdate()
+    form = MaintenanceRecordForm(request.POST or None, instance=record)
+    if request.method == 'POST' and form.is_valid():
+        record = form.save(commit=False)
+        record.owner = request.user
+        try:
+            start, end = _invoice_month_range(record.month_key)
+            record.inward_total = ReadyPOInwardItem.objects.filter(inward__po__owner=request.user, inward__inward_date__gte=start, inward__inward_date__lt=end).aggregate(total=Sum('quantity')).get('total') or Decimal('0')
+        except Exception:
+            record.inward_total = Decimal('0')
+        record.save()
+        messages.success(request, f'Maintenance record for {record.month_display} saved successfully.')
+        return redirect('accounts:maintenance_list')
+    return render(request, 'accounts/maintenance/form.html', {'form': form, 'mode': 'add'})

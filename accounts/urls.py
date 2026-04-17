@@ -243,6 +243,15 @@ urlpatterns = [
     path("production/programs/<int:pk>/verify-toggle/", views.program_toggle_verify, name="program_toggle_verify"),
     path("production/programs/<int:pk>/status-toggle/", views.program_toggle_status, name="program_toggle_status"),
     path("production/programs/<int:pk>/print/", views.program_print, name="program_print"),
+    path("production/programs/<int:pk>/start/", views.program_start_modal, name="program_start_modal"),
+path("production/programs/<int:pk>/start/save/", views.program_start_save, name="program_start_save"),
+    path("production/programs/<int:program_id>/challans/", views.program_challan_manage, name="program_challan_manage"),
+    path("production/programs/<int:program_id>/challans/create/<int:start_jobber_id>/", views.program_challan_create, name="program_challan_create"),
+    path("production/program-challans/<int:pk>/", views.program_challan_detail, name="program_challan_detail"),
+    path("production/program-challans/<int:pk>/approve/", views.program_challan_approve, name="program_challan_approve"),
+    path("production/program-challans/<int:pk>/print/", views.program_challan_print, name="program_challan_print"),
+    path("production/program-challans/<int:challan_id>/inward/", views.program_inward_form, name="program_inward_form"),
+    path("production/programs/<int:program_id>/costing/", views.program_costing_detail, name="program_costing_detail"),
 
     # =========================================================
     # Dispatch / Challan
@@ -252,4 +261,34 @@ urlpatterns = [
     path("dispatch/create/<int:program_id>/", views.dispatch_create, name="dispatch_create"),
     path("dispatch/<int:pk>/", views.dispatch_detail, name="dispatch_detail"),
     path("dispatch/<int:pk>/print/", views.dispatch_print, name="dispatch_print"),
+
+
+    # =========================================================
+    # Sales / Invoice
+    # =========================================================
+    path("sales/invoices/", views.invoice_list, name="invoice_list"),
+    path("sales/invoices/add/", views.invoice_create, name="invoice_add"),
+    path("sales/invoices/<int:pk>/", views.invoice_detail, name="invoice_detail"),
+    path("sales/invoices/<int:pk>/print/", views.invoice_print, name="invoice_print"),
+    path("sales/invoices/program-payload/<int:program_id>/", views.invoice_program_payload, name="invoice_program_payload"),
+
+    # =========================================================
+    # Maintenance
+    # =========================================================
+    path("maintenance/", views.maintenance_list, name="maintenance_list"),
+    path("maintenance/add/", views.maintenance_create, name="maintenance_add"),
+    path("maintenance/month-payload/", views.maintenance_month_payload, name="maintenance_month_payload"),
+
+    # =========================================================
+    # Phase 2 - QC / Lots / QR / Costing
+    # =========================================================
+    path("inventory/lots/", views.inventory_lot_list, name="inventory_lot_list"),
+    path("inventory/lots/<int:pk>/", views.inventory_lot_detail, name="inventory_lot_detail"),
+    path("qc/", views.quality_check_list, name="quality_check_list"),
+    path("qc/add/", views.quality_check_create, name="quality_check_add"),
+    path("qc/<int:pk>/", views.quality_check_detail, name="quality_check_detail"),
+    path("qr/add/", views.qr_code_create, name="qr_code_add"),
+    path("qr/<int:pk>/", views.qr_code_detail, name="qr_code_detail"),
+    path("costing/", views.costing_snapshot_list, name="costing_snapshot_list"),
+    path("costing/add/", views.costing_snapshot_create, name="costing_snapshot_add"),
 ]

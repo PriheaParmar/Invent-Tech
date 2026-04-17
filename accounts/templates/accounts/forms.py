@@ -1,6 +1,6 @@
 import re
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 from django.utils import timezone
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
@@ -51,16 +51,6 @@ from .models import (
     PatternType,
     Program,
     ProgramJobberDetail,
-    ProgramStart,
-    ProgramStartFabric,
-    ProgramStartSize,
-    ProgramStartJobber,
-    ProgramJobberChallan,
-    ProgramJobberChallanSize,
-    
-    ProgramInvoice,
-    ProgramInvoiceItem,
-    MaintenanceRecord,
     ReadyPOInward,
     ReadyPurchaseOrder,
     SubCategory,
@@ -71,15 +61,6 @@ from .models import (
     YarnPOInward,
     YarnPurchaseOrder,
     YarnPurchaseOrderItem,
-        InventoryLot,
-    InventoryRoll,
-    QRCodeRecord,
-    QualityCheck,
-    QualityCheckParameter,
-    QualityCheckDefect,
-    CostingSnapshot,
-    DyeingPOInwardItem,
-    ReadyPOInwardItem,
 )
 
 
@@ -2343,7 +2324,7 @@ class DyeingPOReviewForm(forms.Form):
 class DyeingPOInwardForm(forms.ModelForm):
     class Meta:
         model = DyeingPOInward
-        fields = ["inward_date", "notes"]
+        fields = ["vendor", "inward_type", "inward_date", "notes"]
         widgets = {
             "inward_date": forms.DateInput(attrs={"type": "date"}),
             "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
@@ -2352,10 +2333,39 @@ class DyeingPOInwardForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fields["vendor"].required = False
+        self.fields["inward_type"].required = False
+
+        self.fields["vendor"].queryset = (
+            Vendor.objects.filter(owner=user, is_active=True).order_by("name")
+            if user else Vendor.objects.none()
+        )
+        self.fields["inward_type"].queryset = (
+            InwardType.objects.filter(owner=user).order_by("name")
+            if user else InwardType.objects.none()
+        )
+
+        self.fields["vendor"].empty_label = "Select vendor"
+        self.fields["inward_type"].empty_label = "Select inward type"
+
+        if not self.is_bound:
+            self.fields["inward_date"].initial = self.instance.inward_date or timezone.localdate()
+            if getattr(self.instance, "po_id", None) and not self.instance.vendor_id:
+                po_vendor_id = getattr(getattr(self.instance, "po", None), "vendor_id", None)
+                if po_vendor_id:
+                    self.fields["vendor"].initial = po_vendor_id
+
+
 class DyeingPurchaseOrderItemForm(forms.ModelForm):
     class Meta:
         model = DyeingPurchaseOrderItem
         fields = [
+            "quantity",
+            "source_input_qty",
+            "expected_loss_percent",
+            "expected_output_qty",
+            "actual_output_qty",
+            "balance_output_qty",
             "dyeing_master_detail",
             "finished_material",
             "unit",
@@ -2375,6 +2385,12 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
             "line_final_amount",
         ]
         widgets = {
+            "quantity": forms.HiddenInput(),
+            "source_input_qty": forms.HiddenInput(),
+            "expected_loss_percent": forms.HiddenInput(),
+            "expected_output_qty": forms.HiddenInput(),
+            "actual_output_qty": forms.HiddenInput(),
+            "balance_output_qty": forms.HiddenInput(),
             "description": forms.Textarea(attrs={"rows": 2}),
             "remark": forms.TextInput(attrs={"placeholder": "Enter remarks"}),
         }
@@ -2382,23 +2398,33 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["dyeing_master_detail"].required = False
-        self.fields["finished_material"].required = False
-        self.fields["unit"].required = False
-        self.fields["total_qty"].required = False
-        self.fields["remaining_qty"].required = False
-        self.fields["value"].required = False
-        self.fields["rolls"].required = False
-        self.fields["dyeing_type"].required = False
-        self.fields["dyeing_name"].required = False
-        self.fields["rate"].required = False
-        self.fields["dyeing_other_charge"].required = False
-        self.fields["other_charge_amount"].required = False
-        self.fields["job_work_charges"].required = False
-        self.fields["description"].required = False
-        self.fields["remark"].required = False
-        self.fields["line_subtotal"].required = False
-        self.fields["line_final_amount"].required = False
+        optional_fields = [
+            "quantity",
+            "source_input_qty",
+            "expected_loss_percent",
+            "expected_output_qty",
+            "actual_output_qty",
+            "balance_output_qty",
+            "dyeing_master_detail",
+            "finished_material",
+            "unit",
+            "total_qty",
+            "remaining_qty",
+            "value",
+            "rolls",
+            "dyeing_type",
+            "dyeing_name",
+            "rate",
+            "dyeing_other_charge",
+            "other_charge_amount",
+            "job_work_charges",
+            "description",
+            "remark",
+            "line_subtotal",
+            "line_final_amount",
+        ]
+        for field_name in optional_fields:
+            self.fields[field_name].required = False
 
         self.fields["dyeing_master_detail"].queryset = (
             DyeingMaterialLinkDetail.objects
@@ -2431,6 +2457,9 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
         self.fields["unit"] = forms.ChoiceField(required=False, choices=unit_choices)
         self.fields["unit"].widget = forms.Select(choices=unit_choices)
 
+        self.fields["total_qty"].label = "Process Qty"
+        self.fields["remaining_qty"].label = "Balance Qty"
+
     def clean_unit(self):
         value = (self.cleaned_data.get("unit") or "").strip()
         valid_units = {choice for choice, _label in self.fields["unit"].choices if choice}
@@ -2442,25 +2471,63 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
         cleaned_data = super().clean()
 
         master_detail = cleaned_data.get("dyeing_master_detail")
-        finished_material = cleaned_data.get("finished_material")
-
-        if master_detail and not finished_material and master_detail.finished_material_id:
-            cleaned_data["finished_material"] = master_detail.finished_material
 
         if master_detail:
+            if not cleaned_data.get("finished_material") and master_detail.finished_material_id:
+                cleaned_data["finished_material"] = master_detail.finished_material
+
             if not cleaned_data.get("dyeing_type"):
                 cleaned_data["dyeing_type"] = master_detail.dyeing_type or ""
+
             if not cleaned_data.get("dyeing_name"):
                 cleaned_data["dyeing_name"] = master_detail.dyeing_name or ""
+
             if not cleaned_data.get("rate"):
                 cleaned_data["rate"] = master_detail.price or Decimal("0")
 
-        total_qty = cleaned_data.get("total_qty") or Decimal("0")
+            if not cleaned_data.get("expected_loss_percent"):
+                cleaned_data["expected_loss_percent"] = master_detail.weight_loss or Decimal("0")
+
+        process_qty = cleaned_data.get("source_input_qty") or cleaned_data.get("total_qty") or Decimal("0")
+        expected_loss_percent = cleaned_data.get("expected_loss_percent") or Decimal("0")
         rate = cleaned_data.get("rate") or Decimal("0")
         other_charge_amount = cleaned_data.get("other_charge_amount") or Decimal("0")
         job_work_charges = cleaned_data.get("job_work_charges") or Decimal("0")
 
-        line_subtotal = total_qty * rate
+        numeric_fields = {
+            "process_qty": process_qty,
+            "expected_loss_percent": expected_loss_percent,
+            "rate": rate,
+            "other_charge_amount": other_charge_amount,
+            "job_work_charges": job_work_charges,
+        }
+        for label, value in numeric_fields.items():
+            if value < 0:
+                raise forms.ValidationError(f"{label.replace('_', ' ').title()} cannot be negative.")
+
+        if expected_loss_percent > Decimal("100"):
+            raise forms.ValidationError("Expected loss percent cannot be greater than 100.")
+
+        expected_output_qty = cleaned_data.get("expected_output_qty")
+        if not expected_output_qty:
+            expected_output_qty = process_qty - (process_qty * expected_loss_percent / Decimal("100"))
+            if expected_output_qty < 0:
+                expected_output_qty = Decimal("0")
+
+        cleaned_data["source_input_qty"] = process_qty
+        cleaned_data["total_qty"] = process_qty
+        cleaned_data["quantity"] = process_qty
+        cleaned_data["expected_output_qty"] = expected_output_qty
+
+        current_balance = cleaned_data.get("balance_output_qty")
+        if current_balance in (None, Decimal("0")):
+            cleaned_data["balance_output_qty"] = expected_output_qty
+
+        current_remaining = cleaned_data.get("remaining_qty")
+        if current_remaining in (None, Decimal("0")):
+            cleaned_data["remaining_qty"] = expected_output_qty
+
+        line_subtotal = process_qty * rate
         line_final_amount = line_subtotal + other_charge_amount + job_work_charges
 
         cleaned_data["line_subtotal"] = line_subtotal
@@ -2474,6 +2541,12 @@ DyeingPurchaseOrderItemFormSet = inlineformset_factory(
     DyeingPurchaseOrderItem,
     form=DyeingPurchaseOrderItemForm,
     fields=[
+        "quantity",
+        "source_input_qty",
+        "expected_loss_percent",
+        "expected_output_qty",
+        "actual_output_qty",
+        "balance_output_qty",
         "dyeing_master_detail",
         "finished_material",
         "unit",
@@ -2495,7 +2568,6 @@ DyeingPurchaseOrderItemFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
 )
-
 
 
 # ============================================================
@@ -3394,266 +3466,6 @@ class DispatchChallanForm(forms.ModelForm):
     def clean_remarks(self):
         return (self.cleaned_data.get("remarks") or "").strip()
 
-class ProgramJobberChallanForm(forms.ModelForm):
-    class Meta:
-        model = ProgramJobberChallan
-        fields = [
-            "challan_date",
-            "driver_name",
-            "lr_no",
-            "transport_name",
-            "vehicle_no",
-            "gate_pass_no",
-            "expected_return_date",
-            "remarks",
-        ]
-        widgets = {
-            "challan_date": forms.DateInput(attrs={"type": "date"}),
-            "expected_return_date": forms.DateInput(attrs={"type": "date"}),
-            "remarks": forms.Textarea(attrs={"rows": 3, "placeholder": "Remarks"}),
-            "driver_name": forms.TextInput(attrs={"placeholder": "Driver name"}),
-            "lr_no": forms.TextInput(attrs={"placeholder": "LR No"}),
-            "transport_name": forms.TextInput(attrs={"placeholder": "Transport"}),
-            "vehicle_no": forms.TextInput(attrs={"placeholder": "Vehicle no"}),
-            "gate_pass_no": forms.TextInput(attrs={"placeholder": "Gate pass no"}),
-        }
-
-    def __init__(self, *args, user=None, program=None, start_jobber=None, **kwargs):
-        self.user = user
-        self.program = program
-        self.start_jobber = start_jobber
-        super().__init__(*args, **kwargs)
-
-        for field in self.fields.values():
-            existing = field.widget.attrs.get("class", "")
-            field.widget.attrs["class"] = f"{existing} jf-input".strip()
-
-        self.fields["challan_date"].required = True
-        self.fields["driver_name"].required = False
-        self.fields["lr_no"].required = False
-        self.fields["transport_name"].required = False
-        self.fields["vehicle_no"].required = False
-        self.fields["gate_pass_no"].required = False
-        self.fields["expected_return_date"].required = False
-        self.fields["remarks"].required = False
-
-        if not self.instance.pk and not self.initial.get("challan_date"):
-            self.initial["challan_date"] = timezone.localdate()
-
-    def clean_driver_name(self):
-        return _compact_spaces(self.cleaned_data.get("driver_name"))
-
-    def clean_lr_no(self):
-        return (self.cleaned_data.get("lr_no") or "").strip()
-
-    def clean_transport_name(self):
-        return _compact_spaces(self.cleaned_data.get("transport_name"))
-
-    def clean_vehicle_no(self):
-        return (self.cleaned_data.get("vehicle_no") or "").strip().upper()
-
-    def clean_gate_pass_no(self):
-        return (self.cleaned_data.get("gate_pass_no") or "").strip().upper()
-
-    def clean(self):
-        cleaned = super().clean()
-
-        challan_date = cleaned.get("challan_date")
-        expected_return_date = cleaned.get("expected_return_date")
-
-        if expected_return_date and challan_date and expected_return_date < challan_date:
-            self.add_error("expected_return_date", "Expected return date cannot be before challan date.")
-
-        if self.program is not None:
-            start_record = getattr(self.program, "start_record", None)
-            if not start_record or not start_record.is_started:
-                raise forms.ValidationError("Program must be started before creating a challan.")
-
-        if self.start_jobber is not None:
-            if self.program is not None and self.start_jobber.start_record.program_id != self.program.id:
-                raise forms.ValidationError("Selected jobber row does not belong to this program.")
-
-        if self.instance.pk and self.instance.status in {"approved", "closed"}:
-            raise forms.ValidationError("Approved or closed challan cannot be edited.")
-
-        return cleaned
-
-class ProgramJobberChallanSizeForm(forms.ModelForm):
-    class Meta:
-        model = ProgramJobberChallanSize
-        fields = ["size_name", "issued_qty", "inward_qty", "sort_order"]
-        widgets = {
-            "size_name": forms.TextInput(attrs={"readonly": "readonly"}),
-            "issued_qty": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
-            "inward_qty": forms.NumberInput(attrs={"step": "0.01", "min": "0", "readonly": "readonly"}),
-            "sort_order": forms.HiddenInput(),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        for field in self.fields.values():
-            existing = field.widget.attrs.get("class", "")
-            field.widget.attrs["class"] = f"{existing} jf-input".strip()
-
-        self.fields["size_name"].required = True
-        self.fields["issued_qty"].required = False
-        self.fields["inward_qty"].required = False
-
-    def clean_size_name(self):
-        value = (self.cleaned_data.get("size_name") or "").strip()
-        if not value:
-            raise forms.ValidationError("Size name is required.")
-        return value
-
-    def clean_issued_qty(self):
-        value = self.cleaned_data.get("issued_qty") or Decimal("0")
-        if value < 0:
-            raise forms.ValidationError("Issued quantity cannot be negative.")
-        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-    def clean_inward_qty(self):
-        value = self.cleaned_data.get("inward_qty") or Decimal("0")
-        if value < 0:
-            raise forms.ValidationError("Inward quantity cannot be negative.")
-        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-
-ProgramJobberChallanSizeFormSet = inlineformset_factory(
-    ProgramJobberChallan,
-    ProgramJobberChallanSize,
-    form=ProgramJobberChallanSizeForm,
-    extra=0,
-    can_delete=False,
-)
-
-
-class ProgramJobberChallanApprovalForm(forms.ModelForm):
-    approve = forms.ChoiceField(
-        choices=(
-            ("approved", "Approve"),
-            ("rejected", "Reject"),
-        ),
-        widget=forms.RadioSelect,
-    )
-
-    class Meta:
-        model = ProgramJobberChallan
-        fields = ["approve", "rejection_reason"]
-        widgets = {
-            "rejection_reason": forms.Textarea(attrs={"rows": 3, "placeholder": "Reason for rejection"}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        for field in self.fields.values():
-            existing = field.widget.attrs.get("class", "")
-            field.widget.attrs["class"] = f"{existing} jf-input".strip()
-
-        self.fields["rejection_reason"].required = False
-
-    def clean(self):
-        cleaned = super().clean()
-        approve = cleaned.get("approve")
-        rejection_reason = _compact_spaces(cleaned.get("rejection_reason"))
-
-        if approve == "rejected" and not rejection_reason:
-            self.add_error("rejection_reason", "Rejection reason is required when rejecting challan.")
-
-        cleaned["rejection_reason"] = rejection_reason
-        return cleaned
-
-
-def validate_program_jobber_challan_size_formset(formset):
-    total_issued = Decimal("0")
-    has_row = False
-
-    for form in formset.forms:
-        if not hasattr(form, "cleaned_data"):
-            continue
-
-        cleaned = form.cleaned_data
-        if not cleaned:
-            continue
-
-        size_name = (cleaned.get("size_name") or "").strip()
-        issued_qty = cleaned.get("issued_qty") or Decimal("0")
-
-        if size_name:
-            has_row = True
-
-        if issued_qty < 0:
-            raise forms.ValidationError("Issued quantity cannot be negative.")
-
-        total_issued += issued_qty
-
-    if not has_row:
-        raise forms.ValidationError("At least one size row is required.")
-
-    if total_issued <= 0:
-        raise forms.ValidationError("At least one size row must have issued quantity greater than zero.")
-
-    return total_issued.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-class ProgramInvoiceForm(forms.ModelForm):
-    items_json = forms.CharField(widget=forms.HiddenInput(), required=False)
-
-    class Meta:
-        model = ProgramInvoice
-        fields = [
-            "invoice_no", "invoice_date", "firm", "client", "program", "vehicle_no", "remarks",
-            "discount_percent", "other_charges", "gst_percent", "igst_percent",
-        ]
-        widgets = {
-            "invoice_date": forms.DateInput(attrs={"type": "date"}),
-            "invoice_no": forms.TextInput(attrs={"placeholder": "Auto / invoice number"}),
-            "vehicle_no": forms.TextInput(attrs={"placeholder": "Vehicle number"}),
-            "remarks": forms.Textarea(attrs={"rows": 3, "placeholder": "Remarks"}),
-            "discount_percent": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
-            "other_charges": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
-            "gst_percent": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
-            "igst_percent": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
-        }
-
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["program"].queryset = Program.objects.filter(owner=user).select_related("bom", "firm").order_by("-id") if user else Program.objects.none()
-        self.fields["client"].queryset = Client.objects.filter(owner=user, is_active=True).order_by("name") if user else Client.objects.none()
-        self.fields["firm"].queryset = Firm.objects.filter(owner=user).order_by("firm_name") if user else Firm.objects.none()
-        self.fields["program"].empty_label = "Select program"
-        self.fields["client"].empty_label = "Select client"
-        self.fields["firm"].empty_label = "Select firm"
-        if not self.is_bound:
-            self.fields["invoice_date"].initial = timezone.localdate()
-
-    def clean_items_json(self):
-        return (self.cleaned_data.get("items_json") or "").strip()
-
-
-class MaintenanceRecordForm(forms.ModelForm):
-    class Meta:
-        model = MaintenanceRecord
-        fields = ["month_key", "inward_total", "expense_total", "remarks"]
-        widgets = {
-            "month_key": forms.TextInput(attrs={"type": "month"}),
-            "inward_total": forms.NumberInput(attrs={"step": "0.01", "min": "0", "readonly": "readonly"}),
-            "expense_total": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
-            "remarks": forms.Textarea(attrs={"rows": 3, "placeholder": "Notes"}),
-        }
-
-    def clean_month_key(self):
-        value = (self.cleaned_data.get("month_key") or "").strip()
-        if not re.match(r"^\d{4}-\d{2}$", value):
-            raise forms.ValidationError("Month must be in YYYY-MM format.")
-        return value
-
-    def clean_expense_total(self):
-        value = self.cleaned_data.get("expense_total") or Decimal("0")
-        if value < 0:
-            raise forms.ValidationError("Expense total cannot be negative.")
-        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
 class ProgramJobberDetailForm(forms.ModelForm):
     class Meta:
         model = ProgramJobberDetail
@@ -3696,101 +3508,3 @@ ProgramJobberDetailFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
 )
-
-# ============================================================
-# PHASE 2 FORMS
-# ============================================================
-class ProgramStartForm(forms.ModelForm):
-    class Meta:
-        model = ProgramStart
-        fields = ["is_started", "remarks"]
-        widgets = {"remarks": forms.Textarea(attrs={"rows": 3, "placeholder": "Execution notes"})}
-class ProgramStartFabricForm(forms.ModelForm):
-    class Meta:
-        model = ProgramStartFabric
-        fields = ["material", "unit", "used", "avg", "length", "width", "count", "pp_count", "lot_no", "lot_count", "available_qty", "used_qty", "sort_order"]
-        widgets = {"sort_order": forms.HiddenInput()}
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["material"].queryset = Material.objects.order_by("name")
-        self.fields["unit"].queryset = MaterialUnit.objects.filter(owner=user).order_by("name") if user else MaterialUnit.objects.none()
-        self.fields["material"].required = False
-        self.fields["unit"].required = False
-class ProgramStartSizeForm(forms.ModelForm):
-    class Meta:
-        model = ProgramStartSize
-        fields = ["size_name", "qty", "sort_order"]
-        widgets = {"sort_order": forms.HiddenInput()}
-class ProgramStartJobberForm(forms.ModelForm):
-    class Meta:
-        model = ProgramStartJobber
-        fields = ["jobber", "jobber_type", "jobber_price", "allocation_date", "invoice_no", "invoice_rate", "invoice_date", "sort_order"]
-        widgets = {"allocation_date": forms.DateInput(attrs={"type": "date"}), "invoice_date": forms.DateInput(attrs={"type": "date"}), "sort_order": forms.HiddenInput()}
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["jobber"].queryset = Jobber.objects.filter(owner=user, is_active=True).order_by("name") if user else Jobber.objects.none()
-        self.fields["jobber_type"].queryset = JobberType.objects.filter(owner=user).order_by("name") if user else JobberType.objects.none()
-        self.fields["jobber"].required = False
-        self.fields["jobber_type"].required = False
-ProgramStartFabricFormSet = inlineformset_factory(ProgramStart, ProgramStartFabric, form=ProgramStartFabricForm, extra=1, can_delete=True)
-ProgramStartSizeFormSet = inlineformset_factory(
-    ProgramStart,
-    ProgramStartSize,
-    form=ProgramStartSizeForm,
-    extra=0,
-    can_delete=True,
-)
-ProgramStartJobberFormSet = inlineformset_factory(ProgramStart, ProgramStartJobber, form=ProgramStartJobberForm, extra=1, can_delete=True)
-class InventoryLotForm(forms.ModelForm):
-    class Meta:
-        model = InventoryLot
-        fields = ["stage", "material", "unit", "dye_lot_no", "batch_no", "shade_reference", "location_name", "received_qty", "accepted_qty", "rejected_qty", "hold_qty", "used_qty", "qc_status", "is_closed"]
-class InventoryRollForm(forms.ModelForm):
-    class Meta:
-        model = InventoryRoll
-        fields = ["roll_no", "length_qty", "width", "gsm", "weight_qty", "accepted_qty", "status"]
-InventoryRollFormSet = inlineformset_factory(InventoryLot, InventoryRoll, form=InventoryRollForm, extra=1, can_delete=True)
-class QRCodeRecordForm(forms.ModelForm):
-    class Meta:
-        model = QRCodeRecord
-        fields = ["qr_code", "qr_type", "lot", "roll", "status", "payload_url", "notes"]
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if user:
-            self.fields["lot"].queryset = InventoryLot.objects.filter(owner=user).order_by("-id")
-            self.fields["roll"].queryset = InventoryRoll.objects.filter(lot__owner=user).order_by("-id")
-class QualityCheckForm(forms.ModelForm):
-    class Meta:
-        model = QualityCheck
-        fields = ["qc_number", "stage", "lot", "roll", "dyeing_inward_item", "ready_inward_item", "inspection_date", "status", "result", "remarks"]
-        widgets = {"inspection_date": forms.DateInput(attrs={"type": "date"}), "remarks": forms.Textarea(attrs={"rows": 3})}
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["qc_number"].required = False
-        if not self.is_bound and not self.instance.pk:
-            self.fields["qc_number"].initial = next_quality_check_number()
-        if user:
-            self.fields["lot"].queryset = InventoryLot.objects.filter(owner=user).order_by("-id")
-            self.fields["roll"].queryset = InventoryRoll.objects.filter(lot__owner=user).order_by("-id")
-            self.fields["dyeing_inward_item"].queryset = DyeingPOInwardItem.objects.filter(inward__owner=user).order_by("-id")
-            self.fields["ready_inward_item"].queryset = ReadyPOInwardItem.objects.filter(inward__owner=user).order_by("-id")
-class QualityCheckParameterForm(forms.ModelForm):
-    class Meta:
-        model = QualityCheckParameter
-        fields = ["parameter_name", "expected_value", "actual_value", "tolerance", "is_pass", "remarks"]
-class QualityCheckDefectForm(forms.ModelForm):
-    class Meta:
-        model = QualityCheckDefect
-        fields = ["defect_name", "severity", "affected_qty", "remarks"]
-QualityCheckParameterFormSet = inlineformset_factory(QualityCheck, QualityCheckParameter, form=QualityCheckParameterForm, extra=1, can_delete=True)
-QualityCheckDefectFormSet = inlineformset_factory(QualityCheck, QualityCheckDefect, form=QualityCheckDefectForm, extra=1, can_delete=True)
-class CostingSnapshotForm(forms.ModelForm):
-    class Meta:
-        model = CostingSnapshot
-        fields = ["bom", "program", "material_cost", "accessory_cost", "process_cost", "expense_cost", "overhead_cost", "wastage_cost", "target_margin_percent", "target_selling_price", "mrp", "notes"]
-        widgets = {"notes": forms.Textarea(attrs={"rows": 3})}
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if user:
-            self.fields["bom"].queryset = BOM.objects.filter(owner=user).order_by("-id")
-            self.fields["program"].queryset = Program.objects.filter(owner=user).order_by("-id")

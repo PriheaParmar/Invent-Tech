@@ -1,0 +1,46 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Add Maintenance - InventTech{% endblock %}
+{% block page_title %}Add Maintenance{% endblock %}
+{% block page_subtitle %}Select month to load inward total and enter expense total{% endblock %}
+{% block content %}
+<style>.mf-page{display:flex;flex-direction:column;gap:14px}.mf-card{background:#fff;border:1px solid #e6ebf2;border-radius:20px;box-shadow:0 12px 30px rgba(15,23,42,.06)}.mf-head{padding:16px 18px;border-bottom:1px solid #eef2f6}.mf-title{font-size:20px;font-weight:900;color:#111827}.mf-sub{font-size:13px;color:#667085;margin-top:4px}.mf-body{padding:16px 18px}.mf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.mf-field label{display:block;font-size:11px;font-weight:900;color:#667085;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}.mf-field input,.mf-field textarea{width:100%;min-height:44px;border:1px solid #dbe2ea;border-radius:14px;padding:10px 12px;font-size:13px}.mf-field textarea{min-height:96px}.mf-field--full{grid-column:1/-1}.mf-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.mf-box{border:1px solid #e6ebf2;border-radius:16px;background:#fafbfd;padding:14px}.mf-box-label{font-size:11px;color:#667085;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.mf-box-value{font-size:18px;color:#111827;font-weight:900;margin-top:6px}.mf-actions{padding:16px 18px;border-top:1px solid #eef2f6;display:flex;justify-content:flex-end;gap:10px}.mf-btn{min-height:44px;padding:0 16px;border-radius:14px;border:1px solid #dbe2ea;background:#fff;color:#111827;text-decoration:none;font-weight:800}.mf-btn--dark{background:#111827;color:#fff;border-color:#111827}@media(max-width:900px){.mf-grid,.mf-summary{grid-template-columns:1fr}}</style>
+<div class="mf-page">
+<form method="post">{% csrf_token %}
+  <section class="mf-card">
+    <div class="mf-head"><div class="mf-title">Maintenance Form</div><div class="mf-sub">Select month and the inward total for that month will appear. Enter expense total and cost is calculated.</div></div>
+    <div class="mf-body">
+      {% if form.non_field_errors %}<div style="color:#b42318;font-weight:800;margin-bottom:10px;">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="mf-grid">
+        <div class="mf-field"><label>Month</label>{{ form.month_key }}</div>
+        <div class="mf-field"><label>Inward</label>{{ form.inward_total }}</div>
+        <div class="mf-field"><label>Expense</label>{{ form.expense_total }}</div>
+        <div class="mf-field mf-field--full"><label>Remarks</label>{{ form.remarks }}</div>
+      </div>
+      <div class="mf-summary">
+        <div class="mf-box"><div class="mf-box-label">Month</div><div class="mf-box-value" id="monthDisplay">-</div></div>
+        <div class="mf-box"><div class="mf-box-label">Inward Total</div><div class="mf-box-value" id="inwardDisplay">0.00</div></div>
+        <div class="mf-box"><div class="mf-box-label">Cost</div><div class="mf-box-value" id="costDisplay">0.00</div></div>
+      </div>
+    </div>
+    <div class="mf-actions"><a href="{% url 'accounts:maintenance_list' %}" class="mf-btn">Cancel</a><button type="submit" class="mf-btn mf-btn--dark">Save</button></div>
+  </section>
+</form>
+</div>
+<script>
+(function(){
+  const monthInput = document.getElementById('id_month_key');
+  const inwardInput = document.getElementById('id_inward_total');
+  const expenseInput = document.getElementById('id_expense_total');
+  const monthDisplay = document.getElementById('monthDisplay');
+  const inwardDisplay = document.getElementById('inwardDisplay');
+  const costDisplay = document.getElementById('costDisplay');
+  function dec(v){ const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function fmt(v){ return dec(v).toFixed(2); }
+  function refreshCost(){ inwardDisplay.textContent = fmt(inwardInput.value); costDisplay.textContent = fmt(dec(inwardInput.value) + dec(expenseInput.value)); monthDisplay.textContent = monthInput.value || '-'; }
+  async function loadMonth(){ if(!monthInput.value){ inwardInput.value='0.00'; refreshCost(); return; } const res = await fetch(`{% url 'accounts:maintenance_month_payload' %}?month_key=${monthInput.value}`); const data = await res.json(); inwardInput.value = data.inward_total || '0.00'; refreshCost(); }
+  monthInput && monthInput.addEventListener('change', loadMonth);
+  expenseInput && expenseInput.addEventListener('input', refreshCost);
+  refreshCost();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Create Invoice - InventTech{% endblock %}
+{% block page_title %}Create Invoice{% endblock %}
+{% block page_subtitle %}Firm, client, program, challan details, and totals{% endblock %}
+{% block content %}
+<style>
+.ivf-page{display:flex;flex-direction:column;gap:14px}.ivf-card{background:#fff;border:1px solid #e6ebf2;border-radius:20px;box-shadow:0 12px 30px rgba(15,23,42,.06)}.ivf-head{padding:16px 18px;border-bottom:1px solid #eef2f6}.ivf-title{font-size:20px;font-weight:900;color:#111827}.ivf-sub{font-size:13px;color:#667085;margin-top:4px}.ivf-body{padding:16px 18px}.ivf-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.ivf-field label{display:block;font-size:11px;font-weight:900;color:#667085;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}.ivf-field input,.ivf-field select,.ivf-field textarea{width:100%;min-height:44px;border:1px solid #dbe2ea;border-radius:14px;padding:10px 12px;font-size:13px}.ivf-field textarea{min-height:96px;resize:vertical}.ivf-field--full{grid-column:1/-1}.ivf-table-wrap{overflow:auto;margin-top:10px}.ivf-table{width:100%;min-width:960px;border-collapse:separate;border-spacing:0}.ivf-table th,.ivf-table td{padding:12px 10px;border-bottom:1px solid #eef2f6}.ivf-table th{font-size:11px;color:#667085;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.ivf-table input{width:100%;min-height:40px;border:1px solid #dbe2ea;border-radius:12px;padding:8px 10px}.ivf-totals{margin-top:12px;display:grid;grid-template-columns:1fr 320px;gap:16px}.ivf-box{border:1px solid #e6ebf2;border-radius:16px;background:#fafbfd;padding:14px}.ivf-total-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ivf-total-row{display:grid;grid-template-columns:1fr 140px;gap:10px;align-items:center;margin-bottom:10px}.ivf-total-row input{height:42px;border:1px solid #dbe2ea;border-radius:12px;padding:0 12px}.ivf-final{font-size:20px;font-weight:900;color:#111827}.ivf-actions{padding:16px 18px;border-top:1px solid #eef2f6;display:flex;justify-content:flex-end;gap:10px}.ivf-btn{min-height:44px;padding:0 16px;border-radius:14px;border:1px solid #dbe2ea;background:#fff;color:#111827;text-decoration:none;font-weight:800}.ivf-btn--dark{background:#111827;color:#fff;border-color:#111827}@media(max-width:1100px){.ivf-grid,.ivf-totals{grid-template-columns:1fr}}
+</style>
+<div class="ivf-page">
+<form method="post" id="invoiceForm">
+  {% csrf_token %}
+  {{ form.items_json }}
+  <section class="ivf-card">
+    <div class="ivf-head"><div class="ivf-title">Invoice Form</div><div class="ivf-sub">Firm name, client name, program, challan details, taxes, and final amount.</div></div>
+    <div class="ivf-body">
+      {% if form.non_field_errors %}<div style="color:#b42318;font-weight:800;margin-bottom:10px;">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="ivf-grid">
+        <div class="ivf-field"><label>Invoice No</label>{{ form.invoice_no }}</div>
+        <div class="ivf-field"><label>Date</label>{{ form.invoice_date }}</div>
+        <div class="ivf-field"><label>Firm Name</label>{{ form.firm }}</div>
+        <div class="ivf-field"><label>Client Name</label>{{ form.client }}</div>
+        <div class="ivf-field"><label>Program</label>{{ form.program }}</div>
+        <div class="ivf-field"><label>Vehicle No</label>{{ form.vehicle_no }}</div>
+        <div class="ivf-field ivf-field--full"><label>Remarks</label>{{ form.remarks }}</div>
+      </div>
+
+      <div class="ivf-table-wrap">
+        <table class="ivf-table" id="invoiceItemsTable">
+          <thead><tr><th>Program</th><th>SKU</th><th>Challan</th><th>Quantity</th><th>HSN</th><th>Price</th><th>Amount</th></tr></thead>
+          <tbody id="invoiceItemsBody">
+            <tr><td colspan="7" style="text-align:center;color:#667085;">Select a program to load challan details.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="ivf-totals">
+        <div class="ivf-box">
+          <div style="font-size:12px;font-weight:900;color:#667085;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Invoice Summary</div>
+          <div style="display:grid;gap:10px;grid-template-columns:repeat(3,minmax(0,1fr));">
+            <div><div style="font-size:11px;color:#667085;font-weight:900;">Program</div><div id="summaryProgram" style="margin-top:4px;font-size:14px;font-weight:900;">-</div></div>
+            <div><div style="font-size:11px;color:#667085;font-weight:900;">SKU</div><div id="summarySku" style="margin-top:4px;font-size:14px;font-weight:900;">-</div></div>
+            <div><div style="font-size:11px;color:#667085;font-weight:900;">Vehicle</div><div id="summaryVehicle" style="margin-top:4px;font-size:14px;font-weight:900;">-</div></div>
+          </div>
+        </div>
+
+        <div class="ivf-box">
+          <div class="ivf-total-row"><label>Sub Total</label><input type="text" id="subTotal" readonly value="0.00"></div>
+          <div class="ivf-total-row"><label>Discount In(%)</label>{{ form.discount_percent }}</div>
+          <div class="ivf-total-row"><label>After Discount Amount</label><input type="text" id="afterDiscount" readonly value="0.00"></div>
+          <div class="ivf-total-row"><label>Others</label>{{ form.other_charges }}</div>
+          <div class="ivf-total-row"><label>GST</label>{{ form.gst_percent }}</div>
+          <div class="ivf-total-row"><label>IGST</label>{{ form.igst_percent }}</div>
+          <div class="ivf-total-row"><label>Final Amount</label><input type="text" id="finalAmount" readonly value="0.00" class="ivf-final"></div>
+        </div>
+      </div>
+    </div>
+    <div class="ivf-actions">
+      <a href="{% url 'accounts:invoice_list' %}" class="ivf-btn">Cancel</a>
+      <button type="submit" class="ivf-btn ivf-btn--dark">Save Invoice</button>
+    </div>
+  </section>
+</form>
+</div>
+<script>
+(function(){
+  const programSelect = document.getElementById('id_program');
+  const firmSelect = document.getElementById('id_firm');
+  const remarksInput = document.getElementById('id_remarks');
+  const vehicleInput = document.getElementById('id_vehicle_no');
+  const itemsBody = document.getElementById('invoiceItemsBody');
+  const itemsJsonInput = document.getElementById('id_items_json');
+  const discountInput = document.getElementById('id_discount_percent');
+  const otherInput = document.getElementById('id_other_charges');
+  const gstInput = document.getElementById('id_gst_percent');
+  const igstInput = document.getElementById('id_igst_percent');
+  const subTotalEl = document.getElementById('subTotal');
+  const afterDiscountEl = document.getElementById('afterDiscount');
+  const finalAmountEl = document.getElementById('finalAmount');
+  const summaryProgram = document.getElementById('summaryProgram');
+  const summarySku = document.getElementById('summarySku');
+  const summaryVehicle = document.getElementById('summaryVehicle');
+
+  function dec(v){ const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function fmt(v){ return dec(v).toFixed(2); }
+
+  function recalc(){
+    const rows = [...itemsBody.querySelectorAll('tr[data-row="1"]')];
+    const payload = [];
+    let sub = 0;
+    rows.forEach((row, index) => {
+      const quantity = dec(row.querySelector('[data-field="quantity"]').value);
+      const price = dec(row.querySelector('[data-field="price"]').value);
+      const amount = quantity * price;
+      row.querySelector('[data-field="amount"]').value = fmt(amount);
+      sub += amount;
+      payload.push({
+        dispatch_challan_id: row.dataset.dispatchChallanId || '',
+        program: row.dataset.program || '',
+        sku: row.dataset.sku || '',
+        challan_no: row.dataset.challanNo || '',
+        quantity: fmt(quantity),
+        hsn_code: row.querySelector('[data-field="hsn"]').value || '',
+        price: fmt(price),
+        amount: fmt(amount),
+        sort_order: index + 1
+      });
+    });
+    const discountPercent = dec(discountInput.value);
+    const discountAmount = sub * discountPercent / 100;
+    const afterDiscount = sub - discountAmount;
+    const otherCharges = dec(otherInput.value);
+    const gstAmount = (afterDiscount + otherCharges) * dec(gstInput.value) / 100;
+    const igstAmount = (afterDiscount + otherCharges) * dec(igstInput.value) / 100;
+    const finalAmount = afterDiscount + otherCharges + gstAmount + igstAmount;
+    subTotalEl.value = fmt(sub);
+    afterDiscountEl.value = fmt(afterDiscount);
+    finalAmountEl.value = fmt(finalAmount);
+    itemsJsonInput.value = JSON.stringify(payload);
+  }
+
+  function bindRowInputs(){
+    itemsBody.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', recalc);
+    });
+  }
+
+  function renderRows(data){
+    if (!data.items || !data.items.length){
+      itemsBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#667085;">No challan details found for this program.</td></tr>';
+      itemsJsonInput.value = '[]';
+      recalc();
+      return;
+    }
+    itemsBody.innerHTML = data.items.map(item => `
+      <tr data-row="1" data-dispatch-challan-id="${item.dispatch_challan_id || ''}" data-program="${item.program || ''}" data-sku="${item.sku || ''}" data-challan-no="${item.challan_no || ''}">
+        <td>${item.program || '-'}</td>
+        <td>${item.sku || '-'}</td>
+        <td>${item.challan_no || '-'}</td>
+        <td><input type="number" min="0" step="0.01" value="${item.quantity || '0.00'}" data-field="quantity"></td>
+        <td><input type="text" value="${item.hsn_code || ''}" data-field="hsn"></td>
+        <td><input type="number" min="0" step="0.01" value="${item.price || '0.00'}" data-field="price"></td>
+        <td><input type="text" value="${item.amount || '0.00'}" data-field="amount" readonly></td>
+      </tr>
+    `).join('');
+    summaryProgram.textContent = data.program_no || '-';
+    summarySku.textContent = data.sku || '-';
+    summaryVehicle.textContent = data.vehicle_no || '-';
+    if (data.firm_id && firmSelect){ firmSelect.value = data.firm_id; }
+    if (vehicleInput && !vehicleInput.value){ vehicleInput.value = data.vehicle_no || ''; }
+    if (remarksInput && !remarksInput.value){ remarksInput.value = data.remarks || ''; }
+    bindRowInputs();
+    recalc();
+  }
+
+  programSelect && programSelect.addEventListener('change', async function(){
+    const programId = this.value;
+    if (!programId){
+      itemsBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#667085;">Select a program to load challan details.</td></tr>';
+      summaryProgram.textContent = '-'; summarySku.textContent = '-'; summaryVehicle.textContent = '-';
+      itemsJsonInput.value = '[]';
+      recalc();
+      return;
+    }
+    const res = await fetch(`{% url 'accounts:invoice_program_payload' 0 %}`.replace('/0/', `/${programId}/`));
+    const data = await res.json();
+    renderRows(data);
+  });
+  [discountInput, otherInput, gstInput, igstInput].forEach(el => el && el.addEventListener('input', recalc));
+  recalc();
+})();
+</script>
+{% endblock %}

@@ -819,6 +819,7 @@ class DyeingPurchaseOrder(OwnedModel):
         return self.system_number or f"Dyeing PO {self.pk or 'Draft'}"
 
 
+
 class DyeingPurchaseOrderItem(models.Model):
     po = models.ForeignKey("DyeingPurchaseOrder", on_delete=models.CASCADE, related_name="items")
     source_greige_po_item = models.ForeignKey(
@@ -850,21 +851,36 @@ class DyeingPurchaseOrderItem(models.Model):
         blank=True,
         related_name="dyeing_po_items",
     )
+
     fabric_name = models.CharField(max_length=150, blank=True, default="")
     greige_name = models.CharField(max_length=150, blank=True, default="")
     unit = models.CharField(max_length=20, blank=True, default="")
+
+    # LEGACY FIELDS - keep for current compatibility
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     remaining_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    # NEW BUSINESS-SAFE FIELDS
+    source_input_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    expected_loss_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    expected_output_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    actual_output_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    balance_output_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
     value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     rolls = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
     dyeing_type = models.CharField(max_length=50, blank=True, default="")
     dyeing_name = models.CharField(max_length=120, blank=True, default="")
+
     rate = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     other_charge_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     job_work_charges = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
     description = models.TextField(blank=True, default="")
     remark = models.CharField(max_length=255, blank=True, default="")
+
     line_subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     line_final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
@@ -874,10 +890,45 @@ class DyeingPurchaseOrderItem(models.Model):
         return total
 
     @property
+    def accepted_inward_qty_total(self):
+        total = self.inward_items.aggregate(total=Sum("accepted_qty")).get("total") or Decimal("0")
+        return total
+
+    @property
+    def rejected_inward_qty_total(self):
+        total = self.inward_items.aggregate(total=Sum("rejected_qty")).get("total") or Decimal("0")
+        return total
+
+    @property
+    def hold_inward_qty_total(self):
+        total = self.inward_items.aggregate(total=Sum("hold_qty")).get("total") or Decimal("0")
+        return total
+
+    @property
     def remaining_qty_total(self):
         ordered = self.quantity or Decimal("0")
         inward = self.inward_qty_total or Decimal("0")
         return ordered - inward if ordered > inward else Decimal("0")
+
+    @property
+    def planned_process_qty(self):
+        if self.source_input_qty and self.source_input_qty > 0:
+            return self.source_input_qty
+        if self.total_qty and self.total_qty > 0:
+            return self.total_qty
+        return self.quantity or Decimal("0")
+
+    @property
+    def effective_expected_output_qty(self):
+        if self.expected_output_qty and self.expected_output_qty > 0:
+            return self.expected_output_qty
+        return self.planned_process_qty
+
+    @property
+    def effective_balance_output_qty(self):
+        if self.balance_output_qty and self.balance_output_qty > 0:
+            return self.balance_output_qty
+        return self.remaining_qty_total
 
     class Meta:
         ordering = ["id"]
@@ -887,10 +938,25 @@ class DyeingPurchaseOrderItem(models.Model):
         return f"{self.po} - {label}"
 
 
+
 class DyeingPOInward(OwnedModel):
     po = models.ForeignKey("DyeingPurchaseOrder", on_delete=models.CASCADE, related_name="inwards")
     inward_number = models.CharField(max_length=30, unique=True)
     inward_date = models.DateField(default=timezone.localdate)
+    vendor = models.ForeignKey(
+        "Vendor",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="dyeing_inwards",
+    )
+    inward_type = models.ForeignKey(
+        "InwardType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="dyeing_inwards",
+    )
     notes = models.TextField(blank=True, default="")
 
     class Meta:
@@ -900,14 +966,42 @@ class DyeingPOInward(OwnedModel):
         return self.inward_number
 
 
+
 class DyeingPOInwardItem(models.Model):
+    QC_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("partial", "Partial"),
+        ("hold", "Hold"),
+        ("rejected", "Rejected"),
+    ]
+
     inward = models.ForeignKey(DyeingPOInward, on_delete=models.CASCADE, related_name="items")
     po_item = models.ForeignKey("DyeingPurchaseOrderItem", on_delete=models.CASCADE, related_name="inward_items")
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    received_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    accepted_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    rejected_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    hold_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    actual_rolls = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    actual_gsm = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    actual_width = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    dye_lot_no = models.CharField(max_length=80, blank=True, default="")
+    batch_no = models.CharField(max_length=80, blank=True, default="")
+    shade_reference = models.CharField(max_length=120, blank=True, default="")
+    qc_status = models.CharField(max_length=20, choices=QC_STATUS_CHOICES, default="pending")
     remark = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
         unique_together = ("inward", "po_item")
+
+    def save(self, *args, **kwargs):
+        if (self.received_qty or Decimal("0")) <= 0 and (self.quantity or Decimal("0")) > 0:
+            self.received_qty = self.quantity
+        total_split = (self.accepted_qty or Decimal("0")) + (self.rejected_qty or Decimal("0")) + (self.hold_qty or Decimal("0"))
+        if total_split <= 0 and (self.quantity or Decimal("0")) > 0:
+            self.accepted_qty = self.quantity
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.inward.inward_number} / {self.po_item_id}"
@@ -1405,6 +1499,15 @@ class Program(OwnedModel):
             return first_image.image.url
         return ""
 
+    @property
+    def assigned_jobber_names(self):
+        start = getattr(self, "start_record", None)
+        if start:
+            rows = start.jobber_rows.select_related("jobber").all()
+            return [row.jobber.name for row in rows if row.jobber_id and row.jobber]
+        rows = self.jobber_rows.select_related("jobber").all()
+        return [row.jobber.name for row in rows if row.jobber_id and row.jobber]
+
     def __str__(self):
         return f"{self.program_no} - {self.bom.sku}"
 
@@ -1442,6 +1545,238 @@ class ProgramSizeDetail(models.Model):
 
     def __str__(self):
         return f"{self.program.program_no} - {self.line_name}"
+
+class ProgramStart(OwnedModel):
+    program = models.OneToOneField(
+        "Program",
+        on_delete=models.CASCADE,
+        related_name="start_record",
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    is_started = models.BooleanField(default=False)
+    remarks = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-id"]
+
+    def __str__(self):
+        return f"Start - {self.program.program_no}"
+
+
+class ProgramStartFabric(models.Model):
+    start_record = models.ForeignKey(
+        "ProgramStart",
+        on_delete=models.CASCADE,
+        related_name="fabric_rows",
+    )
+    material = models.ForeignKey(
+        "Material",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="program_start_fabrics",
+    )
+    unit = models.ForeignKey(
+        "MaterialUnit",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="program_start_fabrics",
+    )
+
+    used = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    avg = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    length = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    width = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    count = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    pp_count = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+
+    lot_no = models.CharField(max_length=150, blank=True, default="")
+    lot_count = models.PositiveIntegerField(default=0)
+    available_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    used_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        material_name = self.material.name if self.material_id else "Fabric"
+        return f"{self.start_record.program.program_no} - {material_name}"
+
+
+class ProgramStartSize(models.Model):
+    start_record = models.ForeignKey(
+        "ProgramStart",
+        on_delete=models.CASCADE,
+        related_name="size_rows",
+    )
+    size_name = models.CharField(max_length=20)
+    qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return f"{self.start_record.program.program_no} - {self.size_name}"
+
+
+class ProgramStartJobber(models.Model):
+    start_record = models.ForeignKey(
+        "ProgramStart",
+        on_delete=models.CASCADE,
+        related_name="jobber_rows",
+    )
+    jobber = models.ForeignKey(
+        "Jobber",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="program_start_jobbers",
+    )
+    jobber_type = models.ForeignKey(
+        "JobberType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="program_start_jobber_types",
+    )
+
+    jobber_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    allocation_date = models.DateField(null=True, blank=True)
+
+    invoice_no = models.CharField(max_length=100, blank=True, default="")
+    invoice_rate = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    invoice_date = models.DateField(null=True, blank=True)
+
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        jobber_name = self.jobber.name if self.jobber_id else "Jobber"
+        return f"{self.start_record.program.program_no} - {jobber_name}"
+
+
+PROGRAM_JOBBER_CHALLAN_STATUS_CHOICES = (
+    ("pending", "Pending"),
+    ("approved", "Approved"),
+    ("rejected", "Rejected"),
+    ("partial", "Partial Inward"),
+    ("closed", "Closed"),
+)
+
+
+class ProgramJobberChallan(OwnedModel):
+    challan_no = models.CharField(max_length=30, unique=True)
+    challan_date = models.DateField(default=timezone.localdate)
+    program = models.ForeignKey("Program", on_delete=models.CASCADE, related_name="jobber_challans")
+    start_record = models.ForeignKey("ProgramStart", on_delete=models.CASCADE, related_name="jobber_challans")
+    start_jobber = models.ForeignKey("ProgramStartJobber", on_delete=models.CASCADE, related_name="challans")
+    jobber = models.ForeignKey("Jobber", on_delete=models.SET_NULL, null=True, blank=True, related_name="program_jobber_challans")
+    jobber_type = models.ForeignKey("JobberType", on_delete=models.SET_NULL, null=True, blank=True, related_name="program_jobber_challan_types")
+    firm = models.ForeignKey("Firm", on_delete=models.SET_NULL, null=True, blank=True, related_name="program_jobber_challans")
+    production_sku = models.CharField(max_length=120, blank=True, default="")
+    product_name = models.CharField(max_length=180, blank=True, default="")
+    total_issued_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    inward_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    driver_name = models.CharField(max_length=120, blank=True, default="")
+    lr_no = models.CharField(max_length=80, blank=True, default="")
+    transport_name = models.CharField(max_length=150, blank=True, default="")
+    vehicle_no = models.CharField(max_length=50, blank=True, default="")
+    gate_pass_no = models.CharField(max_length=80, blank=True, default="")
+    expected_return_date = models.DateField(null=True, blank=True)
+    remarks = models.TextField(blank=True, default="")
+    status = models.CharField(max_length=20, choices=PROGRAM_JOBBER_CHALLAN_STATUS_CHOICES, default="pending")
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="approved_program_jobber_challans")
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-id"]
+
+    @classmethod
+    def next_challan_no(cls):
+        last = cls.objects.order_by("-id").first()
+        next_id = (last.id + 1) if last else 1
+        return f"CHL-{next_id:04d}"
+
+    @property
+    def created_by_name(self):
+        full_name = ""
+        try:
+            full_name = self.owner.get_full_name().strip()
+        except Exception:
+            full_name = ""
+        return full_name or getattr(self.owner, "username", "") or "-"
+
+    def refresh_totals(self, save=True):
+        total_issue = self.size_rows.aggregate(total=Sum("issued_qty")).get("total") or Decimal("0")
+        total_inward = self.size_rows.aggregate(total=Sum("inward_qty")).get("total") or Decimal("0")
+        self.total_issued_qty = total_issue
+        self.inward_qty = total_inward
+        if total_inward <= 0:
+            if self.status not in {"approved", "rejected"}:
+                self.status = "pending"
+        elif total_inward < total_issue:
+            self.status = "partial"
+        elif total_inward >= total_issue and total_issue > 0:
+            self.status = "closed"
+        if save and self.pk:
+            self.save(update_fields=["total_issued_qty", "inward_qty", "status", "updated_at"])
+
+    def save(self, *args, **kwargs):
+        if not self.challan_no:
+            self.challan_no = self.next_challan_no()
+        if not self.start_record_id and self.start_jobber_id:
+            self.start_record = self.start_jobber.start_record
+        if not self.program_id:
+            if self.start_record_id:
+                self.program = self.start_record.program
+            elif self.start_jobber_id:
+                self.program = self.start_jobber.start_record.program
+        if not self.jobber_id and self.start_jobber_id and self.start_jobber.jobber_id:
+            self.jobber = self.start_jobber.jobber
+        if not self.jobber_type_id and self.start_jobber_id and self.start_jobber.jobber_type_id:
+            self.jobber_type = self.start_jobber.jobber_type
+        if not self.firm_id and self.program_id and self.program.firm_id:
+            self.firm = self.program.firm
+        if not self.production_sku and self.program_id and self.program.bom_id:
+            self.production_sku = self.program.bom.sku or ""
+        if not self.product_name and self.program_id and self.program.bom_id:
+            self.product_name = self.program.bom.product_name or ""
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.challan_no} - {self.program.program_no}"
+
+
+class ProgramJobberChallanSize(models.Model):
+    challan = models.ForeignKey("ProgramJobberChallan", on_delete=models.CASCADE, related_name="size_rows")
+    size_name = models.CharField(max_length=20)
+    issued_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    inward_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.challan_id:
+            self.challan.refresh_totals(save=True)
+
+    def delete(self, *args, **kwargs):
+        challan = self.challan
+        super().delete(*args, **kwargs)
+        if challan:
+            challan.refresh_totals(save=True)
+
+    def __str__(self):
+        return f"{self.challan.challan_no} - {self.size_name}"
 
 
 class DispatchChallan(OwnedModel):
@@ -1556,3 +1891,482 @@ class DyeingMaterialLinkDetail(models.Model):
         if self.finished_material_id:
             return f"{self.link} - {base} - {self.finished_material.name}"
         return f"{self.link} - {base}"
+
+# ============================================================
+# PHASE 2 FOUNDATION: LOT / ROLL / QR / QC / COSTING
+# ============================================================
+
+LOT_STAGE_CHOICES = [
+    ("yarn", "Yarn"),
+    ("greige", "Greige"),
+    ("dyeing", "Dyeing"),
+    ("ready", "Ready"),
+]
+
+QC_STATUS_CHOICES = [
+    ("pending", "Pending"),
+    ("approved", "Approved"),
+    ("partial", "Partial"),
+    ("hold", "Hold"),
+    ("rejected", "Rejected"),
+]
+
+MOVEMENT_TYPE_CHOICES = [
+    ("receipt", "Receipt"),
+    ("issue", "Issue"),
+    ("return", "Return"),
+    ("transfer", "Transfer"),
+    ("adjustment", "Adjustment"),
+    ("dispatch", "Dispatch"),
+]
+
+
+class InventoryLot(OwnedModel):
+    lot_code = models.CharField(max_length=40, unique=True)
+    stage = models.CharField(max_length=20, choices=LOT_STAGE_CHOICES, default="ready")
+    material = models.ForeignKey("Material", on_delete=models.PROTECT, related_name="inventory_lots")
+    unit = models.CharField(max_length=20, blank=True, default="")
+
+    yarn_inward_item = models.ForeignKey(
+        "YarnPOInwardItem",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="inventory_lots",
+    )
+    greige_inward_item = models.ForeignKey(
+        "GreigePOInwardItem",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="inventory_lots",
+    )
+    dyeing_inward_item = models.ForeignKey(
+        "DyeingPOInwardItem",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="inventory_lots",
+    )
+    ready_inward_item = models.ForeignKey(
+        "ReadyPOInwardItem",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="inventory_lots",
+    )
+
+    dye_lot_no = models.CharField(max_length=80, blank=True, default="")
+    batch_no = models.CharField(max_length=80, blank=True, default="")
+    shade_reference = models.CharField(max_length=120, blank=True, default="")
+    location_name = models.CharField(max_length=120, blank=True, default="")
+
+    received_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    accepted_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    rejected_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    hold_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    used_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    available_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    qc_status = models.CharField(max_length=20, choices=QC_STATUS_CHOICES, default="pending")
+    is_closed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-id"]
+
+    def save(self, *args, **kwargs):
+        accepted = self.accepted_qty or Decimal("0")
+        used = self.used_qty or Decimal("0")
+        available = accepted - used
+        self.available_qty = available if available > 0 else Decimal("0")
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.lot_code
+
+
+class InventoryRoll(models.Model):
+    lot = models.ForeignKey("InventoryLot", on_delete=models.CASCADE, related_name="rolls")
+    roll_no = models.CharField(max_length=50)
+    length_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    width = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    gsm = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    weight_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    accepted_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=QC_STATUS_CHOICES, default="pending")
+
+    class Meta:
+        ordering = ["id"]
+        unique_together = [("lot", "roll_no")]
+
+    def __str__(self):
+        return f"{self.lot.lot_code} / {self.roll_no}"
+
+
+class QRCodeRecord(OwnedModel):
+    qr_code = models.CharField(max_length=60, unique=True)
+    lot = models.ForeignKey(
+        "InventoryLot",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="qr_codes",
+    )
+    roll = models.ForeignKey(
+        "InventoryRoll",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="qr_codes",
+    )
+    qr_type = models.CharField(
+        max_length=20,
+        choices=[("lot", "Lot"), ("roll", "Roll")],
+        default="lot",
+    )
+    status = models.CharField(max_length=20, default="active")
+    payload_url = models.CharField(max_length=255, blank=True, default="")
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-id"]
+
+    def __str__(self):
+        return self.qr_code
+
+
+class QualityCheck(OwnedModel):
+    qc_number = models.CharField(max_length=40, unique=True)
+    stage = models.CharField(max_length=20, choices=LOT_STAGE_CHOICES, default="ready")
+
+    lot = models.ForeignKey(
+        "InventoryLot",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="quality_checks",
+    )
+    roll = models.ForeignKey(
+        "InventoryRoll",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="quality_checks",
+    )
+    dyeing_inward_item = models.ForeignKey(
+        "DyeingPOInwardItem",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="quality_checks",
+    )
+    ready_inward_item = models.ForeignKey(
+        "ReadyPOInwardItem",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="quality_checks",
+    )
+
+    inspection_date = models.DateField(default=timezone.localdate)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("draft", "Draft"),
+            ("submitted", "Submitted"),
+            ("approved", "Approved"),
+            ("rejected", "Rejected"),
+        ],
+        default="draft",
+    )
+    result = models.CharField(max_length=20, choices=QC_STATUS_CHOICES, default="pending")
+
+    inspected_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="inspected_quality_checks",
+    )
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="approved_quality_checks",
+    )
+
+    remarks = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-inspection_date", "-id"]
+
+    def __str__(self):
+        return self.qc_number
+
+
+class QualityCheckParameter(models.Model):
+    quality_check = models.ForeignKey(
+        "QualityCheck",
+        on_delete=models.CASCADE,
+        related_name="parameters",
+    )
+    parameter_name = models.CharField(max_length=120)
+    expected_value = models.CharField(max_length=120, blank=True, default="")
+    actual_value = models.CharField(max_length=120, blank=True, default="")
+    tolerance = models.CharField(max_length=60, blank=True, default="")
+    is_pass = models.BooleanField(default=True)
+    remarks = models.CharField(max_length=255, blank=True, default="")
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.quality_check.qc_number} / {self.parameter_name}"
+
+
+class QualityCheckDefect(models.Model):
+    quality_check = models.ForeignKey(
+        "QualityCheck",
+        on_delete=models.CASCADE,
+        related_name="defects",
+    )
+    defect_name = models.CharField(max_length=120)
+    severity = models.CharField(
+        max_length=20,
+        choices=[("low", "Low"), ("medium", "Medium"), ("high", "High")],
+        default="low",
+    )
+    affected_qty = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    remarks = models.CharField(max_length=255, blank=True, default="")
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.quality_check.qc_number} / {self.defect_name}"
+
+
+class InventoryMovement(OwnedModel):
+    movement_no = models.CharField(max_length=40, unique=True)
+    lot = models.ForeignKey("InventoryLot", on_delete=models.CASCADE, related_name="movements")
+    roll = models.ForeignKey(
+        "InventoryRoll",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="movements",
+    )
+    movement_type = models.CharField(max_length=20, choices=MOVEMENT_TYPE_CHOICES, default="receipt")
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    movement_date = models.DateField(default=timezone.localdate)
+    ref_model = models.CharField(max_length=80, blank=True, default="")
+    ref_number = models.CharField(max_length=80, blank=True, default="")
+    remarks = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-movement_date", "-id"]
+
+    def __str__(self):
+        return self.movement_no
+
+
+class CostingSnapshot(OwnedModel):
+    bom = models.ForeignKey(
+        "BOM",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="costing_snapshots",
+    )
+    program = models.ForeignKey(
+        "Program",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="costing_snapshots",
+    )
+
+    material_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    accessory_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    process_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    expense_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    overhead_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    wastage_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    target_margin_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    target_selling_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    mrp = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-id"]
+
+    def save(self, *args, **kwargs):
+        self.total_cost = sum(
+            [
+                self.material_cost or Decimal("0"),
+                self.accessory_cost or Decimal("0"),
+                self.process_cost or Decimal("0"),
+                self.expense_cost or Decimal("0"),
+                self.overhead_cost or Decimal("0"),
+                self.wastage_cost or Decimal("0"),
+            ],
+            Decimal("0"),
+        )
+        if not self.target_selling_price:
+            margin = self.target_margin_percent or Decimal("0")
+            self.target_selling_price = self.total_cost + (self.total_cost * margin / Decimal("100"))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        if self.program_id:
+            return f"Costing - {self.program.program_no}"
+        if self.bom_id:
+            return f"Costing - {self.bom.bom_code}"
+        return f"Costing {self.pk or 'Draft'}"
+
+
+
+
+class ProgramInvoice(OwnedModel):
+    invoice_no = models.CharField(max_length=30)
+    invoice_date = models.DateField(default=timezone.localdate)
+    firm = models.ForeignKey("Firm", on_delete=models.PROTECT, related_name="program_invoices")
+    client = models.ForeignKey("Client", on_delete=models.PROTECT, related_name="program_invoices")
+    program = models.ForeignKey("Program", on_delete=models.PROTECT, related_name="invoices")
+    vehicle_no = models.CharField(max_length=50, blank=True, default="")
+    remarks = models.TextField(blank=True, default="")
+    sub_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    discount_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    after_discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    other_charges = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    gst_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    gst_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    igst_percent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    igst_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ["-invoice_date", "-id"]
+        unique_together = [("owner", "invoice_no")]
+
+    @classmethod
+    def next_invoice_no(cls, owner):
+        today = timezone.localdate()
+        prefix = f"INV-{today:%y%m}-"
+        last_no = (
+            cls.objects.filter(owner=owner, invoice_no__startswith=prefix)
+            .order_by("-invoice_no")
+            .values_list("invoice_no", flat=True)
+            .first()
+        )
+        next_seq = 1
+        if last_no:
+            try:
+                next_seq = int(last_no.rsplit("-", 1)[-1]) + 1
+            except Exception:
+                next_seq = cls.objects.filter(owner=owner, invoice_no__startswith=prefix).count() + 1
+        return f"{prefix}{next_seq:04d}"
+
+    def recompute_totals(self, save=False):
+        sub_total = self.items.aggregate(total=Sum("amount")).get("total") or Decimal("0")
+        discount_percent = self.discount_percent or Decimal("0")
+        self.sub_total = sub_total
+        self.discount_amount = (sub_total * discount_percent / Decimal("100")).quantize(Decimal("0.01"))
+        self.after_discount_amount = (sub_total - self.discount_amount).quantize(Decimal("0.01"))
+        base_amount = self.after_discount_amount + (self.other_charges or Decimal("0"))
+        gst_percent = self.gst_percent or Decimal("0")
+        igst_percent = self.igst_percent or Decimal("0")
+        self.gst_amount = (base_amount * gst_percent / Decimal("100")).quantize(Decimal("0.01"))
+        self.igst_amount = (base_amount * igst_percent / Decimal("100")).quantize(Decimal("0.01"))
+        self.final_amount = (base_amount + self.gst_amount + self.igst_amount).quantize(Decimal("0.01"))
+        if save and self.pk:
+            self.save(update_fields=[
+                "sub_total", "discount_amount", "after_discount_amount", "gst_amount", "igst_amount", "final_amount", "updated_at"
+            ])
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_no and self.owner_id:
+            self.invoice_no = self.next_invoice_no(self.owner)
+        if not self.invoice_date:
+            self.invoice_date = timezone.localdate()
+        if self.program_id and not self.firm_id and getattr(self.program, "firm_id", None):
+            self.firm = self.program.firm
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.invoice_no
+
+
+class ProgramInvoiceItem(models.Model):
+    invoice = models.ForeignKey("ProgramInvoice", on_delete=models.CASCADE, related_name="items")
+    dispatch_challan = models.ForeignKey("DispatchChallan", on_delete=models.SET_NULL, null=True, blank=True, related_name="invoice_items")
+    program_label = models.CharField(max_length=80, blank=True, default="")
+    sku = models.CharField(max_length=120, blank=True, default="")
+    challan_no = models.CharField(max_length=30, blank=True, default="")
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    hsn_code = models.CharField(max_length=30, blank=True, default="")
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def save(self, *args, **kwargs):
+        self.amount = (Decimal(self.quantity or 0) * Decimal(self.price or 0)).quantize(Decimal("0.01"))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.invoice.invoice_no} - {self.challan_no or self.pk}"
+
+
+class MaintenanceRecord(OwnedModel):
+    month_key = models.CharField(max_length=7)
+    inward_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    expense_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    cost_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    entry_date = models.DateField(default=timezone.localdate)
+    remarks = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-month_key", "-id"]
+        unique_together = [("owner", "month_key")]
+
+    @property
+    def month_display(self):
+        try:
+            year, month = self.month_key.split("-")
+            month_num = int(month)
+            names = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+            return f"{names[month_num-1]} {year}"
+        except Exception:
+            return self.month_key
+
+    def save(self, *args, **kwargs):
+        self.cost_total = (Decimal(self.inward_total or 0) + Decimal(self.expense_total or 0)).quantize(Decimal("0.01"))
+        if not self.entry_date:
+            self.entry_date = timezone.localdate()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.month_display
+
+
+def next_quality_check_number():
+    last = QualityCheck.objects.order_by("-id").first()
+    return f"QC-{((last.id + 1) if last else 1):05d}"
+
+
+def next_inventory_movement_number():
+    last = InventoryMovement.objects.order_by("-id").first()
+    return f"MOV-{((last.id + 1) if last else 1):05d}"
+
+
+def next_qr_code_number():
+    last = QRCodeRecord.objects.order_by("-id").first()
+    return f"QR-{((last.id + 1) if last else 1):05d}"

@@ -1,60 +1,111 @@
 {% load static %}
 
 <style>
+  :root{
+    --pgf-bg:#f6f7fb;
+    --pgf-surface:#ffffff;
+    --pgf-surface-2:#fafbfc;
+    --pgf-surface-3:#f3f5f8;
+
+    --pgf-text:#111111;
+    --pgf-text-soft:#5f6b7a;
+    --pgf-text-muted:#8b95a7;
+
+    --pgf-line:#e8ecf2;
+    --pgf-line-2:#f1f3f7;
+
+    --pgf-black:#111111;
+    --pgf-blue:rgba(28, 109, 216, 1);
+    --pgf-pink:rgb(238, 61, 133);
+    --pgf-orange:rgba(250, 189, 100, 1);
+
+    --pgf-blue-soft:rgba(28,109,216,.08);
+    --pgf-pink-soft:rgba(238,61,133,.08);
+    --pgf-orange-soft:rgba(250,189,100,.16);
+    --pgf-black-soft:rgba(17,17,17,.05);
+
+    --pgf-shadow-sm:0 2px 8px rgba(15,23,42,.04);
+
+    --pgf-radius-lg:14px;
+    --pgf-radius-md:10px;
+    --pgf-radius-sm:8px;
+
+    --pgf-sidebar-width:clamp(280px, 18.5vw, 320px);
+    --pgf-page-gutter:16px;
+  }
+
   .program-form-shell{
-    max-width:1200px;
-    margin:0 auto;
+    width:calc(100vw - var(--pgf-sidebar-width) - (var(--pgf-page-gutter) * 2));
+    max-width:calc(100vw - var(--pgf-sidebar-width) - (var(--pgf-page-gutter) * 2));
+    margin:0;
+    box-sizing:border-box;
+  }
+
+  .program-acc,
+  .program-acc-item,
+  .program-acc-body,
+  .program-card{
+    width:100%;
+    box-sizing:border-box;
   }
 
   .program-acc{
     display:flex;
     flex-direction:column;
-    gap:14px;
+    gap:10px;
   }
 
   .program-acc-item{
-    border:1px solid rgba(0,0,0,.08);
-    border-radius:18px;
+    border:1px solid var(--pgf-line);
+    border-radius:14px;
     background:#fff;
     overflow:hidden;
+    box-shadow:var(--pgf-shadow-sm);
   }
 
   .program-acc-toggle{
     width:100%;
     border:0;
-    background:transparent;
-    padding:16px 18px;
+    background:#fff;
+    padding:11px 13px;
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:12px;
+    gap:10px;
     text-align:left;
     cursor:pointer;
   }
 
+  .program-acc-copy{
+    min-width:0;
+  }
+
   .program-acc-title{
-    font-size:15px;
-    font-weight:900;
-    color:#111827;
+    font-size:12px;
+    font-weight:950;
+    color:var(--pgf-text);
     line-height:1.2;
+    letter-spacing:-.01em;
   }
 
   .program-acc-sub{
-    margin-top:4px;
-    font-size:12px;
-    color:#6b7280;
+    margin-top:3px;
+    font-size:10px;
+    color:var(--pgf-text-soft);
+    font-weight:700;
+    line-height:1.45;
   }
 
   .program-acc-icon{
-    width:34px;
-    height:34px;
-    border-radius:10px;
-    border:1px solid rgba(0,0,0,.08);
-    background:#fff;
+    width:28px;
+    height:28px;
+    border-radius:8px;
+    border:1px solid var(--pgf-line);
+    background:var(--pgf-surface-2);
     display:flex;
     align-items:center;
     justify-content:center;
-    transition:transform .2s ease;
+    transition:transform .18s ease;
     flex:0 0 auto;
   }
 
@@ -63,9 +114,9 @@
   }
 
   .program-acc-icon svg{
-    width:18px;
-    height:18px;
-    stroke:#111827;
+    width:15px;
+    height:15px;
+    stroke:var(--pgf-black);
     fill:none;
     stroke-width:2;
     stroke-linecap:round;
@@ -74,8 +125,9 @@
 
   .program-acc-body{
     display:none;
-    padding:0 18px 18px;
-    border-top:1px solid rgba(0,0,0,.06);
+    padding:0 13px 13px;
+    border-top:1px solid var(--pgf-line-2);
+    background:#fcfcfd;
   }
 
   .program-acc-item.is-open .program-acc-body{
@@ -83,48 +135,51 @@
   }
 
   .program-card{
-    margin-top:16px;
-    padding:16px;
-    border:1px solid rgba(0,0,0,.06);
-    border-radius:16px;
-    background:#fafafa;
+    margin-top:10px;
+    padding:10px;
+    border:1px solid var(--pgf-line);
+    border-radius:12px;
+    background:#fff;
   }
 
   .program-card + .program-card{
-    margin-top:14px;
+    margin-top:10px;
   }
 
   .program-card-head{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:12px;
+    gap:10px;
     flex-wrap:wrap;
-    margin-bottom:12px;
+    margin-bottom:9px;
   }
 
   .program-card-title{
-    font-size:13px;
-    font-weight:900;
-    color:#111827;
+    font-size:11px;
+    font-weight:950;
+    color:var(--pgf-text);
+    letter-spacing:-.01em;
   }
 
   .program-card-sub{
-    margin-top:4px;
-    font-size:12px;
-    color:#6b7280;
+    margin-top:3px;
+    font-size:10px;
+    color:var(--pgf-text-soft);
+    font-weight:700;
+    line-height:1.45;
   }
 
   .program-grid{
     display:grid;
     grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:12px;
+    gap:9px;
   }
 
   .program-grid-2{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:12px;
+    gap:9px;
   }
 
   .program-field{
@@ -137,118 +192,147 @@
 
   .program-field label{
     display:block;
-    font-size:12px;
-    font-weight:800;
-    color:#475467;
-    margin:0 0 6px;
+    font-size:9px;
+    font-weight:900;
+    color:var(--pgf-text-muted);
+    margin:0 0 5px;
+    text-transform:uppercase;
+    letter-spacing:.07em;
   }
 
   .program-field input,
   .program-field select,
   .program-field textarea{
     width:100%;
-    min-height:42px;
-    border:1px solid #d0d5dd;
-    border-radius:12px;
-    padding:10px 12px;
+    min-height:36px;
+    border:1px solid var(--pgf-line);
+    border-radius:9px;
+    padding:8px 10px;
     background:#fff;
-    color:#111827;
+    color:var(--pgf-text);
     box-sizing:border-box;
     outline:none;
+    font-size:11px;
+    font-weight:700;
+    transition:.16s ease;
+  }
+
+  .program-field textarea{
+    min-height:88px;
+    resize:vertical;
   }
 
   .program-field input:focus,
   .program-field select:focus,
   .program-field textarea:focus{
-    border-color:#f59e0b;
-    box-shadow:0 0 0 4px rgba(245,158,11,.12);
+    border-color:rgba(28,109,216,.24);
+    box-shadow:0 0 0 3px rgba(28,109,216,.06);
   }
 
   .program-field input[readonly],
   .program-field textarea[readonly]{
-    background:#f8fafc;
-    color:#111827;
+    background:var(--pgf-surface-2);
+    color:var(--pgf-text);
   }
 
   .program-help{
     margin-top:4px;
-    font-size:12px;
-    color:#6b7280;
+    font-size:10px;
+    color:var(--pgf-text-soft);
+    font-weight:700;
   }
 
   .program-error p,
   .jb-field-errors p{
     margin:4px 0 0;
-    font-size:12px;
+    font-size:10px;
     color:#b42318;
+    font-weight:800;
+  }
+
+  .jb-errors{
+    margin-bottom:10px;
+    padding:10px 11px;
+    border-radius:10px;
+    border:1px solid rgba(180,35,24,.12);
+    background:#fff7f6;
+    color:#b42318;
+    font-size:11px;
+    font-weight:800;
+  }
+
+  .jb-errors div + div{
+    margin-top:4px;
   }
 
   .program-chipbox{
-    min-height:42px;
-    border:1px solid #d0d5dd;
-    border-radius:12px;
+    min-height:36px;
+    border:1px solid var(--pgf-line);
+    border-radius:9px;
     background:#fff;
-    padding:8px;
+    padding:6px;
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:6px;
     flex-wrap:wrap;
   }
 
   .program-chip{
     display:inline-flex;
     align-items:center;
-    min-height:28px;
-    padding:0 10px;
+    min-height:22px;
+    padding:0 8px;
     border-radius:999px;
-    background:#f2f4f7;
-    font-size:12px;
-    font-weight:700;
-    color:#344054;
+    background:var(--pgf-blue-soft);
+    color:var(--pgf-blue);
+    border:1px solid rgba(28,109,216,.10);
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.03em;
   }
 
   .program-empty{
-    font-size:12px;
-    color:#98a2b3;
-    font-weight:600;
+    font-size:10px;
+    color:var(--pgf-text-muted);
+    font-weight:700;
   }
 
   .program-imagebox{
-    min-height:220px;
-    border:1px solid #d0d5dd;
-    border-radius:16px;
-    background:#fff;
+    min-height:180px;
+    border:1px solid var(--pgf-line);
+    border-radius:12px;
+    background:var(--pgf-surface-2);
     display:flex;
     align-items:center;
     justify-content:center;
     overflow:hidden;
-    padding:12px;
+    padding:10px;
   }
 
   .program-imagebox img{
     max-width:100%;
-    max-height:220px;
+    max-height:180px;
     object-fit:contain;
-    border-radius:12px;
+    border-radius:10px;
   }
 
   .program-imagebox.is-empty{
-    color:#98a2b3;
-    font-size:13px;
-    font-weight:700;
+    color:var(--pgf-text-muted);
+    font-size:11px;
+    font-weight:800;
   }
 
   .program-rows{
     display:flex;
     flex-direction:column;
-    gap:12px;
+    gap:8px;
   }
 
   .program-row{
-    border:1px solid rgba(0,0,0,.08);
-    border-radius:14px;
+    border:1px solid var(--pgf-line);
+    border-radius:10px;
     background:#fff;
-    padding:12px;
+    padding:9px;
   }
 
   .program-row.is-hidden{
@@ -259,23 +343,23 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:12px;
-    margin-bottom:10px;
+    gap:10px;
+    margin-bottom:8px;
     flex-wrap:wrap;
   }
 
   .program-row-title{
-    font-size:12px;
-    font-weight:900;
-    letter-spacing:.04em;
+    font-size:9px;
+    font-weight:950;
+    letter-spacing:.08em;
     text-transform:uppercase;
-    color:#111827;
+    color:var(--pgf-text);
   }
 
   .program-row-grid{
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:12px;
+    gap:9px;
   }
 
   .program-delete-wrap{
@@ -286,34 +370,63 @@
     display:flex;
     align-items:center;
     justify-content:flex-end;
-    gap:10px;
-    margin-top:18px;
+    gap:8px;
+    margin-top:12px;
     flex-wrap:wrap;
   }
 
   .program-btn{
-    min-height:42px;
-    padding:0 16px;
-    border-radius:12px;
-    border:1px solid #d0d5dd;
+    min-height:34px;
+    padding:0 12px;
+    border-radius:9px;
+    border:1px solid var(--pgf-line);
     background:#fff;
-    color:#344054;
-    font-weight:800;
+    color:var(--pgf-text-soft);
+    font-weight:900;
+    font-size:10px;
+    letter-spacing:.02em;
     cursor:pointer;
     text-decoration:none;
     display:inline-flex;
     align-items:center;
     justify-content:center;
+    white-space:nowrap;
+    transition:.16s ease;
+  }
+
+  .program-btn:hover{
+    transform:translateY(-1px);
   }
 
   .program-btn-primary{
-    background:#111827;
+    background:var(--pgf-black);
     color:#fff;
-    border-color:#111827;
+    border-color:var(--pgf-black);
   }
 
   .program-btn-soft{
-    background:#f8fafc;
+    background:var(--pgf-surface-2);
+    color:var(--pgf-text);
+  }
+
+  .program-btn-accent{
+    background:var(--pgf-blue-soft);
+    color:var(--pgf-blue);
+    border-color:rgba(28,109,216,.10);
+  }
+
+  [data-sku-image-debug]{
+    font-size:10px;
+    color:var(--pgf-text-soft);
+    font-weight:700;
+    word-break:break-all;
+  }
+
+  @media (max-width: 1180px){
+    .program-form-shell{
+      width:100%;
+      max-width:100%;
+    }
   }
 
   @media (max-width: 1100px){
@@ -323,10 +436,21 @@
   }
 
   @media (max-width: 800px){
+    .program-form-shell,
     .program-grid,
     .program-grid-2,
     .program-row-grid{
+      width:100%;
+      max-width:100%;
       grid-template-columns:1fr;
+    }
+
+    .program-actions{
+      justify-content:stretch;
+    }
+
+    .program-actions .program-btn{
+      width:100%;
     }
   }
 </style>
@@ -358,10 +482,9 @@
 
     <div class="program-acc">
 
-      <!-- A) Program Details -->
       <div class="program-acc-item is-open" data-acc-item>
         <button type="button" class="program-acc-toggle" data-acc-toggle>
-          <div>
+          <div class="program-acc-copy">
             <div class="program-acc-title">Program Details</div>
             <div class="program-acc-sub">Program header, firm and planning values</div>
           </div>
@@ -415,10 +538,9 @@
         </div>
       </div>
 
-      <!-- B) SKU Details -->
       <div class="program-acc-item is-open" data-acc-item>
         <button type="button" class="program-acc-toggle" data-acc-toggle>
-          <div>
+          <div class="program-acc-copy">
             <div class="program-acc-title">SKU Details</div>
             <div class="program-acc-sub">Select BOM SKU and reflect all linked SKU details</div>
           </div>
@@ -538,18 +660,17 @@
             </div>
 
             <div class="program-imagebox is-empty" data-sku-image-box>
-  <img src="" alt="SKU Image" data-sku-image style="display:none;">
-  <span data-sku-image-empty>Select SKU to preview image</span>
-</div>
-<div class="program-help" data-sku-image-debug style="margin-top:8px;"></div>
+              <img src="" alt="SKU Image" data-sku-image style="display:none;">
+              <span data-sku-image-empty>Select SKU to preview image</span>
+            </div>
+            <div class="program-help" data-sku-image-debug style="margin-top:8px;"></div>
           </div>
         </div>
       </div>
 
-      <!-- C) Jobber Details -->
       <div class="program-acc-item" data-acc-item>
         <button type="button" class="program-acc-toggle" data-acc-toggle>
-          <div>
+          <div class="program-acc-copy">
             <div class="program-acc-title">Jobber Details</div>
             <div class="program-acc-sub">Add one or more jobber rows for the selected program</div>
           </div>
@@ -568,7 +689,7 @@
                 <div class="program-card-sub">Each row has jobber name, jobber type and jobber price</div>
               </div>
 
-              <button type="button" class="program-btn program-btn-soft" data-program-add="jobbers">
+              <button type="button" class="program-btn program-btn-accent" data-program-add="jobbers">
                 Add Jobber Row
               </button>
             </div>
@@ -696,47 +817,57 @@
         }).join("");
       }
 
-        function updateImage(url) {
-  const box = root.querySelector("[data-sku-image-box]");
-  const img = root.querySelector("[data-sku-image]");
-  const empty = root.querySelector("[data-sku-image-empty]");
-  const debug = root.querySelector("[data-sku-image-debug]");
-  if (!box || !img || !empty) return;
+      function updateImage(url) {
+        const box = root.querySelector("[data-sku-image-box]");
+        const img = root.querySelector("[data-sku-image]");
+        const empty = root.querySelector("[data-sku-image-empty]");
+        const debug = root.querySelector("[data-sku-image-debug]");
+        if (!box || !img || !empty) return;
 
-  if (debug) {
-    debug.textContent = url ? ("Image URL: " + url) : "Image URL: empty";
-  }
+        const finalUrl = (url || "").trim();
 
-  if (url) {
-    img.onload = function () {
-      img.style.display = "block";
-      empty.style.display = "none";
-      box.classList.remove("is-empty");
-    };
+        img.onload = null;
+        img.onerror = null;
 
-    img.onerror = function () {
-      if (debug) {
-        debug.textContent = "Image failed to load: " + url;
+        if (debug) {
+          debug.textContent = finalUrl ? ("Image URL: " + finalUrl) : "Image URL: empty";
+        }
+
+        if (!finalUrl) {
+          img.removeAttribute("src");
+          img.style.display = "none";
+          empty.style.display = "inline";
+          box.classList.add("is-empty");
+          return;
+        }
+
+        img.onload = function () {
+          img.style.display = "block";
+          empty.style.display = "none";
+          box.classList.remove("is-empty");
+          if (debug) {
+            debug.textContent = "Image loaded: " + finalUrl;
+          }
+        };
+
+        img.onerror = function () {
+          img.removeAttribute("src");
+          img.style.display = "none";
+          empty.style.display = "inline";
+          box.classList.add("is-empty");
+          if (debug) {
+            debug.textContent = "Image failed to load: " + finalUrl;
+          }
+        };
+
+        img.removeAttribute("src");
+        img.src = finalUrl;
       }
-      img.src = "";
-      img.style.display = "none";
-      empty.style.display = "inline";
-      box.classList.add("is-empty");
-    };
-
-    img.src = url;
-  } else {
-    img.src = "";
-    img.style.display = "none";
-    empty.style.display = "inline";
-    box.classList.add("is-empty");
-  }
-}
 
       function applySkuDetails() {
         const select = getSkuSelect();
         const skuId = select ? select.value : "";
-        const data = skuPayloads[skuId] || {};
+        const data = skuPayloads[String(skuId)] || skuPayloads[Number(skuId)] || {};
 
         renderChips("[data-sku-fabrics]", data.linked_fabrics || [], "No linked fabric");
         renderChips("[data-sku-accessories]", data.linked_accessories || [], "No linked accessories");
@@ -754,7 +885,14 @@
         setValue("[data-sku-tie-dye-price]", data.tie_dye_price || "");
         setValue("[data-sku-accessories-price]", data.accessories_price || "");
 
-        updateImage(data.image_url || "");
+        updateImage(
+          data.image_url ||
+          data.preview_image_url ||
+          data.image ||
+          data.preview_image ||
+          ""
+        );
+
         syncAllJobberRows();
       }
 
@@ -902,4 +1040,4 @@
       applySkuDetails();
     })();
   </script>
-</div>
+</div>  

@@ -2,66 +2,410 @@
   :root{
     --ds-bg:#f8fafc;
     --ds-card:#ffffff;
-    --ds-line:#e5e7eb;
+    --ds-card-soft:#fbfdff;
+    --ds-line:rgba(15,23,42,.08);
+    --ds-line-strong:rgba(15,23,42,.12);
     --ds-text:#0f172a;
     --ds-soft:#64748b;
+    --ds-faint:#94a3b8;
     --ds-blue:rgba(28,109,216,1);
     --ds-pink:rgb(238,61,133);
     --ds-orange:rgba(250,189,100,1);
-    --ds-shadow:0 16px 40px rgba(15,23,42,.08);
+    --ds-success:#15803d;
+    --ds-shadow:0 14px 34px rgba(15,23,42,.06);
+    --ds-radius-xl:22px;
+    --ds-radius-lg:16px;
+    --ds-radius-md:12px;
+    --ds-radius-sm:10px;
+    --ds-font-display:"Plus Jakarta Sans","Inter","Segoe UI",Arial,sans-serif;
+    --ds-font-body:"Inter","Segoe UI",Arial,sans-serif;
+    --ds-font-data:"IBM Plex Sans","Inter","Segoe UI",Arial,sans-serif;
   }
-  .dispatch-shell{display:flex;flex-direction:column;gap:18px;min-width:0;}
-  .dispatch-topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
-  .dispatch-titlebox h2{margin:0;font-size:1.2rem;color:var(--ds-text);font-weight:800;}
-  .dispatch-titlebox p{margin:4px 0 0;color:var(--ds-soft);font-size:.92rem;}
-  .dispatch-actions{display:flex;gap:10px;flex-wrap:wrap;}
-  .dispatch-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;border:1px solid var(--ds-line);background:#fff;color:var(--ds-text);text-decoration:none;font-weight:700;font-size:.9rem;transition:.18s ease;}
-  .dispatch-btn:hover{transform:translateY(-1px);box-shadow:var(--ds-shadow);}
-  .dispatch-btn-primary{background:var(--ds-blue);border-color:var(--ds-blue);color:#fff;}
-  .dispatch-search-card{background:var(--ds-card);border:1px solid var(--ds-line);border-radius:18px;padding:16px;box-shadow:var(--ds-shadow);}
-  .dispatch-search-form{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:10px;}
-  .dispatch-input{width:100%;height:44px;border:1px solid var(--ds-line);border-radius:12px;padding:0 14px;font-size:.94rem;outline:none;background:#fff;color:var(--ds-text);}
-  .dispatch-input:focus{border-color:var(--ds-blue);box-shadow:0 0 0 4px rgba(28,109,216,.10);}
-  .dispatch-table-card{background:var(--ds-card);border:1px solid var(--ds-line);border-radius:18px;overflow:hidden;box-shadow:var(--ds-shadow);}
-  .dispatch-table-wrap{overflow:auto;}
-  .dispatch-table{width:100%;border-collapse:collapse;min-width:1050px;}
-  .dispatch-table th{background:#f8fafc;color:#334155;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;padding:14px 12px;border-bottom:1px solid var(--ds-line);text-align:left;white-space:nowrap;}
-  .dispatch-table td{padding:14px 12px;border-bottom:1px solid var(--ds-line);vertical-align:top;color:var(--ds-text);font-size:.92rem;}
-  .dispatch-table tr:last-child td{border-bottom:none;}
-  .dispatch-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:.78rem;font-weight:700;background:rgba(28,109,216,.08);color:var(--ds-blue);}
-  .dispatch-meta{display:flex;flex-direction:column;gap:3px;}
-  .dispatch-main{font-weight:700;color:var(--ds-text);}
-  .dispatch-sub{font-size:.82rem;color:var(--ds-soft);}
-  .dispatch-actions-col{display:flex;gap:8px;flex-wrap:wrap;}
-  .dispatch-link{display:inline-flex;align-items:center;justify-content:center;padding:8px 11px;border:1px solid var(--ds-line);border-radius:10px;text-decoration:none;color:var(--ds-text);font-weight:700;font-size:.82rem;background:#fff;}
-  .dispatch-link:hover{border-color:var(--ds-blue);color:var(--ds-blue);}
-  .dispatch-empty{padding:34px 18px;text-align:center;color:var(--ds-soft);}
+
+  .dispatch-shell{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    min-width:0;
+    color:var(--ds-text);
+    font-family:var(--ds-font-body);
+  }
+
+  .dispatch-header{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:14px;
+    align-items:start;
+    background:linear-gradient(180deg,#fff 0%,#fcfdff 100%);
+    border:1px solid var(--ds-line);
+    border-radius:var(--ds-radius-xl);
+    box-shadow:var(--ds-shadow);
+    padding:18px 18px 16px;
+  }
+
+  .dispatch-titlebox{
+    min-width:0;
+  }
+
+  .dispatch-titlebox h2{
+    margin:0;
+    font-size:24px;
+    line-height:1.05;
+    color:var(--ds-text);
+    font-weight:800;
+    letter-spacing:-.04em;
+    font-family:var(--ds-font-display);
+  }
+
+  .dispatch-titlebox p{
+    margin:8px 0 0;
+    max-width:760px;
+    color:var(--ds-soft);
+    font-size:12.6px;
+    line-height:1.65;
+    font-weight:500;
+  }
+
+  .dispatch-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .dispatch-btn{
+    appearance:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:36px;
+    padding:0 13px;
+    border-radius:12px;
+    border:none;
+    background:#fff;
+    color:var(--ds-text);
+    text-decoration:none;
+    font-weight:700;
+    font-size:12px;
+    line-height:1;
+    font-family:var(--ds-font-body);
+    box-shadow:inset 0 0 0 1px var(--ds-line);
+    transition:all .18s ease;
+    white-space:nowrap;
+    cursor:pointer;
+    gap:8px;
+  }
+
+  .dispatch-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:inset 0 0 0 1px rgba(15,23,42,.14), 0 10px 22px rgba(15,23,42,.06);
+  }
+
+  .dispatch-btn-primary{
+    background:var(--ds-blue);
+    color:#fff;
+    box-shadow:none;
+  }
+
+  .dispatch-btn-primary:hover{
+    background:var(--ds-text);
+    color:#fff;
+    box-shadow:0 10px 20px rgba(28,109,216,.18);
+  }
+
+  .dispatch-btn-svg{
+    width:16px;
+    height:16px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    flex:0 0 auto;
+  }
+
+  .dispatch-toolbar{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px;
+    align-items:center;
+  }
+
+  .dispatch-search-form{
+    display:grid;
+    grid-template-columns:minmax(250px,1fr) auto auto;
+    gap:8px;
+    align-items:center;
+    min-width:0;
+  }
+
+  .dispatch-input{
+    width:100%;
+    min-width:0;
+    height:38px;
+    border:none;
+    outline:none;
+    border-radius:12px;
+    padding:0 13px;
+    font-size:12.6px;
+    font-weight:600;
+    color:var(--ds-text);
+    background:#f8fafc;
+    box-shadow:inset 0 0 0 1px var(--ds-line);
+    transition:all .18s ease;
+    font-family:var(--ds-font-body);
+  }
+
+  .dispatch-input::placeholder{
+    color:var(--ds-faint);
+    font-weight:500;
+  }
+
+  .dispatch-input:focus{
+    background:#fff;
+    box-shadow:inset 0 0 0 1px rgba(28,109,216,.22), 0 0 0 4px rgba(28,109,216,.08);
+  }
+
+  .dispatch-btn-search{
+    width:38px;
+    min-width:38px;
+    padding:0;
+    border-radius:12px;
+  }
+
+  .dispatch-btn-clear{
+    background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);
+    color:var(--ds-text);
+    padding:0 14px;
+  }
+
+  .dispatch-btn-clear:hover{
+    color:var(--ds-pink);
+    box-shadow:inset 0 0 0 1px rgba(238,61,133,.18), 0 10px 20px rgba(238,61,133,.08);
+  }
+
+  .dispatch-table-shell{
+    background:#fff;
+    border:1px solid var(--ds-line);
+    box-shadow:var(--ds-shadow);
+    overflow:hidden;
+  }
+
+  .dispatch-table-wrap{
+    overflow:auto;
+  }
+
+  .dispatch-table{
+    width:100%;
+    min-width:1120px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .dispatch-table th{
+    background:#fff;
+    color:var(--ds-faint);
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    padding:12px 12px;
+    border-bottom:1px solid var(--ds-line-strong);
+    text-align:left;
+    white-space:nowrap;
+    font-family:var(--ds-font-display);
+    position:sticky;
+    top:0;
+    z-index:2;
+  }
+
+  .dispatch-table td{
+    padding:13px 12px;
+    border-bottom:1px solid rgba(15,23,42,.06);
+    vertical-align:top;
+    color:var(--ds-text);
+    font-size:12px;
+    line-height:1.5;
+    background:transparent;
+  }
+
+  .dispatch-table tr:last-child td{
+    border-bottom:none;
+  }
+
+  .dispatch-table tbody tr:hover td{
+    background:#fbfdff;
+  }
+
+  .dispatch-meta{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    min-width:0;
+  }
+
+  .dispatch-main{
+    font-weight:700;
+    color:var(--ds-text);
+    font-size:12.6px;
+    line-height:1.35;
+  }
+
+  .dispatch-main-code{
+    font-family:var(--ds-font-display);
+    font-size:13px;
+    letter-spacing:-.02em;
+    font-weight:800;
+  }
+
+  .dispatch-sub{
+    font-size:11px;
+    line-height:1.45;
+    color:var(--ds-soft);
+    font-weight:500;
+  }
+
+  .dispatch-date{
+    font-family:var(--ds-font-data);
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ds-text);
+  }
+
+  .dispatch-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    background:rgba(28,109,216,.08);
+    color:var(--ds-blue);
+    white-space:nowrap;
+    font-family:var(--ds-font-display);
+  }
+
+  .dispatch-vehicle{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:6px;
+  }
+
+  .dispatch-actions-col{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+  }
+
+  .dispatch-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:30px;
+    padding:0 10px;
+    border-radius:10px;
+    text-decoration:none;
+    color:var(--ds-text);
+    background:#f8fafc;
+    box-shadow:inset 0 0 0 1px var(--ds-line);
+    font-weight:700;
+    font-size:11.5px;
+    line-height:1;
+    transition:all .18s ease;
+    white-space:nowrap;
+  }
+
+  .dispatch-link:hover{
+    background:#fff;
+    transform:translateY(-1px);
+    box-shadow:inset 0 0 0 1px rgba(15,23,42,.13), 0 8px 18px rgba(15,23,42,.05);
+  }
+
+  .dispatch-link-print:hover{
+    color:var(--ds-blue);
+  }
+
+  .dispatch-link-view:hover{
+    color:var(--ds-text);
+  }
+
+  .dispatch-empty{
+    padding:48px 18px;
+    text-align:center;
+    color:var(--ds-soft);
+    font-size:12.5px;
+    line-height:1.6;
+    font-weight:500;
+  }
+
   @media (max-width:900px){
-    .dispatch-search-form{grid-template-columns:1fr;}
+    .dispatch-header{
+      grid-template-columns:1fr;
+    }
+
+    .dispatch-actions{
+      justify-content:flex-start;
+    }
+
+    .dispatch-search-form{
+      grid-template-columns:1fr auto auto;
+    }
+  }
+
+  @media (max-width:640px){
+    .dispatch-search-form{
+      grid-template-columns:1fr;
+    }
+
+    .dispatch-btn-search,
+    .dispatch-btn-clear{
+      width:100%;
+    }
   }
 </style>
 
 <div class="dispatch-shell">
-  <div class="dispatch-topbar">
+  <div class="dispatch-header">
     <div class="dispatch-titlebox">
       <h2>Dispatch Challans</h2>
-      <p>Create and manage challans linked with programs.</p>
+      <p>Create, track, and print challans linked with programs, clients, and transport details from one clean dispatch register.</p>
     </div>
+
     <div class="dispatch-actions">
       <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-btn dispatch-btn-primary">Create Challan</a>
     </div>
   </div>
 
-  <div class="dispatch-search-card">
+  <div class="dispatch-toolbar">
     <form method="get" class="dispatch-search-form">
       {% if request.GET.embed == '1' %}<input type="hidden" name="embed" value="1">{% endif %}
+
       <input type="text" name="q" value="{{ q }}" class="dispatch-input" placeholder="Search challan no, program no, SKU, client, LR no, vehicle...">
-      <button type="submit" class="dispatch-btn dispatch-btn-primary">Search</button>
-      <a href="{% url 'accounts:dispatch_list' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-btn">Clear</a>
+
+      <button type="submit" class="dispatch-btn dispatch-btn-primary dispatch-btn-search" aria-label="Search challans" title="Search challans">
+        <svg class="dispatch-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+      </button>
+
+      <a href="{% url 'accounts:dispatch_list' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-btn dispatch-btn-clear" aria-label="Clear challan search" title="Clear challan search">
+        <svg class="dispatch-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </a>
     </form>
   </div>
 
-  <div class="dispatch-table-card">
+  <div class="dispatch-table-shell">
     <div class="dispatch-table-wrap">
       <table class="dispatch-table">
         <thead>
@@ -69,7 +413,7 @@
             <th>Challan</th>
             <th>Date</th>
             <th>Program</th>
-            <th>SKU</th>
+            <th>SKU / Product</th>
             <th>Client</th>
             <th>Transport</th>
             <th>Vehicle</th>
@@ -81,35 +425,52 @@
             <tr>
               <td>
                 <div class="dispatch-meta">
-                  <span class="dispatch-main">{{ challan.challan_no }}</span>
+                  <span class="dispatch-main dispatch-main-code">{{ challan.challan_no }}</span>
                   <span class="dispatch-sub">LR No: {{ challan.lr_no|default:"-" }}</span>
                 </div>
               </td>
-              <td>{{ challan.challan_date|date:"d-m-Y" }}</td>
+
+              <td>
+                <span class="dispatch-date">{{ challan.challan_date|date:"d M Y" }}</span>
+              </td>
+
               <td>
                 <div class="dispatch-meta">
-                  <span class="dispatch-main">{{ challan.program.program_no }}</span>
-                  <span class="dispatch-sub">Finish: {{ challan.program.finishing_date|date:"d-m-Y"|default:"-" }}</span>
+                  <span class="dispatch-main dispatch-main-code">{{ challan.program.program_no }}</span>
+                  <span class="dispatch-sub">Finish: {{ challan.program.finishing_date|date:"d M Y"|default:"-" }}</span>
                 </div>
               </td>
+
               <td>
                 <div class="dispatch-meta">
                   <span class="dispatch-main">{{ challan.program.bom.sku|default:"-" }}</span>
                   <span class="dispatch-sub">{{ challan.program.bom.product_name|default:"-" }}</span>
                 </div>
               </td>
-              <td>{{ challan.client.name|default:"-" }}</td>
+
+              <td>
+                <div class="dispatch-meta">
+                  <span class="dispatch-main">{{ challan.client.name|default:"-" }}</span>
+                </div>
+              </td>
+
               <td>
                 <div class="dispatch-meta">
                   <span class="dispatch-main">{{ challan.transport_name|default:"-" }}</span>
                   <span class="dispatch-sub">Driver: {{ challan.driver_name|default:"-" }}</span>
                 </div>
               </td>
-              <td><span class="dispatch-pill">{{ challan.vehicle_no|default:"-" }}</span></td>
+
+              <td>
+                <div class="dispatch-vehicle">
+                  <span class="dispatch-pill">{{ challan.vehicle_no|default:"-" }}</span>
+                </div>
+              </td>
+
               <td>
                 <div class="dispatch-actions-col">
-                  <a href="{% url 'accounts:dispatch_detail' challan.pk %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-link">View</a>
-                  <a href="{% url 'accounts:dispatch_print' challan.pk %}" target="_blank" class="dispatch-link">Print</a>
+                  <a href="{% url 'accounts:dispatch_detail' challan.pk %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-link dispatch-link-view">View</a>
+                  <a href="{% url 'accounts:dispatch_print' challan.pk %}" target="_blank" class="dispatch-link dispatch-link-print">Print</a>
                 </div>
               </td>
             </tr>

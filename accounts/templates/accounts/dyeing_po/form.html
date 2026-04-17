@@ -393,13 +393,6 @@
     grid-template-columns:repeat(3, minmax(0, 1fr));
   }
 
-  .yp-detail-grid{
-    display:grid;
-    grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:10px;
-    margin-top:10px;
-  }
-
   .yp-field{
     display:flex;
     flex-direction:column;
@@ -590,129 +583,6 @@
     align-items:end;
   }
 
-  .yp-source-box{
-    margin-top:10px;
-    border:1px solid var(--line);
-    border-radius:12px;
-    background:#fff;
-    overflow:hidden;
-  }
-
-  .yp-source-box-head{
-    padding:10px 12px;
-    background:var(--panel-2);
-    border-bottom:1px solid var(--line);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-
-  .yp-source-box-title{
-    font-size:11px;
-    font-weight:900;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    color:var(--text);
-  }
-
-  .yp-source-status{
-    display:inline-flex;
-    align-items:center;
-    min-height:24px;
-    padding:0 10px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:#fff;
-    color:var(--soft);
-    font-size:10px;
-    font-weight:900;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-  }
-
-  .yp-source-status.approved{
-    background:#ecfdf5;
-    border-color:#bbf7d0;
-    color:#166534;
-  }
-
-  .yp-source-status.pending{
-    background:#fff7ed;
-    border-color:#fed7aa;
-    color:#9a3412;
-  }
-
-  .yp-source-status.rejected{
-    background:#fef2f2;
-    border-color:#fecaca;
-    color:#991b1b;
-  }
-
-  .yp-source-table-wrap{
-    overflow:auto;
-  }
-
-  .yp-source-table{
-    width:100%;
-    min-width:920px;
-    border-collapse:collapse;
-  }
-
-  .yp-source-table th,
-  .yp-source-table td{
-    padding:10px 12px;
-    border-bottom:1px solid var(--line);
-    text-align:left;
-    font-size:12px;
-    color:var(--soft);
-    vertical-align:top;
-  }
-
-  .yp-source-table th{
-    background:#fff;
-    font-size:10px;
-    font-weight:900;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    color:var(--muted);
-    white-space:nowrap;
-  }
-
-  .yp-source-table td strong{
-    color:var(--text);
-  }
-
-  .yp-note-box{
-    margin-top:10px;
-    padding:12px;
-    border-radius:12px;
-    background:var(--panel-2);
-    border:1px solid var(--line);
-  }
-
-  .yp-note-box-label{
-    font-size:10px;
-    font-weight:900;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    color:var(--muted);
-    margin-bottom:6px;
-  }
-
-  .yp-note-box-value{
-    font-size:12px;
-    line-height:1.55;
-    color:var(--text);
-    white-space:pre-line;
-  }
-
-  .yp-empty-note{
-    color:var(--muted);
-    font-style:italic;
-  }
-
   .yp-commercial{
     display:grid;
     grid-template-columns:minmax(0,1fr) 340px;
@@ -811,8 +681,7 @@
     .yp-layout,
     .yp-header-grid,
     .yp-order-grid,
-    .yp-chipbar,
-    .yp-detail-grid{
+    .yp-chipbar{
       grid-template-columns:1fr;
     }
 
@@ -918,22 +787,12 @@
 
             <div class="yp-chipbar">
               <div class="yp-chip highlight">
-                <div class="yp-chip-label">Dyeing PO Number</div>
+                <div class="yp-chip-label">System Number</div>
                 <div class="yp-chip-value">
-                  {% if po_obj and po_obj.po_number %}
-                    {{ po_obj.po_number }}
-                  {% elif form.po_number.value %}
-                    {{ form.po_number.value }}
-                  {% elif po_obj and po_obj.internal_po_number %}
-                    {{ po_obj.internal_po_number }}
-                  {% elif form.internal_po_number.value %}
-                    {{ form.internal_po_number.value }}
-                  {% elif po_obj and po_obj.system_number %}
+                  {% if po_obj and po_obj.system_number %}
                     {{ po_obj.system_number }}
-                  {% elif system_number_preview %}
-                    {{ system_number_preview }}
                   {% else %}
-                    —
+                    Auto Generated
                   {% endif %}
                 </div>
               </div>
@@ -942,7 +801,7 @@
                 <div class="yp-chip-label">Source Greige PO</div>
                 <div class="yp-chip-value">
                   {% if source_greige_po %}
-                    {{ source_greige_po.system_number|default:source_greige_po.po_number|default:"Select source" }}
+                    {{ source_greige_po.system_number }}
                   {% else %}
                     Select source
                   {% endif %}
@@ -1039,6 +898,7 @@
                       </div>
                       {% endif %}
 
+
                       {% if form.cancel_date %}
                       <div class="yp-field">
                         <label for="{{ form.cancel_date.id_for_label }}">Cancel Date</label>
@@ -1055,17 +915,11 @@
                     <div class="yp-accordion-head">
                       <div class="yp-accordion-copy">
                         <div class="yp-panel-title">Greige PO Details</div>
-                        <div class="yp-panel-sub">Detailed source Greige PO information used for this dyeing PO.</div>
+                        <div class="yp-panel-sub">Reference information from the selected source Greige PO.</div>
                       </div>
                     </div>
                     <div class="yp-accordion-meta">
-                      <div class="yp-accordion-chip">
-                        {% if source_greige_po %}
-                          {{ source_greige_po.system_number|default:source_greige_po.po_number|default:"Source" }}
-                        {% else %}
-                          Source
-                        {% endif %}
-                      </div>
+                      <div class="yp-accordion-chip">Source</div>
                       <div class="yp-caret-box"><div class="yp-caret"></div></div>
                     </div>
                   </summary>
@@ -1073,18 +927,8 @@
                   <div class="yp-accordion-body">
                     <div class="yp-grid yp-header-grid">
                       <div class="yp-field">
-                        <label>Greige System Number</label>
-                        <div class="yp-static-value">{% if source_greige_po %}{{ source_greige_po.system_number|default:"—" }}{% else %}—{% endif %}</div>
-                      </div>
-
-                      <div class="yp-field">
                         <label>Greige PO Number</label>
-                        <div class="yp-static-value">{% if source_greige_po %}{{ source_greige_po.po_number|default:"—" }}{% else %}—{% endif %}</div>
-                      </div>
-
-                      <div class="yp-field">
-                        <label>PO Date</label>
-                        <div class="yp-static-value">{% if source_greige_po and source_greige_po.po_date %}{{ source_greige_po.po_date|date:"d-m-Y" }}{% else %}—{% endif %}</div>
+                        <div class="yp-static-value">{% if source_greige_po %}{{ source_greige_po.system_number }}{% else %}—{% endif %}</div>
                       </div>
 
                       <div class="yp-field">
@@ -1093,143 +937,21 @@
                       </div>
 
                       <div class="yp-field">
-                        <label>Approval Status</label>
-                        <div class="yp-static-value">
-                          {% if source_greige_po and source_greige_po.approval_status %}
-                            {{ source_greige_po.approval_status|title }}
-                          {% else %}
-                            —
-                          {% endif %}
-                        </div>
+                        <label>PO Date</label>
+                        <div class="yp-static-value">{% if source_greige_po and source_greige_po.po_date %}{{ source_greige_po.po_date|date:"d-m-Y" }}{% else %}—{% endif %}</div>
                       </div>
 
                       <div class="yp-field">
-                        <label>Expected Delivery</label>
-                        <div class="yp-static-value">
-                          {% if source_greige_po and source_greige_po.expected_delivery_date %}
-                            {{ source_greige_po.expected_delivery_date|date:"d-m-Y" }}
-                          {% else %}
-                            —
-                          {% endif %}
-                        </div>
-                      </div>
-
-                      <div class="yp-field">
-                        <label>Cancel Date</label>
-                        <div class="yp-static-value">
-                          {% if source_greige_po and source_greige_po.cancel_date %}
-                            {{ source_greige_po.cancel_date|date:"d-m-Y" }}
-                          {% else %}
-                            —
-                          {% endif %}
-                        </div>
-                      </div>
-
-                      <div class="yp-field">
-                        <label>Total Weight</label>
-                        <div class="yp-static-value">
-                          {% if source_greige_po and source_greige_po.total_weight %}
-                            {{ source_greige_po.total_weight }}
-                          {% else %}
-                            0.00
-                          {% endif %}
-                        </div>
-                      </div>
-
-                      <div class="yp-field span-2">
                         <label>Firm</label>
                         <div class="yp-static-value">
-                          {% if source_greige_po and source_greige_po.firm %}
-                            {{ source_greige_po.firm.firm_name }}
-                          {% elif source_greige_po and source_greige_po.source_yarn_po and source_greige_po.source_yarn_po.firm %}
+                          {% if source_greige_po and source_greige_po.source_yarn_po and source_greige_po.source_yarn_po.firm %}
                             {{ source_greige_po.source_yarn_po.firm.firm_name }}
+                          {% elif source_greige_po and source_greige_po.firm %}
+                            {{ source_greige_po.firm.firm_name }}
                           {% else %}
                             —
                           {% endif %}
                         </div>
-                      </div>
-
-                      <div class="yp-field span-2">
-                        <label>Shipping Address</label>
-                        <div class="yp-static-value">
-                          {% if source_greige_po and source_greige_po.shipping_address %}
-                            {{ source_greige_po.shipping_address }}
-                          {% else %}
-                            —
-                          {% endif %}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="yp-source-box">
-                      <div class="yp-source-box-head">
-                        <div class="yp-source-box-title">Source Greige PO Item Details</div>
-                        <div class="yp-source-status {% if source_greige_po and source_greige_po.approval_status %}{{ source_greige_po.approval_status }}{% endif %}">
-                          {% if source_greige_po and source_greige_po.approval_status %}
-                            {{ source_greige_po.approval_status|title }}
-                          {% else %}
-                            Pending
-                          {% endif %}
-                        </div>
-                      </div>
-
-                      <div class="yp-source-table-wrap">
-                        <table class="yp-source-table">
-                          <thead>
-                            <tr>
-                              <th>#</th>
-                              <th>Fabric</th>
-                              <th>Unit</th>
-                              <th>Qty</th>
-                              <th>Value</th>
-                              <th>Count</th>
-                              <th>GSM</th>
-                              <th>Dia</th>
-                              <th>Gauge</th>
-                              <th>Rolls</th>
-                              <th>Rate</th>
-                              <th>Final Amount</th>
-                              <th>Remark</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% if source_greige_po %}
-                              {% for item in source_greige_po.items.all %}
-                              <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td><strong>
-                                  {% if item.material %}
-                                    {{ item.material }}
-                                  {% elif item.fabric_name %}
-                                    {{ item.fabric_name }}
-                                  {% else %}
-                                    —
-                                  {% endif %}
-                                </strong></td>
-                                <td>{{ item.unit|default:"—" }}</td>
-                                <td>{{ item.quantity|default:"0" }}</td>
-                                <td>{{ item.value|default:"—" }}</td>
-                                <td>{{ item.count|default:"—" }}</td>
-                                <td>{{ item.gsm|default:"—" }}</td>
-                                <td>{{ item.dia|default:"—" }}</td>
-                                <td>{{ item.gauge|default:"—" }}</td>
-                                <td>{{ item.rolls|default:"—" }}</td>
-                                <td>{{ item.rate|default:"0.00" }}</td>
-                                <td>{{ item.final_amount|default:"0.00" }}</td>
-                                <td>{{ item.remark|default:"—" }}</td>
-                              </tr>
-                              {% empty %}
-                              <tr>
-                                <td colspan="13">No greige PO item rows found.</td>
-                              </tr>
-                              {% endfor %}
-                            {% else %}
-                              <tr>
-                                <td colspan="13">No source greige PO selected.</td>
-                              </tr>
-                            {% endif %}
-                          </tbody>
-                        </table>
                       </div>
                     </div>
                   </div>
@@ -1240,17 +962,11 @@
                     <div class="yp-accordion-head">
                       <div class="yp-accordion-copy">
                         <div class="yp-panel-title">Greige Inward Details</div>
-                        <div class="yp-panel-sub">Detailed inward-wise source information used for dyeing conversion.</div>
+                        <div class="yp-panel-sub">Reference inward information that this Dyeing PO is based on.</div>
                       </div>
                     </div>
                     <div class="yp-accordion-meta">
-                      <div class="yp-accordion-chip">
-                        {% if selected_source_inward %}
-                          {{ selected_source_inward.inward_number }}
-                        {% else %}
-                          Reference
-                        {% endif %}
-                      </div>
+                      <div class="yp-accordion-chip">Reference</div>
                       <div class="yp-caret-box"><div class="yp-caret"></div></div>
                     </div>
                   </summary>
@@ -1282,9 +998,7 @@
                       <div class="yp-field">
                         <label>Vendor</label>
                         <div class="yp-static-value">
-                          {% if selected_source_inward and selected_source_inward.vendor %}
-                            {{ selected_source_inward.vendor.name }}
-                          {% elif source_greige_po and source_greige_po.vendor %}
+                          {% if source_greige_po and source_greige_po.vendor %}
                             {{ source_greige_po.vendor.name }}
                           {% else %}
                             —
@@ -1293,172 +1007,16 @@
                       </div>
 
                       <div class="yp-field">
-                        <label>Inward Type</label>
+                        <label>Items</label>
                         <div class="yp-static-value">
-                          {% if selected_source_inward and selected_source_inward.inward_type %}
-                            {{ selected_source_inward.inward_type.name|default:selected_source_inward.inward_type }}
-                          {% else %}
-                            —
-                          {% endif %}
-                        </div>
-                      </div>
-
-                      <div class="yp-field span-2">
-                        <label>Notes</label>
-                        <div class="yp-static-value">
-                          {% if selected_source_inward and selected_source_inward.notes %}
-                            {{ selected_source_inward.notes }}
-                          {% else %}
-                            —
-                          {% endif %}
-                        </div>
-                      </div>
-
-                      <div class="yp-field">
-                        <label>Available Inwards</label>
-                        <div class="yp-static-value">
-                          {% if source_inwards %}
+                          {% if selected_source_inward %}
+                            {{ selected_source_inward.items.count|default:"0" }}
+                          {% elif source_inwards %}
                             {{ source_inwards|length }}
                           {% else %}
                             0
                           {% endif %}
                         </div>
-                      </div>
-
-                      <div class="yp-field">
-                        <label>Selected Items</label>
-                        <div class="yp-static-value">
-                          {% if selected_source_inward %}
-                            {{ selected_source_inward.items.count|default:"0" }}
-                          {% else %}
-                            0
-                          {% endif %}
-                        </div>
-                      </div>
-                    </div>
-
-                    {% if selected_source_inward %}
-                    <div class="yp-source-box">
-                      <div class="yp-source-box-head">
-                        <div class="yp-source-box-title">Selected Greige Inward Item Details</div>
-                        <div class="yp-source-status">Inward</div>
-                      </div>
-
-                      <div class="yp-source-table-wrap">
-                        <table class="yp-source-table">
-                          <thead>
-                            <tr>
-                              <th>#</th>
-                              <th>Fabric</th>
-                              <th>Unit</th>
-                              <th>Inward Qty</th>
-                              <th>PO Qty</th>
-                              <th>Rate</th>
-                              <th>Final Amount</th>
-                              <th>Remark</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for inward_item in selected_source_inward.items.all %}
-                            <tr>
-                              <td>{{ forloop.counter }}</td>
-                              <td><strong>
-                                {% if inward_item.po_item and inward_item.po_item.material %}
-                                  {{ inward_item.po_item.material }}
-                                {% elif inward_item.po_item and inward_item.po_item.fabric_name %}
-                                  {{ inward_item.po_item.fabric_name }}
-                                {% else %}
-                                  —
-                                {% endif %}
-                              </strong></td>
-                              <td>
-                                {% if inward_item.po_item %}
-                                  {{ inward_item.po_item.unit|default:"—" }}
-                                {% else %}
-                                  —
-                                {% endif %}
-                              </td>
-                              <td>{{ inward_item.quantity|default:"0" }}</td>
-                              <td>
-                                {% if inward_item.po_item %}
-                                  {{ inward_item.po_item.quantity|default:"0" }}
-                                {% else %}
-                                  —
-                                {% endif %}
-                              </td>
-                              <td>
-                                {% if inward_item.po_item %}
-                                  {{ inward_item.po_item.rate|default:"0.00" }}
-                                {% else %}
-                                  —
-                                {% endif %}
-                              </td>
-                              <td>
-                                {% if inward_item.po_item %}
-                                  {{ inward_item.po_item.final_amount|default:"0.00" }}
-                                {% else %}
-                                  —
-                                {% endif %}
-                              </td>
-                              <td>{{ inward_item.remark|default:"—" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                              <td colspan="8">No greige inward item rows found.</td>
-                            </tr>
-                            {% endfor %}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    {% elif source_inwards %}
-                    <div class="yp-source-box">
-                      <div class="yp-source-box-head">
-                        <div class="yp-source-box-title">Available Greige Inwards</div>
-                        <div class="yp-source-status">PO-wise</div>
-                      </div>
-
-                      <div class="yp-source-table-wrap">
-                        <table class="yp-source-table">
-                          <thead>
-                            <tr>
-                              <th>#</th>
-                              <th>Inward No.</th>
-                              <th>Date</th>
-                              <th>Vendor</th>
-                              <th>Type</th>
-                              <th>Notes</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for inward in source_inwards %}
-                            <tr>
-                              <td>{{ forloop.counter }}</td>
-                              <td><strong>{{ inward.inward_number|default:"—" }}</strong></td>
-                              <td>{% if inward.inward_date %}{{ inward.inward_date|date:"d-m-Y" }}{% else %}—{% endif %}</td>
-                              <td>{% if inward.vendor %}{{ inward.vendor.name }}{% else %}—{% endif %}</td>
-                              <td>{% if inward.inward_type %}{{ inward.inward_type.name|default:inward.inward_type }}{% else %}—{% endif %}</td>
-                              <td>{{ inward.notes|default:"—" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                              <td colspan="6">No greige inwards found.</td>
-                            </tr>
-                            {% endfor %}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    {% endif %}
-
-                    <div class="yp-note-box">
-                      <div class="yp-note-box-label">Inward Notes / Remarks</div>
-                      <div class="yp-note-box-value">
-                        {% if selected_source_inward and selected_source_inward.notes %}
-                          {{ selected_source_inward.notes }}
-                        {% else %}
-                          <span class="yp-empty-note">No inward notes available.</span>
-                        {% endif %}
                       </div>
                     </div>
                   </div>
@@ -1764,7 +1322,7 @@
                         {% if selected_source_inward %}
                           Source inward: {{ selected_source_inward.inward_number }}
                         {% elif source_greige_po %}
-                          Source PO: {{ source_greige_po.system_number|default:source_greige_po.po_number|default:"—" }}
+                          Source PO: {{ source_greige_po.system_number }}
                         {% else %}
                           Waiting for source selection
                         {% endif %}
@@ -1776,7 +1334,7 @@
                         <label>PO Number</label>
                         <input
                           type="text"
-                          value="{% if po_obj and po_obj.po_number %}{{ po_obj.po_number }}{% elif form.po_number.value %}{{ form.po_number.value }}{% elif po_obj and po_obj.internal_po_number %}{{ po_obj.internal_po_number }}{% elif form.internal_po_number.value %}{{ form.internal_po_number.value }}{% elif po_obj and po_obj.system_number %}{{ po_obj.system_number }}{% elif system_number_preview %}{{ system_number_preview }}{% else %}—{% endif %}"
+                          value="{% if po_obj and po_obj.po_number %}{{ po_obj.po_number }}{% elif form.po_number.value %}{{ form.po_number.value }}{% elif form.internal_po_number.value %}{{ form.internal_po_number.value }}{% else %}—{% endif %}"
                           readonly
                         >
                       </div>
@@ -1851,10 +1409,6 @@
     const othersEl = document.getElementById("{{ form.others.id_for_label }}");
     const gstEl = document.getElementById("{{ form.gst_percent.id_for_label }}");
     const tcsEl = document.getElementById("{{ form.tcs_percent.id_for_label }}");
-
-    const poNumberEl = document.getElementById("{% if form.po_number %}{{ form.po_number.id_for_label }}{% endif %}");
-    const internalPoEl = document.getElementById("{% if form.internal_po_number %}{{ form.internal_po_number.id_for_label }}{% endif %}");
-    const previewNumber = `{% if po_obj and po_obj.po_number %}{{ po_obj.po_number|escapejs }}{% elif form.po_number.value %}{{ form.po_number.value|escapejs }}{% elif po_obj and po_obj.internal_po_number %}{{ po_obj.internal_po_number|escapejs }}{% elif form.internal_po_number.value %}{{ form.internal_po_number.value|escapejs }}{% elif po_obj and po_obj.system_number %}{{ po_obj.system_number|escapejs }}{% elif system_number_preview %}{{ system_number_preview|escapejs }}{% else %}{% endif %}`;
 
     function num(v) {
       const n = parseFloat(v || 0);
@@ -1934,15 +1488,6 @@
         row.style.display = "none";
         refreshTotals();
       });
-    }
-
-    if (previewNumber) {
-      if (poNumberEl && !poNumberEl.value.trim()) {
-        poNumberEl.value = previewNumber;
-      }
-      if (internalPoEl && !internalPoEl.value.trim()) {
-        internalPoEl.value = previewNumber;
-      }
     }
 
     rowsWrap?.querySelectorAll("[data-row]").forEach(bindRow);
