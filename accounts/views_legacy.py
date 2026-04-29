@@ -6664,7 +6664,6 @@ def generate_ready_po_from_dyeing(request, pk: int):
     
     return redirect("accounts:readypo_add_from_dyeing", dyeing_po_id=pk)
 
-@login_required
 
 def _build_simple_dyeing_po_pdf_response(po):
     try:
@@ -6966,7 +6965,6 @@ def readypo_pdf(request, pk: int):
         except Exception:
             pass
     return response
-
 
 def dyeingpo_list(request):
     q = (request.GET.get("q") or "").strip()
@@ -12066,6 +12064,71 @@ def _program_list_size_rows(program):
     ]
 
 
+
+def _can_verify_program(user):
+    return bool(user.is_authenticated and (user.is_staff or user.is_superuser))
+
+
+def _program_verification_response(request, program, message, status=400):
+    if _is_program_popup(request):
+        return JsonResponse({"ok": False, "message": message}, status=status)
+    messages.error(request, message)
+    return redirect("accounts:program_list")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def program_verify(request, pk: int):
+    program = get_object_or_404(
+        Program.objects.filter(owner=request.user).select_related("bom", "firm"),
+        pk=pk,
+    )
+
+    popup_mode = _is_program_popup(request)
+
+    if request.method == "POST":
+        if not _can_verify_program(request.user):
+            return _program_verification_response(
+                request,
+                program,
+                "Only admin users can verify or unverify programs.",
+                status=403,
+            )
+
+        decision = (request.POST.get("decision") or "").strip().lower()
+
+        if decision == "approve":
+            program.is_verified = True
+            program.save(update_fields=["is_verified"])
+            message = f"Program {program.program_no} verified successfully."
+        elif decision in {"reject", "unverify"}:
+            program.is_verified = False
+            program.save(update_fields=["is_verified"])
+            message = f"Program {program.program_no} marked unverified."
+        else:
+            return _program_verification_response(
+                request,
+                program,
+                "Please choose Verify or Unverify.",
+                status=400,
+            )
+
+        list_url = reverse("accounts:program_list")
+        if popup_mode:
+            return JsonResponse({"ok": True, "message": message, "redirect_url": list_url})
+
+        messages.success(request, message)
+        return redirect(list_url)
+
+    return render(
+        request,
+        "accounts/programs/verify.html",
+        {
+            "program": program,
+            "popup_mode": popup_mode,
+            "can_verify_program": _can_verify_program(request.user),
+        },
+    )
 @login_required
 @require_POST
 def program_toggle_verify(request, pk: int):
@@ -19115,3 +19178,382 @@ def ready_inward_tracker(request):
         "anchor_prefix": "ready-inward-",
     })
 
+# -----------------------------------------------------------------------------
+# PDF DESIGN OVERRIDE - Dyeing/Ready PO styled like Yarn PO
+# Kept at bottom intentionally so it overrides the older simple canvas builders
+# without changing URL/view/import structure.
+# -----------------------------------------------------------------------------
+def _build_dye_ready_yarn_style_pdf(po, *, title, po_kind):
+    try:
+        import os
+        from pathlib import Path
+        from html import escape
+        from django.conf import settings
+        from reportlab.lib import colors
+        from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import mm
+        from reportlab.lib.utils import ImageReader
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    except ImportError:
+        return HttpResponse(
+            "ReportLab is required for PDF generation. Install it with: pip install reportlab",
+            status=500,
+        )
+
+    brand_pink = colors.HexColor("#ED2F8C")
+    brand_orange = colors.HexColor("#F6A33B")
+    brand_blue = colors.HexColor("#1976F3")
+    brand_navy = colors.HexColor("#0F172A")
+    ink = colors.HexColor("#1F2937")
+    muted = colors.HexColor("#667085")
+    border = colors.HexColor("#D0D5DD")
+    soft_bg = colors.HexColor("#F8FAFC")
+    white = colors.white
+
+    def safe(value):
+        value = "" if value is None else str(value).strip()
+        return value if value else "-"
+
+    def money(value):
+        try:
+            return f"{float(value or 0):,.2f}"
+        except Exception:
+            return safe(value)
+
+    def qty(value):
+        try:
+            return f"{float(value or 0):,.2f}".rstrip("0").rstrip(".")
+        except Exception:
+            return safe(value)
+
+    def as_decimal(value):
+        try:
+            return Decimal(str(value or 0))
+        except Exception:
+            return Decimal("0")
+
+    def line_if(label, value):
+        value = "" if value is None else str(value).strip()
+        if not value:
+            return ""
+        return f"<b>{escape(label)}:</b> {escape(value)}"
+
+    def join_parts(*parts):
+        clean = [str(p).strip() for p in parts if str(p).strip()]
+        return ", ".join(clean)
+
+    def date_value(value):
+        try:
+            return value.strftime("%d-%m-%Y") if value else "-"
+        except Exception:
+            return safe(value)
+
+    def logo_path():
+        firm_obj = getattr(po, "firm", None)
+        if firm_obj and getattr(firm_obj, "logo", None):
+            try:
+                path = firm_obj.logo.path
+                if path and os.path.exists(path):
+                    return path
+            except Exception:
+                pass
+        fallback = Path(settings.BASE_DIR) / "Logo.jpeg"
+        return str(fallback) if fallback.exists() else None
+
+    logo = logo_path()
+
+    def draw_page_branding(canvas, doc):
+        page_w, page_h = A4
+        canvas.saveState()
+        canvas.setStrokeColor(colors.HexColor("#E4E7EC"))
+        canvas.setLineWidth(0.8)
+        canvas.roundRect(8 * mm, 8 * mm, page_w - 16 * mm, page_h - 16 * mm, 4 * mm, stroke=1, fill=0)
+        usable_w = page_w - 16 * mm
+        stripe_w = usable_w / 3.0
+        stripe_y = page_h - 13 * mm
+        stripe_h = 4.5 * mm
+        canvas.setFillColor(brand_pink)
+        canvas.rect(8 * mm, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+        canvas.setFillColor(brand_orange)
+        canvas.rect(8 * mm + stripe_w, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+        canvas.setFillColor(brand_blue)
+        canvas.rect(8 * mm + 2 * stripe_w, stripe_y, stripe_w, stripe_h, fill=1, stroke=0)
+        if logo:
+            try:
+                img = ImageReader(logo)
+                iw, ih = img.getSize()
+                draw_w = 26 * mm
+                draw_h = draw_w * (ih / float(iw)) if iw and ih else 26 * mm
+                try:
+                    canvas.setFillAlpha(0.10)
+                    canvas.setStrokeAlpha(0.10)
+                except Exception:
+                    pass
+                canvas.drawImage(
+                    img,
+                    (page_w - draw_w) / 2.0,
+                    10 * mm,
+                    width=draw_w,
+                    height=draw_h,
+                    preserveAspectRatio=True,
+                    mask="auto",
+                )
+            except Exception:
+                pass
+        canvas.restoreState()
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=10 * mm,
+        rightMargin=10 * mm,
+        topMargin=16 * mm,
+        bottomMargin=16 * mm,
+    )
+
+    styles = getSampleStyleSheet()
+    base = ParagraphStyle("DYReadyBase", parent=styles["BodyText"], fontName="Helvetica", fontSize=8.4, leading=10.3, textColor=ink, spaceAfter=0)
+    firm_style = ParagraphStyle("DYReadyFirm", parent=base, fontName="Helvetica", fontSize=8.4, leading=10.4, textColor=white, alignment=TA_LEFT)
+    title_style = ParagraphStyle("DYReadyTitle", parent=base, fontName="Helvetica-Bold", fontSize=14, leading=16, textColor=brand_navy, alignment=TA_RIGHT)
+    meta_style = ParagraphStyle("DYReadyMeta", parent=base, fontName="Helvetica", fontSize=8.3, leading=10.2, textColor=ink, alignment=TA_RIGHT)
+    head_style = ParagraphStyle("DYReadyHead", parent=base, fontName="Helvetica-Bold", fontSize=8, leading=10, textColor=white, alignment=TA_LEFT)
+    value_style = ParagraphStyle("DYReadyValue", parent=base, fontName="Helvetica", fontSize=8.2, leading=10.2, textColor=ink, alignment=TA_LEFT)
+    th_style = ParagraphStyle("DYReadyTableHead", parent=base, fontName="Helvetica-Bold", fontSize=7.6, leading=9.3, textColor=white, alignment=TA_CENTER)
+    center_style = ParagraphStyle("DYReadyCenter", parent=base, fontName="Helvetica", fontSize=7.9, leading=9.5, alignment=TA_CENTER)
+    desc_style = ParagraphStyle("DYReadyDesc", parent=base, fontName="Helvetica", fontSize=7.9, leading=9.5, alignment=TA_LEFT)
+    right_style = ParagraphStyle("DYReadyRight", parent=base, fontName="Helvetica", fontSize=7.9, leading=9.5, alignment=TA_RIGHT)
+    block_title = ParagraphStyle("DYReadyBlockTitle", parent=base, fontName="Helvetica-Bold", fontSize=8.4, leading=10.5, textColor=brand_navy, alignment=TA_LEFT)
+    block_text = ParagraphStyle("DYReadyBlockText", parent=base, fontName="Helvetica", fontSize=8.1, leading=10.1, textColor=ink, alignment=TA_LEFT)
+    sign_style = ParagraphStyle("DYReadySign", parent=base, fontName="Helvetica-Bold", fontSize=8, leading=10, textColor=ink, alignment=TA_LEFT)
+    total_label = ParagraphStyle("DYReadyTotalLabel", parent=base, fontName="Helvetica-Bold", fontSize=8.1, leading=10.1, textColor=ink, alignment=TA_LEFT)
+    total_value = ParagraphStyle("DYReadyTotalValue", parent=base, fontName="Helvetica-Bold", fontSize=8.1, leading=10.1, textColor=ink, alignment=TA_RIGHT)
+    footer_style = ParagraphStyle("DYReadyFooter", parent=base, fontName="Helvetica-Bold", fontSize=7.6, leading=9.2, textColor=muted, alignment=TA_CENTER)
+
+    story = []
+    firm = getattr(po, "firm", None)
+    vendor = getattr(po, "vendor", None)
+    items = list(po.items.all())
+
+    firm_name = safe(getattr(firm, "firm_name", "InventTech") if firm else "InventTech")
+    try:
+        firm_type = firm.get_firm_type_display() if firm else ""
+    except Exception:
+        firm_type = safe(getattr(firm, "firm_type", ""))
+    firm_address = join_parts(getattr(firm, "address_line", ""), getattr(firm, "city", ""), getattr(firm, "state", ""), getattr(firm, "pincode", ""))
+    contact_line = " | ".join([p for p in [line_if("Phone", getattr(firm, "phone", "")), line_if("Email", getattr(firm, "email", "")), line_if("GSTIN", getattr(firm, "gst_number", ""))] if p])
+    stat_line = " | ".join([p for p in [line_if("PAN", getattr(firm, "pan_number", "")), line_if("TAN", getattr(firm, "tan_number", "")), line_if("CIN", getattr(firm, "cin_number", ""))] if p])
+
+    firm_html = f"<font size='13'><b>{escape(firm_name)}</b></font>"
+    if firm_type and firm_type != "-":
+        firm_html += f"<br/>{escape(firm_type)}"
+    if firm_address:
+        firm_html += f"<br/>{escape(firm_address)}"
+    if contact_line:
+        firm_html += f"<br/>{contact_line}"
+    if stat_line:
+        firm_html += f"<br/>{stat_line}"
+
+    try:
+        approval = po.get_approval_status_display()
+    except Exception:
+        approval = safe(getattr(po, "approval_status", ""))
+    po_no = getattr(po, "po_number", "") or getattr(po, "system_number", "") or "-"
+    source_line = ""
+    if po_kind == "dyeing" and getattr(po, "source_greige_po", None):
+        source_line = f"<br/><b>Greige PO:</b> {escape(safe(po.source_greige_po.system_number))}"
+    if po_kind == "ready" and getattr(po, "source_dyeing_po", None):
+        source_line = f"<br/><b>Dyeing PO:</b> {escape(safe(po.source_dyeing_po.system_number))}"
+    cancel_date = date_value(getattr(po, "cancel_date", None))
+
+    header_table = Table(
+        [[
+            Paragraph(firm_html, firm_style),
+            Table(
+                [[Paragraph(f"<b>{escape(title)}</b>", title_style)], [
+                    Paragraph(
+                        f"<b>PO No:</b> {escape(safe(po_no))}<br/>"
+                        f"<b>PO Date:</b> {escape(date_value(getattr(po, 'po_date', None)))}<br/>"
+                        f"<b>System No:</b> {escape(safe(getattr(po, 'system_number', '')))}<br/>"
+                        f"<b>Status:</b> {escape(safe(approval))}"
+                        + source_line
+                        + (f"<br/><b>Cancel Date:</b> {escape(cancel_date)}" if cancel_date != "-" else ""),
+                        meta_style,
+                    )
+                ]],
+                colWidths=[66 * mm],
+            ),
+        ]],
+        colWidths=[124 * mm, 66 * mm],
+    )
+    header_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), brand_navy),
+        ("BACKGROUND", (1, 0), (1, 0), colors.HexColor("#F5F8FF")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (0, 0), 9), ("RIGHTPADDING", (0, 0), (0, 0), 9),
+        ("TOPPADDING", (0, 0), (0, 0), 9), ("BOTTOMPADDING", (0, 0), (0, 0), 9),
+        ("LEFTPADDING", (1, 0), (1, 0), 0), ("RIGHTPADDING", (1, 0), (1, 0), 0),
+        ("TOPPADDING", (1, 0), (1, 0), 0), ("BOTTOMPADDING", (1, 0), (1, 0), 0),
+    ]))
+    header_table._cellvalues[0][1].setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F5F8FF")),
+        ("BOX", (0, 0), (-1, -1), 0.9, brand_blue),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8), ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 7), ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 6))
+
+    vendor_html = f"<b>{escape(safe(getattr(vendor, 'name', '')))}</b>"
+    vendor_body = "<br/>".join([line for line in [line_if("Contact", getattr(vendor, "contact_person", "")), line_if("Phone", getattr(vendor, "phone", "")), line_if("Email", getattr(vendor, "email", "")), line_if("GSTIN", getattr(vendor, "gst_number", "")), line_if("Address", getattr(vendor, "address", ""))] if line])
+    if vendor_body:
+        vendor_html += "<br/>" + vendor_body
+
+    bill_html = f"<b>{escape(firm_name)}</b>"
+    bill_body = "<br/>".join([line for line in [line_if("Address", firm_address), line_if("Phone", getattr(firm, "phone", "")), line_if("Email", getattr(firm, "email", "")), line_if("GSTIN", getattr(firm, "gst_number", "")), line_if("Ship To", getattr(po, "shipping_address", ""))] if line])
+    if bill_body:
+        bill_html += "<br/>" + bill_body
+
+    party_table = Table([[Paragraph("VENDOR", head_style), Paragraph("BILL TO / SHIP TO", head_style)], [Paragraph(vendor_html, value_style), Paragraph(bill_html, value_style)]], colWidths=[95 * mm, 95 * mm])
+    party_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), brand_orange), ("BACKGROUND", (1, 0), (1, 0), brand_blue),
+        ("TEXTCOLOR", (0, 0), (-1, 0), white), ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#FBFCFE")),
+        ("BOX", (0, 0), (-1, -1), 0.9, border), ("INNERGRID", (0, 0), (-1, -1), 0.7, border),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7), ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+        ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ]))
+    story.append(party_table)
+    story.append(Spacer(1, 7))
+
+    if po_kind == "dyeing":
+        rows = [[Paragraph("Sr", th_style), Paragraph("Fabric / Greige", th_style), Paragraph("Dyeing", th_style), Paragraph("Unit", th_style), Paragraph("Qty", th_style), Paragraph("Rate", th_style), Paragraph("Amount", th_style)]]
+        widths = [11 * mm, 62 * mm, 41 * mm, 16 * mm, 18 * mm, 20 * mm, 22 * mm]
+        total_qty = Decimal("0")
+        total_amount = Decimal("0")
+        for index, item in enumerate(items, start=1):
+            item_qty = getattr(item, "quantity", None) or getattr(item, "total_qty", None) or 0
+            amount = getattr(item, "line_final_amount", None) or getattr(item, "line_subtotal", None) or 0
+            total_qty += as_decimal(item_qty)
+            total_amount += as_decimal(amount)
+            fabric = getattr(item, "fabric_name", "") or getattr(getattr(item, "finished_material", None), "name", "") or "-"
+            greige = getattr(item, "greige_name", "") or ""
+            description = fabric if not greige else f"{fabric} / {greige}"
+            detail = []
+            if getattr(item, "source_input_qty", None):
+                detail.append(f"Input: {qty(item.source_input_qty)}")
+            if getattr(item, "expected_loss_percent", None):
+                detail.append(f"Loss: {qty(item.expected_loss_percent)}%")
+            if getattr(item, "expected_output_qty", None):
+                detail.append(f"Output: {qty(item.expected_output_qty)}")
+            if getattr(item, "rolls", None):
+                detail.append(f"Rolls: {qty(item.rolls)}")
+            if getattr(item, "remark", ""):
+                detail.append(f"Remark: {item.remark}")
+            desc_html = f"<b>{escape(safe(description))}</b>" + ("<br/>" + escape(" | ".join(detail)) if detail else "")
+            dyeing = getattr(item, "dyeing_name", "") or getattr(item, "dyeing_type", "") or "-"
+            rows.append([Paragraph(str(index), center_style), Paragraph(desc_html, desc_style), Paragraph(escape(safe(dyeing)), desc_style), Paragraph(escape(safe(getattr(item, "unit", ""))), center_style), Paragraph(escape(qty(item_qty)), center_style), Paragraph(escape(money(getattr(item, "rate", 0))), right_style), Paragraph(escape(money(amount)), right_style)])
+        ordered_qty = getattr(po, "total_weight", None) or total_qty
+        grand_total = getattr(po, "final_amount", None) or total_amount
+    else:
+        rows = [[Paragraph("Sr", th_style), Paragraph("Fabric", th_style), Paragraph("Dyeing", th_style), Paragraph("Unit", th_style), Paragraph("Qty", th_style), Paragraph("Remarks", th_style)]]
+        widths = [12 * mm, 62 * mm, 42 * mm, 18 * mm, 20 * mm, 36 * mm]
+        total_qty = Decimal("0")
+        for index, item in enumerate(items, start=1):
+            item_qty = getattr(item, "quantity", None) or 0
+            total_qty += as_decimal(item_qty)
+            fabric = getattr(item, "fabric_name", "") or getattr(getattr(item, "finished_material", None), "name", "") or "-"
+            rows.append([Paragraph(str(index), center_style), Paragraph(f"<b>{escape(safe(fabric))}</b>", desc_style), Paragraph(escape(safe(getattr(item, "dyeing_name", ""))), desc_style), Paragraph(escape(safe(getattr(item, "unit", ""))), center_style), Paragraph(escape(qty(item_qty)), center_style), Paragraph(escape(safe(getattr(item, "remark", ""))), desc_style)])
+        ordered_qty = getattr(po, "total_weight", None) or total_qty
+        grand_total = None
+
+    for _ in range(max(0, 5 - len(items))):
+        rows.append([Paragraph("", center_style) for _ in range(len(widths))])
+
+    item_table = Table(rows, colWidths=widths, repeatRows=1)
+    item_style = TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), brand_navy), ("TEXTCOLOR", (0, 0), (-1, 0), white),
+        ("BOX", (0, 0), (-1, -1), 0.9, border), ("INNERGRID", (0, 0), (-1, -1), 0.55, border),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4), ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 5), ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ])
+    for row_index in range(1, len(rows)):
+        if row_index % 2 == 0:
+            item_style.add("BACKGROUND", (0, row_index), (-1, row_index), colors.HexColor("#F9FAFB"))
+    item_table.setStyle(item_style)
+    story.append(item_table)
+    story.append(Spacer(1, 8))
+
+    notes = []
+    if getattr(po, "remarks", ""):
+        notes.append(f"<font color='#0F172A'><b>Remarks</b></font><br/>{escape(po.remarks).replace(chr(10), '<br/>')}")
+    if getattr(po, "description", ""):
+        notes.append(f"<font color='#0F172A'><b>Description</b></font><br/>{escape(po.description).replace(chr(10), '<br/>')}")
+    if getattr(po, "terms_conditions", ""):
+        notes.append(f"<font color='#0F172A'><b>Terms &amp; Conditions</b></font><br/>{escape(po.terms_conditions).replace(chr(10), '<br/>')}")
+    if getattr(po, "shipping_address", ""):
+        notes.append(f"<font color='#0F172A'><b>Shipping Address</b></font><br/>{escape(po.shipping_address).replace(chr(10), '<br/>')}")
+    if not notes:
+        notes.append("<font color='#0F172A'><b>Notes</b></font><br/>Standard terms and conditions apply.")
+
+    signature_table = Table([[Paragraph("<b>AUTHORISED SIGNATORY</b><br/><br/>_________________________", sign_style), Paragraph(f"<b>DATE</b><br/><br/>{escape(date_value(getattr(po, 'po_date', None)))}", sign_style)]], colWidths=[68 * mm, 30 * mm])
+    signature_table.setStyle(TableStyle([("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0), ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0), ("VALIGN", (0, 0), (-1, -1), "TOP")]))
+
+    left_block = Table([[Paragraph("NOTES / TERMS", block_title)], [Paragraph("<br/><br/>".join(notes), block_text)], [signature_table]], colWidths=[102 * mm])
+    left_block.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), colors.HexColor("#FDF2F8")), ("BOX", (0, 0), (-1, -1), 0.9, border), ("INNERGRID", (0, 0), (-1, -1), 0.6, border),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7), ("RIGHTPADDING", (0, 0), (-1, -1), 7), ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 7), ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+
+    totals = [[Paragraph("Total Qty", total_label), Paragraph(escape(qty(ordered_qty)), total_value)]]
+    if po_kind == "dyeing":
+        totals.append([Paragraph("Sub Total", total_label), Paragraph(escape(money(getattr(po, "subtotal", 0))), total_value)])
+        totals.append([Paragraph("After Discount", total_label), Paragraph(escape(money(getattr(po, "after_discount_value", 0))), total_value)])
+        totals.append([Paragraph("Other Charges", total_label), Paragraph(escape(money(getattr(po, "others", 0))), total_value)])
+        totals.append([Paragraph(f"GST ({qty(getattr(po, 'gst_percent', 0))}%)", total_label), Paragraph("-", total_value)])
+        totals.append([Paragraph(f"TCS ({qty(getattr(po, 'tcs_percent', 0))}%)", total_label), Paragraph("-", total_value)])
+        totals.append([Paragraph("Total Amount", total_label), Paragraph(escape(money(grand_total)), total_value)])
+    else:
+        if getattr(po, "available_qty", None) is not None:
+            totals.insert(0, [Paragraph("Available Qty", total_label), Paragraph(escape(qty(getattr(po, "available_qty", 0))), total_value)])
+        for label, field in [("Delivery Period", "delivery_period"), ("Validity", "validity_period"), ("Director", "director")]:
+            value = getattr(po, field, "")
+            if value:
+                totals.append([Paragraph(label, total_label), Paragraph(escape(safe(value)), total_value)])
+
+    totals_table = Table(totals, colWidths=[49 * mm, 39 * mm])
+    totals_style = TableStyle([
+        ("BOX", (0, 0), (-1, -1), 0.9, border), ("INNERGRID", (0, 0), (-1, -1), 0.6, border),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7), ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+        ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EFF6FF")), ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#FFF7ED")),
+    ])
+    for row_index in range(1, len(totals) - 1):
+        if row_index % 2 == 1:
+            totals_style.add("BACKGROUND", (0, row_index), (-1, row_index), soft_bg)
+    totals_table.setStyle(totals_style)
+
+    lower_table = Table([[left_block, totals_table]], colWidths=[102 * mm, 88 * mm])
+    lower_table.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0), ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]))
+    story.append(lower_table)
+    story.append(Spacer(1, 8))
+
+    footer = Table([[Paragraph("THIS PO IS COMPUTER GENERATED, HENCE SIGNATURE IS NOT REQUIRED", footer_style)]], colWidths=[190 * mm])
+    footer.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F8FAFC")), ("BOX", (0, 0), (-1, -1), 0.9, border), ("LEFTPADDING", (0, 0), (-1, -1), 6), ("RIGHTPADDING", (0, 0), (-1, -1), 6), ("TOPPADDING", (0, 0), (-1, -1), 5), ("BOTTOMPADDING", (0, 0), (-1, -1), 5)]))
+    story.append(footer)
+
+    doc.build(story, onFirstPage=draw_page_branding, onLaterPages=draw_page_branding)
+    buffer.seek(0)
+    return HttpResponse(buffer.getvalue(), content_type="application/pdf")
+
+
+def _build_simple_dyeing_po_pdf_response(po):
+    return _build_dye_ready_yarn_style_pdf(po, title="DYEING PURCHASE ORDER", po_kind="dyeing")
+
+
+def _build_simple_ready_po_pdf_response(po):
+    return _build_dye_ready_yarn_style_pdf(po, title="READY PURCHASE ORDER", po_kind="ready")
