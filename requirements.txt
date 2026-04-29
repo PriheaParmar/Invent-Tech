@@ -1,0 +1,8 @@
+# InventTech Textile ERP dependencies
+# Recommended Python: 3.13.x
+
+Django==6.0.3
+openpyxl==3.1.5
+reportlab==4.2.5
+qrcode[pil]==8.0
+Pillow==11.1.0
