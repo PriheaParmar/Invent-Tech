@@ -1,0 +1,23 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}
+  {% if mode == "edit" %}Edit Material Sub Type - InventTech{% else %}Add Material Sub Type - InventTech{% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if mode == "edit" %}Edit Material Sub Type{% else %}Add Material Sub Type{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+  {% if mode == "edit" %}
+    Update the selected material sub type
+  {% else %}
+    Create a reusable material sub type
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/material_sub_types/form_embed.html" with full_page=True mode=mode material_sub_type=material_sub_type %}
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Dyeing Other Charges - InventTech{% endblock %}
+{% block page_title %}Dyeing Other Charges{% endblock %}
+{% block page_subtitle %}Manage reusable dyeing extra charges{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/dyeing_other_charges/list_embed.html" with full_page=True %}
+</div>
+{% endblock %}

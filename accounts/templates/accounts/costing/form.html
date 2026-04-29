@@ -1,0 +1,27 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Costing Snapshot{% endblock %}
+{% block page_title %}Costing Snapshot{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block content %}
+<style>
+  .cf-page{padding:12px;background:linear-gradient(180deg,#fbfcff,#f7f8fc);border-radius:24px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#172033;}
+  .cf-shell{max-width:820px;margin:0 auto;}
+  .cf-card{overflow:hidden;border:1px solid #edf0f7;border-radius:26px;background:#fff;box-shadow:0 18px 46px rgba(15,23,42,.08);}
+  .cf-head{padding:18px 20px;border-bottom:1px solid #edf0f7;background:radial-gradient(circle at 8% 0%,rgba(28,109,216,.10),transparent 30%),radial-gradient(circle at 90% 0%,rgba(238,61,133,.08),transparent 28%),#fff;}
+  .cf-kicker{font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:950;color:rgba(28,109,216,1);}
+  .cf-title{margin:4px 0 0;font-family:Georgia,Cambria,serif;font-size:34px;line-height:1;font-weight:900;letter-spacing:-.04em;color:#111827;}
+  .cf-body{padding:18px 20px 20px;}
+  .cf-body p{display:grid;gap:7px;margin:0 0 13px;}
+  .cf-body label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:950;color:#667085;}
+  .cf-body input,.cf-body select,.cf-body textarea{width:100%;min-height:40px;border:1px solid #dfe5ef;border-radius:14px;background:#fbfcff;padding:9px 11px;color:#172033;font-size:13px;font-weight:800;outline:none;box-sizing:border-box;}
+  .cf-body input:focus,.cf-body select:focus,.cf-body textarea:focus{border-color:rgba(28,109,216,.45);box-shadow:0 0 0 4px rgba(28,109,216,.09);background:#fff;}
+  .cf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid #edf0f7;}
+  .cf-save{min-height:40px;border:0;border-radius:14px;background:linear-gradient(90deg,rgba(28,109,216,1),rgb(238,61,133));color:#fff;font-size:12px;font-weight:950;padding:0 18px;box-shadow:0 12px 22px rgba(28,109,216,.16);cursor:pointer;}
+  .cf-back{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 14px;border-radius:14px;border:1px solid #edf0f7;background:#fff;color:#172033;text-decoration:none;font-size:12px;font-weight:950;}
+</style>
+<section class="cf-page"><div class="cf-shell"><div class="cf-card">
+  <div class="cf-head"><div class="cf-kicker">Costing master</div><h1 class="cf-title">Snapshot Form</h1></div>
+  <div class="cf-body"><form method="post">{% csrf_token %}{{ form.as_p }}<div class="cf-actions"><a href="{% url 'accounts:costing_snapshot_list' %}" class="cf-back">Cancel</a><button type="submit" class="cf-save">Save Snapshot</button></div></form></div>
+</div></div></section>
+{% endblock %}

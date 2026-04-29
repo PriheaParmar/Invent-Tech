@@ -1,0 +1,413 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_form.css' %}?v=1">
+
+{% if mode == "edit" %}
+  {% url "accounts:material_list" as back_url %}
+  {% url "accounts:material_edit" material.id as form_action %}
+{% else %}
+  {% url "accounts:material_kind_picker" as back_url %}
+  {% url "accounts:material_create" as form_action %}
+{% endif %}
+
+<div class="master-form-ui material-form-ui">
+  <section class="mf-panel">
+    <div class="mf-head">
+      <div>
+        <h2 class="mf-title">
+          {% if mode == "edit" %}Edit Material{% else %}Create Material{% endif %}
+        </h2>
+      </div>
+
+      <div class="mf-head-actions">
+        <a class="mf-iconbtn mf-back" href="{{ back_url }}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+          <svg class="mf-back-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="mf-iconbtn mf-close" data-embed-close aria-label="Close">
+          <svg class="mf-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <form
+      method="post"
+      action="{{ form_action }}{% if not full_page %}?embed=1{% endif %}{% if mode != 'edit' and selected_kind %}{% if not full_page %}&{% else %}?{% endif %}kind={{ selected_kind }}{% endif %}"
+      enctype="multipart/form-data"
+      class="mf-form"
+      data-material-form="1"
+    >
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+      {{ form.material_kind }}
+
+      {% if form.non_field_errors or form.errors %}
+      <div class="mf-errors">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+        {% if not form.non_field_errors %}
+          <div>Please fix the errors below.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <div class="mf-section">
+        <div class="mf-section-title">{{ selected_kind|title }} Material</div>
+
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.material_code.id_for_label }}">Material Code</label>
+            {{ form.material_code }}
+            {% if form.material_code.errors %}
+            <div class="mf-field-errors">{% for error in form.material_code.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.name.id_for_label }}">Material Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <div class="mf-field-errors">{% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.material_type.id_for_label }}">Material Type</label>
+            {{ form.material_type }}
+            {% if form.material_type.errors %}
+            <div class="mf-field-errors">{% for error in form.material_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.material_sub_type.id_for_label }}">Material Sub Type</label>
+            {{ form.material_sub_type }}
+            {% if form.material_sub_type.errors %}
+            <div class="mf-field-errors">{% for error in form.material_sub_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.material_shade.id_for_label }}">Material Shade</label>
+            {{ form.material_shade }}
+            {% if form.material_shade.errors %}
+            <div class="mf-field-errors">{% for error in form.material_shade.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.unit.id_for_label }}">Unit</label>
+            {{ form.unit }}
+            {% if form.unit.errors %}
+            <div class="mf-field-errors">{% for error in form.unit.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.composition.id_for_label }}">Composition</label>
+            {{ form.composition }}
+            {% if form.composition.errors %}
+            <div class="mf-field-errors">{% for error in form.composition.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.hsn_code.id_for_label }}">HSN Code</label>
+            {{ form.hsn_code }}
+            {% if form.hsn_code.errors %}
+            <div class="mf-field-errors">{% for error in form.hsn_code.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.gst_percent.id_for_label }}">GST %</label>
+            {{ form.gst_percent }}
+            {% if form.gst_percent.errors %}
+            <div class="mf-field-errors">{% for error in form.gst_percent.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label>Status</label>
+            <div class="mf-check-row">
+              <span class="mf-check-box">{{ form.is_active }}</span>
+              <div class="mf-check-copy">
+                <div class="mf-check-title">Active Material</div>
+              </div>
+            </div>
+            {% if form.is_active.errors %}
+            <div class="mf-field-errors">{% for error in form.is_active.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field mf-full">
+            <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+            {{ form.remarks }}
+            {% if form.remarks.errors %}
+            <div class="mf-field-errors">{% for error in form.remarks.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.image.id_for_label }}">Upload Image</label>
+            {{ form.image }}
+            {% if form.image.errors %}
+            <div class="mf-field-errors">{% for error in form.image.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label>Preview</label>
+<div id="matPreview" class="mf-material-preview">
+  {% if material and material.image %}
+    <img src="{{ material.image.url }}" alt="{{ material.name }}">
+  {% else %}
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="mf-material-preview-ico">
+      <path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z"></path>
+      <path d="M8.5 10.5h.01"></path>
+      <path d="m20 15-4.5-4.5L7 19"></path>
+    </svg>
+  {% endif %}
+</div>
+          </div>
+        </div>
+      </div>
+
+      {% if selected_kind == "yarn" %}
+      <div class="mf-section">
+        <div class="mf-section-title">Yarn Details</div>
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.count_denier.id_for_label }}">Count / Denier</label>
+            {{ form.count_denier }}
+            {% if form.count_denier.errors %}
+            <div class="mf-field-errors">{% for error in form.count_denier.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.yarn_color.id_for_label }}">Color</label>
+            {{ form.yarn_color }}
+            {% if form.yarn_color.errors %}
+            <div class="mf-field-errors">{% for error in form.yarn_color.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% elif selected_kind == "greige" %}
+      <div class="mf-section">
+        <div class="mf-section-title">Greige Details</div>
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.fabric_type.id_for_label }}">Fabric Type</label>
+            {{ form.fabric_type }}
+            {% if form.fabric_type.errors %}
+            <div class="mf-field-errors">{% for error in form.fabric_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.gsm.id_for_label }}">GSM</label>
+            {{ form.gsm }}
+            {% if form.gsm.errors %}
+            <div class="mf-field-errors">{% for error in form.gsm.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.width.id_for_label }}">Width</label>
+            {{ form.width }}
+            {% if form.width.errors %}
+            <div class="mf-field-errors">{% for error in form.width.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.construction.id_for_label }}">Construction</label>
+            {{ form.construction }}
+            {% if form.construction.errors %}
+            <div class="mf-field-errors">{% for error in form.construction.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% elif selected_kind == "finished" %}
+      <div class="mf-section">
+        <div class="mf-section-title">Finished Details</div>
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.base_fabric_type.id_for_label }}">Base Fabric Type</label>
+            {{ form.base_fabric_type }}
+            {% if form.base_fabric_type.errors %}
+            <div class="mf-field-errors">{% for error in form.base_fabric_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.finish_type.id_for_label }}">Finish Type</label>
+            {{ form.finish_type }}
+            {% if form.finish_type.errors %}
+            <div class="mf-field-errors">{% for error in form.finish_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.finished_gsm.id_for_label }}">GSM</label>
+            {{ form.finished_gsm }}
+            {% if form.finished_gsm.errors %}
+            <div class="mf-field-errors">{% for error in form.finished_gsm.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.finished_width.id_for_label }}">Width</label>
+            {{ form.finished_width }}
+            {% if form.finished_width.errors %}
+            <div class="mf-field-errors">{% for error in form.finished_width.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field mf-full">
+            <label for="{{ form.end_use.id_for_label }}">End Use</label>
+            {{ form.end_use }}
+            {% if form.end_use.errors %}
+            <div class="mf-field-errors">{% for error in form.end_use.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% elif selected_kind == "trim" %}
+      <div class="mf-section">
+        <div class="mf-section-title">Trim Details</div>
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.trim_size.id_for_label }}">Size</label>
+            {{ form.trim_size }}
+            {% if form.trim_size.errors %}
+            <div class="mf-field-errors">{% for error in form.trim_size.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.trim_color.id_for_label }}">Color</label>
+            {{ form.trim_color }}
+            {% if form.trim_color.errors %}
+            <div class="mf-field-errors">{% for error in form.trim_color.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.brand.id_for_label }}">Brand</label>
+            {{ form.brand }}
+            {% if form.brand.errors %}
+            <div class="mf-field-errors">{% for error in form.brand.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="mf-footer">
+        <a class="mf-btn-secondary" href="{{ back_url }}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="mf-btn-primary">
+          {% if mode == "edit" %}Update Material{% else %}Save Material{% endif %}
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <script>
+  (function () {
+    const root = document.currentScript.closest(".master-form-ui");
+    if (!root) return;
+
+    const form = root.querySelector(".mf-form");
+    const fileInput = form ? form.querySelector('input[name="image"]') : null;
+    const preview = root.querySelector("#matPreview");
+    const typeSelect = form ? form.querySelector('[name="material_type"]') : null;
+    const subTypeSelect = form ? form.querySelector('[name="material_sub_type"]') : null;
+    const initialPreview = preview ? preview.innerHTML : "";
+
+    if (fileInput && preview && !fileInput.dataset.previewBound) {
+      fileInput.dataset.previewBound = "1";
+
+      fileInput.addEventListener("change", function () {
+        const file = this.files && this.files[0];
+
+        if (!file) {
+          preview.innerHTML = initialPreview;
+          return;
+        }
+
+        if (file.type && !file.type.startsWith("image/")) {
+          preview.innerHTML = initialPreview;
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if (typeSelect && subTypeSelect && !subTypeSelect.dataset.filterBound) {
+      const originalOptions = Array.from(subTypeSelect.options).map(function (option) {
+        return option.cloneNode(true);
+      });
+
+      subTypeSelect.dataset.filterBound = "1";
+
+      function rebuildSubTypes() {
+        const selectedTypeId = typeSelect.value || "";
+        const currentValue = subTypeSelect.value || "";
+
+        subTypeSelect.innerHTML = "";
+
+        if (!selectedTypeId) {
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = "Select Material Type first";
+          subTypeSelect.appendChild(placeholder);
+          subTypeSelect.disabled = true;
+          return;
+        }
+
+        subTypeSelect.disabled = false;
+        let hasCurrentValue = false;
+
+        originalOptions.forEach(function (option) {
+          const optionValue = option.value || "";
+          const optionTypeId = option.getAttribute("data-material-type") || "";
+
+          if (!optionValue || optionTypeId === selectedTypeId) {
+            const clone = option.cloneNode(true);
+            if (clone.value === currentValue) {
+              hasCurrentValue = true;
+            }
+            subTypeSelect.appendChild(clone);
+          }
+        });
+
+        subTypeSelect.value = hasCurrentValue ? currentValue : "";
+      }
+
+      rebuildSubTypes();
+      typeSelect.addEventListener("change", rebuildSubTypes);
+    }
+  })();
+  </script>
+</div>

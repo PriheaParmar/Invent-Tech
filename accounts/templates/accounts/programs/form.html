@@ -1,0 +1,9 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}{% if mode == "edit" %}Edit Program{% else %}Create Program{% endif %}{% endblock %}
+{% block page_title %}{% if mode == "edit" %}Edit Program{% else %}Create Program{% endif %}{% endblock %}
+{% block page_subtitle %}Create and manage production programs from BOM with jobber planning{% endblock %}
+
+{% block content %}
+  {% include "accounts/programs/form_embed.html" with full_page=1 %}
+{% endblock %}

@@ -1,0 +1,308 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .brand-master-list .jb-head{
+    align-items: center;
+  }
+
+  .brand-master-list .jb-head-actions{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .brand-master-list .jb-head-stats{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+  }
+
+  .brand-master-list .jb-head-stats .jb-stat{
+    min-width: auto;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 10px;
+    background: rgba(250, 189, 100, 0.12);
+    border: 1px solid rgba(250, 189, 100, 0.35);
+    box-shadow: 0 4px 12px rgba(250, 189, 100, 0.10);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .brand-master-list .jb-head-stats .jb-stat span{
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #7d766d;
+    font-family: var(--jb-font-sans);
+    line-height: 1;
+    margin: 0;
+  }
+
+  .brand-master-list .jb-head-stats .jb-stat strong{
+    font-family: var(--jb-font-serif);
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #121a24;
+    margin: 0;
+  }
+
+  .brand-master-list .jb-search{
+    grid-template-columns: minmax(240px, 1fr) auto auto;
+  }
+
+  .brand-master-list .jb-clear{
+    height: 29px;
+    padding: 0 10px;
+    border: 1px solid var(--jb-line);
+    border-radius: 7px;
+    background: #fff;
+    color: #3d4653;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--jb-shadow-sm);
+    transition:
+      background .16s ease,
+      border-color .16s ease,
+      color .16s ease,
+      transform .16s ease,
+      box-shadow .16s ease;
+  }
+
+  .brand-master-list .jb-clear:hover{
+    background: #faf9f6;
+    border-color: var(--jb-line-dark);
+    color: #161d27;
+  }
+
+  .brand-master-list .jb-table{
+    min-width: 760px;
+  }
+
+  .brand-master-list .jb-table th:nth-child(1),
+  .brand-master-list .jb-table td:nth-child(1){
+    min-width: 220px;
+  }
+
+  .brand-master-list .jb-table th:nth-child(2),
+  .brand-master-list .jb-table td:nth-child(2){
+    min-width: 360px;
+  }
+
+  .brand-master-list .jb-table th:nth-child(3),
+  .brand-master-list .jb-table td:nth-child(3){
+    text-align: center;
+  }
+
+  .brand-master-list .jb-brand-name{
+    font-family: var(--jb-font-serif);
+    font-size: 13px;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #111923;
+  }
+
+  .brand-master-list .jb-desc{
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: #4f5865;
+    font-family: var(--jb-font-sans);
+  }
+
+  .brand-master-list .jb-actions{
+    justify-content: center;
+  }
+
+  @media (max-width: 900px){
+    .brand-master-list .jb-head{
+      align-items: flex-start;
+    }
+
+    .brand-master-list .jb-head-actions{
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+  }
+
+  @media (max-width: 768px){
+    .brand-master-list .jb-search{
+      grid-template-columns: 1fr;
+    }
+
+    .brand-master-list .jb-search .jb-search-btn,
+    .brand-master-list .jb-search .jb-clear{
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 640px){
+    .brand-master-list .jb-head-stats{
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .brand-master-list .jb-head-stats .jb-stat{
+      justify-content: space-between;
+    }
+  }
+</style>
+
+<div class="jobbers-embed brand-master-list">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Brands</div>
+        <div class="jb-sub">Manage reusable customer and garment brand names</div>
+      </div>
+
+      <div class="jb-head-actions">
+        <div class="jb-stats jb-stats-inline jb-head-stats">
+          <div class="jb-stat">
+            <span>Total</span>
+            <strong>{{ stats.total|default:0 }}</strong>
+          </div>
+          
+        </div>
+
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if delete_error %}
+    <div class="jb-errors jb-usage-error">
+      <div class="jb-usage-title">{{ delete_error }}</div>
+      {% if delete_label %}
+      <div class="jb-usage-label">Record: <strong>{{ delete_label }}</strong></div>
+      {% endif %}
+      {% if delete_usage %}
+      <div class="jb-usage-list">
+        {% for row in delete_usage %}
+        <div class="jb-usage-row">
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:brand_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search brand name or description"
+          autocomplete="off"
+          aria-label="Search brands"
+        >
+
+        <button class="jb-search-btn" type="submit">Search</button>
+
+        {% if q %}
+        <a class="jb-clear" href="{% url 'accounts:brand_list' %}{% if not full_page %}?embed=1{% endif %}">Clear</a>
+        {% endif %}
+      </form>
+
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:brand_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Add Brand
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th style="width: 96px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for brand in brands %}
+          <tr>
+            <td class="jb-brand-name">{{ brand.name }}</td>
+            <td class="jb-desc">{{ brand.description|default:"—"|truncatechars:140 }}</td>
+            <td class="jb-actions">
+              <a
+                class="jb-link jb-link-icon jb-link-edit"
+                href="{% url 'accounts:brand_edit' brand.id %}{% if not full_page %}?embed=1{% endif %}"
+                aria-label="Edit {{ brand.name }}"
+                title="Edit"
+              >
+                <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z"></path>
+                  <path d="M14.06 4.94l3.75 3.75"></path>
+                </svg>
+              </a>
+
+              <form
+                method="post"
+                action="{% url 'accounts:brand_delete' brand.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="brand &quot;{{ brand.name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                {% if not full_page %}
+                <input type="hidden" name="embed" value="1">
+                {% endif %}
+                <button
+                  class="jb-link jb-link-icon jb-link-danger jb-link-delete jb-link-button"
+                  type="submit"
+                  aria-label="Delete {{ brand.name }}"
+                  title="Delete"
+                >
+                  <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M6 7l1 12h10l1-12"></path>
+                    <path d="M9 7V4h6v3"></path>
+                  </svg>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="jb-empty">No brands found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+</div>

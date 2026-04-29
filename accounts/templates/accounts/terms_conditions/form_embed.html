@@ -1,0 +1,106 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/master_form.css' %}?v=1">
+
+
+
+<div class="master-form-ui terms-form-ui">
+  <section class="mf-panel">
+    <div class="mf-head">
+      <div>
+        <h1 class="mf-title">
+          {% if mode == "edit" %}Edit Terms &amp; Conditions{% else %}Add Terms &amp; Conditions{% endif %}
+        </h1>
+      </div>
+
+      <div class="mf-head-actions">
+        <a
+          class="mf-iconbtn mf-back"
+          href="{% url 'accounts:termscondition_list' %}{% if not full_page %}?embed=1{% endif %}"
+          aria-label="Back"
+        >
+          <svg class="mf-back-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button
+          type="button"
+          class="mf-iconbtn mf-close"
+          aria-label="Close"
+          onclick="
+            const panel = document.getElementById('mastersEmbedPanel');
+            const mount = document.getElementById('mastersEmbedMount');
+            if (panel && mount) {
+              panel.style.display = 'none';
+              panel.style.pointerEvents = 'none';
+              mount.classList.remove('is-loading');
+              mount.innerHTML = '';
+            } else {
+              window.history.back();
+            }
+          "
+        >
+          <svg class="mf-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="mf-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form
+      method="post"
+      action="{% if mode == 'edit' and terms_condition %}{% url 'accounts:termscondition_edit' terms_condition.id %}{% else %}{% url 'accounts:termscondition_add' %}{% endif %}{% if not full_page %}?embed=1{% endif %}"
+      class="mf-form"
+      novalidate
+    >
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="mf-section">
+        <div class="mf-grid">
+          <div class="mf-field mf-full">
+            <label for="{{ form.title.id_for_label }}">Title</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.title.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field mf-full">
+            <label for="{{ form.content.id_for_label }}">Terms Content</label>
+            {{ form.content }}
+            {% if form.content.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.content.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-footer">
+        <a class="mf-btn-secondary" href="{% url 'accounts:termscondition_list' %}{% if not full_page %}?embed=1{% endif %}">
+          Cancel
+        </a>
+        <button type="submit" class="mf-btn-primary">
+          {% if mode == "edit" %}Update Terms{% else %}Save Terms{% endif %}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>

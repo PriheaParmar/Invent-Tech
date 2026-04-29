@@ -1,0 +1,953 @@
+{% load static %}
+<style>
+  :root{
+    --ld-bg:#f3f8ff;
+    --ld-bg-2:#eef5ff;
+
+    --ld-card:#ffffff;
+    --ld-card-soft:#f8fbff;
+    --ld-card-blue:#f2f7ff;
+    --ld-card-blue-2:#edf4ff;
+
+    --ld-line:#d7e6ff;
+    --ld-line-strong:#b8d2ff;
+    --ld-line-soft:#e9f1ff;
+
+    --ld-text:#0f172a;
+    --ld-muted:#6b7280;
+    --ld-muted-2:#8aa0c5;
+
+    --ld-blue:#2563eb;
+    --ld-blue-dark:#1d4ed8;
+    --ld-blue-deep:#163b95;
+    --ld-blue-soft:#eaf2ff;
+    --ld-blue-soft-2:#f5f9ff;
+
+    --ld-green:#16a34a;
+    --ld-red:#dc2626;
+    --ld-amber:#d97706;
+
+    --ld-shadow:0 14px 32px rgba(37,99,235,.08);
+    --ld-shadow-soft:0 8px 20px rgba(37,99,235,.06);
+  }
+
+  html,body{
+    margin:0;
+    padding:0;
+    background:
+      radial-gradient(circle at top left, rgba(37,99,235,.08) 0, rgba(37,99,235,0) 28%),
+      linear-gradient(180deg, var(--ld-bg) 0%, var(--ld-bg-2) 100%);
+    color:var(--ld-text);
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .ld-page{
+    padding:10px;
+    color:var(--ld-text);
+  }
+
+  .ld-shell{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .ld-card{
+    background:linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    border:1px solid var(--ld-line);
+    border-radius:16px;
+    padding:12px;
+    box-shadow:var(--ld-shadow-soft);
+  }
+
+  .ld-topcard{
+    background:
+      linear-gradient(135deg, rgba(37,99,235,.10) 0%, rgba(37,99,235,.04) 18%, #ffffff 18%, #f7fbff 100%);
+    border-color:var(--ld-line-strong);
+    box-shadow:var(--ld-shadow);
+  }
+
+  .ld-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+
+  .ld-title-wrap{
+    min-width:0;
+  }
+
+  .ld-title{
+    margin:0;
+    font-size:20px;
+    line-height:1.05;
+    font-weight:800;
+    color:#0f172a;
+    letter-spacing:-.02em;
+    font-family:ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  }
+
+  .ld-sub{
+    margin-top:6px;
+    font-size:11px;
+    color:var(--ld-muted);
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+
+  .ld-sub svg{
+    width:14px;
+    height:14px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+  }
+
+  .ld-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .ld-action-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    min-height:34px;
+    padding:0 12px;
+    border-radius:10px;
+    border:1px solid var(--ld-line);
+    background:#fff;
+    color:#0f172a;
+    text-decoration:none;
+    font-size:10.5px;
+    font-weight:900;
+    letter-spacing:.04em;
+    transition:.18s ease;
+    white-space:nowrap;
+  }
+
+  .ld-action-btn svg{
+    width:15px;
+    height:15px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .ld-action-btn:hover{
+    border-color:var(--ld-blue);
+    background:var(--ld-blue-soft);
+    color:var(--ld-blue-dark);
+    transform:translateY(-1px);
+  }
+
+  .ld-action-btn.is-primary{
+    border-color:var(--ld-blue);
+    background:linear-gradient(180deg, var(--ld-blue) 0%, var(--ld-blue-dark) 100%);
+    color:#fff;
+    box-shadow:0 10px 18px rgba(37,99,235,.16);
+  }
+
+  .ld-action-btn.is-primary:hover{
+    background:linear-gradient(180deg, var(--ld-blue-dark) 0%, var(--ld-blue-deep) 100%);
+    color:#fff;
+  }
+
+  .ld-tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-bottom:10px;
+  }
+
+  .ld-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    border:1px solid var(--ld-line);
+    background:#fff;
+    font-size:10.5px;
+    font-weight:800;
+    color:#334155;
+    white-space:nowrap;
+  }
+
+  .ld-tag svg{
+    width:13px;
+    height:13px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .ld-tag b{
+    color:var(--ld-blue-dark);
+    font-weight:900;
+  }
+
+  .ld-tag-strong{
+    background:var(--ld-blue-soft);
+    border-color:var(--ld-line-strong);
+    color:var(--ld-blue-dark);
+  }
+
+  .ld-stats{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .ld-stat{
+    min-width:0;
+    border:1px solid var(--ld-line);
+    background:linear-gradient(180deg, #ffffff 0%, #f4f9ff 100%);
+    border-radius:12px;
+    padding:10px;
+  }
+
+  .ld-stat span{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:9px;
+    line-height:1.1;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:900;
+    color:var(--ld-muted-2);
+    margin-bottom:6px;
+  }
+
+  .ld-stat span svg{
+    width:12px;
+    height:12px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .ld-stat strong{
+    display:block;
+    font-size:14px;
+    line-height:1.1;
+    font-weight:900;
+    color:var(--ld-blue-dark);
+  }
+
+  .ld-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .ld-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:8px;
+  }
+
+  .ld-head h3{
+    margin:0;
+    font-size:13px;
+    font-weight:800;
+    color:#0f172a;
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+
+  .ld-head h3 svg{
+    width:15px;
+    height:15px;
+    stroke:var(--ld-blue-dark);
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .ld-eyebrow{
+    font-size:9px;
+    font-weight:900;
+    color:#8ea4ca;
+    text-transform:uppercase;
+    letter-spacing:.10em;
+    margin-bottom:2px;
+  }
+
+  .ld-meta-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .ld-meta{
+    min-width:0;
+    border:1px solid var(--ld-line-soft);
+    border-radius:12px;
+    background:linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    padding:9px 10px;
+  }
+
+  .ld-meta span{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:9px;
+    line-height:1.1;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:900;
+    color:#8ea4ca;
+    margin-bottom:5px;
+  }
+
+  .ld-meta span svg{
+    width:12px;
+    height:12px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .ld-meta strong{
+    display:block;
+    font-size:11.5px;
+    line-height:1.35;
+    font-weight:800;
+    color:#0f172a;
+    word-break:break-word;
+  }
+
+  .ld-link{
+    color:var(--ld-blue-dark);
+    text-decoration:none;
+    font-weight:900;
+  }
+
+  .ld-link:hover{
+    text-decoration:underline;
+  }
+
+  .ld-table-wrap{
+    overflow:auto;
+    border-radius:12px;
+    border:1px solid var(--ld-line-soft);
+    background:#fff;
+  }
+
+  .ld-table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .ld-table thead th{
+    background:linear-gradient(180deg, #edf5ff 0%, #e6f0ff 100%);
+    color:#60728f;
+    font-size:9px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    text-align:left;
+    padding:10px;
+    border-bottom:1px solid var(--ld-line);
+    white-space:nowrap;
+  }
+
+  .ld-table thead th:first-child{border-top-left-radius:11px}
+  .ld-table thead th:last-child{border-top-right-radius:11px}
+
+  .ld-table tbody td{
+    padding:10px;
+    border-bottom:1px solid var(--ld-line-soft);
+    font-size:11.5px;
+    color:#0f172a;
+    vertical-align:top;
+    background:#fff;
+  }
+
+  .ld-table tbody tr:last-child td{
+    border-bottom:none;
+  }
+
+  .ld-table tbody tr:hover td{
+    background:var(--ld-blue-soft-2);
+  }
+
+  .ld-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:22px;
+    padding:0 8px;
+    border-radius:999px;
+    border:1px solid var(--ld-line);
+    background:#fff;
+    font-size:10px;
+    font-weight:900;
+    white-space:nowrap;
+    color:#334155;
+  }
+
+  .ld-pill-primary{
+    background:var(--ld-blue-soft);
+    color:var(--ld-blue-dark);
+    border-color:var(--ld-line-strong);
+  }
+
+  .ld-mini-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    min-height:28px;
+    padding:0 10px;
+    border-radius:8px;
+    border:1px solid var(--ld-line);
+    background:var(--ld-blue-soft-2);
+    color:var(--ld-blue-dark);
+    text-decoration:none;
+    font-size:10px;
+    font-weight:900;
+    white-space:nowrap;
+    transition:.18s ease;
+  }
+
+  .ld-mini-btn svg{
+    width:12px;
+    height:12px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .ld-mini-btn:hover{
+    border-color:var(--ld-blue-line-strong, var(--ld-line-strong));
+    background:var(--ld-blue-soft);
+  }
+
+  .ld-empty{
+    padding:16px 12px;
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ld-muted);
+    border:1px dashed var(--ld-line);
+    border-radius:12px;
+    background:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  }
+
+  @media (max-width:1100px){
+    .ld-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+
+  @media (max-width:980px){
+    .ld-page{padding:8px}
+    .ld-grid{grid-template-columns:1fr}
+  }
+
+  @media (max-width:640px){
+    .ld-meta-grid,
+    .ld-stats{grid-template-columns:1fr}
+    .ld-topbar{flex-direction:column;align-items:flex-start}
+    .ld-actions{width:100%}
+  }
+</style>
+
+<div class="ld-page">
+  <div class="ld-shell">
+
+    <div class="ld-card ld-topcard">
+      <div class="ld-topbar">
+        <div class="ld-title-wrap">
+          <h2 class="ld-title">{{ lot.lot_code }}</h2>
+          <div class="ld-sub">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 7l9-4 9 4-9 4-9-4z"></path>
+              <path d="M3 7v10l9 4 9-4V7"></path>
+              <path d="M12 11v10"></path>
+            </svg>
+            {{ lot.material.name }} • {{ lot.get_stage_display }}
+          </div>
+        </div>
+
+        <div class="ld-actions">
+          <a href="{% url 'accounts:quality_check_add' %}?lot={{ lot.id }}&embed=1" class="ld-action-btn is-primary" aria-label="Quality Check" title="Quality Check">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            QC
+          </a>
+          <a href="{% url 'accounts:qr_code_add' %}?lot={{ lot.id }}&embed=1" class="ld-action-btn" aria-label="Generate QR" title="Generate QR">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 3h7v7H3z"></path>
+              <path d="M14 3h7v7h-7z"></path>
+              <path d="M3 14h7v7H3z"></path>
+              <path d="M14 14h3"></path>
+              <path d="M17 14v3"></path>
+              <path d="M21 14v7h-7"></path>
+              <path d="M14 21v-3"></path>
+              <path d="M17 21h.01"></path>
+            </svg>
+            QR
+          </a>
+        </div>
+      </div>
+
+      <div class="ld-tags">
+        <span class="ld-tag ld-tag-strong">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-4z"></path>
+          </svg>
+          {{ lot.get_stage_display }}
+        </span>
+        <span class="ld-tag">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+            <path d="M8 3v4M16 3v4M3 10h18"></path>
+          </svg>
+          Batch <b>{{ lot.batch_no|default:"-" }}</b>
+        </span>
+        <span class="ld-tag">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0z"></path>
+            <path d="M12 8v4l2 2"></path>
+          </svg>
+          Dye Lot <b>{{ lot.dye_lot_no|default:"-" }}</b>
+        </span>
+        <span class="ld-tag">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3l8 7-8 11-8-11 8-7z"></path>
+          </svg>
+          Shade <b>{{ lot.shade_reference|default:"-" }}</b>
+        </span>
+        <span class="ld-tag">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"></path>
+            <path d="M7 4v6"></path>
+            <path d="M17 4v6"></path>
+            <path d="M6 14h12"></path>
+            <path d="M9 11v6"></path>
+            <path d="M15 11v6"></path>
+          </svg>
+          Unit <b>{{ lot.unit|default:"-" }}</b>
+        </span>
+      </div>
+
+      <div class="ld-stats">
+        <div class="ld-stat">
+          <span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18"></path><path d="M5 10l7-7 7 7"></path></svg>
+            Received
+          </span>
+          <strong>{{ lot.received_qty }}</strong>
+        </div>
+        <div class="ld-stat">
+          <span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
+            Accepted
+          </span>
+          <strong>{{ lot.accepted_qty }}</strong>
+        </div>
+        <div class="ld-stat">
+          <span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16"></path><path d="M14 6l6 6-6 6"></path></svg>
+            Used
+          </span>
+          <strong>{{ lot.used_qty }}</strong>
+        </div>
+        <div class="ld-stat">
+          <span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
+            Available
+          </span>
+          <strong>{{ lot.available_qty }}</strong>
+        </div>
+        <div class="ld-stat">
+          <span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
+            Rejected
+          </span>
+          <strong>{{ lot.rejected_qty }}</strong>
+        </div>
+        <div class="ld-stat">
+          <span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12l3 5-9 13L3 8l3-5z"></path></svg>
+            Hold
+          </span>
+          <strong>{{ lot.hold_qty }}</strong>
+        </div>
+        <div class="ld-stat">
+          <span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+            QC Status
+          </span>
+          <strong>{{ lot.get_qc_status_display }}</strong>
+        </div>
+        <div class="ld-stat">
+          <span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+            Location
+          </span>
+          <strong>{{ lot.location_name|default:"-" }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="ld-grid">
+      <div class="ld-card">
+        <div class="ld-head">
+          <div>
+            <div class="ld-eyebrow">Details</div>
+            <h3>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                <path d="M8 9h8M8 13h8M8 17h5"></path>
+              </svg>
+              Lot Information
+            </h3>
+          </div>
+        </div>
+
+        <div class="ld-meta-grid">
+          <div class="ld-meta">
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M8 3v4M16 3v4M3 10h18"></path></svg>
+              Batch No
+            </span>
+            <strong>{{ lot.batch_no|default:"-" }}</strong>
+          </div>
+          <div class="ld-meta">
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l2 2"></path></svg>
+              Dye Lot No
+            </span>
+            <strong>{{ lot.dye_lot_no|default:"-" }}</strong>
+          </div>
+          <div class="ld-meta">
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 7-8 11-8-11 8-7z"></path></svg>
+              Shade Reference
+            </span>
+            <strong>{{ lot.shade_reference|default:"-" }}</strong>
+          </div>
+          <div class="ld-meta">
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M7 4v6"></path><path d="M17 4v6"></path></svg>
+              Unit
+            </span>
+            <strong>{{ lot.unit|default:"-" }}</strong>
+          </div>
+          <div class="ld-meta">
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-4z"></path></svg>
+              Status
+            </span>
+            <strong>{% if lot.is_closed %}Closed{% else %}Open{% endif %}</strong>
+          </div>
+          <div class="ld-meta">
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="9"></circle></svg>
+              Updated
+            </span>
+            <strong>{{ lot.updated_at|date:"d M Y" }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="ld-card">
+        <div class="ld-head">
+          <div>
+            <div class="ld-eyebrow">Traceability</div>
+            <h3>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 13a5 5 0 0 1 0-7l1.5-1.5a5 5 0 0 1 7 7L17 13"></path>
+                <path d="M14 11a5 5 0 0 1 0 7L12.5 19.5a5 5 0 0 1-7-7L7 11"></path>
+              </svg>
+              Source Information
+            </h3>
+          </div>
+        </div>
+
+        {% if lot.dyeing_inward_item_id %}
+          <div class="ld-meta-grid">
+            <div class="ld-meta">
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4-9-4z"></path><path d="M3 7v10l9 4 9-4V7"></path></svg>
+                Type
+              </span>
+              <strong>Dyeing Inward</strong>
+            </div>
+            <div class="ld-meta">
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M8 3v4M16 3v4M3 10h18"></path></svg>
+                Inward No
+              </span>
+              <strong>{{ lot.dyeing_inward_item.inward.inward_number }}</strong>
+            </div>
+            <div class="ld-meta">
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
+                PO No
+              </span>
+              <strong>{{ lot.dyeing_inward_item.inward.po.system_number|default:"-" }}</strong>
+            </div>
+            <div class="ld-meta">
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7"></path><path d="M10 14L21 3"></path><path d="M21 14v4a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h4"></path></svg>
+                Action
+              </span>
+              <strong><a class="ld-link" href="{% url 'accounts:dyeingpo_inward' lot.dyeing_inward_item.inward.po_id %}">Open Source</a></strong>
+            </div>
+          </div>
+        {% elif lot.ready_inward_item_id %}
+          <div class="ld-meta-grid">
+            <div class="ld-meta">
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4-9-4z"></path><path d="M3 7v10l9 4 9-4V7"></path></svg>
+                Type
+              </span>
+              <strong>Ready Inward</strong>
+            </div>
+            <div class="ld-meta">
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M8 3v4M16 3v4M3 10h18"></path></svg>
+                Inward No
+              </span>
+              <strong>{{ lot.ready_inward_item.inward.inward_number }}</strong>
+            </div>
+            <div class="ld-meta">
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
+                PO No
+              </span>
+              <strong>{{ lot.ready_inward_item.inward.po.system_number|default:"-" }}</strong>
+            </div>
+            <div class="ld-meta">
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7"></path><path d="M10 14L21 3"></path><path d="M21 14v4a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h4"></path></svg>
+                Action
+              </span>
+              <strong><a class="ld-link" href="{% url 'accounts:readypo_inward' lot.ready_inward_item.inward.po_id %}">Open Source</a></strong>
+            </div>
+          </div>
+        {% else %}
+          <div class="ld-empty">No source linked.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="ld-card">
+      <div class="ld-head">
+        <div>
+          <div class="ld-eyebrow">Related</div>
+          <h3>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+              <path d="M7 10h10M7 14h6"></path>
+            </svg>
+            Rolls
+          </h3>
+        </div>
+      </div>
+
+      <div class="ld-table-wrap">
+        <table class="ld-table">
+          <thead>
+            <tr>
+              <th>Roll No</th>
+              <th>Length</th>
+              <th>Width</th>
+              <th>GSM</th>
+              <th>Weight</th>
+              <th>Accepted</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for roll in lot.rolls.all %}
+            <tr>
+              <td>{{ roll.roll_no }}</td>
+              <td>{{ roll.length_qty }}</td>
+              <td>{{ roll.width|default:"-" }}</td>
+              <td>{{ roll.gsm|default:"-" }}</td>
+              <td>{{ roll.weight_qty }}</td>
+              <td>{{ roll.accepted_qty }}</td>
+              <td><span class="ld-pill ld-pill-primary">{{ roll.get_status_display }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7"><div class="ld-empty">No rolls found.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="ld-card">
+      <div class="ld-head">
+        <div>
+          <div class="ld-eyebrow">Inspection</div>
+          <h3>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            Quality Checks
+          </h3>
+        </div>
+      </div>
+
+      <div class="ld-table-wrap">
+        <table class="ld-table">
+          <thead>
+            <tr>
+              <th>QC No</th>
+              <th>Date</th>
+              <th>Result</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for qc in lot.quality_checks.all %}
+            <tr>
+              <td>{{ qc.qc_number }}</td>
+              <td>{{ qc.inspection_date|date:"d M Y" }}</td>
+              <td>{{ qc.get_result_display }}</td>
+              <td>{{ qc.get_status_display }}</td>
+              <td>
+                <a href="{% url 'accounts:quality_check_detail' qc.id %}?embed=1" class="ld-mini-btn">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  Open
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5"><div class="ld-empty">No QC records found.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="ld-card">
+      <div class="ld-head">
+        <div>
+          <div class="ld-eyebrow">Codes</div>
+          <h3>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 3h7v7H3z"></path>
+              <path d="M14 3h7v7h-7z"></path>
+              <path d="M3 14h7v7H3z"></path>
+              <path d="M14 14h3"></path>
+              <path d="M17 14v3"></path>
+              <path d="M21 14v7h-7"></path>
+            </svg>
+            QR Codes
+          </h3>
+        </div>
+      </div>
+
+      <div class="ld-table-wrap">
+        <table class="ld-table">
+          <thead>
+            <tr>
+              <th>QR Code</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for qr in lot.qr_codes.all %}
+            <tr>
+              <td>{{ qr.qr_code }}</td>
+              <td>{{ qr.qr_type|title }}</td>
+              <td>{{ qr.status }}</td>
+              <td>
+                <a href="{% url 'accounts:qr_code_detail' qr.id %}?embed=1" class="ld-mini-btn">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  Open
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4"><div class="ld-empty">No QR records found.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="ld-card" id="history">
+      <div class="ld-head">
+        <div>
+          <div class="ld-eyebrow">Audit</div>
+          <h3>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+              <path d="M3 3v6h6"></path>
+              <path d="M12 7v5l3 3"></path>
+            </svg>
+            Movement History
+          </h3>
+        </div>
+      </div>
+
+      <div class="ld-table-wrap">
+        <table class="ld-table">
+          <thead>
+            <tr>
+              <th>Movement No</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Qty</th>
+              <th>Reference</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for move in lot.movements.all %}
+            <tr>
+              <td>{{ move.movement_no }}</td>
+              <td>{{ move.movement_date|date:"d M Y" }}</td>
+              <td>{{ move.get_movement_type_display }}</td>
+              <td>{{ move.quantity }}</td>
+              <td>{{ move.ref_number|default:"-" }}</td>
+              <td>{{ move.remarks|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6"><div class="ld-empty">No movement history yet.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

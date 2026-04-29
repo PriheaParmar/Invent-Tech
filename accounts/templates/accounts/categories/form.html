@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}{% if mode == "add" %}Add Category{% else %}Edit Category{% endif %} - InventTech{% endblock %}
+{% block page_title %}{% if mode == "add" %}Add Category{% else %}Edit Category{% endif %}{% endblock %}
+{% block page_subtitle %}Manage garment category master{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/categories/form_embed.html" with full_page=True %}
+</div>
+{% endblock %}

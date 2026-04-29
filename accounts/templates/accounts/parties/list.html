@@ -1,0 +1,16 @@
+{% load static %}
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Parties{% endblock %}
+{% block page_title %}Parties{% endblock %}
+{% block page_subtitle %}Manage parties{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/jobbers/list.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/parties/list_embed.html" with full_page=1 %}
+</div>
+{% endblock %}

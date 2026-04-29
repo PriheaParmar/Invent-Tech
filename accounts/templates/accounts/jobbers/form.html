@@ -1,0 +1,14 @@
+{% load static %}
+{% extends "accounts/base.html" %}
+
+{% block title %}{% if mode == "add" %}Add Jobber{% else %}Edit Jobber{% endif %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/shared/master_form.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/jobbers/embed_form.html" with full_page=1 %}
+</div>
+{% endblock %}  

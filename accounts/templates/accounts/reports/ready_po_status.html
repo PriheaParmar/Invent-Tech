@@ -1,0 +1,8 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+{% block title %}Ready PO Status Report{% endblock %}
+{% block page_title %}Ready PO Status Report{% endblock %}
+{% block page_subtitle %}Ready PO ordered, inwarded and pending quantities.{% endblock %}
+{% block content %}
+  {% include "accounts/reports/ready_po_status_embed.html" %}
+{% endblock %}

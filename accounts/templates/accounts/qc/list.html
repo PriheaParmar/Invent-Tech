@@ -1,0 +1,483 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Quality Checks - InventTech{% endblock %}
+{% block page_title %}Quality Checks{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+    --qc-bg:#eef5ff;
+    --qc-bg-2:#f7fbff;
+
+    --qc-panel:#ffffff;
+    --qc-panel-soft:#f8fbff;
+    --qc-panel-blue:#eef5ff;
+    --qc-panel-blue-2:#e8f1ff;
+
+    --qc-line:#d7e6ff;
+    --qc-line-soft:#e9f1ff;
+    --qc-line-strong:#b8d2ff;
+
+    --qc-text:#0f172a;
+    --qc-muted:#64748b;
+    --qc-muted-2:#8aa0c5;
+
+    --qc-blue:#2563eb;
+    --qc-blue-dark:#1d4ed8;
+    --qc-blue-deep:#163b95;
+    --qc-blue-soft:#eaf2ff;
+    --qc-blue-soft-2:#f5f9ff;
+
+    --qc-green:#16a34a;
+    --qc-red:#dc2626;
+    --qc-amber:#d97706;
+
+    --qc-shadow:0 14px 30px rgba(37,99,235,.08);
+    --qc-shadow-soft:0 8px 20px rgba(37,99,235,.05);
+  }
+
+  .qc-page{
+    padding:12px;
+    background:
+      radial-gradient(circle at top left, rgba(37,99,235,.08) 0, rgba(37,99,235,0) 28%),
+      linear-gradient(180deg, var(--qc-bg) 0%, var(--qc-bg-2) 100%);
+    color:var(--qc-text);
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .qc-shell{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .qc-card{
+    background:linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    border:1px solid var(--qc-line);
+    border-radius:18px;
+    padding:14px;
+    box-shadow:var(--qc-shadow-soft);
+  }
+
+  .qc-hero{
+    background:
+      linear-gradient(135deg, rgba(37,99,235,.10) 0%, rgba(37,99,235,.04) 18%, #ffffff 18%, #f7fbff 100%);
+    border-color:var(--qc-line-strong);
+    box-shadow:var(--qc-shadow);
+  }
+
+  .qc-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+
+  .qc-title-wrap{
+    min-width:0;
+  }
+
+  .qc-title{
+    margin:0;
+    font-size:22px;
+    line-height:1.04;
+    font-weight:800;
+    color:#0f172a;
+    letter-spacing:-.02em;
+    font-family:ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  }
+
+  .qc-sub{
+    margin-top:6px;
+    font-size:11px;
+    color:var(--qc-muted);
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+
+  .qc-sub svg{
+    width:14px;
+    height:14px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .qc-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    min-height:38px;
+    padding:0 14px;
+    border-radius:12px;
+    border:1px solid var(--qc-blue);
+    background:linear-gradient(180deg, var(--qc-blue) 0%, var(--qc-blue-dark) 100%);
+    color:#fff;
+    text-decoration:none;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.04em;
+    transition:.18s ease;
+    white-space:nowrap;
+    cursor:pointer;
+    box-shadow:0 10px 18px rgba(37,99,235,.16);
+  }
+
+  .qc-btn svg{
+    width:14px;
+    height:14px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .qc-btn:hover{
+    background:linear-gradient(180deg, var(--qc-blue-dark) 0%, var(--qc-blue-deep) 100%);
+    border-color:var(--qc-blue-dark);
+  }
+
+  .qc-table-wrap{
+    width:100%;
+    overflow-x:auto;
+    border:1px solid var(--qc-line-soft);
+    border-radius:14px;
+    background:#fff;
+  }
+
+  .qc-table{
+    width:100%;
+    min-width:860px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .qc-table thead th{
+    background:linear-gradient(180deg, #edf5ff 0%, #e6f0ff 100%);
+    color:#64748b;
+    font-size:9px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    text-align:left;
+    padding:11px 12px;
+    border-bottom:1px solid var(--qc-line);
+    white-space:nowrap;
+  }
+
+  .qc-table thead th:first-child{border-top-left-radius:12px}
+  .qc-table thead th:last-child{border-top-right-radius:12px}
+
+  .qc-table tbody td{
+    padding:12px;
+    border-bottom:1px solid var(--qc-line-soft);
+    font-size:11.5px;
+    color:#0f172a;
+    vertical-align:middle;
+    background:#fff;
+  }
+
+  .qc-table tbody tr:last-child td{
+    border-bottom:none;
+  }
+
+  .qc-table tbody tr:hover td{
+    background:var(--qc-blue-soft-2);
+  }
+
+  .qc-num{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+  }
+
+  .qc-num-ico{
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    border:1px solid var(--qc-line);
+    background:var(--qc-blue-soft);
+    color:var(--qc-blue-dark);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+  }
+
+  .qc-num-ico svg{
+    width:15px;
+    height:15px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+  }
+
+  .qc-num-text{
+    min-width:0;
+  }
+
+  .qc-num-code{
+    font-size:12px;
+    font-weight:900;
+    color:#0f172a;
+    line-height:1.2;
+  }
+
+  .qc-num-meta{
+    margin-top:2px;
+    font-size:10px;
+    color:var(--qc-muted);
+    font-weight:700;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .qc-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    min-height:24px;
+    padding:0 9px;
+    border-radius:999px;
+    border:1px solid var(--qc-line);
+    background:#fff;
+    font-size:10px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .qc-pill svg{
+    width:11px;
+    height:11px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .qc-pill-stage{
+    background:var(--qc-blue-soft);
+    border-color:var(--qc-line-strong);
+    color:var(--qc-blue-dark);
+  }
+
+  .qc-pill-status{
+    background:var(--qc-panel-soft);
+    color:#334155;
+  }
+
+  .qc-result{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:11px;
+    font-weight:900;
+  }
+
+  .qc-result svg{
+    width:13px;
+    height:13px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .qc-result.pass{
+    color:var(--qc-green);
+  }
+
+  .qc-result.fail{
+    color:var(--qc-red);
+  }
+
+  .qc-result.pending{
+    color:var(--qc-amber);
+  }
+
+  .qc-actions{
+    display:flex;
+    justify-content:flex-end;
+  }
+
+  .qc-action-btn{
+    min-width:32px;
+    height:32px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    border:1px solid var(--qc-line);
+    background:linear-gradient(180deg, #ffffff 0%, #eef5ff 100%);
+    color:var(--qc-blue-dark);
+    text-decoration:none;
+    transition:.18s ease;
+    box-shadow:0 6px 14px rgba(37,99,235,.08);
+  }
+
+  .qc-action-btn svg{
+    width:15px;
+    height:15px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+  }
+
+  .qc-action-btn:hover{
+    border-color:var(--qc-blue);
+    background:linear-gradient(180deg, var(--qc-blue) 0%, var(--qc-blue-dark) 100%);
+    color:#fff;
+    transform:translateY(-1px);
+  }
+
+  .qc-empty{
+    padding:18px 12px;
+    text-align:center;
+    font-size:11.5px;
+    color:var(--qc-muted);
+    background:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  }
+
+  @media (max-width:720px){
+    .qc-page{padding:8px}
+    .qc-top{flex-direction:column;align-items:flex-start}
+  }
+</style>
+
+<div class="qc-page">
+  <div class="qc-shell">
+    <div class="qc-card qc-hero">
+      <div class="qc-top">
+        <div class="qc-title-wrap">
+          <h2 class="qc-title">Quality Checks</h2>
+          <div class="qc-sub">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            Compact inspection records with lot, status, and result
+          </div>
+        </div>
+        <a href="{% url 'accounts:quality_check_add' %}" class="qc-btn">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Add Quality Check
+        </a>
+      </div>
+    </div>
+
+    <div class="qc-card">
+      <div class="qc-table-wrap">
+        <table class="qc-table">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Stage</th>
+              <th>Lot</th>
+              <th>Status</th>
+              <th>Result</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for qc in checks %}
+            <tr>
+              <td>
+                <div class="qc-num">
+                  <span class="qc-num-ico">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M9 11l3 3L22 4"></path>
+                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                  </span>
+                  <div class="qc-num-text">
+                    <div class="qc-num-code">{{ qc.qc_number }}</div>
+                    <div class="qc-num-meta">Inspection</div>
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <span class="qc-pill qc-pill-stage">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-4z"></path>
+                  </svg>
+                  {{ qc.get_stage_display }}
+                </span>
+              </td>
+
+              <td>{% if qc.lot %}{{ qc.lot.lot_code }}{% else %}-{% endif %}</td>
+
+              <td>
+                <span class="qc-pill qc-pill-status">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 12h18"></path>
+                    <path d="M12 3v18"></path>
+                  </svg>
+                  {{ qc.get_status_display }}
+                </span>
+              </td>
+
+              <td>
+                {% with result=qc.get_result_display|lower %}
+                  {% if "pass" in result %}
+                    <span class="qc-result pass">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20 6L9 17l-5-5"></path>
+                      </svg>
+                      {{ qc.get_result_display }}
+                    </span>
+                  {% elif "fail" in result or "reject" in result %}
+                    <span class="qc-result fail">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M18 6L6 18"></path>
+                        <path d="M6 6l12 12"></path>
+                      </svg>
+                      {{ qc.get_result_display }}
+                    </span>
+                  {% else %}
+                    <span class="qc-result pending">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="8"></circle>
+                        <path d="M12 8v4l2 2"></path>
+                      </svg>
+                      {{ qc.get_result_display }}
+                    </span>
+                  {% endif %}
+                {% endwith %}
+              </td>
+
+              <td>
+                <div class="qc-actions">
+                  <a href="{% url 'accounts:quality_check_detail' qc.id %}" class="qc-action-btn" aria-label="Open QC" title="Open QC">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6"><div class="qc-empty">No QC records found.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

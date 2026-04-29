@@ -1,0 +1,315 @@
+<style>
+  .firm-wrap{
+    padding:0;
+  }
+
+  .firm-card{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(15,23,42,.06);
+    padding:16px;
+  }
+
+  .firm-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:14px;
+  }
+
+  .firm-title{
+    font-size:18px;
+    font-weight:800;
+    color:#111827;
+    line-height:1.1;
+  }
+
+  .firm-sub{
+    margin-top:4px;
+    font-size:12px;
+    color:#6b7280;
+    font-weight:600;
+  }
+
+  .firm-close{
+    width:36px;
+    height:36px;
+    border:none;
+    border-radius:10px;
+    background:#f3f4f6;
+    color:#111827;
+    font-size:18px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  .firm-close:hover{
+    background:#111827;
+    color:#fff;
+  }
+
+  .firm-form{
+    display:grid;
+    gap:14px;
+  }
+
+  .firm-form p{
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .firm-form label{
+    font-size:11px;
+    font-weight:800;
+    color:#6b7280;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .firm-form input,
+  .firm-form textarea,
+  .firm-form select{
+    width:100%;
+    min-height:40px;
+    box-sizing:border-box;
+    border:1px solid #d1d5db;
+    border-radius:10px;
+    padding:8px 10px;
+    background:#fff;
+    color:#111827;
+    font:inherit;
+    outline:none;
+  }
+
+  .firm-form textarea{
+    min-height:90px;
+    resize:vertical;
+  }
+
+  .firm-form input:focus,
+  .firm-form textarea:focus,
+  .firm-form select:focus{
+    border-color:#9ca3af;
+  }
+
+  .firm-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .firm-btn{
+    min-height:40px;
+    padding:0 16px;
+    border:none;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:800;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .firm-btn.primary{
+    background:#ee3d85;
+    color:#fff;
+  }
+
+  .firm-btn.primary:hover{
+    background:#111827;
+  }
+
+  .firm-btn.secondary{
+    background:#f3f4f6;
+    color:#111827;
+  }
+
+  .firm-btn.secondary:hover{
+    background:#e5e7eb;
+  }
+
+  .firm-errorlist,
+  .errorlist{
+    color:#b91c1c;
+    font-size:12px;
+    font-weight:700;
+    margin:4px 0 0;
+    padding-left:16px;
+  }
+
+  .firm-address-card{
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:12px;
+    background:#fafafa;
+  }
+
+  .firm-address-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .firm-address-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+
+  .firm-address-title{
+    font-size:15px;
+    font-weight:800;
+    color:#111827;
+  }
+
+  .firm-address-sub{
+    margin-top:4px;
+    font-size:12px;
+    color:#6b7280;
+  }
+
+  @media (max-width: 768px){
+    .firm-address-grid{
+      grid-template-columns:1fr;
+    }
+
+    .firm-head,
+    .firm-actions{
+      flex-direction:column;
+      align-items:stretch;
+    }
+  }
+</style>
+
+<div class="firm-wrap">
+  <div class="firm-card">
+    <div class="firm-head">
+      <div>
+        <div class="firm-title">
+          {% if mode == "edit" %}Edit Firm{% else %}Create Firm{% endif %}
+        </div>
+        <div class="firm-sub">Enter firm details</div>
+      </div>
+
+      <button type="button" class="firm-close" data-embed-close>×</button>
+    </div>
+
+    <form method="post"
+          action="{% if mode == 'edit' %}{% url 'accounts:firm_edit' firm.id %}{% else %}{% url 'accounts:firm_add' %}{% endif %}?embed=1"
+          class="firm-form">
+      {% csrf_token %}
+      <input type="hidden" name="embed" value="1">
+
+      {{ form.as_p }}
+
+      {% if address_formset %}
+        <div class="firm-address-head">
+          <div>
+            <div class="firm-address-title">Shipping Addresses</div>
+            <div class="firm-address-sub">These addresses will appear in Yarn PO shipping address source.</div>
+          </div>
+          <button type="button" class="firm-btn secondary" id="addFirmAddressRow">Add Address</button>
+        </div>
+
+        {{ address_formset.management_form }}
+
+        {% if address_formset.non_form_errors %}
+          <div class="errorlist">{{ address_formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div id="firmAddressRows" style="display:grid;gap:12px;">
+          {% for address_form in address_formset.forms %}
+            <div class="firm-address-card" data-address-row>
+              {% for hidden in address_form.hidden_fields %}{{ hidden }}{% endfor %}
+              <div class="firm-address-grid">
+                <p>{{ address_form.label.label_tag }}{{ address_form.label }}{{ address_form.label.errors }}</p>
+                <p>{{ address_form.address_line.label_tag }}{{ address_form.address_line }}{{ address_form.address_line.errors }}</p>
+                <p>{{ address_form.city.label_tag }}{{ address_form.city }}{{ address_form.city.errors }}</p>
+                <p>{{ address_form.state.label_tag }}{{ address_form.state }}{{ address_form.state.errors }}</p>
+                <p>{{ address_form.pincode.label_tag }}{{ address_form.pincode }}{{ address_form.pincode.errors }}</p>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:24px;">
+                  <label style="display:flex;align-items:center;gap:8px;font-weight:700;">
+                    {{ address_form.is_default }} Default shipping address
+                  </label>
+                  <button type="button" class="firm-btn secondary" data-remove-address-row>Remove</button>
+                </div>
+              </div>
+              <div style="display:none;">{{ address_form.DELETE }}</div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <template id="firmAddressEmptyRow">
+          {% with address_form=address_formset.empty_form %}
+            <div class="firm-address-card" data-address-row>
+              {% for hidden in address_form.hidden_fields %}{{ hidden }}{% endfor %}
+              <div class="firm-address-grid">
+                <p>{{ address_form.label.label_tag }}{{ address_form.label }}</p>
+                <p>{{ address_form.address_line.label_tag }}{{ address_form.address_line }}</p>
+                <p>{{ address_form.city.label_tag }}{{ address_form.city }}</p>
+                <p>{{ address_form.state.label_tag }}{{ address_form.state }}</p>
+                <p>{{ address_form.pincode.label_tag }}{{ address_form.pincode }}</p>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:24px;">
+                  <label style="display:flex;align-items:center;gap:8px;font-weight:700;">
+                    {{ address_form.is_default }} Default shipping address
+                  </label>
+                  <button type="button" class="firm-btn secondary" data-remove-address-row>Remove</button>
+                </div>
+              </div>
+              <div style="display:none;">{{ address_form.DELETE }}</div>
+            </div>
+          {% endwith %}
+        </template>
+      {% endif %}
+
+      <div class="firm-actions">
+        <button type="submit" class="firm-btn primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if address_formset %}
+<script>
+  (function () {
+    const totalForms = document.getElementById('id_addresses-TOTAL_FORMS');
+    const rowsWrap = document.getElementById('firmAddressRows');
+    const addBtn = document.getElementById('addFirmAddressRow');
+    const template = document.getElementById('firmAddressEmptyRow');
+
+    function bindRow(row) {
+      const removeBtn = row.querySelector('[data-remove-address-row]');
+      const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+      removeBtn?.addEventListener('click', () => {
+        if (deleteInput) {
+          deleteInput.checked = true;
+          row.style.display = 'none';
+        } else {
+          row.remove();
+        }
+      });
+    }
+
+    rowsWrap?.querySelectorAll('[data-address-row]').forEach(bindRow);
+
+    addBtn?.addEventListener('click', () => {
+      const idx = parseInt(totalForms.value, 10);
+      const html = template.innerHTML.replaceAll('__prefix__', idx);
+      const temp = document.createElement('div');
+      temp.innerHTML = html.trim();
+      const row = temp.firstElementChild;
+      rowsWrap.appendChild(row);
+      totalForms.value = idx + 1;
+      bindRow(row);
+    });
+  })();
+</script>
+{% endif %}

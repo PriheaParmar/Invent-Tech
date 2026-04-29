@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Edit Pattern Type - InventTech{% endblock %}
+{% block page_title %}Edit Pattern Type{% endblock %}
+{% block page_subtitle %}Update the selected pattern type{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/pattern_types/edit_embed.html" with full_page=True %}
+</div>
+{% endblock %}

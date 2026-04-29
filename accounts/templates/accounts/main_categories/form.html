@@ -1,0 +1,23 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}
+  {% if mode == "edit" %}Edit Main Category - InventTech{% else %}Add Main Category - InventTech{% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if mode == "edit" %}Edit Main Category{% else %}Add Main Category{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+  {% if mode == "edit" %}
+    Update the selected main category
+  {% else %}
+    Create a reusable main category
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/main_categories/form_embed.html" with full_page=True mode=mode %}
+</div>
+{% endblock %}

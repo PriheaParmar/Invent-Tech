@@ -1,0 +1,8 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+{% block title %}Used Lot Summary Report{% endblock %}
+{% block page_title %}Used Lot Summary Report{% endblock %}
+{% block page_subtitle %}Lot-wise used quantity summary across programs.{% endblock %}
+{% block content %}
+  {% include "accounts/reports/used_lot_summary_embed.html" %}
+{% endblock %}

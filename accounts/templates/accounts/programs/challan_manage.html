@@ -1,0 +1,1193 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Program Challan Manage - InventTech{% endblock %}
+{% block page_title %}Program Challan Manage{% endblock %}
+{% block page_subtitle %}Jobber issue, inward, approval, and print control{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+    --pcm-bg:#f6f7fb;
+    --pcm-surface:#ffffff;
+    --pcm-surface-2:#fafbfc;
+    --pcm-surface-3:#f3f5f8;
+    --pcm-text:#111111;
+    --pcm-text-soft:#5f6b7a;
+    --pcm-text-muted:#8b95a7;
+    --pcm-line:#e8ecf2;
+    --pcm-line-2:#f1f3f7;
+    --pcm-black:#111111;
+    --pcm-blue:rgba(28,109,216,1);
+    --pcm-pink:rgb(238,61,133);
+    --pcm-orange:rgba(250,189,100,1);
+    --pcm-green:#118a4b;
+    --pcm-red:#b42318;
+    --pcm-blue-soft:rgba(28,109,216,.08);
+    --pcm-pink-soft:rgba(238,61,133,.08);
+    --pcm-orange-soft:rgba(250,189,100,.16);
+    --pcm-green-soft:rgba(17,138,75,.10);
+    --pcm-red-soft:rgba(180,35,24,.10);
+    --pcm-black-soft:rgba(17,17,17,.05);
+    --pcm-shadow-sm:0 2px 8px rgba(15,23,42,.04);
+  }
+
+  .pcm-page{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    color:var(--pcm-text);
+    padding-bottom:10px;
+  }
+
+  .pcm-topbar,
+  .pcm-card{
+    background:#fff;
+    border:1px solid var(--pcm-line);
+    border-radius:14px;
+    box-shadow:var(--pcm-shadow-sm);
+  }
+
+  .pcm-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    padding:10px 12px;
+  }
+
+  .pcm-topbar-left,
+  .pcm-topbar-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .pcm-actions{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+  }
+
+  .pcm-btn,
+  .pcm-link{
+    border:1px solid var(--pcm-line);
+    background:#fff;
+    color:var(--pcm-text);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    text-decoration:none;
+    white-space:nowrap;
+    cursor:pointer;
+    transition:.16s ease;
+    font-weight:900;
+  }
+
+  .pcm-btn{
+    min-height:34px;
+    padding:0 11px;
+    border-radius:9px;
+    font-size:10px;
+  }
+
+  .pcm-link{
+    min-height:25px;
+    padding:0 8px;
+    border-radius:8px;
+    font-size:8.5px;
+  }
+
+  .pcm-btn:hover,
+  .pcm-link:hover{
+    transform:translateY(-1px);
+  }
+
+  .pcm-btn svg{
+    width:13px;
+    height:13px;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .pcm-btn--dark,
+  .pcm-link--dark{
+    background:var(--pcm-black);
+    color:#fff;
+    border-color:var(--pcm-black);
+  }
+
+  .pcm-btn--blue,
+  .pcm-link--blue{
+    background:var(--pcm-blue-soft);
+    color:var(--pcm-blue);
+    border-color:rgba(28,109,216,.10);
+  }
+
+  .pcm-btn--soft{
+    background:var(--pcm-surface-2);
+    color:var(--pcm-text-soft);
+  }
+
+  .pcm-link--pink{
+    background:var(--pcm-pink-soft);
+    color:var(--pcm-pink);
+    border-color:rgba(238,61,133,.10);
+  }
+
+  .pcm-pill,
+  .pcm-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    white-space:nowrap;
+    border-radius:999px;
+    font-weight:900;
+  }
+
+  .pcm-pill{
+    min-height:20px;
+    padding:0 8px;
+    background:var(--pcm-black-soft);
+    color:var(--pcm-black);
+    font-size:8.5px;
+    border:1px solid transparent;
+  }
+
+  .pcm-pill--blue{
+    background:var(--pcm-blue-soft);
+    color:var(--pcm-blue);
+    border-color:rgba(28,109,216,.10);
+  }
+
+  .pcm-pill--pink{
+    background:var(--pcm-pink-soft);
+    color:var(--pcm-pink);
+    border-color:rgba(238,61,133,.10);
+  }
+
+  .pcm-pill--orange{
+    background:var(--pcm-orange-soft);
+    color:#9a6700;
+    border-color:rgba(250,189,100,.16);
+  }
+
+  .pcm-header{
+    display:grid;
+    grid-template-columns:minmax(280px,1.2fr) minmax(320px,1fr);
+    gap:10px;
+    padding:11px;
+    border-bottom:1px solid var(--pcm-line-2);
+  }
+
+  .pcm-main{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+  }
+
+  .pcm-kicker,
+  .pcm-stat-label,
+  .pcm-block-title,
+  .pcm-table thead th,
+  .pcm-meta-key,
+  .pcm-jobber-meta-label{
+    font-weight:900;
+    color:var(--pcm-text-muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .pcm-kicker{font-size:8px;}
+
+  .pcm-title{
+    font-size:18px;
+    font-weight:950;
+    line-height:1.05;
+    letter-spacing:-.03em;
+    color:var(--pcm-text);
+  }
+
+  .pcm-sub{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    font-size:10px;
+    font-weight:700;
+    color:var(--pcm-text-soft);
+  }
+
+  .pcm-summary{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .pcm-stat{
+    min-height:58px;
+    padding:9px 10px;
+    border-radius:10px;
+    background:var(--pcm-surface-2);
+    border:1px solid var(--pcm-line);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:4px;
+  }
+
+  .pcm-stat-label{font-size:8px;}
+
+  .pcm-stat-value{
+    font-size:13px;
+    font-weight:950;
+    line-height:1.1;
+    color:var(--pcm-text);
+  }
+
+  .pcm-stat-sub{
+    font-size:9px;
+    font-weight:700;
+    color:var(--pcm-text-soft);
+  }
+
+  .pcm-meta{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .pcm-meta-row,
+  .pcm-jobber-meta-box{
+    background:var(--pcm-surface-2);
+    border:1px solid var(--pcm-line);
+    border-radius:9px;
+    padding:8px 9px;
+  }
+
+  .pcm-meta-key,
+  .pcm-jobber-meta-label{
+    font-size:7.5px;
+  }
+
+  .pcm-meta-value,
+  .pcm-jobber-meta-value{
+    margin-top:3px;
+    font-size:10px;
+    font-weight:900;
+    color:var(--pcm-text);
+    line-height:1.25;
+  }
+
+  .pcm-block{
+    padding:10px 11px 11px;
+  }
+
+  .pcm-block + .pcm-block{
+    border-top:1px solid var(--pcm-line-2);
+  }
+
+  .pcm-block-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+
+  .pcm-block-title{
+    font-size:10px;
+    color:var(--pcm-text-soft);
+  }
+
+  .pcm-jobber-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:8px;
+  }
+
+  .pcm-jobber-card{
+    border:1px solid var(--pcm-line);
+    border-radius:11px;
+    background:var(--pcm-surface-2);
+    padding:9px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .pcm-jobber-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:8px;
+  }
+
+  .pcm-jobber-name{
+    font-size:12px;
+    font-weight:950;
+    color:var(--pcm-text);
+    line-height:1.15;
+  }
+
+  .pcm-jobber-sub{
+    margin-top:2px;
+    font-size:9px;
+    font-weight:700;
+    color:var(--pcm-text-soft);
+  }
+
+  .pcm-jobber-meta{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+  }
+
+  .pcm-table-wrap{
+    width:100%;
+    overflow:auto;
+    border:1px solid var(--pcm-line);
+    border-radius:12px;
+    background:#fff;
+  }
+
+  .pcm-table{
+    width:100%;
+    min-width:1220px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .pcm-table th,
+  .pcm-table td{
+    padding:6px 7px;
+    border-bottom:1px solid var(--pcm-line-2);
+    vertical-align:top;
+  }
+
+  .pcm-table thead th{
+    text-align:left;
+    white-space:nowrap;
+    background:#fff;
+    font-size:8px;
+    position:sticky;
+    top:0;
+    z-index:1;
+  }
+
+  .pcm-table tbody tr:hover td{
+    background:#fcfdff;
+  }
+
+  .pcm-table tbody tr:last-child td{
+    border-bottom:0;
+  }
+
+  .pcm-row-complete td{
+    background:rgba(17,138,75,.04);
+  }
+
+  .pcm-strong{
+    font-size:10px;
+    font-weight:950;
+    color:var(--pcm-text);
+    line-height:1.25;
+  }
+
+  .pcm-soft{
+    font-size:9px;
+    font-weight:700;
+    color:var(--pcm-text-soft);
+    line-height:1.35;
+    margin-top:2px;
+  }
+
+  .pcm-size-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    margin-top:4px;
+  }
+
+  .pcm-size-pill{
+    padding:2px 6px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid var(--pcm-line);
+    font-size:8px;
+    font-weight:900;
+    color:var(--pcm-text-soft);
+  }
+
+  .pcm-status{
+    min-height:18px;
+    padding:0 6px;
+    gap:5px;
+    font-size:8px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    border:1px solid var(--pcm-line);
+    background:#fff;
+    color:var(--pcm-text-soft);
+  }
+
+  .pcm-status::before{
+    content:"";
+    width:5px;
+    height:5px;
+    border-radius:999px;
+    background:#c5ccda;
+    flex:0 0 auto;
+  }
+
+  .pcm-status--pending{color:#9a6700;background:var(--pcm-orange-soft);border-color:rgba(250,189,100,.16);}
+  .pcm-status--pending::before{background:var(--pcm-orange);}
+  .pcm-status--approved{color:var(--pcm-green);background:var(--pcm-green-soft);border-color:rgba(17,138,75,.14);}
+  .pcm-status--approved::before{background:var(--pcm-green);}
+  .pcm-status--rejected{color:var(--pcm-red);background:var(--pcm-red-soft);border-color:rgba(180,35,24,.14);}
+  .pcm-status--rejected::before{background:var(--pcm-red);}
+  .pcm-status--partial{color:var(--pcm-blue);background:var(--pcm-blue-soft);border-color:rgba(28,109,216,.10);}
+  .pcm-status--partial::before{background:var(--pcm-blue);}
+  .pcm-status--closed{color:var(--pcm-black);background:var(--pcm-black-soft);border-color:rgba(17,17,17,.08);}
+  .pcm-status--closed::before{background:var(--pcm-black);}
+
+  .pcm-empty{
+    padding:24px 16px;
+    text-align:center;
+    border:1px dashed var(--pcm-line);
+    border-radius:12px;
+    background:#fff;
+  }
+
+  .pcm-empty-title{
+    font-size:13px;
+    font-weight:950;
+    color:var(--pcm-text);
+  }
+
+  .pcm-empty-copy{
+    margin-top:4px;
+    font-size:10px;
+    font-weight:700;
+    color:var(--pcm-text-soft);
+  }
+
+  .pcm-msgs{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .pcm-msg{
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--pcm-line);
+    background:#fff;
+    font-size:11px;
+    font-weight:800;
+  }
+
+  .pcm-msg.success{
+    background:var(--pcm-green-soft);
+    color:var(--pcm-green);
+    border-color:rgba(17,138,75,.14);
+  }
+
+  .pcm-msg.error{
+    background:var(--pcm-red-soft);
+    color:var(--pcm-red);
+    border-color:rgba(180,35,24,.14);
+  }
+
+  .pcm-popup{
+    position:fixed;
+    inset:0;
+    z-index:1200;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:22px;
+    background:rgba(15,23,42,.44);
+    backdrop-filter:blur(4px);
+  }
+
+  .pcm-popup.is-open{display:flex;}
+
+  .pcm-popup-dialog{
+    width:min(1220px,96vw);
+    max-height:90vh;
+    background:#fff;
+    border:1px solid rgba(226,232,240,.9);
+    border-radius:20px;
+    box-shadow:0 30px 90px rgba(15,23,42,.24);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .pcm-popup-head{
+    min-height:54px;
+    padding:0 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    border-bottom:1px solid var(--pcm-line);
+    background:#fff;
+  }
+
+  .pcm-popup-title{
+    font-size:12px;
+    font-weight:900;
+    color:var(--pcm-text);
+    letter-spacing:.02em;
+  }
+
+  .pcm-popup-close{
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    border:1px solid var(--pcm-line);
+    background:#fff;
+    color:var(--pcm-text);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+
+  .pcm-popup-close svg{
+    width:15px;
+    height:15px;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .pcm-popup-body{
+    min-height:220px;
+    max-height:calc(90vh - 55px);
+    overflow:auto;
+    background:#f8fafc;
+  }
+
+  .pcm-popup-loader{
+    min-height:240px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:900;
+    color:var(--pcm-text-soft);
+  }
+
+  @media (max-width:1200px){
+    .pcm-header{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width:768px){
+    .pcm-popup{
+      padding:10px;
+    }
+
+    .pcm-popup-dialog{
+      width:100%;
+      max-height:94vh;
+      border-radius:16px;
+    }
+  }
+
+  @media (max-width:720px){
+    .pcm-summary,
+    .pcm-meta,
+    .pcm-jobber-meta{
+      grid-template-columns:1fr;
+    }
+
+    .pcm-topbar-left,
+    .pcm-topbar-right{
+      width:100%;
+    }
+
+    .pcm-btn{
+      width:100%;
+    }
+  }
+
+
+  /* Premium pink list-matched overrides */
+  :root{
+    --pcm-bg:#fff7fb;
+    --pcm-surface:#ffffff;
+    --pcm-surface-2:#fffafd;
+    --pcm-surface-3:#fff1f8;
+    --pcm-line:#f6d9e8;
+    --pcm-line-2:#fae8f1;
+    --pcm-blue:rgb(238,61,133);
+    --pcm-pink:rgb(238,61,133);
+    --pcm-blue-soft:rgba(238,61,133,.085);
+    --pcm-pink-soft:rgba(238,61,133,.105);
+    --pcm-shadow-sm:0 8px 28px rgba(238,61,133,.055);
+  }
+
+  .pcm-page{
+    background:radial-gradient(circle at top right, rgba(238,61,133,.08), transparent 34%);
+  }
+
+  .pcm-topbar,
+  .pcm-card{
+    border-color:rgba(238,61,133,.16);
+    box-shadow:0 12px 36px rgba(95,15,50,.055);
+  }
+
+  .pcm-topbar{
+    background:linear-gradient(180deg,#fff,#fff9fc);
+  }
+
+  .pcm-title{
+    letter-spacing:-.04em;
+  }
+
+  .pcm-kicker,
+  .pcm-stat-label,
+  .pcm-block-title,
+  .pcm-table thead th,
+  .pcm-meta-key,
+  .pcm-jobber-meta-label{
+    color:#9b315f;
+  }
+
+  .pcm-pill,
+  .pcm-status,
+  .pcm-link{
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 6px 14px rgba(238,61,133,.045);
+  }
+
+  .pcm-pill--blue,
+  .pcm-pill--pink,
+  .pcm-link--blue,
+  .pcm-link--pink{
+    background:linear-gradient(180deg,rgba(238,61,133,.13),rgba(238,61,133,.07));
+    color:#c21f69;
+    border-color:rgba(238,61,133,.18);
+  }
+
+  .pcm-header{
+    background:radial-gradient(circle at top right, rgba(238,61,133,.09), transparent 38%), #fff;
+  }
+
+  .pcm-stat,
+  .pcm-meta-row,
+  .pcm-jobber-card,
+  .pcm-jobber-meta-box{
+    border-color:rgba(238,61,133,.11);
+    background:linear-gradient(180deg,#fff,#fffafd);
+  }
+
+  .pcm-stat{
+    min-height:52px;
+  }
+
+  .pcm-btn,
+  .pcm-link{
+    border-radius:999px;
+  }
+
+  .pcm-btn--dark,
+  .pcm-link--dark{
+    color:#fff;
+    border-color:rgba(238,61,133,.45);
+    background:linear-gradient(135deg,#ee3d85,#d82a74);
+    box-shadow:0 12px 24px rgba(238,61,133,.20);
+  }
+
+  .pcm-btn--dark:hover,
+  .pcm-link--dark:hover{
+    box-shadow:0 16px 30px rgba(238,61,133,.26);
+  }
+
+  .pcm-btn--soft{
+    background:#fff7fb;
+    border-color:rgba(238,61,133,.14);
+    color:#7d294f;
+  }
+
+  .pcm-table-wrap{
+    border-color:rgba(238,61,133,.14);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+  }
+
+  .pcm-table{
+    min-width:1120px;
+  }
+
+  .pcm-table thead th{
+    background:linear-gradient(180deg,#fff,#fff7fb);
+    border-bottom:1px solid rgba(238,61,133,.12);
+  }
+
+  .pcm-table th,
+  .pcm-table td{
+    padding:7px 8px;
+  }
+
+  .pcm-table tbody tr:hover td{
+    background:#fff9fc;
+  }
+
+  .pcm-size-pill{
+    background:#fff7fb;
+    border-color:rgba(238,61,133,.14);
+    color:#9b315f;
+  }
+
+  .pcm-popup-dialog{
+    border-color:rgba(238,61,133,.16);
+    box-shadow:0 34px 100px rgba(101,24,61,.22);
+  }
+
+  .pcm-popup-head{
+    background:linear-gradient(180deg,#fff,#fff8fc);
+  }
+
+</style>
+
+<div class="pcm-page">
+  {% if messages %}
+    <div class="pcm-msgs">
+      {% for message in messages %}
+        <div class="pcm-msg {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="pcm-topbar">
+    <div class="pcm-topbar-left">
+      <a href="{% url 'accounts:program_list' %}" class="pcm-btn pcm-btn--soft">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+        Back to Program List
+      </a>
+
+      {% if start_record and start_record.is_started %}
+        <span class="pcm-pill pcm-pill--pink">Started Program</span>
+      {% else %}
+        <span class="pcm-pill pcm-pill--orange">Not Started</span>
+      {% endif %}
+
+      {% if program.is_verified %}
+        <span class="pcm-pill pcm-pill--blue">Verified</span>
+      {% endif %}
+    </div>
+
+    <div class="pcm-topbar-right">
+      <a href="{% url 'accounts:program_start_modal' program.id %}" class="pcm-btn pcm-btn--soft">Edit Start</a>
+      <a href="{% url 'accounts:program_print' program.id %}" target="_blank" class="pcm-btn pcm-btn--blue">Review / Print</a>
+    </div>
+  </div>
+
+  <section class="pcm-card">
+    <div class="pcm-header">
+      <div class="pcm-main">
+        <div class="pcm-kicker">Program Challan Control</div>
+        <div class="pcm-title">{{ program.program_no }}</div>
+        <div class="pcm-sub">
+          <span class="pcm-pill">{{ program.bom.sku }}</span>
+          {% if program.bom.product_name %}<span>{{ program.bom.product_name }}</span>{% endif %}
+          {% if program.firm %}<span>• {{ program.firm.firm_name }}</span>{% endif %}
+          {% if program.status %}<span>• {{ program.get_status_display }}</span>{% endif %}
+        </div>
+      </div>
+
+      <div class="pcm-summary">
+        <div class="pcm-stat">
+          <div class="pcm-stat-label">Total Challans</div>
+          <div class="pcm-stat-value">{{ total_challans|default:"0" }}</div>
+          <div class="pcm-stat-sub">Generated for this program</div>
+        </div>
+        <div class="pcm-stat">
+          <div class="pcm-stat-label">Assigned Jobbers</div>
+          <div class="pcm-stat-value">{{ assigned_jobbers|length }}</div>
+          <div class="pcm-stat-sub">Started allocation rows</div>
+        </div>
+        <div class="pcm-stat">
+          <div class="pcm-stat-label">Total Issued Qty</div>
+          <div class="pcm-stat-value">{{ total_issued_qty|default:"0.00" }}</div>
+          <div class="pcm-stat-sub">Across all challans</div>
+        </div>
+        <div class="pcm-stat">
+          <div class="pcm-stat-label">Total Inward Qty</div>
+          <div class="pcm-stat-value">{{ total_inward_qty|default:"0.00" }}</div>
+          <div class="pcm-stat-sub">Returned against challans</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcm-block">
+      <div class="pcm-block-head">
+        <div class="pcm-block-title">Program Snapshot</div>
+      </div>
+
+      <div class="pcm-meta">
+        <div class="pcm-meta-row">
+          <div class="pcm-meta-key">Program Date</div>
+          <div class="pcm-meta-value">{{ program.program_date|date:"d-m-Y"|default:"-" }}</div>
+        </div>
+        <div class="pcm-meta-row">
+          <div class="pcm-meta-key">Finishing Date</div>
+          <div class="pcm-meta-value">{{ program.finishing_date|date:"d-m-Y"|default:"-" }}</div>
+        </div>
+        <div class="pcm-meta-row">
+          <div class="pcm-meta-key">Total Qty</div>
+          <div class="pcm-meta-value">{{ program.total_qty|default:"0.00" }}</div>
+        </div>
+        <div class="pcm-meta-row">
+          <div class="pcm-meta-key">Ratio</div>
+          <div class="pcm-meta-value">{{ program.ratio|default:"-" }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcm-block">
+      <div class="pcm-block-head">
+        <div class="pcm-block-title">Assigned Jobber Rows</div>
+      </div>
+
+      {% if assigned_jobbers %}
+        <div class="pcm-jobber-grid">
+          {% for row in assigned_jobbers %}
+            <div class="pcm-jobber-card">
+              <div class="pcm-jobber-top">
+                <div>
+                  <div class="pcm-jobber-name">{% if row.jobber %}{{ row.jobber.name }}{% else %}Unassigned Jobber{% endif %}</div>
+                  <div class="pcm-jobber-sub">{% if row.jobber_type %}{{ row.jobber_type.name }}{% else %}Jobber{% endif %}</div>
+                </div>
+
+                {% if row.latest_pending_challan %}
+                  <a href="{% url 'accounts:program_challan_approve' row.latest_pending_challan.id %}"
+                     class="pcm-btn pcm-btn--blue"
+                     data-challan-popup="1"
+                     data-popup-title="Approve Challan">
+                    Approve DC
+                  </a>
+                {% elif row.latest_inward_challan %}
+                  <a href="{% url 'accounts:program_inward_form' row.latest_inward_challan.id %}"
+                     class="pcm-btn pcm-btn--dark"
+                     data-challan-popup="1"
+                     data-popup-title="Program Inward">
+                    Program Inward
+                  </a>
+                {% else %}
+                  <a href="{% url 'accounts:program_challan_create' program.id row.id %}"
+                     class="pcm-btn pcm-btn--dark"
+                     data-challan-popup="1"
+                     data-popup-title="New Challan">
+                    New Challan
+                  </a>
+                {% endif %}
+              </div>
+
+              <div class="pcm-jobber-meta">
+                <div class="pcm-jobber-meta-box">
+                  <div class="pcm-jobber-meta-label">Jobber Price</div>
+                  <div class="pcm-jobber-meta-value">{{ row.jobber_price|default:"0.00" }}</div>
+                </div>
+                <div class="pcm-jobber-meta-box">
+                  <div class="pcm-jobber-meta-label">Allocation Date</div>
+                  <div class="pcm-jobber-meta-value">{{ row.allocation_date|date:"d-m-Y"|default:"-" }}</div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="pcm-empty">
+          <div class="pcm-empty-title">No started jobber rows found</div>
+          <div class="pcm-empty-copy">Start the program and assign jobbers before generating challans.</div>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="pcm-block">
+      <div class="pcm-block-head">
+        <div class="pcm-block-title">Challan History</div>
+      </div>
+
+      {% if challans %}
+        <div class="pcm-table-wrap">
+          <table class="pcm-table">
+            <thead>
+              <tr>
+                <th>Challan</th>
+                <th>Jobber</th>
+                <th>Issue Summary</th>
+                <th>Return Summary</th>
+                <th>Dates</th>
+                <th>Status</th>
+                <th>Approval</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for challan in challans %}
+                <tr class="{% if challan.display_status == 'Completed' %}pcm-row-complete{% endif %}">
+                  <td>
+                    <div class="pcm-strong">{{ challan.challan_no }}</div>
+                    <div class="pcm-soft">{{ challan.production_sku|default:"-" }}</div>
+                    <div class="pcm-soft">{{ challan.product_name|default:"-" }}</div>
+                  </td>
+
+                  <td>
+                    <div class="pcm-strong">{% if challan.jobber %}{{ challan.jobber.name }}{% else %}-{% endif %}</div>
+                    <div class="pcm-soft">{% if challan.jobber_type %}{{ challan.jobber_type.name }}{% else %}-{% endif %}</div>
+                    <div class="pcm-soft">Created by: {{ challan.created_by_name }}</div>
+                  </td>
+
+                  <td>
+                    <div class="pcm-strong">Issued: {{ challan.total_issued_qty|default:"0.00" }}</div>
+                    <div class="pcm-soft">Expected Return: {{ challan.expected_return_date|date:"d-m-Y"|default:"-" }}</div>
+                    {% if challan.size_rows.all %}
+                      <div class="pcm-size-row">
+                        {% for size in challan.size_rows.all %}
+                          {% if size.issued_qty %}
+                            <span class="pcm-size-pill">{{ size.size_name }}: {{ size.issued_qty }}</span>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    <div class="pcm-strong">Inward: {{ challan.inward_qty|default:"0.00" }}</div>
+                    <div class="pcm-soft">Pending: {{ challan.total_issued_qty|default:"0.00"|floatformat:2 }} - {{ challan.inward_qty|default:"0.00"|floatformat:2 }}</div>
+                    {% if challan.size_rows.all %}
+                      <div class="pcm-size-row">
+                        {% for size in challan.size_rows.all %}
+                          {% if size.inward_qty %}
+                            <span class="pcm-size-pill">{{ size.size_name }}: {{ size.inward_qty }}</span>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    <div class="pcm-strong">{{ challan.challan_date|date:"d-m-Y"|default:"-" }}</div>
+                    <div class="pcm-soft">Return: {{ challan.expected_return_date|date:"d-m-Y"|default:"-" }}</div>
+                    <div class="pcm-soft">Updated: {{ challan.updated_at|date:"d-m-Y"|default:"-" }}</div>
+                  </td>
+
+                  <td>
+                    {% if challan.display_status == "Pending Approval" %}
+                      <span class="pcm-status pcm-status--pending">Pending</span>
+                    {% elif challan.display_status == "Rejected" %}
+                      <span class="pcm-status pcm-status--rejected">Rejected</span>
+                    {% elif challan.display_status == "Approved" %}
+                      <span class="pcm-status pcm-status--approved">Approved</span>
+                    {% elif challan.display_status == "Partially Inwarded" %}
+                      <span class="pcm-status pcm-status--partial">Partial</span>
+                    {% elif challan.display_status == "Completed" %}
+                      <span class="pcm-status pcm-status--closed">Completed</span>
+                    {% else %}
+                      <span class="pcm-status">{{ challan.display_status }}</span>
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    {% if challan.status == "approved" %}
+                      <div class="pcm-strong">Approved</div>
+                      <div class="pcm-soft">
+                        By:
+                        {% if challan.approved_by %}
+                          {{ challan.approved_by.get_full_name|default:challan.approved_by.username }}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </div>
+                      <div class="pcm-soft">{{ challan.approved_at|date:"d-m-Y H:i"|default:"-" }}</div>
+                    {% elif challan.status == "rejected" %}
+                      <div class="pcm-strong">Rejected</div>
+                      <div class="pcm-soft">{{ challan.rejection_reason|default:"No reason" }}</div>
+                    {% else %}
+                      <div class="pcm-soft">Awaiting review</div>
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    <div class="pcm-actions">
+                      <a href="{% url 'accounts:program_challan_detail' challan.id %}"
+                         class="pcm-link"
+                         data-challan-popup="1"
+                         data-popup-title="Challan Detail">View</a>
+
+                      
+
+                     {% if challan.status == "approved" %}
+  <a href="{% url 'accounts:program_inward_form' challan.id %}"
+     class="pcm-link pcm-link--dark"
+     data-challan-popup="1"
+     data-popup-title="Program Inward">Inward</a>
+
+{% elif challan.status == "pending" %}
+  <a href="{% url 'accounts:program_challan_approve' challan.id %}"
+     class="pcm-link pcm-link--pink"
+     data-challan-popup="1"
+     data-popup-title="Approve Challan">Approve DC</a>
+
+{% elif challan.status == "rejected" %}
+  <span class="pcm-link">Rejected</span>
+
+{% else %}
+  <span class="pcm-link">Blocked</span>
+{% endif %}
+
+                      <a href="{% url 'accounts:program_challan_print' challan.id %}"
+                         target="_blank"
+                         class="pcm-link pcm-link--blue">Print</a>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="pcm-empty">
+          <div class="pcm-empty-title">No challan generated yet</div>
+          <div class="pcm-empty-copy">Create a new challan from any assigned jobber card above.</div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<div class="pcm-popup" id="challanPopup" aria-hidden="true">
+  <div class="pcm-popup-dialog">
+    <div class="pcm-popup-head">
+      <div class="pcm-popup-title" id="challanPopupTitle">Popup</div>
+      <button type="button" class="pcm-popup-close" id="challanPopupClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="pcm-popup-body" id="challanPopupBody">
+      <div class="pcm-popup-loader">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const popup = document.getElementById("challanPopup");
+  const popupBody = document.getElementById("challanPopupBody");
+  const popupTitle = document.getElementById("challanPopupTitle");
+  const popupClose = document.getElementById("challanPopupClose");
+  if (!popup || !popupBody || !popupTitle || !popupClose) return;
+
+  function openPopup(title){
+    popupTitle.textContent = title || "Popup";
+    popup.classList.add("is-open");
+    popup.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closePopup(){
+    popup.classList.remove("is-open");
+    popup.setAttribute("aria-hidden", "true");
+    popupBody.innerHTML = '<div class="pcm-popup-loader">Loading…</div>';
+    document.body.style.overflow = "";
+  }
+
+  async function loadPopup(url, title){
+    openPopup(title);
+    try{
+      const finalUrl = url.includes("?") ? `${url}&popup=1` : `${url}?popup=1`;
+      const res = await fetch(finalUrl, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+      const html = await res.text();
+      popupBody.innerHTML = html;
+      bindInner();
+    }catch(err){
+      popupBody.innerHTML = '<div class="pcm-popup-loader">Failed to load popup.</div>';
+    }
+  }
+
+  function bindLinks(root=document){
+    root.querySelectorAll("[data-challan-popup='1']").forEach(link => {
+      if (link.dataset.popupBound === "1") return;
+      link.dataset.popupBound = "1";
+      link.addEventListener("click", function(e){
+        e.preventDefault();
+        loadPopup(this.getAttribute("href"), this.getAttribute("data-popup-title") || "Popup");
+      });
+    });
+  }
+
+  function bindForms(root=document){
+    root.querySelectorAll("[data-challan-popup-form='1']").forEach(form => {
+      if (form.dataset.popupFormBound === "1") return;
+      form.dataset.popupFormBound = "1";
+      form.addEventListener("submit", async function(e){
+        e.preventDefault();
+        const formData = new FormData(this);
+        if (!formData.has("popup")) formData.append("popup", "1");
+        const res = await fetch(this.getAttribute("action") || window.location.href, {
+          method: this.getAttribute("method") || "POST",
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          body: formData
+        });
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+if (data.ok) {
+  window.location.href = data.redirect_url || data.url || window.location.href;
+  return;
+}
+        }
+        const html = await res.text();
+        popupBody.innerHTML = html;
+        bindInner();
+      });
+    });
+  }
+
+  function bindInner(){
+    bindLinks(popupBody);
+    bindForms(popupBody);
+    popupBody.querySelectorAll("[data-challan-popup-close='1']").forEach(btn => {
+      if (btn.dataset.closeBound === "1") return;
+      btn.dataset.closeBound = "1";
+      btn.addEventListener("click", function(e){
+        e.preventDefault();
+        closePopup();
+      });
+    });
+  }
+
+  popupClose.addEventListener("click", closePopup);
+  popup.addEventListener("click", function(e){
+    if (e.target === popup) closePopup();
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && popup.classList.contains("is-open")) closePopup();
+  });
+
+  bindLinks(document);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+{% block title %}Ready Fabric PO Details Report{% endblock %}
+{% block page_title %}Ready Fabric PO Details Report{% endblock %}
+{% block page_subtitle %}Ready fabric purchase details with vendor, material, subtype, rate and weight.{% endblock %}
+{% block content %}
+  {% include "accounts/reports/ready_fabric_po_details_embed.html" %}
+{% endblock %}

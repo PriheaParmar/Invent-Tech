@@ -1,0 +1,134 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_form.css' %}?v=1">
+
+<div class="master-form-ui location-form-ui">
+  <section class="mf-panel">
+    <div class="mf-head">
+      <div>
+        <h2 class="mf-title">
+          {% if mode == "edit" %}Edit Location{% else %}Add Location{% endif %}
+        </h2>
+      </div>
+
+      <div class="mf-head-actions">
+        <a class="mf-iconbtn mf-back" href="{% url 'accounts:location_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+          <svg class="mf-back-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="mf-iconbtn mf-close" data-embed-close aria-label="Close">
+          <svg class="mf-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if mode == "add" %}
+      {% url "accounts:location_add" as action_url %}
+    {% else %}
+      {% url "accounts:location_edit" location.id as action_url %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="mf-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="mf-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="mf-section">
+        <div class="mf-section-title">Location Details</div>
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.name.id_for_label }}">Location Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.city.id_for_label }}">City</label>
+            {{ form.city }}
+            {% if form.city.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.city.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.state.id_for_label }}">State</label>
+            {{ form.state }}
+            {% if form.state.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.state.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.pincode.id_for_label }}">Pincode</label>
+            {{ form.pincode }}
+            {% if form.pincode.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.pincode.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field mf-full">
+            <label for="{{ form.address_line_1.id_for_label }}">Address Line 1</label>
+            {{ form.address_line_1 }}
+            {% if form.address_line_1.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.address_line_1.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field mf-full">
+            <label for="{{ form.address_line_2.id_for_label }}">Address Line 2</label>
+            {{ form.address_line_2 }}
+            {% if form.address_line_2.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.address_line_2.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field mf-full">
+            <label for="{{ form.landmark.id_for_label }}">Landmark</label>
+            {{ form.landmark }}
+            {% if form.landmark.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.landmark.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-footer">
+        <a class="mf-btn-secondary" href="{% url 'accounts:location_list' %}{% if not full_page %}?embed=1{% endif %}">
+          Cancel
+        </a>
+        <button type="submit" class="mf-btn-primary">Save Location</button>
+      </div>
+    </form>
+  </section>
+</div>

@@ -1,0 +1,23 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}
+  {% if mode == "edit" %}Edit Material Type - InventTech{% else %}Add Material Type - InventTech{% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if mode == "edit" %}Edit Material Type{% else %}Add Material Type{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+  {% if mode == "edit" %}
+    Update the selected material type
+  {% else %}
+    Create a reusable material type
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/material_types/form_embed.html" with full_page=True mode=mode material_type=material_type %}
+</div>
+{% endblock %}

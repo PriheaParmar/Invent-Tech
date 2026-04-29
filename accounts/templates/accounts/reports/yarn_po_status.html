@@ -1,0 +1,10 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Yarn PO Status Report{% endblock %}
+{% block page_title %}Yarn PO Status Report{% endblock %}
+{% block page_subtitle %}Yarn PO ordered, inwarded and pending quantities.{% endblock %}
+
+{% block content %}
+  {% include "accounts/reports/yarn_po_status_embed.html" %}
+{% endblock %}

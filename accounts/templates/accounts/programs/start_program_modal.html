@@ -1,0 +1,1306 @@
+<div class="spm-backdrop" id="programStartModal" aria-hidden="false">
+  <div class="spm-dialog" role="dialog" aria-modal="true" aria-labelledby="spmTitle">
+    <style>
+      :root{
+        --accent:#e83e8c;
+        --accent-dark:#c72f75;
+        --accent-soft:rgba(232,62,140,.075);
+        --accent-line:rgba(232,62,140,.20);
+        --bg:#f7f8fb;
+        --panel:#fff;
+        --line:#e7ebf2;
+        --line-soft:#f0f3f8;
+        --line-strong:#d7dde8;
+        --text:#17202f;
+        --text-soft:#667085;
+        --text-muted:#98a2b3;
+        --danger:#c0392b;
+        --danger-soft:#fff4f2;
+        --danger-line:#f0d2cb;
+        --shadow-sm:0 1px 2px rgba(16,24,40,.05);
+        --shadow-md:0 8px 22px rgba(16,24,40,.055);
+        --shadow-lg:0 28px 80px rgba(16,24,40,.16);
+        --font-serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+        --font-sans:Inter,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+        --font-ui:"Segoe UI",Inter,Arial,sans-serif;
+      }
+
+      .spm-backdrop{
+        position:fixed; inset:0; z-index:1200;
+        background:rgba(18,25,38,.42);
+        backdrop-filter:blur(8px);
+        display:flex; align-items:flex-start; justify-content:center;
+        padding:14px; overflow:auto;
+      }
+
+      .spm-dialog{
+        width:min(1380px, calc(100vw - 28px));
+        max-height:calc(100vh - 28px);
+        background:var(--panel);
+        border:1px solid rgba(255,255,255,.72);
+        border-radius:22px;
+        box-shadow:var(--shadow-lg);
+        overflow:hidden;
+        color:var(--text);
+        font-family:var(--font-sans);
+        display:flex;
+        flex-direction:column;
+      }
+
+      .spm-head{
+        display:flex; align-items:center; justify-content:space-between;
+        gap:14px;
+        padding:13px 16px;
+        background:linear-gradient(180deg,#fff 0%,#fbfcff 100%);
+        border-bottom:1px solid var(--line);
+      }
+
+      .spm-head-copy{ min-width:0; display:flex; align-items:center; gap:12px; }
+
+      .spm-kicker{
+        display:inline-flex; align-items:center; justify-content:center;
+        height:30px; padding:0 12px;
+        border-radius:999px;
+        background:var(--accent-soft);
+        color:var(--accent-dark);
+        border:1px solid var(--accent-line);
+        font-size:10px; font-weight:900;
+        text-transform:uppercase; letter-spacing:.10em;
+        white-space:nowrap;
+      }
+
+      .spm-title{
+        margin:0;
+        font-size:24px; line-height:1;
+        font-weight:760;
+        color:#111827;
+        font-family:var(--font-serif);
+        letter-spacing:-.03em;
+      }
+
+      .spm-subtitle,
+      .spm-card-sub{ display:none !important; }
+
+      .spm-head-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+      .spm-head-pill{
+        min-height:30px; padding:0 11px;
+        border-radius:999px;
+        border:1px solid var(--line);
+        background:#fff;
+        color:#344054;
+        font-size:10px; font-weight:850;
+        display:inline-flex; align-items:center; justify-content:center;
+        white-space:nowrap;
+        box-shadow:var(--shadow-sm);
+        text-transform:uppercase; letter-spacing:.045em;
+      }
+
+      .spm-head-pill--firm{ background:#f8fafc; color:#475467; text-transform:none; letter-spacing:0; }
+
+      .spm-close{
+        width:34px; height:34px;
+        border-radius:11px;
+        border:1px solid var(--line);
+        background:#fff;
+        color:#475467;
+        cursor:pointer;
+        display:inline-flex; align-items:center; justify-content:center;
+        transition:.16s ease;
+        box-shadow:var(--shadow-sm);
+      }
+      .spm-close:hover{ transform:translateY(-1px); background:#f8fafc; border-color:var(--line-strong); }
+      .spm-close svg{ width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+      .spm-body{
+        padding:12px;
+        background:
+          radial-gradient(circle at 10% 0%, rgba(232,62,140,.05), transparent 26%),
+          linear-gradient(180deg,#f8fafc 0%,#f5f7fb 100%);
+        overflow:auto;
+      }
+
+      .spm-form{
+        display:grid;
+        grid-template-columns:330px minmax(0,1fr);
+        gap:12px;
+        align-items:start;
+      }
+
+      .spm-alert,
+      .spm-form-errors{
+        grid-column:1 / -1;
+        padding:10px 12px;
+        border-radius:14px;
+        border:1px solid var(--danger-line);
+        background:var(--danger-soft);
+        color:#b42318;
+        font-size:12px;
+        font-weight:800;
+        box-shadow:var(--shadow-sm);
+        margin:0;
+      }
+
+      .spm-card{
+        background:rgba(255,255,255,.92);
+        border:1px solid var(--line);
+        border-radius:18px;
+        overflow:hidden;
+        box-shadow:var(--shadow-md);
+      }
+
+      .spm-card:nth-of-type(1),
+      .spm-card:nth-of-type(2){ grid-column:1; }
+      .spm-card:nth-of-type(3),
+      .spm-card:nth-of-type(4),
+      .spm-card:nth-of-type(5){ grid-column:2; }
+
+      .spm-card-head{
+        padding:10px 12px;
+        display:flex; align-items:center; justify-content:space-between;
+        gap:10px;
+        border-bottom:1px solid var(--line-soft);
+        background:#fff;
+      }
+
+      .spm-card-title{
+        position:relative;
+        font-size:11px;
+        font-weight:920;
+        color:#111827;
+        text-transform:uppercase;
+        letter-spacing:.085em;
+        padding-left:10px;
+      }
+      .spm-card-title:before{
+        content:""; position:absolute; left:0; top:2px; bottom:2px;
+        width:3px; border-radius:999px; background:var(--accent);
+      }
+
+      .spm-grid{
+        padding:12px;
+        display:grid;
+        grid-template-columns:1fr;
+        gap:8px;
+      }
+      .spm-field--span-2,
+      .spm-field--span-3{ grid-column:auto; }
+
+      .spm-field{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+      .spm-label{
+        font-size:9px; font-weight:900;
+        color:#7a8290;
+        text-transform:uppercase; letter-spacing:.08em;
+      }
+
+      .spm-input,
+      .spm-select,
+      .spm-textarea,
+      .spm-field input:not([type="hidden"]),
+      .spm-field select,
+      .spm-field textarea{
+        width:100%; min-height:34px;
+        border:1px solid var(--line);
+        border-radius:11px;
+        background:#fff;
+        color:var(--text);
+        font-size:12px; font-weight:760;
+        padding:7px 9px;
+        box-sizing:border-box;
+        outline:none;
+        font-family:var(--font-sans);
+        box-shadow:var(--shadow-sm);
+      }
+      .spm-field input:not([type="hidden"]):focus,
+      .spm-field select:focus,
+      .spm-field textarea:focus,
+      .spm-table input:not([type="hidden"]):focus,
+      .spm-table select:focus,
+      .spm-table textarea:focus,
+      .spm-size-chip-input input:not([type="hidden"]):focus{
+        border-color:var(--accent-line);
+        box-shadow:0 0 0 4px var(--accent-soft);
+      }
+      .spm-textarea,.spm-field textarea{ min-height:62px; resize:vertical; }
+      .spm-input[readonly]{ background:#f8fafc; color:#344054; }
+
+      .spm-preview-wrap{ padding:12px; display:flex; flex-direction:column; gap:10px; }
+      .spm-preview-box{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:8px; }
+      .spm-preview-frame{
+        width:100%; aspect-ratio:1 / 1.08;
+        border-radius:14px; border:1px solid var(--line-soft);
+        background:#f8fafc; overflow:hidden;
+        display:flex; align-items:center; justify-content:center;
+      }
+      .spm-preview-frame img{ width:100%; height:100%; object-fit:cover; }
+      .spm-preview-empty{ color:var(--text-muted); font-size:11px; font-weight:800; text-align:center; padding:18px; }
+
+      .spm-meta-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+      .spm-meta-card{
+        min-height:54px;
+        border-radius:14px;
+        border:1px solid var(--line);
+        background:#fff;
+        padding:9px;
+      }
+      .spm-meta-label{
+        font-size:8px; font-weight:900;
+        color:var(--text-soft);
+        text-transform:uppercase; letter-spacing:.08em;
+      }
+      .spm-meta-value{
+        margin-top:5px;
+        color:#111827;
+        font-size:13px;
+        font-weight:900;
+        line-height:1.16;
+        word-break:break-word;
+        font-family:var(--font-ui);
+      }
+
+      .spm-table-wrap{ padding:10px; overflow:auto; }
+      .spm-table{
+        width:100%; border-collapse:separate; border-spacing:0 6px;
+        min-width:980px; table-layout:fixed;
+      }
+      .spm-table th{ padding:0 8px 3px; }
+      .spm-table td{ padding:6px 7px; }
+      .spm-table th,.spm-table td{ vertical-align:top; background:#fff; }
+      .spm-table thead th{
+        position:sticky; top:0; z-index:1;
+        background:#f8fafc;
+        color:#7a8290;
+        font-size:8px; font-weight:900;
+        text-transform:uppercase; letter-spacing:.08em;
+        white-space:nowrap;
+      }
+      .spm-table tbody tr td{
+        border-top:1px solid var(--line-soft);
+        border-bottom:1px solid var(--line-soft);
+      }
+      .spm-table tbody tr td:first-child{ border-left:1px solid var(--line-soft); border-radius:12px 0 0 12px; }
+      .spm-table tbody tr td:last-child{ border-right:1px solid var(--line-soft); border-radius:0 12px 12px 0; }
+      .spm-table tbody tr:hover td{ background:#fffafd; border-color:var(--accent-line); }
+      .spm-table input:not([type="hidden"]),
+      .spm-table select,
+      .spm-table textarea{
+        width:100%; min-height:31px;
+        border:1px solid var(--line);
+        border-radius:10px;
+        background:#fff;
+        color:var(--text);
+        font-size:11px; font-weight:750;
+        padding:6px 7px;
+        box-sizing:border-box;
+        outline:none;
+        font-family:var(--font-sans);
+      }
+      .spm-read{
+        min-height:31px; border-radius:10px; border:1px solid var(--line);
+        background:#f8fafc; color:var(--text); font-size:11px; font-weight:800;
+        padding:7px 8px; display:flex; align-items:center;
+      }
+
+      .spm-row-actions{ display:flex; align-items:center; gap:6px; }
+      .spm-mini-btn{
+        min-height:30px; padding:0 10px;
+        border-radius:10px;
+        border:1px solid var(--line);
+        background:#fff;
+        color:#344054;
+        font-size:9px; font-weight:900;
+        display:inline-flex; align-items:center; justify-content:center; gap:6px;
+        cursor:pointer; text-decoration:none; white-space:nowrap;
+        box-shadow:var(--shadow-sm);
+        text-transform:uppercase; letter-spacing:.05em;
+        transition:.16s ease;
+      }
+      .spm-mini-btn:hover,.spm-action:hover{ transform:translateY(-1px); }
+      .spm-mini-btn svg{ width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+      .spm-mini-btn--blue,.spm-mini-btn--orange{ color:var(--accent-dark); background:var(--accent-soft); border-color:var(--accent-line); }
+      .spm-mini-btn--pink{ color:#b42318; background:#fff5f5; border-color:#f6d0d0; }
+
+      .spm-size-wrap{ padding:10px 12px 12px; overflow:auto; }
+      .spm-size-table{ width:100%; border-collapse:collapse; min-width:0; }
+      .spm-size-table th,.spm-size-table td{ padding:7px; border-bottom:1px solid var(--line-soft); text-align:center; background:#fff; }
+      .spm-size-table thead th{ background:#f8fafc; color:#7a8290; font-size:8px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
+      .spm-size-name{ text-align:left !important; font-weight:900; color:var(--text); width:120px; }
+
+      .spm-size-strip{ padding:12px; }
+      .spm-size-strip-grid{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(76px, 1fr));
+        gap:8px;
+        align-items:stretch;
+      }
+      .spm-size-chip{
+        border:1px solid var(--line);
+        border-radius:16px;
+        background:#fff;
+        min-height:68px;
+        padding:9px 7px;
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        text-align:center;
+        box-shadow:var(--shadow-sm);
+      }
+      .spm-size-chip:hover{ border-color:var(--accent-line); background:#fffafd; }
+      .spm-size-chip-label{
+        font-size:9px; font-weight:950;
+        color:#667085;
+        text-transform:uppercase; letter-spacing:.08em;
+      }
+      .spm-size-chip-value{ margin-top:7px; font-size:14px; font-weight:950; color:#111827; }
+      .spm-size-chip-input{ width:100%; margin-top:6px; display:flex; align-items:center; justify-content:center; }
+      .spm-size-chip-input input:not([type="hidden"]){
+        width:62px !important; min-height:34px !important;
+        border:0 !important; border-radius:10px;
+        background:#f8fafc !important;
+        color:#111827 !important;
+        font-size:24px !important;
+        font-weight:950 !important;
+        line-height:1 !important;
+        text-align:center !important;
+        padding:0 !important;
+        box-shadow:none !important;
+        font-family:var(--font-ui) !important;
+        appearance:textfield; -moz-appearance:textfield;
+      }
+      .spm-size-chip-input input[type="number"]::-webkit-outer-spin-button,
+      .spm-size-chip-input input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+      .spm-size-note-row{ margin-top:10px; display:grid; grid-template-columns:minmax(0,1.2fr) repeat(3,minmax(110px,.6fr)); gap:9px; }
+      .spm-size-chip-error{ margin-top:4px; color:#b42318; font-size:9px; font-weight:800; line-height:1.15; text-align:center; }
+
+      .spm-footer{
+        padding:11px 16px;
+        display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;
+        background:rgba(255,255,255,.96);
+        border-top:1px solid var(--line);
+        box-shadow:0 -8px 24px rgba(16,24,40,.04);
+      }
+      .spm-action{
+        min-height:36px; padding:0 13px;
+        border-radius:11px;
+        border:1px solid var(--line);
+        background:#fff;
+        color:#344054;
+        font-size:10px; font-weight:900;
+        display:inline-flex; align-items:center; justify-content:center; gap:7px;
+        cursor:pointer; box-shadow:var(--shadow-sm);
+        text-transform:uppercase; letter-spacing:.05em;
+        transition:.16s ease;
+      }
+      .spm-action svg{ width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+      .spm-action--save{ background:#111827; border-color:#111827; color:#fff; box-shadow:0 10px 22px rgba(17,24,39,.18); }
+      .spm-action--save:hover{ background:var(--accent); border-color:var(--accent); color:#fff; }
+      .spm-action--cancel:hover{ background:#f8fafc; border-color:var(--line-strong); color:#111827; }
+
+      .spm-hidden{ display:none !important; }
+      .spm-errorlist{ margin:6px 0 0; padding:0; list-style:none; color:#b42318; font-size:11px; font-weight:800; }
+      .spm-help-error{ margin-top:5px; color:#b42318; font-size:10px; font-weight:800; }
+      .spm-placeholder-row td{ text-align:center; color:var(--text-muted); font-weight:800; padding:15px; }
+      .spm-fabric-stock-note{ margin-top:6px; font-size:10px; font-weight:800; color:var(--text-soft); }
+
+      .spm-searchbar input:focus-visible,
+      .spm-btn:focus-visible,
+      .spm-mini-btn:focus-visible,
+      .spm-action:focus-visible,
+      .spm-close:focus-visible{ outline:2px solid var(--accent-line); outline-offset:2px; }
+
+      @media (max-width:1180px){
+        .spm-form{ grid-template-columns:1fr; }
+        .spm-card:nth-of-type(1),.spm-card:nth-of-type(2),.spm-card:nth-of-type(3),.spm-card:nth-of-type(4),.spm-card:nth-of-type(5){ grid-column:1; }
+        .spm-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .spm-preview-wrap{ display:grid; grid-template-columns:220px minmax(0,1fr); }
+        .spm-size-note-row{ grid-template-columns:1fr 1fr; }
+      }
+      @media (max-width:860px){
+        .spm-backdrop{ padding:8px; }
+        .spm-dialog{ width:100%; max-height:calc(100vh - 16px); border-radius:18px; }
+        .spm-head{ align-items:flex-start; }
+        .spm-head-copy{ flex-direction:column; align-items:flex-start; gap:6px; }
+        .spm-head-actions{ justify-content:flex-end; }
+        .spm-grid,.spm-preview-wrap,.spm-meta-grid,.spm-size-note-row{ grid-template-columns:1fr; }
+      }
+    
+      /* LESS GAP FIX: keep same layout, but remove the empty top-right space */
+      .spm-body{ padding:10px !important; }
+      .spm-form{
+        grid-template-columns:300px minmax(0,1fr) !important;
+        gap:10px !important;
+        grid-auto-flow:dense !important;
+      }
+      .spm-card:nth-of-type(1){ grid-column:1 !important; grid-row:1 !important; }
+      .spm-card:nth-of-type(2){ grid-column:1 !important; grid-row:2 / span 3 !important; }
+      .spm-card:nth-of-type(3){ grid-column:2 !important; grid-row:1 !important; }
+      .spm-card:nth-of-type(4){ grid-column:2 !important; grid-row:2 !important; }
+      .spm-card:nth-of-type(5){ grid-column:2 !important; grid-row:3 !important; }
+      .spm-card-head{ padding:9px 11px !important; }
+      .spm-grid{ padding:10px !important; gap:7px !important; }
+      .spm-preview-wrap{ padding:10px !important; gap:8px !important; }
+      .spm-table-wrap{ padding:8px 10px 10px !important; }
+      .spm-size-strip{ padding:10px !important; }
+      .spm-meta-card{ min-height:48px !important; padding:8px !important; }
+      .spm-size-chip{ min-height:60px !important; padding:8px 6px !important; }
+      .spm-size-note-row{ margin-top:8px !important; gap:8px !important; }
+      @media (max-width:1180px){
+        .spm-form{ grid-template-columns:1fr !important; }
+        .spm-card:nth-of-type(1),
+        .spm-card:nth-of-type(2),
+        .spm-card:nth-of-type(3),
+        .spm-card:nth-of-type(4),
+        .spm-card:nth-of-type(5){ grid-column:1 !important; grid-row:auto !important; }
+      }
+
+    </style>
+
+    <div class="spm-head">
+      <div class="spm-head-copy">
+        <div class="spm-kicker">Start Program</div>
+        <h2 class="spm-title" id="spmTitle">{{ program.program_no }}</h2>
+      </div>
+
+      <div class="spm-head-actions">
+        <span class="spm-head-pill">
+          Created: {% if program.program_date %}{{ program.program_date|date:"d-m-Y" }}{% else %}-{% endif %}
+        </span>
+        <span class="spm-head-pill spm-head-pill--firm">
+          {% if program.firm %}{{ program.firm.firm_name }}{% else %}No Firm{% endif %}
+        </span>
+        <button type="button" class="spm-close" data-spm-close aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="spm-body">
+      <form method="post"
+            action="{% url 'accounts:program_start_save' program.id %}"
+            class="spm-form"
+            id="programStartForm">
+        {% csrf_token %}
+
+        {% if start_errors %}
+          <div class="spm-form-errors">
+            {% for err in start_errors %}
+              <div>
+                {{ err.section }}{% if err.row %} Row {{ err.row }}{% endif %}{% if err.field %} · {{ err.field }}{% endif %}: {{ err.message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if start_form.non_field_errors or fabric_formset.non_form_errors or size_formset.non_form_errors or jobber_formset.non_form_errors %}
+          <div class="spm-alert">
+            {% for error in start_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+            {% for error in fabric_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}
+            {% for error in size_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}
+            {% for error in jobber_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}
+          </div>
+        {% endif %}
+
+        <section class="spm-card">
+          <div class="spm-card-head">
+            <div>
+              <div class="spm-card-title">Program Details</div>
+            </div>
+          </div>
+
+          <div class="spm-grid">
+            <div class="spm-field">
+              <label class="spm-label">Number</label>
+              <input type="text" class="spm-input" value="{{ program_meta.program_no }}" readonly>
+            </div>
+
+            <div class="spm-field">
+              <label class="spm-label">Creation Date</label>
+              <input type="text" class="spm-input" value="{% if program_meta.program_date %}{{ program_meta.program_date|date:'d-m-Y' }}{% else %}-{% endif %}" readonly>
+            </div>
+
+            <div class="spm-field">
+              <label class="spm-label">Style Code</label>
+              <input type="text" class="spm-input" value="{{ program_meta.style_code|default:'' }}" readonly>
+            </div>
+
+            <div class="spm-field spm-field--span-2">
+              <label class="spm-label">Style Name</label>
+              <input type="text" class="spm-input" value="{{ program_meta.style_name|default:'' }}" readonly>
+            </div>
+
+            <div class="spm-field spm-field--span-2">
+              <label class="spm-label">Firm Name</label>
+              <input type="text" class="spm-input" value="{{ program_meta.firm_name|default:'' }}" readonly>
+            </div>
+          </div>
+        </section>
+
+        <section class="spm-card">
+          <div class="spm-card-head">
+            <div>
+              <div class="spm-card-title">Style / Size Chart</div>
+            </div>
+          </div>
+
+          <div class="spm-preview-wrap">
+            <div class="spm-preview-box">
+              <div class="spm-preview-frame">
+                {% if size_chart_image_url %}
+                  <img src="{{ size_chart_image_url }}" alt="{{ program_meta.style_code }}">
+                {% else %}
+                  <div class="spm-preview-empty">No size chart image available</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="spm-meta-grid">
+              <div class="spm-meta-card">
+                <div class="spm-meta-label">Program Qty</div>
+                <div class="spm-meta-value">{{ program.total_qty }}</div>
+              </div>
+
+              <div class="spm-meta-card">
+                <div class="spm-meta-label">Ratio</div>
+                <div class="spm-meta-value">{{ program.ratio }}</div>
+              </div>
+
+              <div class="spm-meta-card">
+                <div class="spm-meta-label">Cost Price</div>
+                <div class="spm-meta-value">₹ {{ program.cost_price }}</div>
+              </div>
+
+              <div class="spm-meta-card">
+                <div class="spm-meta-label">Average Price</div>
+                <div class="spm-meta-value">₹ {{ program.avg_price }}</div>
+              </div>
+
+              <div class="spm-meta-card">
+                <div class="spm-meta-label">GLT</div>
+                <div class="spm-meta-value">{{ program.glt_days }} Days</div>
+              </div>
+
+              <div class="spm-meta-card">
+                <div class="spm-meta-label">GLT On 100%</div>
+                <div class="spm-meta-value">{{ program.glt_on_100_days }} Days</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="spm-card">
+          <div class="spm-card-head">
+            <div>
+              <div class="spm-card-title">Fabric / Lot Detail</div>
+            </div>
+
+            <button type="button" class="spm-mini-btn spm-mini-btn--blue" data-add-row="fabric">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+              </svg>
+              Add Fabric
+            </button>
+          </div>
+
+          {{ fabric_formset.management_form }}
+          <div class="spm-table-wrap">
+            <table class="spm-table">
+              <thead>
+                <tr>
+                  <th>Fabric Name</th>
+                  <th>Actual Usage</th>
+                  <th>Consumption</th>
+                  <th>Length</th>
+                  <th>Width</th>
+                  <th>Count</th>
+                  <th>PP Count</th>
+                  <th>Lot No</th>
+                  <th>Lots In Stock</th>
+                  <th>Available</th>
+                  <th>Used Qty</th>
+                  <th>Unit</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="spm-fabric-rows">
+                {% for row in fabric_formset %}
+                  <tr class="spm-fabric-row" data-form-index="{{ forloop.counter0 }}">
+                    {{ row.id.as_hidden }}
+                    {{ row.sort_order.as_hidden }}
+                    {% if row.DELETE %}{{ row.DELETE.as_hidden }}{% endif %}
+
+                    <td>
+                      {{ row.material }}
+                      <div class="spm-fabric-stock-note" data-fabric-stock-note>Choose fabric to see available lots and stock.</div>
+                      {% if row.material.errors %}
+                        <div class="spm-help-error">{{ row.material.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.used }}
+                      {% if row.used.errors %}
+                        <div class="spm-help-error">{{ row.used.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.avg }}
+                      {% if row.avg.errors %}
+                        <div class="spm-help-error">{{ row.avg.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.length }}
+                      {% if row.length.errors %}
+                        <div class="spm-help-error">{{ row.length.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.width }}
+                      {% if row.width.errors %}
+                        <div class="spm-help-error">{{ row.width.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.count }}
+                      {% if row.count.errors %}
+                        <div class="spm-help-error">{{ row.count.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.pp_count }}
+                      {% if row.pp_count.errors %}
+                        <div class="spm-help-error">{{ row.pp_count.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.lot_no }}
+                      {% if row.lot_no.errors %}
+                        <div class="spm-help-error">{{ row.lot_no.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.lot_count }}
+                      {% if row.lot_count.errors %}
+                        <div class="spm-help-error">{{ row.lot_count.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.available_qty }}
+                      {% if row.available_qty.errors %}
+                        <div class="spm-help-error">{{ row.available_qty.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.used_qty }}
+                      {% if row.used_qty.errors %}
+                        <div class="spm-help-error">{{ row.used_qty.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.unit }}
+                      {% if row.unit.errors %}
+                        <div class="spm-help-error">{{ row.unit.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="spm-row-actions">
+                        <button type="button" class="spm-mini-btn spm-mini-btn--pink" data-remove-row="fabric">
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18 6L6 18"></path>
+                            <path d="M6 6l12 12"></path>
+                          </svg>
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+
+                <tr class="spm-placeholder-row {% if fabric_formset.forms %}spm-hidden{% endif %}" id="spm-fabric-empty-row">
+                  <td colspan="13">No fabric row found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <template id="spm-fabric-empty-template">
+            <tr class="spm-fabric-row" data-form-index="__prefix__">
+              {{ fabric_formset.empty_form.id.as_hidden }}
+              {{ fabric_formset.empty_form.sort_order.as_hidden }}
+              {% if fabric_formset.empty_form.DELETE %}{{ fabric_formset.empty_form.DELETE.as_hidden }}{% endif %}
+
+              <td>
+                {{ fabric_formset.empty_form.material }}
+                <div class="spm-fabric-stock-note" data-fabric-stock-note>Choose fabric to see available lots and stock.</div>
+              </td>
+              <td>{{ fabric_formset.empty_form.used }}</td>
+              <td>{{ fabric_formset.empty_form.avg }}</td>
+              <td>{{ fabric_formset.empty_form.length }}</td>
+              <td>{{ fabric_formset.empty_form.width }}</td>
+              <td>{{ fabric_formset.empty_form.count }}</td>
+              <td>{{ fabric_formset.empty_form.pp_count }}</td>
+              <td>{{ fabric_formset.empty_form.lot_no }}</td>
+              <td>{{ fabric_formset.empty_form.lot_count }}</td>
+              <td>{{ fabric_formset.empty_form.available_qty }}</td>
+              <td>{{ fabric_formset.empty_form.used_qty }}</td>
+              <td>{{ fabric_formset.empty_form.unit }}</td>
+              <td>
+                <div class="spm-row-actions">
+                  <button type="button" class="spm-mini-btn spm-mini-btn--pink" data-remove-row="fabric">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M18 6L6 18"></path>
+                      <path d="M6 6l12 12"></path>
+                    </svg>
+                    Remove
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </section>
+
+        <section class="spm-card">
+          <div class="spm-card-head">
+            <div>
+              <div class="spm-card-title">Size Summary</div>
+            </div>
+          </div>
+
+          {{ size_formset.management_form }}
+
+          <div class="spm-size-strip">
+            <div class="spm-size-strip-grid">
+              {% for row in size_formset %}
+                <div class="spm-size-chip">
+                  {{ row.id.as_hidden }}
+                  {{ row.sort_order.as_hidden }}
+                  {{ row.size_name.as_hidden }}
+                  {% if row.DELETE %}{{ row.DELETE.as_hidden }}{% endif %}
+
+                  <div class="spm-size-chip-label">{{ row.size_name.value|upper|default:"SIZE" }}</div>
+                  <div class="spm-size-chip-input">
+                    {{ row.qty }}
+                  </div>
+
+                  {% if row.qty.errors %}
+                    <div class="spm-size-chip-error">{{ row.qty.errors|join:", " }}</div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+
+              <div class="spm-size-chip">
+                <div class="spm-size-chip-label">Total</div>
+                <div class="spm-size-chip-value" id="spm-size-total">{{ size_snapshot.total|default:"0" }}</div>
+              </div>
+
+              <div class="spm-size-chip">
+                <div class="spm-size-chip-label">Avg</div>
+                <div class="spm-size-chip-value" id="spm-size-avg">{{ size_snapshot.avg|default:"0.00" }}</div>
+              </div>
+
+              <div class="spm-size-chip">
+                <div class="spm-size-chip-label">A Avg</div>
+                <div class="spm-size-chip-value" id="spm-size-aavg">{{ size_snapshot.a_avg|default:"0.00" }}</div>
+              </div>
+
+              <div class="spm-size-chip">
+                <div class="spm-size-chip-label">Ratio</div>
+                <div class="spm-size-chip-value" id="spm-size-ratio">{{ size_snapshot.ratio|default:"-" }}</div>
+              </div>
+            </div>
+
+            <div class="spm-size-note-row">
+              <div class="spm-field">
+                <label class="spm-label" for="{{ start_form.remarks.id_for_label }}">Remarks</label>
+                {{ start_form.remarks }}
+                {% if start_form.remarks.errors %}
+                  <ul class="spm-errorlist">
+                    {% for error in start_form.remarks.errors %}
+                      <li>{{ error }}</li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              </div>
+
+              <div class="spm-field">
+                <label class="spm-label">Total Qty</label>
+                <input type="text" class="spm-input" value="{{ program.total_qty }}" readonly>
+              </div>
+
+              <div class="spm-field">
+                <label class="spm-label">Average Price</label>
+                <input type="text" class="spm-input" value="{{ program.avg_price }}" readonly>
+              </div>
+
+              <div class="spm-field">
+                <label class="spm-label">Ratio</label>
+                <input type="text" class="spm-input" value="{{ program.ratio|default:'' }}" readonly>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="spm-card">
+          <div class="spm-card-head">
+            <div>
+              <div class="spm-card-title">Jobber Detail</div>
+            </div>
+
+            <button type="button" class="spm-mini-btn spm-mini-btn--orange" data-add-row="jobber">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+              </svg>
+              Add Jobber
+            </button>
+          </div>
+
+          {{ jobber_formset.management_form }}
+          <div class="spm-table-wrap">
+            <table class="spm-table">
+              <thead>
+                <tr>
+                  <th>Jobber Name</th>
+                  <th>Jobber Type</th>
+                  <th>Jobber Price</th>
+                  <th>Allocation Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="spm-jobber-rows">
+                {% for row in jobber_formset %}
+                  <tr class="spm-jobber-row" data-form-index="{{ forloop.counter0 }}">
+                    {{ row.id.as_hidden }}
+                    {{ row.sort_order.as_hidden }}
+                    {% if row.DELETE %}{{ row.DELETE.as_hidden }}{% endif %}
+
+                    <td>
+                      {{ row.jobber }}
+                      {% if row.jobber.errors %}
+                        <div class="spm-help-error">{{ row.jobber.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.jobber_type }}
+                      {% if row.jobber_type.errors %}
+                        <div class="spm-help-error">{{ row.jobber_type.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.jobber_price }}
+                      {% if row.jobber_price.errors %}
+                        <div class="spm-help-error">{{ row.jobber_price.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ row.allocation_date }}
+                      {% if row.allocation_date.errors %}
+                        <div class="spm-help-error">{{ row.allocation_date.errors|join:", " }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="spm-row-actions">
+                        <button type="button" class="spm-mini-btn spm-mini-btn--pink" data-remove-row="jobber">
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18 6L6 18"></path>
+                            <path d="M6 6l12 12"></path>
+                          </svg>
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+
+                <tr class="spm-placeholder-row {% if jobber_formset.forms %}spm-hidden{% endif %}" id="spm-jobber-empty-row">
+                  <td colspan="5">No jobber row found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <template id="spm-jobber-empty-template">
+            <tr class="spm-jobber-row" data-form-index="__prefix__">
+              {{ jobber_formset.empty_form.id.as_hidden }}
+              {{ jobber_formset.empty_form.sort_order.as_hidden }}
+              {% if jobber_formset.empty_form.DELETE %}{{ jobber_formset.empty_form.DELETE.as_hidden }}{% endif %}
+
+              <td>{{ jobber_formset.empty_form.jobber }}</td>
+              <td>{{ jobber_formset.empty_form.jobber_type }}</td>
+              <td>{{ jobber_formset.empty_form.jobber_price }}</td>
+              <td>{{ jobber_formset.empty_form.allocation_date }}</td>
+              <td>
+                <div class="spm-row-actions">
+                  <button type="button" class="spm-mini-btn spm-mini-btn--pink" data-remove-row="jobber">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M18 6L6 18"></path>
+                      <path d="M6 6l12 12"></path>
+                    </svg>
+                    Remove
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </section>
+      </form>
+    </div>
+
+    <div class="spm-footer">
+      <button type="button" class="spm-action spm-action--cancel" data-spm-close>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+        Cancel
+      </button>
+
+      <button type="submit" form="programStartForm" class="spm-action spm-action--save">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5"></path>
+        </svg>
+        Save Start Program
+      </button>
+    </div>
+
+    {{ bom_payload|json_script:"spm-bom-payload" }}
+    {{ jobber_defaults|json_script:"spm-jobber-defaults" }}
+    {{ bom_jobber_price_map|json_script:"spm-bom-jobber-price-map" }}
+    {{ fabric_lot_payload|json_script:"spm-fabric-lot-payload" }}
+
+    <script>
+      window.initProgramStartModal = function () {
+        const modal = document.getElementById("programStartModal");
+        if (!modal || modal.dataset.bound === "1") return;
+        modal.dataset.bound = "1";
+
+        const mount = document.getElementById("programStartModalMount");
+        const form = document.getElementById("programStartForm");
+
+        const bomPayload = JSON.parse(document.getElementById("spm-bom-payload")?.textContent || "{}");
+        const jobberDefaults = JSON.parse(document.getElementById("spm-jobber-defaults")?.textContent || "{}");
+        const bomJobberPriceMap = JSON.parse(document.getElementById("spm-bom-jobber-price-map")?.textContent || '{"jobber_type_prices":{},"jobber_detail_prices":{}}');
+        const fabricLotPayload = JSON.parse(document.getElementById("spm-fabric-lot-payload")?.textContent || "{}");
+
+        function closeModal() {
+          document.removeEventListener("keydown", escHandler);
+          if (mount) {
+            mount.innerHTML = "";
+          } else if (modal.parentNode) {
+            modal.remove();
+          }
+        }
+
+        modal.querySelectorAll("[data-spm-close]").forEach((btn) => {
+          btn.addEventListener("click", closeModal);
+        });
+
+        modal.addEventListener("click", function (e) {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+
+        function escHandler(e) {
+          if (e.key === "Escape" && document.body.contains(modal)) {
+            closeModal();
+          }
+        }
+        document.addEventListener("keydown", escHandler);
+
+        function updateDeleteField(row) {
+          const deleteField = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+          if (deleteField) {
+            deleteField.checked = true;
+          }
+        }
+
+        function getTotalInput(prefix) {
+          return document.querySelector(`#id_${prefix}-TOTAL_FORMS`);
+        }
+
+        function renumberSortOrder(selector) {
+          const rows = Array.from(document.querySelectorAll(selector))
+            .filter((row) => !row.classList.contains("spm-hidden"));
+
+          rows.forEach((row, index) => {
+            const sortInput = row.querySelector('input[name$="-sort_order"]');
+            if (sortInput) {
+              sortInput.value = index + 1;
+            }
+          });
+        }
+
+        function togglePlaceholder(tbodyId, rowSelector, emptyRowId) {
+          const tbody = document.getElementById(tbodyId);
+          const emptyRow = document.getElementById(emptyRowId);
+          if (!tbody || !emptyRow) return;
+
+          const visibleRows = Array.from(tbody.querySelectorAll(rowSelector))
+            .filter((row) => !row.classList.contains("spm-hidden"));
+
+          if (visibleRows.length) {
+            emptyRow.classList.add("spm-hidden");
+          } else {
+            emptyRow.classList.remove("spm-hidden");
+          }
+        }
+
+        function syncSection(prefix, rowSelector, tbodyId, emptyRowId) {
+          renumberSortOrder(rowSelector);
+          togglePlaceholder(tbodyId, rowSelector, emptyRowId);
+        }
+
+        function mappedJobberPrice(jobberId, jobberTypeId) {
+          const detailKey = `${jobberId || ""}:${jobberTypeId || ""}`;
+
+          if (
+            jobberId &&
+            jobberTypeId &&
+            bomJobberPriceMap.jobber_detail_prices &&
+            Object.prototype.hasOwnProperty.call(bomJobberPriceMap.jobber_detail_prices, detailKey)
+          ) {
+            return bomJobberPriceMap.jobber_detail_prices[detailKey];
+          }
+
+          if (
+            jobberTypeId &&
+            bomJobberPriceMap.jobber_type_prices &&
+            Object.prototype.hasOwnProperty.call(bomJobberPriceMap.jobber_type_prices, String(jobberTypeId))
+          ) {
+            return bomJobberPriceMap.jobber_type_prices[String(jobberTypeId)];
+          }
+
+          return "";
+        }
+
+        function applyJobberDefaults(row, options) {
+          const settings = Object.assign(
+            { forceTypeSelection: false, forcePrice: false },
+            options || {}
+          );
+
+          const jobberSelect = row.querySelector('select[name$="-jobber"]');
+          const jobberTypeSelect = row.querySelector('select[name$="-jobber_type"]');
+          const priceInput = row.querySelector('input[name$="-jobber_price"]');
+
+          if (!jobberSelect || !jobberTypeSelect || !priceInput) return;
+
+          const jobberId = jobberSelect.value || "";
+          let jobberTypeId = jobberTypeSelect.value || "";
+          const defaultJobber = jobberDefaults[jobberId] || {};
+
+          if (!jobberTypeId && defaultJobber.jobber_type_id) {
+            jobberTypeSelect.value = String(defaultJobber.jobber_type_id);
+          }
+
+          jobberTypeId = jobberTypeSelect.value || "";
+
+          const mappedPrice = mappedJobberPrice(jobberId, jobberTypeId);
+          const currentPrice = (priceInput.value || "").trim();
+
+          if (mappedPrice !== "") {
+            if (settings.forcePrice || !currentPrice || currentPrice === "0" || currentPrice === "0.00") {
+              priceInput.value = mappedPrice;
+            }
+          }
+        }
+
+        function bindJobberRow(row) {
+          if (!row || row.dataset.jobberBound === "1") return;
+          row.dataset.jobberBound = "1";
+
+          const jobberSelect = row.querySelector('select[name$="-jobber"]');
+          const jobberTypeSelect = row.querySelector('select[name$="-jobber_type"]');
+
+          if (jobberSelect) {
+            jobberSelect.addEventListener("change", function () {
+              applyJobberDefaults(row, { forceTypeSelection: true, forcePrice: true });
+            });
+          }
+
+          if (jobberTypeSelect) {
+            jobberTypeSelect.addEventListener("change", function () {
+              applyJobberDefaults(row, { forceTypeSelection: false, forcePrice: true });
+            });
+          }
+
+          applyJobberDefaults(row, { forceTypeSelection: false, forcePrice: false });
+        }
+
+        function applyFabricLotDefaults(row) {
+          const materialSelect = row.querySelector('select[name$="-material"]');
+          const lotCountInput = row.querySelector('input[name$="-lot_count"]');
+          const availableQtyInput = row.querySelector('input[name$="-available_qty"]');
+          const note = row.querySelector('[data-fabric-stock-note]');
+
+          if (!materialSelect) return;
+
+          const materialId = String(materialSelect.value || "");
+          const stock = fabricLotPayload[materialId] || null;
+
+          if (stock) {
+            if (lotCountInput) {
+              lotCountInput.value = stock.lot_count || "0";
+            }
+            if (availableQtyInput) {
+              availableQtyInput.value = stock.available_qty || "0";
+            }
+            if (note) {
+              note.textContent = `${stock.material_name || "Fabric"} • ${stock.lot_count || 0} lot(s) • Available ${stock.available_qty || 0}`;
+            }
+          } else {
+            if (lotCountInput && (!lotCountInput.value || lotCountInput.value === "0")) {
+              lotCountInput.value = "0";
+            }
+            if (availableQtyInput && (!availableQtyInput.value || availableQtyInput.value === "0")) {
+              availableQtyInput.value = "0";
+            }
+            if (note) {
+              note.textContent = "Choose fabric to see available lots and stock.";
+            }
+          }
+        }
+
+        function bindFabricRow(row) {
+          if (!row || row.dataset.fabricBound === "1") return;
+          row.dataset.fabricBound = "1";
+
+          const materialSelect = row.querySelector('select[name$="-material"]');
+          if (materialSelect) {
+            materialSelect.addEventListener("change", function () {
+              applyFabricLotDefaults(row);
+            });
+          }
+
+          applyFabricLotDefaults(row);
+        }
+
+        function addRow(prefix, templateId, tbodyId, rowClass, emptyRowId) {
+          const totalInput = getTotalInput(prefix);
+          const template = document.getElementById(templateId);
+          const tbody = document.getElementById(tbodyId);
+
+          if (!totalInput || !template || !tbody) return;
+
+          const index = parseInt(totalInput.value, 10) || 0;
+          const html = template.innerHTML.replace(/__prefix__/g, index);
+          const temp = document.createElement("tbody");
+          temp.innerHTML = html.trim();
+          const newRow = temp.firstElementChild;
+
+          tbody.appendChild(newRow);
+
+          if (rowClass === "spm-jobber-row") {
+            bindJobberRow(newRow);
+          }
+
+          if (rowClass === "spm-fabric-row") {
+            bindFabricRow(newRow);
+          }
+
+          totalInput.value = index + 1;
+          syncSection(prefix, "." + rowClass, tbodyId, emptyRowId);
+        }
+
+        function updateSizeSummary() {
+          const qtyInputs = Array.from(modal.querySelectorAll('input[name^="sizes-"][name$="-qty"]'));
+          const totalEl = document.getElementById("spm-size-total");
+          const avgEl = document.getElementById("spm-size-avg");
+          const aAvgEl = document.getElementById("spm-size-aavg");
+
+          if (!qtyInputs.length) return;
+
+          let total = 0;
+          let activeCount = 0;
+
+          qtyInputs.forEach(function (input) {
+            const value = parseFloat(input.value || "0");
+            if (!Number.isNaN(value)) {
+              total += value;
+              if (value > 0) {
+                activeCount += 1;
+              }
+            }
+          });
+
+          if (totalEl) {
+            totalEl.textContent = total % 1 === 0 ? String(parseInt(total, 10)) : total.toFixed(2);
+          }
+
+          if (avgEl) {
+            const avg = activeCount ? (total / activeCount) : 0;
+            avgEl.textContent = avg.toFixed(2);
+          }
+
+          if (aAvgEl) {
+            const allAvg = qtyInputs.length ? (total / qtyInputs.length) : 0;
+            aAvgEl.textContent = allAvg.toFixed(2);
+          }
+        }
+
+        function bindSizeInputs() {
+          const qtyInputs = Array.from(modal.querySelectorAll('input[name^="sizes-"][name$="-qty"]'));
+          qtyInputs.forEach(function (input) {
+            if (input.dataset.sizeBound === "1") return;
+            input.dataset.sizeBound = "1";
+            input.addEventListener("input", updateSizeSummary);
+            input.addEventListener("change", updateSizeSummary);
+          });
+          updateSizeSummary();
+        }
+
+        modal.addEventListener("click", function (e) {
+          const addBtn = e.target.closest("[data-add-row]");
+          if (addBtn) {
+            const type = addBtn.getAttribute("data-add-row");
+
+            if (type === "fabric") {
+              addRow("fabrics", "spm-fabric-empty-template", "spm-fabric-rows", "spm-fabric-row", "spm-fabric-empty-row");
+            }
+
+            if (type === "jobber") {
+              addRow("jobbers", "spm-jobber-empty-template", "spm-jobber-rows", "spm-jobber-row", "spm-jobber-empty-row");
+            }
+            return;
+          }
+
+          const removeBtn = e.target.closest("[data-remove-row]");
+          if (removeBtn) {
+            const row = removeBtn.closest("tr");
+            if (!row) return;
+
+            updateDeleteField(row);
+
+            const idInput = row.querySelector('input[name$="-id"]');
+            const hasPersistentId = idInput && idInput.value;
+
+            if (hasPersistentId) {
+              row.classList.add("spm-hidden");
+            } else {
+              row.remove();
+            }
+
+            syncSection("fabrics", ".spm-fabric-row", "spm-fabric-rows", "spm-fabric-empty-row");
+            syncSection("jobbers", ".spm-jobber-row", "spm-jobber-rows", "spm-jobber-empty-row");
+          }
+        });
+
+        Array.from(document.querySelectorAll(".spm-fabric-row")).forEach(bindFabricRow);
+        Array.from(document.querySelectorAll(".spm-jobber-row")).forEach(bindJobberRow);
+
+        syncSection("fabrics", ".spm-fabric-row", "spm-fabric-rows", "spm-fabric-empty-row");
+        syncSection("jobbers", ".spm-jobber-row", "spm-jobber-rows", "spm-jobber-empty-row");
+
+        bindSizeInputs();
+
+        if (form) {
+          form.setAttribute("data-start-modal-ready", "1");
+        }
+      };
+
+      window.initProgramStartModal();
+    </script>
+  </div>
+</div>

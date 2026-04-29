@@ -1,0 +1,246 @@
+<div class="pcap-overlay" id="programChallanApproveModal" aria-hidden="false">
+  <div class="pcap-modal" role="dialog" aria-modal="true" aria-labelledby="pcapTitle">
+    <style>
+      :root{
+        --pcap-pink:#ee3d85;
+        --pcap-pink-dark:#d92d74;
+        --pcap-pink-soft:rgba(238,61,133,.10);
+        --pcap-pink-line:rgba(238,61,133,.24);
+        --pcap-bg:#fff8fb;
+        --pcap-card:#ffffff;
+        --pcap-line:#eadde5;
+        --pcap-line-soft:#f7edf3;
+        --pcap-text:#1b2430;
+        --pcap-soft:#707887;
+        --pcap-muted:#8e96a2;
+        --pcap-green:#17754a;
+        --pcap-green-soft:#edf8f1;
+        --pcap-green-line:#cfe7d8;
+        --pcap-red:#bf4336;
+        --pcap-red-soft:#fff2ef;
+        --pcap-red-line:#f0d2cb;
+        --pcap-blue:#2555d9;
+        --pcap-blue-soft:#eef3ff;
+        --pcap-blue-line:#ccd8ff;
+        --pcap-shadow:0 24px 70px rgba(15,23,42,.18);
+        --pcap-serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,"Times New Roman",serif;
+        --pcap-sans:Inter,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+      }
+      .pcap-overlay{position:fixed;inset:0;z-index:1500;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(15,23,42,.42);backdrop-filter:blur(5px);font-family:var(--pcap-sans);color:var(--pcap-text);}
+      .pcap-modal{width:min(920px,96vw);max-height:92vh;overflow:hidden;background:linear-gradient(180deg,#fff,#fff8fb);border:1px solid rgba(234,221,229,.96);border-radius:18px;box-shadow:var(--pcap-shadow);}
+      .pcap-form{display:flex;flex-direction:column;max-height:92vh;}
+      .pcap-head{height:54px;padding:0 12px 0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--pcap-line);background:rgba(255,255,255,.92);}
+      .pcap-title-wrap{display:flex;align-items:center;gap:10px;min-width:0;}
+      .pcap-mark{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--pcap-pink),var(--pcap-pink-dark));box-shadow:0 10px 20px rgba(238,61,133,.18);color:#fff;flex:0 0 auto;}
+      .pcap-mark svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;}
+      .pcap-title-text{min-width:0;}
+      .pcap-kicker{font-size:8px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8b6577;line-height:1;}
+      .pcap-title{margin-top:4px;font-family:var(--pcap-serif);font-size:20px;font-weight:700;letter-spacing:-.02em;color:#121a24;line-height:1;}
+      .pcap-close{width:32px;height:32px;border:1px solid var(--pcap-line);border-radius:11px;background:#fff;color:#7b6570;display:grid;place-items:center;cursor:pointer;transition:.16s ease;}
+      .pcap-close:hover{border-color:var(--pcap-pink-line);background:var(--pcap-pink-soft);color:var(--pcap-pink-dark);}
+      .pcap-close svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;}
+      .pcap-body{overflow:auto;padding:12px;background:radial-gradient(circle at top right,rgba(238,61,133,.08),transparent 26%),var(--pcap-bg);display:flex;flex-direction:column;gap:10px;}
+      .pcap-alert{display:flex;align-items:flex-start;gap:8px;padding:9px 10px;border:1px solid var(--pcap-red-line);border-radius:13px;background:var(--pcap-red-soft);color:var(--pcap-red);font-size:11px;font-weight:800;}
+      .pcap-summary{background:#fff;border:1px solid var(--pcap-line);border-radius:16px;box-shadow:0 10px 28px rgba(15,23,42,.05);overflow:hidden;}
+      .pcap-summary-top{padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--pcap-line-soft);}
+      .pcap-main-id{display:flex;align-items:center;gap:8px;min-width:0;}
+      .pcap-main-no{font-size:15px;font-weight:900;color:#111827;white-space:nowrap;}
+      .pcap-status{min-height:24px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--pcap-blue-line);background:var(--pcap-blue-soft);color:var(--pcap-blue);font-size:9px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;}
+      .pcap-status.is-approved{border-color:var(--pcap-green-line);background:var(--pcap-green-soft);color:var(--pcap-green);}
+      .pcap-status.is-rejected{border-color:var(--pcap-red-line);background:var(--pcap-red-soft);color:var(--pcap-red);}
+      .pcap-status.is-pending{border-color:var(--pcap-pink-line);background:var(--pcap-pink-soft);color:var(--pcap-pink-dark);}
+      .pcap-pill-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+      .pcap-pill{min-height:24px;padding:0 9px;border-radius:999px;border:1px solid var(--pcap-line);background:linear-gradient(180deg,#fff,#fffafd);box-shadow:0 1px 2px rgba(17,24,39,.04);display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:850;color:#364152;white-space:nowrap;}
+      .pcap-pill b{font-size:10px;color:#101828;}
+      .pcap-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--pcap-line-soft);}
+      .pcap-box{padding:10px 12px;min-width:0;border-right:1px solid var(--pcap-line-soft);border-bottom:1px solid var(--pcap-line-soft);background:rgba(255,255,255,.72);}
+      .pcap-box:nth-child(3n){border-right:0;}
+      .pcap-label{font-size:8px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;color:var(--pcap-muted);line-height:1;}
+      .pcap-value{margin-top:5px;font-size:12px;font-weight:850;color:#182230;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .pcap-value.big{font-size:15px;font-weight:950;color:#101828;}
+      .pcap-section{background:#fff;border:1px solid var(--pcap-line);border-radius:16px;box-shadow:0 10px 28px rgba(15,23,42,.05);overflow:hidden;}
+      .pcap-section-head{height:34px;padding:0 10px 0 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--pcap-line-soft);background:linear-gradient(180deg,#fff,#fffafd);}
+      .pcap-section-title{font-size:10.5px;font-weight:950;color:#182230;letter-spacing:.01em;}
+      .pcap-table-wrap{padding:7px;background:linear-gradient(180deg,#fffafd,#fff);}
+      .pcap-size-table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:10.5px;border:1px solid rgba(238,61,133,.18);border-radius:14px;overflow:hidden;background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 10px 24px rgba(238,61,133,.055);}
+      .pcap-size-table col.col-size{width:92px;}
+      .pcap-size-table col.col-number{width:auto;}
+      .pcap-size-table th{height:26px;padding:0 10px;border-bottom:1px solid rgba(238,61,133,.13);color:#8a4768;font-size:7.7px;font-weight:950;letter-spacing:.17em;text-transform:uppercase;background:linear-gradient(180deg,#fff8fb,#fff2f8);vertical-align:middle;}
+      .pcap-size-table td{height:27px;padding:0 10px;border-bottom:1px solid rgba(238,61,133,.08);color:#1d2734;font-weight:850;vertical-align:middle;background:#fff;}
+      .pcap-size-table tr:last-child td{border-bottom:0;}
+      .pcap-size-table th:first-child,.pcap-size-table td:first-child{text-align:left;font-weight:950;color:#101828;padding-left:13px;}
+      .pcap-size-table th:not(:first-child),.pcap-size-table td:not(:first-child){text-align:center;}
+      .pcap-size-table tbody tr:nth-child(even) td{background:linear-gradient(180deg,#fff,#fffcfe);}
+      .pcap-size-table tbody tr:hover td{background:#fff3f8;}
+      .pcap-size-table tbody tr:hover .pcap-size-token{border-color:rgba(238,61,133,.30);box-shadow:0 4px 12px rgba(238,61,133,.10);}
+      .pcap-num{font-variant-numeric:tabular-nums;}
+      .pcap-num-head{display:flex;align-items:center;justify-content:center;width:100%;}
+      .pcap-size-token{min-width:52px;height:19px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#fff,#fff8fb);border:1px solid rgba(238,61,133,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 1px 2px rgba(17,24,39,.035);font-size:10px;font-weight:950;color:#182230;line-height:1;}
+      .pcap-size-token.is-issued{background:linear-gradient(180deg,#fff,#fff5fa);border-color:rgba(238,61,133,.24);color:#a11c5b;}
+      .pcap-size-name{display:inline-flex;align-items:center;justify-content:flex-start;min-width:42px;height:19px;padding:0 8px;border-radius:999px;background:#fff;border:1px solid rgba(238,61,133,.10);font-size:9.8px;font-weight:950;color:#111827;line-height:1;}
+      .pcap-field{padding:11px 12px;background:#fff;}
+      .pcap-field label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;font-size:10px;font-weight:950;color:#364152;letter-spacing:.02em;}
+      .pcap-help{font-size:9px;font-weight:800;color:var(--pcap-muted);}
+      .pcap-field textarea{width:100%;min-height:76px;border:1px solid var(--pcap-line);border-radius:13px;background:#fffafd;padding:10px 11px;font-family:var(--pcap-sans);font-size:12px;line-height:1.45;color:#1f2937;resize:vertical;outline:none;transition:.16s ease;box-sizing:border-box;}
+      .pcap-field textarea:focus{border-color:var(--pcap-pink-line);background:#fff;box-shadow:0 0 0 4px rgba(238,61,133,.10);}
+      .pcap-actions{padding:10px 12px;border-top:1px solid var(--pcap-line);display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.94);}
+      .pcap-actions-left{display:flex;align-items:center;gap:7px;min-width:0;color:var(--pcap-muted);font-size:10px;font-weight:800;}
+      .pcap-actions-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
+      .pcap-btn{min-height:34px;padding:0 12px;border-radius:11px;border:1px solid var(--pcap-line);background:#fff;color:#344054;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:10px;font-weight:950;letter-spacing:.02em;text-decoration:none;cursor:pointer;transition:.16s ease;white-space:nowrap;}
+      .pcap-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+      .pcap-btn:hover{transform:translateY(-1px);border-color:var(--pcap-pink-line);box-shadow:0 8px 18px rgba(15,23,42,.07);}
+      .pcap-btn-muted{background:#fff;color:#667085;}
+      .pcap-btn-danger{border-color:var(--pcap-red-line);background:linear-gradient(180deg,#fff7f5,#fff2ef);color:var(--pcap-red);}
+      .pcap-btn-primary{border-color:rgba(238,61,133,.55);background:linear-gradient(135deg,var(--pcap-pink),var(--pcap-pink-dark));color:#fff;box-shadow:0 12px 24px rgba(238,61,133,.22);}
+      .pcap-btn-primary:hover{box-shadow:0 16px 30px rgba(238,61,133,.28);}
+      @media(max-width:780px){.pcap-overlay{padding:10px}.pcap-modal{max-height:94vh}.pcap-head{height:auto;min-height:54px;padding:10px 12px}.pcap-summary-top{align-items:flex-start;flex-direction:column}.pcap-pill-row{justify-content:flex-start}.pcap-grid{grid-template-columns:1fr}.pcap-box,.pcap-box:nth-child(3n){border-right:0}.pcap-actions{align-items:stretch;flex-direction:column}.pcap-actions-right{display:grid;grid-template-columns:1fr}.pcap-btn{width:100%;}.pcap-actions-left{justify-content:center}}
+    </style>
+
+    <form class="pcap-form" method="post" data-challan-popup-form="1" action="{% url 'accounts:program_challan_approve' challan.id %}?popup=1">
+      {% csrf_token %}
+      <input type="hidden" name="popup" value="1">
+      <input type="hidden" name="action" id="challanApproveAction" value="">
+
+      <div class="pcap-head">
+        <div class="pcap-title-wrap">
+          <div class="pcap-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-5"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+          </div>
+          <div class="pcap-title-text">
+            <div class="pcap-kicker">Program Workflow</div>
+            <div class="pcap-title" id="pcapTitle">Approve Challan</div>
+          </div>
+        </div>
+        <button type="button" class="pcap-close" data-challan-popup-close="1" aria-label="Close">
+          <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="pcap-body">
+        {% if error %}
+          <div class="pcap-alert">
+            <span>!</span>
+            <span>{{ error }}</span>
+          </div>
+        {% endif %}
+
+        <div class="pcap-summary">
+          <div class="pcap-summary-top">
+            <div class="pcap-main-id">
+              <div class="pcap-main-no">{{ challan.challan_no|default:"-" }}</div>
+              {% if challan.status == "approved" %}
+                <span class="pcap-status is-approved">Approved</span>
+              {% elif challan.status == "rejected" %}
+                <span class="pcap-status is-rejected">Rejected</span>
+              {% else %}
+                <span class="pcap-status is-pending">{{ challan.status|default:"Pending"|title }}</span>
+              {% endif %}
+            </div>
+            <div class="pcap-pill-row">
+              <span class="pcap-pill">Program <b>{{ program.program_no|default:"-" }}</b></span>
+              <span class="pcap-pill">Issued <b>{{ challan.total_issued_qty|default:"0.00" }}</b></span>
+              <span class="pcap-pill">Inward <b>{{ challan.inward_qty|default:"0.00" }}</b></span>
+            </div>
+          </div>
+
+          <div class="pcap-grid">
+            <div class="pcap-box">
+              <div class="pcap-label">Jobber</div>
+              <div class="pcap-value">{% if challan.jobber %}{{ challan.jobber.name }}{% else %}-{% endif %}</div>
+            </div>
+            <div class="pcap-box">
+              <div class="pcap-label">Process</div>
+              <div class="pcap-value">{% if challan.jobber_type %}{{ challan.jobber_type.name }}{% else %}-{% endif %}</div>
+            </div>
+            <div class="pcap-box">
+              <div class="pcap-label">Challan Date</div>
+              <div class="pcap-value">{{ challan.challan_date|date:"d M Y"|default:"-" }}</div>
+            </div>
+            <div class="pcap-box">
+              <div class="pcap-label">SKU</div>
+              <div class="pcap-value">{{ challan.production_sku|default:program.bom.sku|default:"-" }}</div>
+            </div>
+            <div class="pcap-box">
+              <div class="pcap-label">Product</div>
+              <div class="pcap-value">{{ challan.product_name|default:program.bom.product_name|default:"-" }}</div>
+            </div>
+            <div class="pcap-box">
+              <div class="pcap-label">Expected Return</div>
+              <div class="pcap-value">{{ challan.expected_return_date|date:"d M Y"|default:"-" }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pcap-section">
+          <div class="pcap-section-head">
+            <div class="pcap-section-title">Size Issue Summary</div>
+            <span class="pcap-pill">Compact View</span>
+          </div>
+          <div class="pcap-table-wrap">
+            <table class="pcap-size-table">
+              <colgroup>
+                <col class="col-size">
+                <col class="col-number">
+                <col class="col-number">
+                <col class="col-number">
+                <col class="col-number">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Size</th>
+                  <th class="pcap-num"><span class="pcap-num-head">Issued</span></th>
+                  <th class="pcap-num"><span class="pcap-num-head">Inward</span></th>
+                  <th class="pcap-num"><span class="pcap-num-head">Accepted</span></th>
+                  <th class="pcap-num"><span class="pcap-num-head">Rejected</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in challan.size_rows.all %}
+                  <tr>
+                    <td><span class="pcap-size-name">{{ row.size_name|default:"-" }}</span></td>
+                    <td class="pcap-num"><span class="pcap-size-token is-issued">{{ row.issued_qty|default:"0" }}</span></td>
+                    <td class="pcap-num"><span class="pcap-size-token">{{ row.inward_qty|default:"0" }}</span></td>
+                    <td class="pcap-num"><span class="pcap-size-token">{{ row.accepted_qty|default:"0" }}</span></td>
+                    <td class="pcap-num"><span class="pcap-size-token">{{ row.rejected_qty|default:"0" }}</span></td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="5">No size rows found.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pcap-section">
+          <div class="pcap-field">
+            <label>
+              <span>Rejection Reason</span>
+              <span class="pcap-help">Required only when rejecting</span>
+            </label>
+            <textarea name="rejection_reason" placeholder="Write rejection reason here only if rejecting this challan">{{ challan.rejection_reason|default:"" }}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="pcap-actions">
+        <div class="pcap-actions-left">Review this DC and choose the final approval action.</div>
+        <div class="pcap-actions-right">
+          <button type="button" class="pcap-btn pcap-btn-muted" data-challan-popup-close="1">
+            <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Close
+          </button>
+          <button type="submit" class="pcap-btn pcap-btn-danger" onclick="document.getElementById('challanApproveAction').value='reject';">
+            <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Reject
+          </button>
+          <button type="submit" class="pcap-btn pcap-btn-primary" onclick="document.getElementById('challanApproveAction').value='approve';">
+            <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+            Approve DC
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

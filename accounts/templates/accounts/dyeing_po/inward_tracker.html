@@ -1,0 +1,332 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}{{ tracker_title|default:"Inward Tracker" }} - InventTech{% endblock %}
+{% block page_title %}{{ tracker_title|default:"Inward Tracker" }}{% endblock %}
+{% block page_subtitle %}{{ tracker_subtitle|default:"Track inward entries" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  :root{
+    --dit-orange: rgba(250, 189, 100, 1);
+    --dit-orange-dark: rgb(218, 153, 52);
+    --dit-orange-soft: rgba(250, 189, 100, 0.12);
+    --dit-orange-line: rgba(250, 189, 100, 0.34);
+    --dit-green: rgb(16, 185, 129);
+    --dit-green-soft: rgba(16, 185, 129, 0.14);
+    --dit-blue: rgb(59, 130, 246);
+    --dit-blue-soft: rgba(59, 130, 246, 0.14);
+    --dit-red: rgb(239, 68, 68);
+    --dit-red-soft: rgba(239, 68, 68, 0.14);
+    --dit-violet: rgb(139, 92, 246);
+    --dit-violet-soft: rgba(139, 92, 246, 0.14);
+    --dit-ink:#16141a;
+    --dit-text:#374151;
+    --dit-muted:#6b7280;
+    --dit-fade:#98a2b3;
+    --dit-line:#eadfce;
+    --dit-line-soft:#f3ecdf;
+    --dit-bg-soft:#fdfaf4;
+    --dit-shadow-sm:0 1px 2px rgba(17,24,39,.04);
+    --dit-shadow-md:0 10px 24px rgba(17,24,39,.06);
+    --dit-font-ui:Inter,"Segoe UI",Arial,sans-serif;
+    --dit-font-serif:"Cormorant Garamond",Georgia,serif;
+    --dit-font-mono:"JetBrains Mono",Consolas,monospace;
+  }
+
+  .canvas{grid-template-columns:1fr!important;width:100%;min-width:0;}
+  .dit-page{width:100%;min-width:0;}
+  .dit-page .jobbers-embed{padding:0;color:var(--dit-text);font-family:var(--dit-font-ui);}
+  .dit-page .jb-panel,.dit-page .jb-panel *{box-sizing:border-box;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+  .dit-page .jb-panel{background:transparent;border:none;border-radius:0;box-shadow:none;overflow:visible;}
+  .dit-page .jb-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:6px 0 12px;border-bottom:1px solid var(--dit-line-soft);background:transparent;}
+  .dit-page .jb-title{font-family:var(--dit-font-serif);font-size:28px;line-height:.95;font-weight:700;letter-spacing:-.02em;color:var(--dit-ink);}
+  .dit-page .jb-sub{margin-top:6px;font-size:12px;line-height:1.45;color:#846f52;font-weight:600;}
+  .dit-page .jb-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .dit-page .jb-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:12px 0 14px;border-bottom:1px solid var(--dit-line-soft);background:transparent;}
+  .dit-page .jb-search{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;min-width:0;}
+  .dit-page .jb-search input{appearance:none;width:100%;min-width:0;height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--dit-line);background:#fff;color:var(--dit-ink);outline:none;font-family:var(--dit-font-ui);font-size:13px;font-weight:500;transition:border-color .18s ease,box-shadow .18s ease;}
+  .dit-page .jb-search input::placeholder{color:var(--dit-fade);}
+  .dit-page .jb-search input:focus{border-color:var(--dit-orange-line);box-shadow:0 0 0 4px var(--dit-orange-soft);}
+  .dit-page .jb-search-btn,.dit-page .jb-add,.dit-page .jb-secondary{appearance:none;text-decoration:none;cursor:pointer;border-radius:12px;height:40px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;font-family:var(--dit-font-ui);font-size:12px;font-weight:800;border:1px solid transparent;transition:transform .18s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease,color .18s ease;}
+  .dit-page .jb-search-btn,.dit-page .jb-secondary{background:#fff;color:#374151;border-color:var(--dit-line);box-shadow:var(--dit-shadow-sm);}
+  .dit-page .jb-search-btn:hover,.dit-page .jb-secondary:hover{background:var(--dit-bg-soft);border-color:var(--dit-orange-line);color:#8a5b12;}
+  .dit-page .jb-add{background:linear-gradient(135deg,var(--dit-orange) 0%,rgb(255,208,130) 100%);color:#52340a;border-color:transparent;box-shadow:0 10px 20px rgba(250,189,100,.18);}
+  .dit-page .jb-add:hover{transform:translateY(-1px);background:linear-gradient(135deg,var(--dit-orange-dark) 0%,var(--dit-orange) 100%);color:#3f2908;}
+  .dit-page .jb-tool-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .dit-list{display:flex;flex-direction:column;gap:7px;padding:8px 0 0;width:100%;min-width:0;}
+  .dit-card{border:1px solid var(--dit-line);border-radius:12px;background:linear-gradient(180deg,#fff 0%,#fffdfa 100%);box-shadow:var(--dit-shadow-sm);padding:8px 9px;width:100%;min-width:0;transition:border-color .18s ease,box-shadow .18s ease;}
+  .dit-card:hover{border-color:rgba(250,189,100,.38);box-shadow:var(--dit-shadow-md);}
+  .dit-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .dit-ident{min-width:0;}
+  .dit-ident-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+  .dit-badge{height:24px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:var(--dit-orange-soft);border:1px solid var(--dit-orange-line);color:#8a5b12;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;}
+  .dit-status{height:24px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;border:1px solid transparent;}
+  .dit-status.done,.dit-status.started{background:var(--dit-green-soft);color:#047857;border-color:rgba(16,185,129,.22);}
+  .dit-status.partial{background:var(--dit-blue-soft);color:#1d4ed8;border-color:rgba(59,130,246,.22);}
+  .dit-status.pending,.dit-status.not-started{background:#fff7ed;color:#92400e;border-color:#fed7aa;}
+  .dit-po-no{font-size:18px;line-height:1.15;font-weight:900;letter-spacing:-.02em;color:var(--dit-ink);}
+  .dit-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .dit-meta-pill{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:999px;background:#fff;border:1px solid var(--dit-line-soft);color:#6b5b45;font-size:11px;font-weight:700;white-space:nowrap;}
+  .dit-meta-pill strong{font-family:var(--dit-font-mono);font-size:9px;color:#a77728;letter-spacing:.08em;}
+  .dit-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
+  .dit-link,.dit-generate-btn,.dit-generated-link{appearance:none;border:1px solid var(--dit-line);background:#fff;color:#8a5b12;text-decoration:none;border-radius:10px;min-height:32px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:var(--dit-font-ui);font-size:11px;font-weight:900;white-space:nowrap;cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease;}
+  .dit-link:hover,.dit-generate-btn:hover,.dit-generated-link:hover{background:var(--dit-bg-soft);border-color:var(--dit-orange-line);transform:translateY(-1px);box-shadow:var(--dit-shadow-sm);}
+  .dit-ready-generate,.dit-generate-btn{background:#fffaf0;border-color:var(--dit-orange-line);color:#7c4a03;}
+  .dit-layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:10px;align-items:start;}
+  .dit-panel{border:1px solid var(--dit-line-soft);border-radius:14px;background:#fff;padding:10px;min-width:0;}
+  .dit-panel-title{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#8a5b12;margin-bottom:8px;}
+  .dit-detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .dit-kv{border:1px solid var(--dit-line-soft);border-radius:12px;padding:8px;background:#fffdfa;min-width:0;}
+  .dit-kv .k{font-family:var(--dit-font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#a77728;font-weight:800;margin-bottom:4px;}
+  .dit-kv .v{font-size:12px;font-weight:800;color:var(--dit-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dit-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .dit-stat{border:1px solid var(--dit-line-soft);border-radius:12px;background:#fffdfa;padding:9px;min-width:0;}
+  .dit-stat-label{font-family:var(--dit-font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#a77728;font-weight:800;}
+  .dit-stat-value{margin-top:4px;font-size:16px;line-height:1;font-weight:900;color:var(--dit-ink);}
+  .dit-inward-panel{grid-column:1/-1;margin-top:10px;}
+  .dit-inward-list{display:flex;flex-direction:column;gap:8px;}
+  .dit-entry,.dit-inward-row{border:1px solid var(--dit-line);border-radius:14px;background:#fff;box-shadow:var(--dit-shadow-sm);padding:10px;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;}
+  .dit-entry:hover,.dit-inward-row:hover{border-color:var(--dit-orange-line);box-shadow:var(--dit-shadow-md);transform:translateY(-1px);}
+  .dit-entry.is-target,.dit-inward-row.is-target{border-color:var(--dit-orange);box-shadow:0 0 0 4px var(--dit-orange-soft);}
+  .dit-inward-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .dit-inward-no{font-size:13px;font-weight:900;color:var(--dit-ink);letter-spacing:-.01em;}
+  .dit-inward-meta{margin-top:3px;font-size:11px;font-weight:600;color:#7c6a51;line-height:1.35;}
+  .dit-inline-status{height:24px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;}
+  .dit-inline-status.started,.dit-inline-status.done{background:var(--dit-green-soft);color:#047857;border:1px solid rgba(16,185,129,.22);}
+  .dit-inline-status.pending{background:#fff7ed;color:#92400e;border:1px solid #fed7aa;}
+  .dit-table-wrap{width:100%;overflow-x:auto;border:1px solid var(--dit-line-soft);border-radius:12px;background:#fff;margin-top:8px;}
+  .dit-table{width:100%;border-collapse:separate;border-spacing:0;min-width:920px;font-family:var(--dit-font-ui);}
+  .dit-table th{padding:9px 10px;background:var(--dit-bg-soft);border-bottom:1px solid var(--dit-line-soft);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#8a5b12;text-align:left;white-space:nowrap;}
+  .dit-table td{padding:5px 7px;border-bottom:1px solid #f7efe3;font-size:11px;font-weight:700;color:#374151;vertical-align:middle;white-space:nowrap;line-height:1.15;}
+  .dit-table tbody tr:last-child td{border-bottom:none;}
+  .dit-right{text-align:right!important;}
+  .dit-maintext{font-size:12px;font-weight:900;color:var(--dit-ink);}
+  .dit-subtext{font-size:11px;font-weight:650;color:#94846e;}
+  .dit-qty,.dit-ok,.dit-bad,.dit-hold{font-family:var(--dit-font-mono);font-size:11px;font-weight:900;}
+  .dit-ok{color:#047857;}.dit-bad{color:#b91c1c;}.dit-hold{color:#b45309;}
+  .dit-qc{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;background:#fff7ed;color:#92400e;border:1px solid #fed7aa;}
+  .dit-qc.approved{background:var(--dit-green-soft);color:#047857;border-color:rgba(16,185,129,.22);}
+  .dit-qc.partial{background:var(--dit-blue-soft);color:#1d4ed8;border-color:rgba(59,130,246,.22);}
+  .dit-qc.hold{background:#fff7ed;color:#92400e;border-color:#fed7aa;}
+  .dit-qc.rejected{background:var(--dit-red-soft);color:#b91c1c;border-color:rgba(239,68,68,.22);}
+  .dit-inward-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .dit-generate-form{display:inline-flex;margin:0;}
+  .dit-note,.jb-empty{border:1px dashed var(--dit-line);border-radius:14px;background:#fffdfa;color:#8a7356;font-size:12px;font-weight:800;padding:16px;text-align:center;}
+  @media(max-width:1100px){.dit-layout{grid-template-columns:1fr}.dit-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  @media(max-width:760px){.dit-page .jb-head,.dit-page .jb-tools,.dit-card-top,.dit-inward-top{display:flex;flex-direction:column;align-items:stretch}.dit-page .jb-search{grid-template-columns:1fr}.dit-detail-grid,.dit-stats{grid-template-columns:1fr}.dit-actions,.dit-inward-actions{justify-content:flex-start}.dit-po-no{font-size:16px}.dit-page .jb-title{font-size:24px}}
+  /* Compact row mode */
+  .dit-page .jb-head{padding:4px 0 8px;}
+  .dit-page .jb-title{font-size:24px;}
+  .dit-page .jb-sub{margin-top:3px;font-size:11px;line-height:1.25;}
+  .dit-page .jb-tools{gap:8px;padding:8px 0 9px;}
+  .dit-page .jb-search input{height:34px;border-radius:10px;font-size:12px;}
+  .dit-page .jb-search-btn,.dit-page .jb-add,.dit-page .jb-secondary{height:34px;border-radius:10px;padding:0 11px;font-size:11px;}
+  .dit-card-head{gap:8px;margin-bottom:7px;}
+  .dit-card-main{gap:7px;}
+  .dit-card-actions{gap:5px;}
+  .dit-meta{gap:5px;margin-top:5px;}
+  .dit-grid,.dit-stats-grid{gap:6px;}
+  .dit-panel-title{font-size:10px;margin-bottom:5px;}
+  .dit-kv-label,.dit-stat-label{font-size:9px;line-height:1.05;}
+  .dit-kv-value{font-size:11px;line-height:1.15;}
+  .dit-entry-head,.dit-inward-head{gap:7px;margin-bottom:6px;}
+  .dit-inward-title{font-size:12px;line-height:1.1;}
+  .dit-table-wrap{border-radius:10px;}
+  .dit-table{line-height:1.15;}
+  .dit-link svg,.dit-generate-btn svg,.dit-generated-link svg{width:13px;height:13px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="dit-page">
+      <div class="jobbers-embed">
+        <div class="jb-panel">
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">{{ tracker_title|default:"Inward Tracker" }}</div>
+              <div class="jb-sub">{{ tracker_subtitle|default:"Track inward entries" }}</div>
+            </div>
+            <div class="jb-head-actions">
+              <a href="{{ tracker_list_url }}" class="jb-secondary">{{ tracker_list_label|default:"PO List" }}</a>
+              <a href="{{ tracker_stock_url }}" class="jb-secondary">Stock Lot Wise</a>
+            </div>
+          </div>
+
+          <div class="jb-tools">
+            <form class="jb-search" method="get">
+              <input type="text" name="q" value="{{ q }}" placeholder="Search PO no, vendor, inward no, firm, item...">
+              <button type="submit" class="jb-search-btn">Search</button>
+              <a href="{{ tracker_reset_url }}" class="jb-secondary">Reset</a>
+            </form>
+            <div class="jb-tool-actions"></div>
+          </div>
+
+          <div class="dit-list">
+            {% for row in rows %}
+            <div class="dit-card">
+              <div class="dit-card-top">
+                <div class="dit-ident">
+                  <div class="dit-ident-top">
+                    <span class="dit-badge">{{ row.po.system_number|default:row.po.po_number }}</span>
+                    <span class="dit-status {% if row.progress_label == 'Done' or row.progress_label == 'Created' or row.progress_label == 'Completed' %}done{% elif row.progress_label == 'Partial' %}partial{% else %}pending{% endif %}">{{ row.progress_label }}</span>
+                  </div>
+                  <div class="dit-po-no">{{ row.po.po_number|default:"No PO Number" }}</div>
+                  <div class="dit-meta">
+                    <span class="dit-meta-pill"><strong>DATE</strong>&nbsp;{{ row.po.po_date|date:"d-m-Y"|default:"—" }}</span>
+                    <span class="dit-meta-pill"><strong>VENDOR</strong>&nbsp;{{ row.po.vendor.name|default:"—" }}</span>
+                    {% if row.po.firm %}<span class="dit-meta-pill"><strong>FIRM</strong>&nbsp;{{ row.po.firm.firm_name }}</span>{% endif %}
+                    <span class="dit-meta-pill"><strong>ENTRIES</strong>&nbsp;{{ row.inward_entries|length }}</span>
+                  </div>
+                </div>
+                <div class="dit-actions">
+                  <a href="{{ row.inward_url }}" class="dit-link">Open Inward</a>
+                  <a href="{{ row.next_list_url }}" class="dit-link">{{ row.next_list_label }}</a>
+                </div>
+              </div>
+
+              <div class="dit-layout">
+                <div class="dit-panel">
+                  <div class="dit-panel-title">PO Details</div>
+                  <div class="dit-detail-grid">
+                    <div class="dit-kv"><div class="k">PO No</div><div class="v">{{ row.po.po_number|default:"—" }}</div></div>
+                    <div class="dit-kv"><div class="k">Date</div><div class="v">{{ row.po.po_date|date:"d-m-Y"|default:"—" }}</div></div>
+                    <div class="dit-kv"><div class="k">Vendor</div><div class="v">{{ row.po.vendor.name|default:"—" }}</div></div>
+                    <div class="dit-kv"><div class="k">Firm</div><div class="v">{% if row.po.firm %}{{ row.po.firm.firm_name }}{% else %}—{% endif %}</div></div>
+                    <div class="dit-kv"><div class="k">Total</div><div class="v">{{ row.total_qty|default:"0.00" }}</div></div>
+                    <div class="dit-kv"><div class="k">Inward</div><div class="v">{{ row.inward_qty|default:"0.00" }}</div></div>
+                    <div class="dit-kv"><div class="k">Remaining</div><div class="v">{{ row.remaining_qty|default:"0.00" }}</div></div>
+                  </div>
+                </div>
+
+                <div class="dit-panel">
+                  <div class="dit-panel-title">{{ row.progress_title }}</div>
+                  <div class="dit-stats">
+                    <div class="dit-stat"><div class="dit-stat-label">Generated</div><div class="dit-stat-value">{{ row.generated_count }}/{{ row.total_inwards }}</div></div>
+                    <div class="dit-stat"><div class="dit-stat-label">Status</div><div class="dit-stat-value">{{ row.progress_label }}</div></div>
+                  </div>
+                  <div style="margin-top:8px;"><a class="dit-link" href="{{ row.next_list_url }}">{{ row.next_list_label }}</a></div>
+                </div>
+              </div>
+
+              <div class="dit-panel dit-inward-panel">
+                <div class="dit-panel-title">Inward Entries</div>
+                {% if row.inward_entries %}
+                <div class="dit-inward-list">
+                  {% for inward_block in row.inward_entries %}
+                  <div class="dit-inward-row {% if inward_block.is_target %}is-target{% endif %}" id="{{ anchor_prefix }}{{ inward_block.inward.id }}">
+                    <div class="dit-inward-top">
+                      <div class="dit-inward-left">
+                        <div class="dit-inward-no">{{ inward_block.inward.inward_number }}</div>
+                        <div class="dit-inward-meta">
+                          Date: {{ inward_block.inward.inward_date|date:"d-m-Y"|default:"—" }}
+                          {% if inward_block.inward.vendor %} · Vendor: {{ inward_block.inward.vendor.name }}{% endif %}
+                          {% if inward_block.inward.inward_type %} · Type: {{ inward_block.inward.inward_type.name }}{% endif %}
+                          {% if inward_block.inward.notes %} · {{ inward_block.inward.notes }}{% endif %}
+                        </div>
+                      </div>
+                      <span class="dit-inline-status {% if inward_block.next_started %}started{% else %}pending{% endif %}">{% if inward_block.next_started %}Generated{% else %}Pending{% endif %}</span>
+                    </div>
+
+                    <div class="dit-table-wrap">
+                      <table class="dit-table">
+                        <thead>
+                          <tr>
+                            <th>Fabric / Item</th>
+                            <th class="dit-right">Expected</th>
+                            <th class="dit-right">Received</th>
+                            <th class="dit-right">Accepted</th>
+                            <th class="dit-right">Rejected</th>
+                            <th class="dit-right">Hold</th>
+                            <th class="dit-right">Rolls</th>
+                            <th>GSM</th>
+                            <th>Width</th>
+                            <th>Dye Lot</th>
+                            <th>Batch</th>
+                            <th>Shade</th>
+                            <th>QC</th>
+                            <th>Unit</th>
+                            <th>Remark</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for item in inward_block.items %}
+                          <tr>
+                            <td><div class="dit-maintext">{{ item.fabric_name }}</div></td>
+                            <td class="dit-right"><span class="dit-qty">{{ item.ordered_qty|default:"0.00" }}</span></td>
+                            <td class="dit-right"><span class="dit-qty">{{ item.received_qty|default:"0.00" }}</span></td>
+                            <td class="dit-right"><span class="dit-ok">{{ item.accepted_qty|default:"0.00" }}</span></td>
+                            <td class="dit-right"><span class="dit-bad">{{ item.rejected_qty|default:"0.00" }}</span></td>
+                            <td class="dit-right"><span class="dit-hold">{{ item.hold_qty|default:"0.00" }}</span></td>
+                            <td class="dit-right"><span class="dit-qty">{{ item.actual_rolls|default:"0.00" }}</span></td>
+                            <td>{% if item.actual_gsm %}<span class="dit-qty">{{ item.actual_gsm }}</span>{% else %}<span class="dit-subtext">—</span>{% endif %}</td>
+                            <td>{% if item.actual_width %}<span class="dit-qty">{{ item.actual_width }}</span>{% else %}<span class="dit-subtext">—</span>{% endif %}</td>
+                            <td>{{ item.dye_lot_no|default:"—" }}</td>
+                            <td>{{ item.batch_no|default:"—" }}</td>
+                            <td>{{ item.shade_reference|default:"—" }}</td>
+                            <td>
+                              {% if item.qc_status == "approved" %}<span class="dit-qc approved">Approved</span>
+                              {% elif item.qc_status == "partial" %}<span class="dit-qc partial">Partial</span>
+                              {% elif item.qc_status == "hold" %}<span class="dit-qc hold">Hold</span>
+                              {% elif item.qc_status == "rejected" %}<span class="dit-qc rejected">Rejected</span>
+                              {% else %}<span class="dit-qc">Pending</span>{% endif %}
+                            </td>
+                            <td>{% if item.unit %}{{ item.unit }}{% else %}<span class="dit-subtext">—</span>{% endif %}</td>
+                            <td>{{ item.remark|default:"—" }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div class="dit-inward-actions">
+                      {% if inward_block.edit_url %}<a href="{{ inward_block.edit_url }}" class="dit-link">Edit</a>{% endif %}
+                      {% if inward_block.next_started and inward_block.next_view_url %}
+                        <a class="dit-generated-link" href="{{ inward_block.next_view_url }}">{{ inward_block.next_view_label }}</a>
+                      {% elif inward_block.next_generate_url %}
+                        {% if inward_block.next_generate_method == "post" %}
+                          <form class="dit-generate-form" method="post" action="{{ inward_block.next_generate_url }}">
+                            {% csrf_token %}
+                            <input type="hidden" name="inward_id" value="{{ inward_block.inward.id }}">
+                            <button type="submit" class="dit-generate-btn">{{ inward_block.next_generate_label }}</button>
+                          </form>
+                        {% else %}
+                          <a class="dit-link dit-ready-generate" href="{{ inward_block.next_generate_url }}">{{ inward_block.next_generate_label }}</a>
+                        {% endif %}
+                      {% else %}
+                        <span class="dit-inline-status started">Completed</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% else %}
+                  <div class="dit-note">No inward entries found.</div>
+                {% endif %}
+              </div>
+            </div>
+            {% empty %}
+            <div class="jb-empty">{{ empty_message|default:"No inwarded POs found yet." }}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function(){
+    var targetId = "{{ target_inward_id|default:'' }}";
+    var prefix = "{{ anchor_prefix|default:'inward-' }}";
+    if (!targetId) return;
+    var el = document.getElementById(prefix + targetId);
+    if (!el) return;
+    window.setTimeout(function(){
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+  })();
+</script>
+{% endblock %}

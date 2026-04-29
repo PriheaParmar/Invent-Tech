@@ -1,0 +1,8 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+{% block title %}Used Lot Details Report{% endblock %}
+{% block page_title %}Used Lot Details Report{% endblock %}
+{% block page_subtitle %}Program-wise fabric lot consumption with inward and PO reference.{% endblock %}
+{% block content %}
+  {% include "accounts/reports/used_lot_details_embed.html" %}
+{% endblock %}

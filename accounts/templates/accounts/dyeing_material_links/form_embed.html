@@ -1,0 +1,602 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_form.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/material_flow.css' %}?v=3">
+
+<style>
+  .dmlf-section{
+    margin-top:12px;
+  }
+
+  .dmlf-card{
+    border:1px solid var(--mf-line);
+    border-radius:16px;
+    background:#fff;
+    overflow:hidden;
+  }
+
+  .dmlf-card-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 16px;
+    border-bottom:1px solid var(--mf-line-soft);
+    background:linear-gradient(180deg, #fffdfa 0%, #faf8f4 100%);
+  }
+
+  .dmlf-card-title{
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.10em;
+    text-transform:uppercase;
+    color:#8a651f;
+  }
+
+  .dmlf-card-sub{
+    margin-top:4px;
+    color:#707887;
+    font-size:12px;
+    line-height:1.4;
+  }
+
+  .dmlf-card-body{
+    padding:14px 16px 16px;
+    background:#fcfbf8;
+  }
+
+  .dmlf-tools{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+
+  .dmlf-note{
+    font-size:12px;
+    color:#707887;
+  }
+
+  /* remove horizontal scroll completely */
+  .dmlf-tablewrap{
+    overflow:visible;
+    border:0;
+    background:transparent;
+  }
+
+  .dmlf-table{
+    width:100%;
+    min-width:0;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  /* hide old header row */
+  .dmlf-table thead{
+    display:none;
+  }
+
+  .dmlf-table tbody{
+    display:grid;
+    gap:12px;
+  }
+
+.dmlf-table tr[data-dyeing-link-row="1"]{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(180px, 1fr));
+  gap:14px;
+  padding:14px;
+  border:1px solid var(--mf-line);
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 1px 2px rgba(17,24,39,.03);
+}
+
+  .dmlf-table td{
+    padding:0;
+    border:0;
+    background:transparent;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  /* field labels generated from column order */
+.dmlf-table td:nth-of-type(1)::before{ content:"Finished Material"; }
+.dmlf-table td:nth-of-type(2)::before{ content:"Dyeing Type"; }
+.dmlf-table td:nth-of-type(3)::before{ content:"Dyeing Name"; }
+.dmlf-table td:nth-of-type(4)::before{ content:"Colors / %"; }
+.dmlf-table td:nth-of-type(5)::before{ content:"Weight Loss"; }
+.dmlf-table td:nth-of-type(6)::before{ content:"Price"; }
+.dmlf-table td:nth-of-type(7)::before{ content:"Sort Order"; }
+.dmlf-table td:nth-of-type(8)::before{ content:"Remove"; }
+
+.dmlf-table td::before{
+  display:block;
+  margin:0 0 6px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#6b7280;
+}
+
+.dmlf-table input:not([type="checkbox"]):not([type="radio"]),
+.dmlf-table select,
+.dmlf-table textarea{
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  border:1px solid rgba(250, 189, 100, 0.24);
+  border-radius:10px;
+  background:var(--mf-panel-soft);
+  color:var(--mf-text);
+  font-family:var(--mf-font-sans);
+  font-size:12px;
+  font-weight:600;
+  outline:none;
+  box-shadow:none;
+  transition:
+    border-color .16s ease,
+    box-shadow .16s ease,
+    background .16s ease,
+    transform .16s ease;
+}
+
+.dmlf-table input:not([type="checkbox"]):not([type="radio"]),
+.dmlf-table select{
+  height:38px;
+  padding:0 12px;
+}
+
+.dmlf-table textarea{
+  min-height:84px;
+  padding:10px 12px;
+  resize:vertical;
+}
+
+.dmlf-table input:not([type="checkbox"]):not([type="radio"])::placeholder,
+.dmlf-table textarea::placeholder{
+  color:#9aa1ab;
+  font-weight:500;
+}
+
+.dmlf-table input:not([type="checkbox"]):not([type="radio"]):hover,
+.dmlf-table select:hover,
+.dmlf-table textarea:hover{
+  border-color:rgba(250, 189, 100, 0.48);
+  background:#fffdfa;
+}
+
+.dmlf-table input:not([type="checkbox"]):not([type="radio"]):focus,
+.dmlf-table select:focus,
+.dmlf-table textarea:focus{
+  border-color:var(--orange);
+  background:#fff;
+  box-shadow:0 0 0 4px rgba(250, 189, 100, 0.12);
+}
+
+.dmlf-table select{
+  padding-right:38px;
+  background-color:var(--mf-panel-soft);
+  background-image:
+    linear-gradient(45deg, transparent 50%, #8a651f 50%),
+    linear-gradient(135deg, #8a651f 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 16px,
+    calc(100% - 12px) 16px;
+  background-size:6px 6px, 6px 6px;
+  background-repeat:no-repeat;
+}
+
+.dmlf-table select option{
+  background:#fff;
+  color:#1b2430;
+}
+
+  .dmlf-remove-wrap{
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    min-height:100%;
+  }
+
+  .dmlf-table td:last-of-type{
+  justify-content:flex-end;
+}
+
+.dmlf-remove-wrap{
+  height:100%;
+}
+
+.dmlf-remove-wrap .mf-btn-secondary,
+.dmlf-remove-wrap .jb-secondary{
+  min-height:38px;
+  width:100%;
+}
+  .dmlf-remove-wrap input[type="checkbox"]{
+    display:none;
+  }
+
+  .dmlf-hidden-row{
+    display:none !important;
+  }
+
+  .dmlf-inline-errors{
+    margin-top:2px;
+  }
+
+  .dmlf-inline-errors p{
+    margin:0;
+    color:#b42318;
+    font-size:11px;
+    font-weight:700;
+  }
+
+  /* make remove button fit the card style */
+  .dmlf-remove-wrap .mf-btn-secondary,
+  .dmlf-remove-wrap .jb-secondary{
+    width:100%;
+    justify-content:center;
+  }
+
+  /* better compact add button area */
+  .dmlf-card-head .mf-btn-primary,
+  .dmlf-card-head .jb-add{
+    flex:0 0 auto;
+  }
+
+  @media (max-width: 1200px){
+    .dmlf-table tr[data-dyeing-link-row="1"]{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 900px){
+    .dmlf-table tr[data-dyeing-link-row="1"]{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px){
+    .dmlf-card-head{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .dmlf-table tr[data-dyeing-link-row="1"]{
+      grid-template-columns:1fr;
+      padding:12px;
+    }
+
+    .dmlf-card-body{
+      padding:12px;
+    }
+  }
+  .dmlf-table tr[data-dyeing-link-row="1"]{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(4, minmax(180px, 1fr));
+  gap:14px;
+  padding:18px 14px 14px;
+  border:1px solid var(--mf-line);
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 1px 2px rgba(17,24,39,.03);
+}
+
+.dmlf-remove-cell{
+  position:absolute;
+  top:10px;
+  right:10px;
+  padding:0 !important;
+  border:0 !important;
+  background:transparent !important;
+  display:block !important;
+  width:auto !important;
+  min-width:0 !important;
+}
+
+.dmlf-remove-cell::before{
+  display:none !important;
+  content:none !important;
+}
+
+.dmlf-remove-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+}
+
+.dmlf-remove-wrap input[type="checkbox"]{
+  display:none;
+}
+
+.dmlf-remove-icon{
+  width:28px;
+  height:28px;
+  border:1px solid #e7c2bc;
+  border-radius:8px;
+  background:#fff8f7;
+  color:#b42318;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 1px 0 rgba(180,35,24,0.03);
+  transition:
+    background .16s ease,
+    border-color .16s ease,
+    color .16s ease,
+    transform .16s ease,
+    box-shadow .16s ease;
+}
+
+.dmlf-remove-icon:hover{
+  background:#fff1ef;
+  border-color:#dca9a2;
+  color:#8e1f15;
+  box-shadow:0 4px 10px rgba(201,50,40,0.10);
+  transform:translateY(-1px);
+}
+
+.dmlf-remove-icon svg{
+  width:14px;
+  height:14px;
+  stroke:currentColor;
+  stroke-width:2;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+</style>
+
+<div class="master-form-ui dyeing-master-form-ui" data-dyeing-link-root="1">
+  <section class="mf-panel">
+
+    <div class="mf-head">
+      <div>
+        <h2 class="mf-title">
+          {% if mode == "add" %}Add Dyeing Master{% else %}Edit Dyeing Master{% endif %}
+        </h2>
+      </div>
+
+      <div class="mf-head-actions">
+        <a class="mf-iconbtn mf-back" href="{% url 'accounts:dyeing_material_link_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+          <svg class="mf-back-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="mf-iconbtn mf-close" data-embed-close aria-label="Close">
+          <svg class="mf-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if mode == "add" %}
+      {% url "accounts:dyeing_material_link_add" as action_url %}
+    {% else %}
+      {% url "accounts:dyeing_material_link_edit" link_obj.id as action_url %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="mf-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if formset.non_form_errors %}
+    <div class="mf-errors">
+      {% for error in formset.non_form_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="mf-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="mf-section">
+        <div class="mf-section-title">Master Details</div>
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.vendor.id_for_label }}">Vendor</label>
+            {{ form.vendor }}
+            {% if form.vendor.errors %}
+            <div class="mf-field-errors">{% for error in form.vendor.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.material_type.id_for_label }}">Material Type</label>
+            {{ form.material_type }}
+            {% if form.material_type.errors %}
+            <div class="mf-field-errors">{% for error in form.material_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field mf-full">
+            <label for="{{ form.material.id_for_label }}">Greige Material</label>
+            {{ form.material }}
+            {% if form.material.errors %}
+            <div class="mf-field-errors">{% for error in form.material.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field mf-full">
+            <label for="{{ form.notes.id_for_label }}">Notes</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+            <div class="mf-field-errors">{% for error in form.notes.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="dmlf-section">
+        <div class="dmlf-card">
+          <div class="dmlf-card-head">
+            <div>
+              <div class="dmlf-card-title">Dyeing Rows</div>
+                </div>
+            <button type="button" class="mf-btn-primary" data-dyeing-link-add-row="1">Add Row</button>
+          </div>
+
+          <div class="dmlf-card-body">
+            <div class="dmlf-tools">
+              </div>
+
+            {{ formset.management_form }}
+
+            <div class="dmlf-tablewrap">
+              <table class="dmlf-table">
+                <thead>
+                  <tr>
+                    <th>Finished Material</th>
+                    <th>Dyeing Type</th>
+                    <th>Dyeing Name</th>
+                    <th>Colors / %</th>
+                    <th>Weight Loss</th>
+                    <th>Price</th>
+                    <th>Sort Order</th>
+                    <th style="width:100px;">Remove</th>
+                  </tr>
+                </thead>
+                <tbody data-dyeing-link-body="1">
+                  {% for detail_form in formset.forms %}
+                  <tr data-dyeing-link-row="1">
+                    {% for hidden in detail_form.hidden_fields %}
+                      {{ hidden }}
+                    {% endfor %}
+
+                    <td>
+                      {{ detail_form.finished_material }}
+                      {% if detail_form.finished_material.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.finished_material.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                      {{ detail_form.dyeing_type }}
+                      {% if detail_form.dyeing_type.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.dyeing_type.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                      {{ detail_form.dyeing_name }}
+                      {% if detail_form.dyeing_name.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.dyeing_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                      {{ detail_form.percentage_no_of_colors }}
+                      {% if detail_form.percentage_no_of_colors.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.percentage_no_of_colors.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                      {{ detail_form.weight_loss }}
+                      {% if detail_form.weight_loss.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.weight_loss.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                      {{ detail_form.price }}
+                      {% if detail_form.price.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.price.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                      {{ detail_form.sort_order }}
+                      {% if detail_form.sort_order.errors %}
+                      <div class="dmlf-inline-errors">{% for error in detail_form.sort_order.errors %}<p>{{ error }}</p>{% endfor %}</div>
+                      {% endif %}
+                    </td>
+
+<td class="dmlf-remove-cell">
+  <div class="dmlf-remove-wrap">
+    {{ detail_form.DELETE }}
+    <button
+      type="button"
+      class="dmlf-remove-icon"
+      data-dyeing-link-remove-row="1"
+      aria-label="Remove row"
+      title="Remove row"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 6L6 18"></path>
+        <path d="M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <template data-dyeing-link-empty-form="1">
+              <tr data-dyeing-link-row="1">
+                {% for hidden in formset.empty_form.hidden_fields %}
+                  {{ hidden }}
+                {% endfor %}
+                <td>{{ formset.empty_form.finished_material }}</td>
+                <td>{{ formset.empty_form.dyeing_type }}</td>
+                <td>{{ formset.empty_form.dyeing_name }}</td>
+                <td>{{ formset.empty_form.percentage_no_of_colors }}</td>
+                <td>{{ formset.empty_form.weight_loss }}</td>
+                <td>{{ formset.empty_form.price }}</td>
+                <td>{{ formset.empty_form.sort_order }}</td>
+<td class="dmlf-remove-cell">
+  <div class="dmlf-remove-wrap">
+    {{ formset.empty_form.DELETE }}
+    <button
+      type="button"
+      class="dmlf-remove-icon"
+      data-dyeing-link-remove-row="1"
+      aria-label="Remove row"
+      title="Remove row"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 6L6 18"></path>
+        <path d="M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+</td>
+              </tr>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-footer">
+        <a class="mf-btn-secondary" href="{% url 'accounts:dyeing_material_link_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="mf-btn-primary">Save Dyeing Master</button>
+      </div>
+    </form>
+  </section>
+</div>

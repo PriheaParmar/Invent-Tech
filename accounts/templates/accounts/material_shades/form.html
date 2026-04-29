@@ -1,0 +1,23 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}
+  {% if mode == "edit" %}Edit Material Shade - InventTech{% else %}Add Material Shade - InventTech{% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if mode == "edit" %}Edit Material Shade{% else %}Add Material Shade{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+  {% if mode == "edit" %}
+    Update the selected material shade
+  {% else %}
+    Create a reusable material shade
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="canvas">
+  {% include "accounts/material_shades/form_embed.html" with full_page=True mode=mode shade=shade %}
+</div>
+{% endblock %}

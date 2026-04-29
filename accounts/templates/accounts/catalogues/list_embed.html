@@ -1,0 +1,204 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .catalogue-embed .jb-head{
+    align-items: center;
+  }
+
+  .catalogue-embed .jb-head-actions{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .catalogue-embed .jb-search{
+    grid-template-columns: minmax(280px, 1fr) auto;
+  }
+
+  .catalogue-embed .jb-tablewrap{
+    overflow-x: hidden;
+  }
+
+  .catalogue-embed .jb-table{
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .catalogue-embed .jb-table th,
+  .catalogue-embed .jb-table td{
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+  }
+
+  .catalogue-embed .jb-table th:nth-child(1),
+  .catalogue-embed .jb-table td:nth-child(1){
+    width: 28%;
+  }
+
+  .catalogue-embed .jb-table th:nth-child(2),
+  .catalogue-embed .jb-table td:nth-child(2){
+    width: auto;
+  }
+
+  .catalogue-embed .jb-table th:nth-child(3),
+  .catalogue-embed .jb-table td:nth-child(3){
+    width: 96px;
+    text-align: center;
+  }
+
+  .catalogue-embed .cat-name{
+    font-family: var(--jb-font-serif);
+    font-size: 13px;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #111923;
+  }
+
+  .catalogue-embed .cat-desc{
+    font-size: 11px;
+    line-height: 1.4;
+    color: #6b7280;
+    font-family: var(--jb-font-sans);
+  }
+
+  .catalogue-embed .jb-actions{
+    justify-content: center;
+  }
+
+  @media (max-width: 768px){
+    .catalogue-embed .jb-search{
+      grid-template-columns: 1fr;
+    }
+
+    .catalogue-embed .jb-search .jb-search-btn{
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="jobbers-embed catalogue-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Catalogue</div>
+        <div class="jb-sub">Manage catalogue master records</div>
+      </div>
+
+      <div class="jb-head-actions">
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:catalogue_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search catalogue name or description"
+          autocomplete="off"
+          aria-label="Search catalogue"
+        >
+
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="jb-tool-actions">
+        {% if q %}
+        <a class="jb-secondary" href="{% url 'accounts:catalogue_list' %}{% if not full_page %}?embed=1{% endif %}">Clear</a>
+        {% endif %}
+
+        <a class="jb-add" href="{% url 'accounts:catalogue_add' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Add Catalogue">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Add Catalogue
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Catalogue</th>
+            <th>Description</th>
+            <th style="width: 96px;">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for catalogue in catalogues %}
+          <tr>
+            <td>
+              <div class="cat-name">{{ catalogue.name }}</div>
+            </td>
+
+            <td>
+              <div class="cat-desc">{{ catalogue.description|default:"—" }}</div>
+            </td>
+
+            <td class="jb-actions">
+              <a
+                class="jb-link jb-link-icon jb-link-edit"
+                href="{% url 'accounts:catalogue_edit' catalogue.id %}{% if not full_page %}?embed=1{% endif %}"
+                aria-label="Edit {{ catalogue.name }}"
+                title="Edit"
+              >
+                <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z"></path>
+                  <path d="M14.06 4.94l3.75 3.75"></path>
+                </svg>
+              </a>
+
+              <form
+                method="post"
+                action="{% url 'accounts:catalogue_delete' catalogue.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="catalogue &quot;{{ catalogue.name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="jb-link jb-link-icon jb-link-danger jb-link-delete jb-link-button"
+                  aria-label="Delete {{ catalogue.name }}"
+                  title="Delete"
+                >
+                  <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M6 7l1 12h10l1-12"></path>
+                    <path d="M9 7V4h6v3"></path>
+                  </svg>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="jb-empty">No catalogue records found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

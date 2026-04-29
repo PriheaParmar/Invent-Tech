@@ -1,0 +1,57 @@
+from django.urls import path
+
+from .. import views
+
+urlpatterns = [
+    path("po/", views.po_home, name="po_home"),
+
+    path("po/yarn/", views.yarnpo_list, name="yarnpo_list"),
+    path("po/yarn/add/", views.yarnpo_create, name="yarnpo_add"),
+    path("po/yarn/<int:pk>/edit/", views.yarnpo_update, name="yarnpo_edit"),
+    path("po/yarn/<int:pk>/delete/", views.yarnpo_delete, name="yarnpo_delete"),
+    path("po/yarn/<int:pk>/review/", views.yarnpo_review, name="yarnpo_review"),
+    path("po/yarn/<int:pk>/pdf/", views.yarnpo_pdf, name="yarnpo_pdf"),
+    path("po/yarn/<int:pk>/inward/", views.yarnpo_inward, name="yarnpo_inward"),
+    path("po/yarn/inwards/<int:pk>/edit/", views.yarn_inward_update, name="yarn_inward_edit"),
+    path("po/yarn/inwards/", views.yarn_inward_tracker, name="yarn_inward_tracker"),
+    path("po/yarn/<int:pk>/generate-greige/", views.generate_greige_po_from_yarn, name="generate_greige_po_from_yarn"),
+
+    path("po/greige/", views.greigepo_list, name="greigepo_list"),
+    path("po/greige/add/", views.greigepo_create, name="greigepo_add"),
+    path("po/greige/add/from-yarn/<int:yarn_po_id>/", views.greigepo_create, name="greigepo_add_from_yarn"),
+    path("po/greige/<int:pk>/", views.greigepo_detail, name="greigepo_detail"),
+    path("po/greige/<int:pk>/edit/", views.greigepo_update, name="greigepo_edit"),
+    path("po/greige/<int:pk>/delete/", views.greigepo_delete, name="greigepo_delete"),
+    path("po/greige/<int:pk>/review/", views.greigepo_review, name="greigepo_review"),
+    path("po/greige/<int:pk>/pdf/", views.greigepo_pdf, name="greigepo_pdf"),
+    path("po/greige/<int:pk>/inward/", views.greigepo_inward, name="greigepo_inward"),
+    path("po/greige/inwards/<int:pk>/edit/", views.greige_inward_edit, name="greige_inward_edit"),
+    path("po/greige/inwards/", views.greige_inward_tracker, name="greige_inward_tracker"),
+    path("po/greige/<int:pk>/generate-dyeing/", views.generate_dyeing_po_from_greige, name="generate_dyeing_po_from_greige"),
+
+    path("po/dyeing/", views.dyeingpo_list, name="dyeingpo_list"),
+    path("po/dyeing/add/", views.dyeingpo_create, name="dyeingpo_add"),
+    path("po/dyeing/add/from-greige/<int:greige_po_id>/", views.dyeingpo_create, name="dyeingpo_add_from_greige"),
+    path("po/dyeing/<int:pk>/", views.dyeingpo_detail, name="dyeingpo_detail"),
+    path("po/dyeing/<int:pk>/edit/", views.dyeingpo_update, name="dyeingpo_edit"),
+    path("po/dyeing/<int:pk>/delete/", views.dyeingpo_delete, name="dyeingpo_delete"),
+    path("po/dyeing/<int:pk>/review/", views.dyeingpo_review, name="dyeingpo_review"),
+    path("po/dyeing/<int:pk>/pdf/", views.dyeingpo_pdf, name="dyeingpo_pdf"),
+    path("po/dyeing/<int:pk>/inward/", views.dyeingpo_inward, name="dyeingpo_inward"),
+    path("po/dyeing/inwards/<int:pk>/edit/", views.dyeing_inward_edit, name="dyeing_inward_edit"),
+    path("po/dyeing/inwards/", views.dyeing_inward_tracker, name="dyeing_inward_tracker"),
+    path("po/dyeing/<int:pk>/generate-ready/", views.generate_ready_po_from_dyeing, name="generate_ready_po_from_dyeing"),
+
+    path("po/ready/", views.readypo_list, name="readypo_list"),
+    path("po/ready/add/", views.readypo_create, name="readypo_add"),
+    path("po/ready/add/from-dyeing/<int:dyeing_po_id>/", views.readypo_create, name="readypo_add_from_dyeing"),
+    path("po/ready/<int:pk>/", views.readypo_detail, name="readypo_detail"),
+    path("po/ready/<int:pk>/edit/", views.readypo_update, name="readypo_edit"),
+    path("po/ready/<int:pk>/review/", views.readypo_review, name="readypo_review"),
+    path("po/ready/<int:pk>/pdf/", views.readypo_pdf, name="readypo_pdf"),
+    path("po/ready/<int:pk>/delete/", views.readypo_delete, name="readypo_delete"),
+    path("po/ready/<int:pk>/review/", views.readypo_review, name="readypo_review"),
+    path("po/ready/<int:pk>/inward/", views.readypo_inward, name="readypo_inward"),
+    path("po/ready/inwards/<int:pk>/edit/", views.ready_inward_edit, name="ready_inward_edit"),
+    path("po/ready/inwards/", views.ready_inward_tracker, name="ready_inward_tracker"),
+]

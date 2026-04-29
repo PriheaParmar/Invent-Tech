@@ -1,0 +1,1043 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Stock Lot Wise - InventTech{% endblock %}
+{% block page_title %}Stock Lot Register{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+    --lot-bg:#eaf2ff;
+    --lot-bg-2:#f4f8ff;
+
+    --lot-panel:#ffffff;
+    --lot-panel-blue:#f3f8ff;
+    --lot-panel-blue-2:#ebf3ff;
+
+    --lot-line:#cfe0ff;
+    --lot-line-strong:#aecaff;
+
+    --lot-text:#0f172a;
+    --lot-muted:#5f6f8d;
+
+    --lot-blue:#2563eb;
+    --lot-blue-dark:#1d4ed8;
+    --lot-blue-deep:#153c98;
+    --lot-blue-soft:#e8f1ff;
+    --lot-blue-soft-2:#f3f8ff;
+
+    --lot-slate:#64748b;
+    --lot-slate-soft:#f8fbff;
+
+    --lot-shadow:0 18px 40px rgba(37, 99, 235, .10);
+    --lot-shadow-soft:0 10px 24px rgba(37, 99, 235, .08);
+  }
+
+  .lot-page{
+    padding:10px;
+    background-color:white;
+    color:var(--lot-text);
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .lot-shell{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-height:97vh;
+    padding: 15px;
+  }
+
+  .lot-top{
+    border:1px solid var(--lot-line);
+    border-radius:18px;
+    padding:12px;
+    background:
+      linear-gradient(135deg, rgba(37,99,235,.08) 0%, rgba(37,99,235,.03) 18%, #ffffff 18%, #f6faff 100%);
+    box-shadow:var(--lot-shadow-soft);
+    border:2px solid rgba(28, 109, 216, 1);
+  }
+
+  .lot-top-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+
+  .lot-title{
+    margin:0;
+    font-size:20px;
+    line-height:1.02;
+    font-weight:800;
+    letter-spacing:-.03em;
+    color:#0f172a;
+    font-family:ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  }
+
+  .lot-top-actions{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+
+  .lot-count{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:28px;
+    padding:0 10px;
+    border-radius:999px;
+    border:1px solid #bdd4ff;
+    background:var(--lot-blue-soft);
+    color:var(--lot-blue-dark);
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.05em;
+    white-space:nowrap;
+  }
+
+  .lot-btn{
+    height:32px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 12px;
+    border-radius:10px;
+    border:1px solid var(--lot-line);
+    background:#fff;
+    color:#0f172a;
+    text-decoration:none;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.04em;
+    transition:.18s ease;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+
+  .lot-btn:hover{
+    border-color:var(--lot-blue);
+    background:var(--lot-blue-soft);
+    color:var(--lot-blue-dark);
+  }
+
+  .lot-btn-primary{
+    border-color:var(--lot-blue);
+    background:linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+    color:#fff;
+    box-shadow:0 8px 14px rgba(37,99,235,.14);
+  }
+
+  .lot-btn-primary:hover{
+    border-color:var(--lot-blue-dark);
+    background:linear-gradient(180deg, #1d4ed8 0%, #173ea8 100%);
+    color:#fff;
+  }
+
+  .lot-filter-wrap{
+    border:1px solid #d6e5ff;
+    border-radius:16px;
+    padding:10px;
+    background:linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
+  }
+
+  .lot-filters{
+    display:grid;
+    grid-template-columns:minmax(220px, 2fr) repeat(5, minmax(110px, 1fr)) auto auto;
+    gap:7px;
+  }
+
+  .lot-field{
+    width:100%;
+    height:33px;
+    border:1px solid #cfe0ff;
+    border-radius:10px;
+    background:#fff;
+    padding:0 10px;
+    font-size:11px;
+    font-weight:700;
+    color:#0f172a;
+    outline:none;
+    transition:.18s ease;
+  }
+
+  .lot-field::placeholder{
+    color:#8ea4ca;
+    font-weight:700;
+  }
+
+  .lot-field:focus{
+    border-color:var(--lot-blue);
+    box-shadow:0 0 0 3px rgba(37,99,235,.10);
+  }
+
+  .lot-chip-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:8px;
+  }
+
+  .lot-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:24px;
+    padding:0 9px;
+    border-radius:999px;
+    border:1px solid #bfd4ff;
+    background:var(--lot-blue-soft);
+    color:var(--lot-blue-dark);
+    font-size:9.5px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .lot-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .lot-row{
+    display:grid;
+    grid-template-columns:minmax(220px, .95fr) minmax(310px, 1.35fr) minmax(280px, 1.05fr) 68px;
+    border:1px solid var(--lot-line);
+    border-radius:18px;
+    overflow:hidden;
+    background:linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+    box-shadow:var(--lot-shadow-soft);
+    transition:.18s ease;
+  }
+
+  .lot-row:hover{
+    transform:translateY(-1px);
+    border-color:var(--lot-line-strong);
+    box-shadow:0 14px 28px rgba(37,99,235,.10);
+  }
+
+  .lot-main{
+    padding:11px 12px;
+    min-width:0;
+    background:linear-gradient(180deg, rgba(37,99,235,.08) 0%, rgba(37,99,235,.03) 100%);
+  }
+
+  .lot-center,
+  .lot-right{
+    padding:11px 12px;
+    min-width:0;
+    border-left:1px solid #e2ecff;
+    background:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  }
+
+  .lot-action-rail{
+    padding:8px 6px;
+    border-left:1px solid #d9e7ff;
+    background:linear-gradient(180deg, #edf4ff 0%, #e5efff 100%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+
+  .lot-code{
+    font-size:15px;
+    line-height:1.05;
+    font-weight:800;
+    letter-spacing:-.02em;
+    color:#0f172a;
+    font-family:ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    margin-bottom:7px;
+    word-break:break-word;
+  }
+
+  .lot-material{
+    font-size:12.5px;
+    line-height:1.22;
+    font-weight:800;
+    color:#0f172a;
+    margin-bottom:8px;
+  }
+
+  .lot-tag-wrap{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+
+  .lot-tag{
+    display:inline-flex;
+    align-items:center;
+    min-height:24px;
+    padding:0 8px;
+    border-radius:9px;
+    border:1px solid #d5e4ff;
+    background:#ffffff;
+    color:#365280;
+    font-size:9.5px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  .lot-tag b{
+    margin-left:4px;
+    color:#0f172a;
+    font-weight:900;
+  }
+
+  .lot-tag.is-stage{
+    border-color:#b7ceff;
+    background:var(--lot-blue-soft);
+    color:var(--lot-blue-dark);
+  }
+
+  .lot-pair-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:7px 8px;
+  }
+
+  .lot-pair{
+    min-width:0;
+    border:1px solid #dfebff;
+    border-radius:11px;
+    background:linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+    padding:7px 8px;
+  }
+
+  .lot-pair span{
+    display:block;
+    margin-bottom:3px;
+    font-size:8px;
+    line-height:1.05;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:900;
+    color:#8fa6cb;
+  }
+
+  .lot-pair strong{
+    display:block;
+    font-size:10.5px;
+    line-height:1.22;
+    font-weight:800;
+    color:#0f172a;
+    word-break:break-word;
+  }
+
+  .lot-pair a{
+    color:var(--lot-blue-dark);
+    text-decoration:none;
+    font-weight:900;
+  }
+
+  .lot-pair a:hover{
+    text-decoration:underline;
+  }
+
+  .lot-stock-grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:7px;
+    margin-bottom:8px;
+  }
+
+  .lot-stock{
+    border:1px solid #dce9ff;
+    border-radius:11px;
+    background:linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+    padding:7px 8px;
+  }
+
+  .lot-stock span{
+    display:block;
+    margin-bottom:3px;
+    font-size:8px;
+    line-height:1.05;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:900;
+    color:#8ea4ca;
+  }
+
+  .lot-stock strong{
+    display:block;
+    font-size:11px;
+    line-height:1.05;
+    font-weight:900;
+    color:#0f172a;
+  }
+
+  .lot-stock.is-main{
+    background:linear-gradient(180deg, #e8f2ff 0%, #dfecff 100%);
+    border-color:#afc9ff;
+  }
+
+  .lot-stock.is-main strong{
+    color:var(--lot-blue-dark);
+  }
+
+  .lot-status-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+
+  .lot-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:23px;
+    padding:0 9px;
+    border-radius:999px;
+    border:1px solid transparent;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.02em;
+    white-space:nowrap;
+  }
+
+  .lot-badge.qc{
+    background:var(--lot-blue-soft);
+    color:var(--lot-blue-dark);
+    border-color:#bfd4ff;
+  }
+
+  .lot-badge.open{
+    background:#eaf3ff;
+    color:#1f53ba;
+    border-color:#caddff;
+  }
+
+  .lot-badge.closed{
+    background:#f6f9fd;
+    color:#64748b;
+    border-color:#dde7f2;
+  }
+
+  .lot-action{
+    width:34px;
+    height:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    border:1px solid #bfd4ff;
+    background:linear-gradient(180deg, #ffffff 0%, #e9f2ff 100%);
+    color:var(--lot-blue-dark);
+    text-decoration:none;
+    box-shadow:0 6px 12px rgba(37,99,235,.08);
+    transition:.18s ease;
+    cursor:pointer;
+  }
+
+  button.lot-action{
+    appearance:none;
+    -webkit-appearance:none;
+  }
+
+  .lot-action svg{
+    width:15px;
+    height:15px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+  }
+
+  .lot-action:hover{
+    transform:translateY(-1px) scale(1.02);
+    border-color:var(--lot-blue);
+    background:linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+    color:#fff;
+    box-shadow:0 10px 18px rgba(37,99,235,.16);
+  }
+
+  .lot-empty{
+    border:1px dashed #c7d9ff;
+    border-radius:16px;
+    background:linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+    padding:28px 14px;
+    text-align:center;
+    font-size:12px;
+    font-weight:800;
+    color:#64748b;
+  }
+
+  .lot-pager{
+    border:1px solid var(--lot-line);
+    border-radius:14px;
+    background:linear-gradient(180deg, #ffffff 0%, #f6faff 100%);
+    box-shadow:var(--lot-shadow-soft);
+    padding:10px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-top:auto;
+  }
+
+  .lot-pager-note{
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.04em;
+    color:#64748b;
+  }
+
+  .lot-pager-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+
+  body.lot-popup-open{
+    overflow:hidden;
+  }
+
+  .lot-popup{
+    position:fixed;
+    inset:0;
+    z-index:1200;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+
+  .lot-popup.is-open{
+    display:flex;
+  }
+
+  .lot-popup-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(15, 23, 42, .42);
+    backdrop-filter:blur(4px);
+  }
+
+  .lot-popup-dialog{
+    position:relative;
+    z-index:2;
+    width:min(1000px, 96vw);
+    height:min(88vh, 920px);
+    border-radius:20px;
+    overflow:hidden;
+    border:1px solid var(--lot-line);
+    background:#fff;
+    box-shadow:0 30px 70px rgba(15, 23, 42, .28);
+    display:flex;
+    flex-direction:column;
+  }
+
+  .lot-popup-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 14px;
+    border-bottom:1px solid var(--lot-line);
+    background:linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+  }
+
+  .lot-popup-title{
+    font-size:13px;
+    line-height:1.2;
+    font-weight:900;
+    color:#0f172a;
+    letter-spacing:.02em;
+  }
+
+  .lot-popup-head-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .lot-popup-opennew,
+  .lot-popup-close{
+    width:34px;
+    height:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    border:1px solid #bfd4ff;
+    background:#fff;
+    color:var(--lot-blue-dark);
+    text-decoration:none;
+    transition:.18s ease;
+    cursor:pointer;
+  }
+
+  .lot-popup-opennew svg,
+  .lot-popup-close svg{
+    width:16px;
+    height:16px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+  }
+
+  .lot-popup-opennew:hover,
+  .lot-popup-close:hover{
+    border-color:var(--lot-blue);
+    background:var(--lot-blue-soft);
+    color:var(--lot-blue-dark);
+  }
+
+  .lot-popup-body{
+    flex:1;
+    min-height:0;
+    background:#fff;
+  }
+
+  .lot-popup-frame{
+    width:100%;
+    height:100%;
+    border:0;
+    display:block;
+    background:#fff;
+  }
+
+  @media (max-width:1500px){
+    .lot-filters{
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width:1380px){
+    .lot-row{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .lot-right{
+      border-left:none;
+      border-top:1px solid #e2ecff;
+    }
+
+    .lot-action-rail{
+      grid-column:1 / -1;
+      border-left:none;
+      border-top:1px solid #d9e7ff;
+      flex-direction:row;
+      justify-content:flex-start;
+      padding:8px 10px;
+    }
+  }
+
+  @media (max-width:900px){
+    .lot-page{
+      padding:8px;
+    }
+
+    .lot-top-head{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+
+    .lot-filters{
+      grid-template-columns:1fr;
+    }
+
+    .lot-row{
+      grid-template-columns:1fr;
+    }
+
+    .lot-center,
+    .lot-right,
+    .lot-action-rail{
+      border-left:none;
+      border-top:1px solid #e2ecff;
+    }
+
+    .lot-pager{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+
+    .lot-popup{
+      padding:10px;
+    }
+
+    .lot-popup-dialog{
+      width:100%;
+      height:92vh;
+      border-radius:16px;
+    }
+
+    .lot-popup-head{
+      padding:12px;
+    }
+  }
+
+  @media (max-width:560px){
+    .lot-pair-grid,
+    .lot-stock-grid{
+      grid-template-columns:1fr;
+    }
+  }
+</style>
+
+<div class="lot-page">
+  <div class="lot-shell">
+
+    <section class="lot-top">
+      <div class="lot-top-head">
+        <h2 class="lot-title">Stock Lot Register</h2>
+
+        <div class="lot-top-actions">
+          <span class="lot-count">{{ page_obj.paginator.count }} Records</span>
+          <a href="{% url 'accounts:inventory_lot_list' %}" class="lot-btn">All Lots</a>
+        </div>
+      </div>
+
+      <div class="lot-filter-wrap">
+        <form method="get" class="lot-filters">
+          <input type="text" name="q" value="{{ q }}" class="lot-field" placeholder="Search lot, material, batch, dye lot">
+
+          <select name="material" class="lot-field">
+            <option value="">All materials</option>
+            {% for material in material_choices %}
+              <option value="{{ material.id }}" {% if selected_material == material.id|stringformat:"s" %}selected{% endif %}>
+                {{ material.name }}
+              </option>
+            {% endfor %}
+          </select>
+
+          <select name="stage" class="lot-field">
+            <option value="">All stages</option>
+            {% for value, label in stage_choices %}
+              <option value="{{ value }}" {% if selected_stage == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+
+          <select name="qc" class="lot-field">
+            <option value="">All QC</option>
+            {% for value, label in qc_choices %}
+              <option value="{{ value }}" {% if selected_qc == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+
+          <select name="location" class="lot-field">
+            <option value="">All locations</option>
+            {% for location in location_choices %}
+              <option value="{{ location }}" {% if selected_location == location %}selected{% endif %}>{{ location }}</option>
+            {% endfor %}
+          </select>
+
+          <select name="stock_type" class="lot-field">
+            <option value="">All stock</option>
+            <option value="available" {% if selected_stock_type == "available" %}selected{% endif %}>Available</option>
+            <option value="open" {% if selected_stock_type == "open" %}selected{% endif %}>Open</option>
+            <option value="closed" {% if selected_stock_type == "closed" %}selected{% endif %}>Closed</option>
+            <option value="zero" {% if selected_stock_type == "zero" %}selected{% endif %}>Zero</option>
+          </select>
+
+          <button type="submit" class="lot-btn lot-btn-primary">Apply</button>
+          <a href="{% url 'accounts:stock_lot_wise' %}" class="lot-btn">Clear</a>
+        </form>
+
+        {% if q or selected_material or selected_stage or selected_qc or selected_location or selected_stock_type %}
+          <div class="lot-chip-row">
+            {% if q %}<span class="lot-chip">{{ q }}</span>{% endif %}
+            {% if selected_material %}<span class="lot-chip">Material</span>{% endif %}
+            {% if selected_stage %}<span class="lot-chip">{{ selected_stage|title }}</span>{% endif %}
+            {% if selected_qc %}<span class="lot-chip">{{ selected_qc|title }}</span>{% endif %}
+            {% if selected_location %}<span class="lot-chip">{{ selected_location }}</span>{% endif %}
+            {% if selected_stock_type %}<span class="lot-chip">{{ selected_stock_type|title }}</span>{% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="lot-list">
+      {% for lot in rows %}
+        <article class="lot-row">
+
+          <div class="lot-main">
+            <div class="lot-code">{{ lot.lot_code }}</div>
+            <div class="lot-material">{{ lot.material.name }}</div>
+
+            <div class="lot-tag-wrap">
+              <span class="lot-tag is-stage">{{ lot.get_stage_display }}</span>
+              <span class="lot-tag">Batch <b>{{ lot.batch_no|default:"-" }}</b></span>
+              <span class="lot-tag">Dye Lot <b>{{ lot.dye_lot_no|default:"-" }}</b></span>
+              <span class="lot-tag">Shade <b>{{ lot.shade_reference|default:"-" }}</b></span>
+              <span class="lot-tag">Unit <b>{{ lot.unit|default:"-" }}</b></span>
+            </div>
+          </div>
+
+          <div class="lot-center">
+            <div class="lot-pair-grid">
+              <div class="lot-pair">
+                <span>Location</span>
+                <strong>{{ lot.location_name|default:"-" }}</strong>
+              </div>
+
+              <div class="lot-pair">
+                <span>Source Type</span>
+                <strong>
+                  {% if lot.dyeing_inward_item_id %}
+                    Dyeing Inward
+                  {% elif lot.ready_inward_item_id %}
+                    Ready Inward
+                  {% else %}
+                    -
+                  {% endif %}
+                </strong>
+              </div>
+
+              <div class="lot-pair">
+                <span>Source No.</span>
+                <strong>
+                  {% if lot.dyeing_inward_item_id %}
+                    <a href="{% url 'accounts:dyeingpo_inward' lot.dyeing_inward_item.inward.po_id %}">
+                      {{ lot.dyeing_inward_item.inward.inward_number }}
+                    </a>
+                  {% elif lot.ready_inward_item_id %}
+                    <a href="{% url 'accounts:readypo_inward' lot.ready_inward_item.inward.po_id %}">
+                      {{ lot.ready_inward_item.inward.inward_number }}
+                    </a>
+                  {% else %}
+                    -
+                  {% endif %}
+                </strong>
+              </div>
+
+              <div class="lot-pair">
+                <span>PO No.</span>
+                <strong>
+                  {% if lot.dyeing_inward_item_id %}
+                    {{ lot.dyeing_inward_item.inward.po.system_number|default:"-" }}
+                  {% elif lot.ready_inward_item_id %}
+                    {{ lot.ready_inward_item.inward.po.system_number|default:"-" }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="lot-right">
+            <div class="lot-stock-grid">
+              <div class="lot-stock">
+                <span>Received</span>
+                <strong>{{ lot.received_qty|floatformat:2 }}</strong>
+              </div>
+              <div class="lot-stock">
+                <span>Accepted</span>
+                <strong>{{ lot.accepted_qty|floatformat:2 }}</strong>
+              </div>
+              <div class="lot-stock">
+                <span>Used</span>
+                <strong>{{ lot.used_qty|floatformat:2 }}</strong>
+              </div>
+              <div class="lot-stock is-main">
+                <span>Available</span>
+                <strong>{{ lot.available_qty|floatformat:2 }}</strong>
+              </div>
+              <div class="lot-stock">
+                <span>Rejected</span>
+                <strong>{{ lot.rejected_qty|floatformat:2 }}</strong>
+              </div>
+              <div class="lot-stock">
+                <span>Hold</span>
+                <strong>{{ lot.hold_qty|floatformat:2 }}</strong>
+              </div>
+            </div>
+
+            <div class="lot-status-row">
+              <span class="lot-badge qc">{{ lot.get_qc_status_display }}</span>
+              {% if lot.is_closed %}
+                <span class="lot-badge closed">Closed</span>
+              {% else %}
+                <span class="lot-badge open">Open</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="lot-action-rail">
+            <button
+              type="button"
+              class="lot-action js-lot-popup"
+              data-popup-title="Lot Detail"
+              data-popup-url="{% url 'accounts:inventory_lot_detail' lot.id %}?embed=1"
+              data-open-url="{% url 'accounts:inventory_lot_detail' lot.id %}"
+              aria-label="Open lot"
+              title="Open lot"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              class="lot-action js-lot-popup"
+              data-popup-title="Quality Check"
+              data-popup-url="{% url 'accounts:quality_check_add' %}?lot={{ lot.id }}&embed=1"
+              data-open-url="{% url 'accounts:quality_check_add' %}?lot={{ lot.id }}"
+              aria-label="Quality check"
+              title="Quality check"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 11l3 3L22 4"></path>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              class="lot-action js-lot-popup"
+              data-popup-title="Generate QR"
+              data-popup-url="{% url 'accounts:qr_code_add' %}?lot={{ lot.id }}&embed=1"
+              data-open-url="{% url 'accounts:qr_code_add' %}?lot={{ lot.id }}"
+              aria-label="Generate QR"
+              title="Generate QR"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 3h7v7H3z"></path>
+                <path d="M14 3h7v7h-7z"></path>
+                <path d="M3 14h7v7H3z"></path>
+                <path d="M14 14h3"></path>
+                <path d="M17 14v3"></path>
+                <path d="M21 14v7h-7"></path>
+                <path d="M14 21v-3"></path>
+                <path d="M17 21h.01"></path>
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              class="lot-action js-lot-popup"
+              data-popup-title="Lot History"
+              data-popup-url="{% url 'accounts:inventory_lot_detail' lot.id %}?embed=1#history"
+              data-open-url="{% url 'accounts:inventory_lot_detail' lot.id %}#history"
+              aria-label="Lot history"
+              title="Lot history"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+                <path d="M3 3v6h6"></path>
+                <path d="M12 7v5l3 3"></path>
+              </svg>
+            </button>
+          </div>
+
+        </article>
+      {% empty %}
+        <div class="lot-empty">No lots found.</div>
+      {% endfor %}
+    </section>
+
+    <div class="lot-pager">
+      <div class="lot-pager-note">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</div>
+
+      <div class="lot-pager-actions">
+        {% if page_obj.has_previous %}
+          <a class="lot-btn" href="?q={{ q|urlencode }}&material={{ selected_material }}&stage={{ selected_stage }}&qc={{ selected_qc }}&location={{ selected_location|urlencode }}&stock_type={{ selected_stock_type }}&page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a class="lot-btn" href="?q={{ q|urlencode }}&material={{ selected_material }}&stage={{ selected_stage }}&qc={{ selected_qc }}&location={{ selected_location|urlencode }}&stock_type={{ selected_stock_type }}&page={{ page_obj.next_page_number }}">Next</a>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="lot-popup" id="lotActionPopup" aria-hidden="true">
+  <div class="lot-popup-backdrop" data-lot-popup-close></div>
+
+  <div class="lot-popup-dialog" role="dialog" aria-modal="true" aria-labelledby="lotPopupTitle">
+    <div class="lot-popup-head">
+      <div class="lot-popup-title" id="lotPopupTitle">Details</div>
+
+      <div class="lot-popup-head-actions">
+        <a href="#" class="lot-popup-opennew" id="lotPopupOpenNew" target="_blank" rel="noopener" aria-label="Open in new page" title="Open in new page">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M14 3h7v7"></path>
+            <path d="M10 14L21 3"></path>
+            <path d="M21 14v4a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h4"></path>
+          </svg>
+        </a>
+
+        <button type="button" class="lot-popup-close" id="lotPopupClose" aria-label="Close popup" title="Close popup">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="lot-popup-body">
+      <iframe class="lot-popup-frame" id="lotPopupFrame" src="about:blank"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const popup = document.getElementById("lotActionPopup");
+    const frame = document.getElementById("lotPopupFrame");
+    const title = document.getElementById("lotPopupTitle");
+    const openNew = document.getElementById("lotPopupOpenNew");
+    const closeBtn = document.getElementById("lotPopupClose");
+    const closeEls = popup ? popup.querySelectorAll("[data-lot-popup-close]") : [];
+    const triggers = document.querySelectorAll(".js-lot-popup");
+
+    if (!popup || !frame || !title || !openNew || !closeBtn || !triggers.length) return;
+
+    function openPopup(popupUrl, heading, openUrl) {
+      title.textContent = heading || "Details";
+      openNew.href = openUrl || popupUrl || "#";
+      frame.src = "about:blank";
+      popup.classList.add("is-open");
+      popup.setAttribute("aria-hidden", "false");
+      document.body.classList.add("lot-popup-open");
+
+      setTimeout(function () {
+        frame.src = popupUrl || "about:blank";
+      }, 30);
+    }
+
+    function closePopup() {
+      popup.classList.remove("is-open");
+      popup.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("lot-popup-open");
+
+      setTimeout(function () {
+        frame.src = "about:blank";
+      }, 120);
+    }
+
+    triggers.forEach((trigger) => {
+      trigger.addEventListener("click", function (event) {
+        event.preventDefault();
+        const popupUrl = this.getAttribute("data-popup-url");
+        const openUrl = this.getAttribute("data-open-url") || popupUrl;
+        const heading = this.getAttribute("data-popup-title") || this.getAttribute("title") || "Details";
+        openPopup(popupUrl, heading, openUrl);
+      });
+    });
+
+    closeBtn.addEventListener("click", closePopup);
+
+    closeEls.forEach((el) => {
+      el.addEventListener("click", closePopup);
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && popup.classList.contains("is-open")) {
+        closePopup();
+      }
+    });
+  })();
+</script>
+{% endblock %}

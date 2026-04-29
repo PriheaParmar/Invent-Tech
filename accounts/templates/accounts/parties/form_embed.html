@@ -1,0 +1,241 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_form.css' %}?v=1">
+
+<div class="master-form-ui party-form-ui">
+  <section class="mf-panel">
+    <div class="mf-head">
+      <div>
+        <h2 class="mf-title">
+          {% if mode == "add" %}Add Party{% else %}Edit Party{% endif %}
+        </h2>
+      </div>
+
+      <div class="mf-head-actions">
+        <a class="mf-iconbtn mf-back" href="{% url 'accounts:party_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+          <svg class="mf-back-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="mf-iconbtn mf-close" data-embed-close aria-label="Close">
+          <svg class="mf-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if mode == "add" %}
+      {% url "accounts:party_add" as action_url %}
+    {% else %}
+      {% url "accounts:party_edit" party.id as action_url %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="mf-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="mf-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="mf-section">
+        <div class="mf-section-title">Basic</div>
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.party_code.id_for_label }}">Party Code</label>
+            {{ form.party_code }}
+            {% if form.party_code.errors %}
+            <div class="mf-field-errors">{% for error in form.party_code.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.party_name.id_for_label }}">Party Name</label>
+            {{ form.party_name }}
+            {% if form.party_name.errors %}
+            <div class="mf-field-errors">{% for error in form.party_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.party_category.id_for_label }}">Category</label>
+            {{ form.party_category }}
+            {% if form.party_category.errors %}
+            <div class="mf-field-errors">{% for error in form.party_category.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label>Status</label>
+            <div class="mf-check-row">
+              {{ form.is_active }}
+              <div class="mf-check-copy">
+                <div class="mf-check-title">Active Party</div>
+              </div>
+            </div>
+            {% if form.is_active.errors %}
+            <div class="mf-field-errors">{% for error in form.is_active.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-section">
+        <div class="mf-section-title">Contact</div>
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.contact_person.id_for_label }}">Contact Person</label>
+            {{ form.contact_person }}
+            {% if form.contact_person.errors %}
+            <div class="mf-field-errors">{% for error in form.contact_person.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.phone_number.id_for_label }}">Mobile</label>
+            {{ form.phone_number }}
+            {% if form.phone_number.errors %}
+            <div class="mf-field-errors">{% for error in form.phone_number.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.alt_phone.id_for_label }}">Alternate Mobile</label>
+            {{ form.alt_phone }}
+            {% if form.alt_phone.errors %}
+            <div class="mf-field-errors">{% for error in form.alt_phone.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+            <div class="mf-field-errors">{% for error in form.email.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-section">
+        <div class="mf-section-title">Tax &amp; Bank</div>
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.gst_number.id_for_label }}">GST Number</label>
+            {{ form.gst_number }}
+            {% if form.gst_number.errors %}
+            <div class="mf-field-errors">{% for error in form.gst_number.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.pan_number.id_for_label }}">PAN Number</label>
+            {{ form.pan_number }}
+            {% if form.pan_number.errors %}
+            <div class="mf-field-errors">{% for error in form.pan_number.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.tan_number.id_for_label }}">TAN Number</label>
+            {{ form.tan_number }}
+            {% if form.tan_number.errors %}
+            <div class="mf-field-errors">{% for error in form.tan_number.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.bank_name.id_for_label }}">Bank Name</label>
+            {{ form.bank_name }}
+            {% if form.bank_name.errors %}
+            <div class="mf-field-errors">{% for error in form.bank_name.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.account_number.id_for_label }}">Account Number</label>
+            {{ form.account_number }}
+            {% if form.account_number.errors %}
+            <div class="mf-field-errors">{% for error in form.account_number.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.ifsc_code.id_for_label }}">IFSC Code</label>
+            {{ form.ifsc_code }}
+            {% if form.ifsc_code.errors %}
+            <div class="mf-field-errors">{% for error in form.ifsc_code.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-section">
+        <div class="mf-section-title">Address</div>
+        <div class="mf-grid">
+          <div class="mf-field mf-full">
+            <label for="{{ form.address.id_for_label }}">Address</label>
+            {{ form.address }}
+            {% if form.address.errors %}
+            <div class="mf-field-errors">{% for error in form.address.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.city.id_for_label }}">City</label>
+            {{ form.city }}
+            {% if form.city.errors %}
+            <div class="mf-field-errors">{% for error in form.city.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.state.id_for_label }}">State</label>
+            {{ form.state }}
+            {% if form.state.errors %}
+            <div class="mf-field-errors">{% for error in form.state.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.pincode.id_for_label }}">Pincode</label>
+            {{ form.pincode }}
+            {% if form.pincode.errors %}
+            <div class="mf-field-errors">{% for error in form.pincode.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-section">
+        <div class="mf-section-title">Notes</div>
+        <div class="mf-grid">
+          <div class="mf-field mf-full">
+            <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+            {{ form.remarks }}
+            {% if form.remarks.errors %}
+            <div class="mf-field-errors">{% for error in form.remarks.errors %}<p>{{ error }}</p>{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-footer">
+        <a class="mf-btn-secondary" href="{% url 'accounts:party_list' %}{% if not full_page %}?embed=1{% endif %}">
+          Cancel
+        </a>
+        <button type="submit" class="mf-btn-primary">Save Party</button>
+      </div>
+    </form>
+  </section>
+</div>

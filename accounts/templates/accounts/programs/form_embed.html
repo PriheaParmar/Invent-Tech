@@ -1,0 +1,1232 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=1">
+
+<div class="{% if full_page %}jb-page{% endif %}">
+  <div class="jobbers-embed program-form-embed">
+    <section class="pf-shell">
+
+      <div class="pf-hero">
+        <div class="pf-hero-copy">
+          <div class="pf-kicker">Production Studio</div>
+          <div class="pf-title">{% if mode == "edit" %}Edit Program{% else %}Create Program{% endif %}</div>
+          <div class="pf-sub">Build the production program, review the SKU snapshot, and prepare jobber planning in one unified workspace.</div>
+        </div>
+
+        <div class="pf-hero-stats">
+          <div class="pf-stat">
+            <div class="pf-stat-label">Workflow</div>
+            <div class="pf-stat-value">Planning</div>
+          </div>
+          <div class="pf-stat">
+            <div class="pf-stat-label">Next Step</div>
+            <div class="pf-stat-value">Start Program</div>
+          </div>
+          <div class="pf-stat">
+            <div class="pf-stat-label">Section</div>
+            <div class="pf-stat-value">Production</div>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        :root{
+          --pf-bg:#fcfbf8;
+          --pf-surface:#ffffff;
+          --pf-surface-2:#faf8f4;
+          --pf-surface-3:#f7f3ec;
+          --pf-line:#e7e1d7;
+          --pf-line-2:#f2ede5;
+          --pf-line-strong:#ddd5ca;
+
+          --pf-text:#1b2430;
+          --pf-text-soft:#707887;
+          --pf-text-muted:#8e96a2;
+
+          --pf-orange:#fabd64;
+          --pf-orange-dark:#f2b24f;
+          --pf-orange-soft:rgba(250,189,100,.12);
+          --pf-orange-soft-2:rgba(250,189,100,.18);
+          --pf-orange-line:rgba(250,189,100,.48);
+
+          --pf-green:#17754a;
+          --pf-green-soft:#edf8f1;
+          --pf-green-line:#cfe7d8;
+
+          --pf-red:#bf4336;
+          --pf-red-soft:#fff2ef;
+          --pf-red-line:#f0d2cb;
+
+          --pf-blue:#2555d9;
+          --pf-blue-soft:#eef3ff;
+          --pf-blue-line:#ccd8ff;
+
+          --pf-shadow-sm:0 1px 2px rgba(17,24,39,.04);
+          --pf-shadow-md:0 10px 28px rgba(15,23,42,.05);
+          --pf-shadow-lg:0 18px 44px rgba(15,23,42,.08);
+
+          --pf-font-serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,"Times New Roman",serif;
+          --pf-font-sans:Inter,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+        } 
+        .jb-page{
+          padding: 0;
+          margin: 0;
+        }
+
+        .pf-shell{
+          color:var(--pf-text);
+          font-family:var(--pf-font-sans);
+          display:grid;
+          gap:12px;
+          padding-bottom:10px;
+        }
+
+        .pf-hero{
+          display:flex;
+          align-items:flex-start;
+          justify-content:space-between;
+          gap:14px;
+          border:1px solid var(--pf-line);
+          background:linear-gradient(180deg,#fff,#fcfbf8);
+          border-radius:18px;
+          padding:14px;
+          box-shadow:var(--pf-shadow-md);
+          flex-wrap:wrap;
+        }
+
+        .pf-hero-copy{
+          min-width:0;
+          flex:1 1 480px;
+        }
+
+        .pf-kicker{
+          font-size:8px;
+          font-weight:900;
+          letter-spacing:.16em;
+          text-transform:uppercase;
+          color:#8a7860;
+          line-height:1;
+          margin-bottom:5px;
+        }
+
+        .pf-title{
+          font-size:26px;
+          line-height:1.02;
+          font-weight:700;
+          color:#121a24;
+          font-family:var(--pf-font-serif);
+          letter-spacing:-.03em;
+        }
+
+        .pf-sub{
+          margin-top:6px;
+          font-size:11px;
+          line-height:1.55;
+          color:var(--pf-text-soft);
+          font-weight:700;
+          max-width:760px;
+        }
+
+        .pf-hero-stats{
+          display:grid;
+          grid-template-columns:repeat(3,minmax(0,1fr));
+          gap:8px;
+          flex:0 0 auto;
+          min-width:320px;
+        }
+
+        .pf-stat{
+          border:1px solid var(--pf-line);
+          background:#fff;
+          border-radius:12px;
+          padding:10px 10px 9px;
+          box-shadow:var(--pf-shadow-sm);
+        }
+
+        .pf-stat-label{
+          font-size:7px;
+          font-weight:900;
+          letter-spacing:.08em;
+          text-transform:uppercase;
+          color:var(--pf-text-muted);
+        }
+
+        .pf-stat-value{
+          margin-top:4px;
+          font-size:11px;
+          font-weight:900;
+          color:var(--pf-text);
+          font-family:var(--pf-font-serif);
+        }
+
+        .pf-form{
+          display:grid;
+          gap:12px;
+        }
+
+        .pf-error-list{
+          margin:0;
+          padding:0;
+          list-style:none;
+          display:grid;
+          gap:8px;
+        }
+
+        .pf-error{
+          padding:10px 12px;
+          border-radius:12px;
+          background:var(--pf-red-soft);
+          border:1px solid var(--pf-red-line);
+          color:var(--pf-red);
+          font-size:10px;
+          font-weight:800;
+        }
+
+        .pf-main-grid{
+          display:grid;
+          grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+          gap:12px;
+          align-items:start;
+        }
+
+        .pf-stack{
+          display:grid;
+          gap:12px;
+        }
+
+        .pf-card{
+          border:1px solid var(--pf-line);
+          border-radius:18px;
+          background:#fff;
+          overflow:hidden;
+          box-shadow:var(--pf-shadow-md);
+        }
+
+        .pf-card-head{
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:12px;
+          padding:10px 12px;
+          border-bottom:1px solid var(--pf-line-2);
+          background:#fcfbf8;
+        }
+
+        .pf-card-title{
+          font-size:9px;
+          font-weight:800;
+          color:#5f4a1d;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+        }
+
+        .pf-card-sub{
+          font-size:10px;
+          color:var(--pf-text-soft);
+          margin-top:3px;
+          font-weight:700;
+          line-height:1.45;
+        }
+
+        .pf-card-body{
+          padding:12px;
+        }
+
+        .pf-fields{
+          display:grid;
+          grid-template-columns:repeat(12,minmax(0,1fr));
+          gap:10px;
+        }
+
+        .pf-field{
+          grid-column:span 4;
+          display:flex;
+          flex-direction:column;
+          gap:4px;
+          min-width:0;
+        }
+
+        .pf-field-wide{grid-column:span 6}
+        .pf-field-full{grid-column:span 12}
+
+        .pf-field label{
+          font-size:9px;
+          font-weight:800;
+          color:#4b5563;
+          letter-spacing:.01em;
+        }
+
+        .pf-field input,
+        .pf-field select,
+        .pf-field textarea{
+          width:100%;
+          border:1px solid var(--pf-line);
+          border-radius:11px;
+          padding:9px 10px;
+          font-size:11px;
+          font-weight:700;
+          color:#111827;
+          background:#fff;
+          outline:none;
+          transition:border-color .15s ease, box-shadow .15s ease, background .15s ease, transform .15s ease;
+          min-height:36px;
+          box-sizing:border-box;
+          box-shadow:var(--pf-shadow-sm);
+        }
+
+        .pf-field textarea{
+          min-height:96px;
+          resize:vertical;
+        }
+
+        .pf-field input:focus,
+        .pf-field select:focus,
+        .pf-field textarea:focus{
+          border-color:var(--pf-orange-line);
+          box-shadow:0 0 0 4px var(--pf-orange-soft);
+          background:#fff;
+        }
+
+        .pf-inline-error{
+          font-size:9px;
+          color:#b91c1c;
+          font-weight:700;
+        }
+
+        .pf-help{
+          font-size:9px;
+          color:var(--pf-text-soft);
+          font-weight:700;
+        }
+
+        .pf-checkbox{
+          display:flex;
+          align-items:center;
+          gap:8px;
+          padding-top:21px;
+        }
+
+        .pf-checkbox input{
+          width:15px;
+          height:15px;
+          min-height:auto;
+          box-shadow:none;
+        }
+
+        .pf-snapshot{
+          display:grid;
+          grid-template-columns:240px minmax(0,1fr);
+          gap:12px;
+          align-items:start;
+        }
+
+        .pf-media{
+          border:1px solid var(--pf-line);
+          border-radius:14px;
+          background:var(--pf-surface-2);
+          padding:10px;
+        }
+
+        .pf-media-title,
+        .pf-mini-title{
+          font-size:9px;
+          font-weight:800;
+          color:#5f4a1d;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+          margin-bottom:8px;
+        }
+
+        .pf-media-frame{
+          width:100%;
+          aspect-ratio:1/1;
+          border-radius:12px;
+          border:1px solid var(--pf-line);
+          background:#f9fafb;
+          overflow:hidden;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+        }
+
+        .pf-media-frame img{
+          width:100%;
+          height:100%;
+          object-fit:cover;
+          display:block;
+        }
+
+        .pf-media-empty{
+          font-size:10px;
+          font-weight:700;
+          color:#9ca3af;
+          text-align:center;
+          padding:16px;
+        }
+
+        .pf-hidden{
+          display:none !important;
+        }
+
+        .pf-meta-grid{
+          display:grid;
+          grid-template-columns:repeat(4,minmax(0,1fr));
+          gap:8px;
+        }
+
+        .pf-meta-card{
+          border:1px solid var(--pf-line);
+          border-radius:11px;
+          padding:8px 9px;
+          background:var(--pf-surface-2);
+        }
+
+        .pf-meta-label{
+          font-size:7px;
+          font-weight:900;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+          color:var(--pf-text-muted);
+        }
+
+        .pf-meta-value{
+          margin-top:4px;
+          font-size:10px;
+          font-weight:900;
+          color:var(--pf-text);
+          min-height:14px;
+          line-height:1.2;
+          word-break:break-word;
+        }
+
+        .pf-lists{
+          display:grid;
+          grid-template-columns:repeat(2,minmax(0,1fr));
+          gap:8px;
+          margin-top:10px;
+        }
+
+        .pf-mini-list{
+          border:1px solid var(--pf-line);
+          border-radius:12px;
+          padding:10px;
+          background:#fff;
+        }
+
+        .pf-tags{
+          display:flex;
+          flex-wrap:wrap;
+          gap:6px;
+        }
+
+        .pf-tag{
+          display:inline-flex;
+          align-items:center;
+          padding:4px 8px;
+          border-radius:999px;
+          background:var(--pf-surface-2);
+          border:1px solid var(--pf-line);
+          color:#374151;
+          font-size:9px;
+          font-weight:800;
+        }
+
+        .pf-mini-text{
+          font-size:10px;
+          line-height:1.6;
+          color:#374151;
+          white-space:pre-wrap;
+          font-weight:700;
+        }
+
+        .pf-summary-grid{
+          display:grid;
+          grid-template-columns:repeat(3,minmax(0,1fr));
+          gap:8px;
+        }
+
+        .pf-summary-card{
+          border:1px solid var(--pf-line);
+          border-radius:12px;
+          padding:10px;
+          background:linear-gradient(180deg,#fff,#fcfbf8);
+        }
+
+        .pf-summary-label{
+          font-size:7px;
+          font-weight:900;
+          color:var(--pf-text-muted);
+          text-transform:uppercase;
+          letter-spacing:.08em;
+        }
+
+        .pf-summary-value{
+          margin-top:4px;
+          font-size:12px;
+          font-weight:900;
+          color:var(--pf-text);
+          font-family:var(--pf-font-serif);
+        }
+
+        .pf-jobber-tools{
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          margin-bottom:10px;
+          flex-wrap:wrap;
+        }
+
+        .pf-muted{
+          font-size:9px;
+          color:var(--pf-text-soft);
+          font-weight:700;
+          line-height:1.45;
+        }
+
+        .pf-jobber-wrap{
+          overflow:auto;
+          border:1px solid var(--pf-line);
+          border-radius:12px;
+          background:#fff;
+        }
+
+        .pf-jobber-table{
+          width:100%;
+          border-collapse:collapse;
+          min-width:820px;
+          background:#fff;
+        }
+
+        .pf-jobber-table th,
+        .pf-jobber-table td{
+          padding:7px 8px;
+          border-bottom:1px solid var(--pf-line-2);
+          vertical-align:top;
+        }
+
+        .pf-jobber-table th{
+          font-size:7px;
+          font-weight:900;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+          color:var(--pf-text-muted);
+          background:#faf8f5;
+          text-align:left;
+          white-space:nowrap;
+        }
+
+        .pf-jobber-table td .pf-field{
+          grid-column:auto;
+        }
+
+        .pf-jobber-table td .pf-field input,
+        .pf-jobber-table td .pf-field select{
+          min-width:130px;
+        }
+
+        .pf-jobber-empty{
+          text-align:center;
+          color:var(--pf-text-soft);
+          font-size:10px;
+          font-weight:700;
+          padding:16px;
+        }
+
+        .pf-delete-cell{
+          width:90px;
+        }
+
+        .pf-delete-wrap{
+          display:flex;
+          align-items:center;
+          gap:8px;
+          padding-top:2px;
+        }
+
+        .pf-btn,
+        .pf-btn-secondary{
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          border-radius:9px;
+          padding:9px 13px;
+          font-size:10px;
+          font-weight:900;
+          text-decoration:none;
+          border:1px solid transparent;
+          cursor:pointer;
+          transition:.16s ease;
+          white-space:nowrap;
+          box-shadow:var(--pf-shadow-sm);
+        }
+
+        .pf-btn{
+          background:var(--pf-orange);
+          color:#3b2b0d;
+          border-color:var(--pf-orange);
+        }
+
+        .pf-btn:hover{
+          background:var(--pf-orange-dark);
+          border-color:var(--pf-orange-dark);
+          color:#2f2209;
+          transform:translateY(-1px);
+        }
+
+        .pf-btn-secondary{
+          background:#fff;
+          border-color:var(--pf-line);
+          color:#374151;
+        }
+
+        .pf-btn-secondary:hover{
+          background:#faf9f6;
+          border-color:var(--pf-line-strong);
+          transform:translateY(-1px);
+        }
+
+        .pf-actionbar{
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:12px;
+          flex-wrap:wrap;
+          border:1px solid var(--pf-line);
+          background:#fff;
+          border-radius:16px;
+          padding:12px 14px;
+          box-shadow:var(--pf-shadow-md);
+        }
+
+        .pf-actions{
+          display:flex;
+          gap:8px;
+          flex-wrap:wrap;
+        }
+
+        @media (max-width: 1200px){
+          .pf-main-grid{
+            grid-template-columns:1fr;
+          }
+
+          .pf-snapshot{
+            grid-template-columns:1fr;
+          }
+
+          .pf-meta-grid{
+            grid-template-columns:repeat(2,minmax(0,1fr));
+          }
+
+          .pf-lists{
+            grid-template-columns:1fr;
+          }
+        }
+
+        @media (max-width: 900px){
+          .pf-hero{
+            padding:12px;
+          }
+
+          .pf-hero-stats{
+            grid-template-columns:1fr;
+            min-width:0;
+            width:100%;
+          }
+
+          .pf-field,
+          .pf-field-wide{
+            grid-column:span 12;
+          }
+
+          .pf-summary-grid{
+            grid-template-columns:1fr;
+          }
+        }
+
+        @media (max-width: 720px){
+          .pf-head,
+          .pf-jobber-tools,
+          .pf-actionbar{
+            flex-direction:column;
+            align-items:stretch;
+          }
+
+          .pf-meta-grid{
+            grid-template-columns:1fr;
+          }
+
+          .pf-actions{
+            width:100%;
+          }
+
+          .pf-actions .pf-btn,
+          .pf-actions .pf-btn-secondary,
+          .pf-jobber-tools .pf-btn-secondary{
+            width:100%;
+          }
+        }
+      </style>
+
+      <form method="post" action="{{ action_url }}" class="pf-form" novalidate>
+        {% csrf_token %}
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+        {{ jobber_formset.management_form }}
+
+        {% if form.non_field_errors or jobber_formset.non_form_errors %}
+        <ul class="pf-error-list">
+          {% for err in form.non_field_errors %}<li class="pf-error">{{ err }}</li>{% endfor %}
+          {% for err in jobber_formset.non_form_errors %}<li class="pf-error">{{ err }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="pf-main-grid">
+          <div class="pf-stack">
+            <section class="pf-card">
+              <div class="pf-card-head">
+                <div>
+                  <div class="pf-card-title">Basic Details</div>
+                  <div class="pf-card-sub">Core program identity, dates, and approval controls.</div>
+                </div>
+              </div>
+              <div class="pf-card-body">
+                <div class="pf-fields">
+                  <div class="pf-field">
+                    <label for="{{ form.program_no.id_for_label }}">{{ form.program_no.label }}</label>
+                    {{ form.program_no }}
+                    {% for err in form.program_no.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                  <div class="pf-field">
+                    <label for="{{ form.program_date.id_for_label }}">{{ form.program_date.label }}</label>
+                    {{ form.program_date }}
+                    {% for err in form.program_date.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                  <div class="pf-field">
+                    <label for="{{ form.finishing_date.id_for_label }}">{{ form.finishing_date.label }}</label>
+                    {{ form.finishing_date }}
+                    {% for err in form.finishing_date.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                  <div class="pf-field">
+                    <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                    {{ form.status }}
+                    {% for err in form.status.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                  <div class="pf-field pf-checkbox">
+                    {{ form.is_verified }}
+                    <label for="{{ form.is_verified.id_for_label }}">{{ form.is_verified.label }}</label>
+                    {% for err in form.is_verified.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="pf-card">
+              <div class="pf-card-head">
+                <div>
+                  <div class="pf-card-title">SKU Snapshot</div>
+                  <div class="pf-card-sub">Preview the selected BOM details, image, and mapped jobber pricing before starting production.</div>
+                </div>
+              </div>
+              <div class="pf-card-body">
+                <div class="pf-snapshot">
+                  <div class="pf-media">
+                    <div class="pf-media-title">SKU Image</div>
+                    <div class="pf-media-frame">
+                      <img src="" alt="" data-program-sku-image class="pf-hidden">
+                      <div class="pf-media-empty" data-program-sku-image-empty>No BOM image available</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="pf-meta-grid">
+                      <div class="pf-meta-card"><div class="pf-meta-label">BOM Code</div><div class="pf-meta-value" data-program-sku="bom_code"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">SKU</div><div class="pf-meta-value" data-program-sku="sku"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Product Name</div><div class="pf-meta-value" data-program-sku="product_name"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Catalogue</div><div class="pf-meta-value" data-program-sku="catalogue"></div></div>
+
+                      <div class="pf-meta-card"><div class="pf-meta-label">Brand</div><div class="pf-meta-value" data-program-sku="brand"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Pattern</div><div class="pf-meta-value" data-program-sku="pattern_type"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Main Category</div><div class="pf-meta-value" data-program-sku="main_category"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Category</div><div class="pf-meta-value" data-program-sku="category"></div></div>
+
+                      <div class="pf-meta-card"><div class="pf-meta-label">Sub Category</div><div class="pf-meta-value" data-program-sku="sub_category"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Gender</div><div class="pf-meta-value" data-program-sku="gender"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Size Type</div><div class="pf-meta-value" data-program-sku="size_type"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Status</div><div class="pf-meta-value" data-program-sku="status"></div></div>
+
+                      <div class="pf-meta-card"><div class="pf-meta-label">MRP</div><div class="pf-meta-value" data-program-sku="mrp"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Selling Price</div><div class="pf-meta-value" data-program-sku="selling_price"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Maintenance Price</div><div class="pf-meta-value" data-program-sku="maintenance_price"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Final Price</div><div class="pf-meta-value" data-program-sku="final_price"></div></div>
+
+                      <div class="pf-meta-card"><div class="pf-meta-label">Color</div><div class="pf-meta-value" data-program-sku="color"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Character</div><div class="pf-meta-value" data-program-sku="character_name"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">License</div><div class="pf-meta-value" data-program-sku="license_name"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Drawcord</div><div class="pf-meta-value" data-program-sku="drawcord"></div></div>
+
+                      <div class="pf-meta-card"><div class="pf-meta-label">Tie Dye</div><div class="pf-meta-value" data-program-sku="tie_dye_price"></div></div>
+                      <div class="pf-meta-card"><div class="pf-meta-label">Accessories Price</div><div class="pf-meta-value" data-program-sku="accessories_price"></div></div>
+                    </div>
+
+                    <div class="pf-lists">
+                      <div class="pf-mini-list">
+                        <div class="pf-mini-title">Linked Fabrics</div>
+                        <div class="pf-tags" data-program-sku-list="linked_fabrics"></div>
+                      </div>
+
+                      <div class="pf-mini-list">
+                        <div class="pf-mini-title">Linked Accessories</div>
+                        <div class="pf-tags" data-program-sku-list="linked_accessories"></div>
+                      </div>
+
+                      <div class="pf-mini-list">
+                        <div class="pf-mini-title">BOM Process Price Mapping</div>
+                        <div class="pf-tags" data-program-sku-list="linked_processes"></div>
+                      </div>
+
+                      <div class="pf-mini-list">
+                        <div class="pf-mini-title">BOM Jobber Mapping</div>
+                        <div class="pf-tags" data-program-sku-list="linked_jobbers"></div>
+                      </div>
+
+                      <div class="pf-mini-list" style="grid-column:1 / -1;">
+                        <div class="pf-mini-title">BOM Notes</div>
+                        <div class="pf-mini-text" data-program-sku="notes">—</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="pf-card">
+              <div class="pf-card-head">
+                <div>
+                  <div class="pf-card-title">Planned Jobber Pricing</div>
+                  <div class="pf-card-sub">Add the planned jobber mapping and process price before production starts.</div>
+                </div>
+              </div>
+              <div class="pf-card-body">
+                <div class="pf-jobber-tools">
+                  <div class="pf-muted">These rows are planning rows. Actual start allocation happens inside Program Start.</div>
+                  <button type="button" class="pf-btn-secondary" id="add-jobber-row">Add Jobber Row</button>
+                </div>
+
+                <div class="pf-jobber-wrap">
+                  <table class="pf-jobber-table">
+                    <thead>
+                      <tr>
+                        <th style="width:34%">Jobber</th>
+                        <th style="width:28%">Jobber Type</th>
+                        <th style="width:18%">Price</th>
+                        <th style="width:12%">Order</th>
+                        <th class="pf-delete-cell">Remove</th>
+                      </tr>
+                    </thead>
+                    <tbody id="program-jobber-body">
+                      {% for jf in jobber_formset.forms %}
+                      <tr class="program-jobber-row">
+                        <td>
+                          {% for hidden in jf.hidden_fields %}{{ hidden }}{% endfor %}
+                          <div class="pf-field">
+                            {{ jf.jobber }}
+                            {% for err in jf.jobber.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                          </div>
+                        </td>
+                        <td>
+                          <div class="pf-field">
+                            {{ jf.jobber_type }}
+                            {% for err in jf.jobber_type.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                          </div>
+                        </td>
+                        <td>
+                          <div class="pf-field">
+                            {{ jf.price }}
+                            {% for err in jf.price.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                          </div>
+                        </td>
+                        <td>
+                          <div class="pf-field">
+                            {{ jf.sort_order }}
+                            {% for err in jf.sort_order.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                          </div>
+                        </td>
+                        <td class="pf-delete-cell">
+                          <div class="pf-delete-wrap">
+                            {% if jf.DELETE %}{{ jf.DELETE }}{% endif %}
+                            <button type="button" class="pf-btn-secondary js-remove-jobber">Remove</button>
+                          </div>
+                        </td>
+                      </tr>
+                      {% empty %}
+                      <tr><td colspan="5" class="pf-jobber-empty">No jobber rows yet.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="pf-stack">
+            <section class="pf-card">
+              <div class="pf-card-head">
+                <div>
+                  <div class="pf-card-title">SKU / Planning</div>
+                  <div class="pf-card-sub">Select the production SKU and define the main planning values.</div>
+                </div>
+              </div>
+              <div class="pf-card-body">
+                <div class="pf-fields">
+                  <div class="pf-field pf-field-full">
+                    <label for="{{ form.bom.id_for_label }}">{{ form.bom.label }}</label>
+                    {{ form.bom }}
+                    {% for err in form.bom.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                  <div class="pf-field pf-field-full">
+                    <label for="{{ form.firm.id_for_label }}">{{ form.firm.label }}</label>
+                    {{ form.firm }}
+                    {% for err in form.firm.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                  <div class="pf-field pf-field-full">
+                    <label for="{{ form.total_qty.id_for_label }}">{{ form.total_qty.label }}</label>
+                    {{ form.total_qty }}
+                    {% for err in form.total_qty.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                  <div class="pf-field pf-field-full">
+                    <label for="{{ form.ratio.id_for_label }}">{{ form.ratio.label }}</label>
+                    {{ form.ratio }}
+                    {% for err in form.ratio.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="pf-card">
+              <div class="pf-card-head">
+                <div>
+                  <div class="pf-card-title">Production Control</div>
+                  <div class="pf-card-sub">Keep damage and lead-time controls visible at planning time.</div>
+                </div>
+              </div>
+              <div class="pf-card-body">
+                <div class="pf-fields">
+                  <div class="pf-field pf-field-full">
+                    <label for="{{ form.damage.id_for_label }}">{{ form.damage.label }}</label>
+                    {{ form.damage }}
+                    {% for err in form.damage.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                  <div class="pf-field pf-field-full">
+                    <label for="{{ form.glt_days.id_for_label }}">{{ form.glt_days.label }}</label>
+                    {{ form.glt_days }}
+                    {% for err in form.glt_days.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                  <div class="pf-field pf-field-full">
+                    <label for="{{ form.glt_on_100_days.id_for_label }}">{{ form.glt_on_100_days.label }}</label>
+                    {{ form.glt_on_100_days }}
+                    {% for err in form.glt_on_100_days.errors %}<div class="pf-inline-error">{{ err }}</div>{% endfor %}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="pf-card">
+              <div class="pf-card-head">
+                <div>
+                  <div class="pf-card-title">Planning Notes</div>
+                  <div class="pf-card-sub">A quick visual guide for the team before moving to Start Program.</div>
+                </div>
+              </div>
+              <div class="pf-card-body">
+                <div class="pf-summary-grid">
+                  <div class="pf-summary-card">
+                    <div class="pf-summary-label">Save First</div>
+                    <div class="pf-summary-value">Program</div>
+                  </div>
+                  <div class="pf-summary-card">
+                    <div class="pf-summary-label">Then Move To</div>
+                    <div class="pf-summary-value">Start</div>
+                  </div>
+                  <div class="pf-summary-card">
+                    <div class="pf-summary-label">After Start</div>
+                    <div class="pf-summary-value">Challan</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div class="pf-actionbar">
+          <div class="pf-muted">Save the program first, then continue with Program Start and Challan flow.</div>
+          <div class="pf-actions">
+            <a href="{% url 'accounts:program_list' %}{% if not full_page %}?embed=1{% endif %}" class="pf-btn-secondary">Back</a>
+            <button type="submit" class="pf-btn">{% if mode == "edit" %}Update Program{% else %}Save Program{% endif %}</button>
+          </div>
+        </div>
+      </form>
+
+      {{ sku_payloads|json_script:"program-sku-payloads" }}
+      {{ jobber_defaults|json_script:"program-jobber-defaults" }}
+      {% with empty_form=jobber_formset.empty_form %}
+      <template id="program-jobber-empty-form">
+        <tr class="program-jobber-row">
+          <td>
+            {% for hidden in empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+            <div class="pf-field">{{ empty_form.jobber }}</div>
+          </td>
+          <td><div class="pf-field">{{ empty_form.jobber_type }}</div></td>
+          <td><div class="pf-field">{{ empty_form.price }}</div></td>
+          <td><div class="pf-field">{{ empty_form.sort_order }}</div></td>
+          <td class="pf-delete-cell">
+            <div class="pf-delete-wrap">
+              {% if empty_form.DELETE %}{{ empty_form.DELETE }}{% endif %}
+              <button type="button" class="pf-btn-secondary js-remove-jobber">Remove</button>
+            </div>
+          </td>
+        </tr>
+      </template>
+      {% endwith %}
+
+      <script>
+        (function(){
+          const skuPayloads = JSON.parse(document.getElementById('program-sku-payloads')?.textContent || '{}');
+          const jobberDefaults = JSON.parse(document.getElementById('program-jobber-defaults')?.textContent || '{}');
+          const bomSelect = document.getElementById('{{ form.bom.id_for_label }}');
+          const totalForms = document.getElementById('id_jobbers-TOTAL_FORMS');
+          const body = document.getElementById('program-jobber-body');
+          const emptyTpl = document.getElementById('program-jobber-empty-form');
+          const addBtn = document.getElementById('add-jobber-row');
+
+          function selectedBomPayload(){
+            return skuPayloads[(bomSelect && bomSelect.value) || ''] || {};
+          }
+
+          function setText(selector, value){
+            const el = document.querySelector(selector);
+            if (el) el.textContent = value || '—';
+          }
+
+          function setTags(selector, items){
+            const wrap = document.querySelector(selector);
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            (items || []).forEach(function(item){
+              const tag = document.createElement('span');
+              tag.className = 'pf-tag';
+              tag.textContent = item;
+              wrap.appendChild(tag);
+            });
+            if (!wrap.children.length){
+              const tag = document.createElement('span');
+              tag.className = 'pf-tag';
+              tag.textContent = '—';
+              wrap.appendChild(tag);
+            }
+          }
+
+          function setImage(url, altText){
+            const img = document.querySelector('[data-program-sku-image]');
+            const empty = document.querySelector('[data-program-sku-image-empty]');
+            if (!img || !empty) return;
+
+            if (url){
+              img.src = url;
+              img.alt = altText || 'SKU image';
+              img.classList.remove('pf-hidden');
+              empty.classList.add('pf-hidden');
+            } else {
+              img.removeAttribute('src');
+              img.alt = '';
+              img.classList.add('pf-hidden');
+              empty.classList.remove('pf-hidden');
+            }
+          }
+
+          function refreshSkuSnapshot(){
+            const payload = selectedBomPayload();
+
+            [
+              'bom_code',
+              'sku',
+              'product_name',
+              'catalogue',
+              'brand',
+              'pattern_type',
+              'main_category',
+              'category',
+              'sub_category',
+              'gender',
+              'size_type',
+              'status',
+              'mrp',
+              'selling_price',
+              'maintenance_price',
+              'final_price',
+              'color',
+              'character_name',
+              'license_name',
+              'drawcord',
+              'tie_dye_price',
+              'accessories_price',
+              'notes'
+            ].forEach(function(key){
+              setText('[data-program-sku="' + key + '"]', payload[key] || '—');
+            });
+
+            setTags('[data-program-sku-list="linked_fabrics"]', payload.linked_fabrics || []);
+            setTags('[data-program-sku-list="linked_accessories"]', payload.linked_accessories || []);
+            setTags('[data-program-sku-list="linked_processes"]', payload.linked_processes || []);
+            setTags('[data-program-sku-list="linked_jobbers"]', payload.linked_jobbers || []);
+            setImage(payload.image_url || '', payload.sku || payload.product_name || 'SKU image');
+
+            Array.from(document.querySelectorAll('.program-jobber-row')).forEach(function(row){
+              applyJobberRowDefaults(row, { forceTypeSelection: false, forcePrice: true });
+            });
+          }
+
+          function mappedPriceForRow(payload, jobberId, jobberTypeId){
+            const jobberMap = (payload.bom_jobber_details || {})[jobberId || ''] || null;
+
+            if (
+              jobberMap &&
+              jobberTypeId &&
+              jobberMap.process_prices &&
+              Object.prototype.hasOwnProperty.call(jobberMap.process_prices, jobberTypeId)
+            ){
+              return jobberMap.process_prices[jobberTypeId];
+            }
+
+            if (
+              jobberTypeId &&
+              payload.jobber_process_prices &&
+              Object.prototype.hasOwnProperty.call(payload.jobber_process_prices, jobberTypeId)
+            ){
+              return payload.jobber_process_prices[jobberTypeId];
+            }
+
+            return '';
+          }
+
+          function updateDeleteState(row){
+            const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (!deleteInput) return;
+
+            if (deleteInput.checked){
+              row.classList.add('pf-hidden');
+            } else {
+              row.classList.remove('pf-hidden');
+            }
+          }
+
+          function applyJobberRowDefaults(row, options){
+            const settings = Object.assign(
+              { forceTypeSelection: false, forcePrice: false },
+              options || {}
+            );
+
+            const payload = selectedBomPayload();
+            const jobberSelect = row.querySelector('select[name$="-jobber"]');
+            const jobberTypeSelect = row.querySelector('select[name$="-jobber_type"]');
+            const priceInput = row.querySelector('input[name$="-price"]');
+
+            if (!jobberSelect || !jobberTypeSelect || !priceInput) return;
+
+            const jobberId = jobberSelect.value || '';
+            let jobberTypeId = jobberTypeSelect.value || '';
+            const jobberMap = (payload.bom_jobber_details || {})[jobberId] || null;
+            const defaultJobber = jobberDefaults[jobberId] || {};
+
+            if (jobberMap){
+              const mappedTypeIds = Object.keys(jobberMap.process_prices || {});
+
+              if (mappedTypeIds.length === 1 && (settings.forceTypeSelection || !jobberTypeId)){
+                jobberTypeSelect.value = mappedTypeIds[0];
+              } else if (!jobberTypeId && jobberMap.default_jobber_type_id){
+                jobberTypeSelect.value = jobberMap.default_jobber_type_id;
+              }
+            } else if (!jobberTypeId && defaultJobber.jobber_type_id) {
+              jobberTypeSelect.value = defaultJobber.jobber_type_id;
+            }
+
+            jobberTypeId = jobberTypeSelect.value || '';
+            const mappedPrice = mappedPriceForRow(payload, jobberId, jobberTypeId);
+
+            if (mappedPrice !== ''){
+              const currentPrice = (priceInput.value || '').trim();
+              if (settings.forcePrice || !currentPrice || currentPrice === '0' || currentPrice === '0.00'){
+                priceInput.value = mappedPrice;
+              }
+            }
+          }
+
+          function bindJobberRow(row){
+            const jobberSelect = row.querySelector('select[name$="-jobber"]');
+            const jobberTypeSelect = row.querySelector('select[name$="-jobber_type"]');
+            const removeBtn = row.querySelector('.js-remove-jobber');
+            const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+
+            if (jobberSelect){
+              jobberSelect.addEventListener('change', function(){
+                applyJobberRowDefaults(row, { forceTypeSelection: true, forcePrice: true });
+              });
+            }
+
+            if (jobberTypeSelect){
+              jobberTypeSelect.addEventListener('change', function(){
+                applyJobberRowDefaults(row, { forceTypeSelection: false, forcePrice: true });
+              });
+            }
+
+            if (removeBtn){
+              removeBtn.addEventListener('click', function(){
+                if (deleteInput){
+                  deleteInput.checked = true;
+                  updateDeleteState(row);
+                } else {
+                  row.remove();
+                }
+              });
+            }
+
+            if (deleteInput){
+              deleteInput.classList.add('pf-hidden');
+              updateDeleteState(row);
+            }
+
+            applyJobberRowDefaults(row, { forceTypeSelection: false, forcePrice: false });
+          }
+
+          function addJobberRow(){
+            if (!body || !emptyTpl || !totalForms) return;
+
+            const index = parseInt(totalForms.value, 10);
+            const html = emptyTpl.innerHTML.replace(/__prefix__/g, index);
+            const temp = document.createElement('tbody');
+            temp.innerHTML = html.trim();
+
+            const row = temp.firstElementChild;
+            body.appendChild(row);
+            totalForms.value = index + 1;
+
+            const sortInput = row.querySelector('input[name$="-sort_order"]');
+            if (sortInput && !sortInput.value) sortInput.value = index + 1;
+
+            bindJobberRow(row);
+          }
+
+          if (bomSelect) {
+            bomSelect.addEventListener('change', refreshSkuSnapshot);
+          }
+
+          refreshSkuSnapshot();
+
+          Array.from(document.querySelectorAll('.program-jobber-row')).forEach(bindJobberRow);
+
+          if (addBtn){
+            addBtn.addEventListener('click', addJobberRow);
+          }
+        })();
+      </script>
+    </section>
+  </div>
+</div>

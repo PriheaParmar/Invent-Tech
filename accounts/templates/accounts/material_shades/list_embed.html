@@ -1,0 +1,321 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .materialshades-embed .jb-head {
+    align-items: center;
+  }
+
+  .materialshades-embed .jb-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .materialshades-embed .ms-chip {
+    min-width: 72px;
+    padding: 6px 10px;
+    border: 1px solid var(--jb-line);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: var(--jb-shadow-sm);
+    text-align: left;
+  }
+
+  .materialshades-embed .ms-chip span {
+    display: block;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--jb-text-soft);
+    line-height: 1.1;
+  }
+
+  .materialshades-embed .ms-chip strong {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--jb-font-serif);
+    font-size: 15px;
+    line-height: 1;
+    color: #151d27;
+  }
+
+  .materialshades-embed .jb-search {
+    grid-template-columns: 170px minmax(0, 1fr) auto;
+  }
+
+  .materialshades-embed .jb-table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .materialshades-embed .jb-table th:nth-child(1),
+  .materialshades-embed .jb-table td:nth-child(1) {
+    width: 22%;
+  }
+
+  .materialshades-embed .jb-table th:nth-child(2),
+  .materialshades-embed .jb-table td:nth-child(2) {
+    width: 16%;
+  }
+
+  .materialshades-embed .jb-table th:nth-child(3),
+  .materialshades-embed .jb-table td:nth-child(3) {
+    width: 20%;
+  }
+
+  .materialshades-embed .jb-table th:nth-child(4),
+  .materialshades-embed .jb-table td:nth-child(4) {
+    width: 27%;
+  }
+
+  .materialshades-embed .jb-table th:nth-child(5),
+  .materialshades-embed .jb-table td:nth-child(5) {
+    width: 15%;
+  }
+
+  .materialshades-embed .ms-code {
+    color: var(--jb-text);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .materialshades-embed .ms-kind-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 9px;
+    border-radius: 7px;
+    background: var(--jb-orange-soft);
+    border: 1px solid rgba(250, 189, 100, 0.42);
+    color: #6f531b;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .materialshades-embed .ms-notes {
+    color: var(--jb-text);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .materialshades-embed .jb-table th:last-child {
+    text-align: center;
+  }
+
+  .materialshades-embed .ms-actions-cell {
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .materialshades-embed .ms-actions-cell .jb-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .materialshades-embed .ms-actions-cell .jb-inline-delete {
+    display: inline;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .materialshades-embed .jb-search {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .materialshades-embed .jb-head {
+      align-items: flex-start;
+    }
+
+    .materialshades-embed .jb-head-actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .materialshades-embed .ms-chip {
+      min-width: 66px;
+    }
+  }
+</style>
+
+<div class="jobbers-embed materialshades-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Material Shades</div>
+        <div class="jb-sub">Maintain reusable shades, codes, and notes by material kind</div>
+      </div>
+
+      <div class="jb-head-actions">
+        <div class="ms-chip">
+          <span>Total</span>
+          <strong>{{ stats.total|default:0 }}</strong>
+        </div>
+        <div class="ms-chip">
+          <span>With Code</span>
+          <strong>{{ stats.with_code|default:0 }}</strong>
+        </div>
+        <div class="ms-chip">
+          <span>With Notes</span>
+          <strong>{{ stats.with_notes|default:0 }}</strong>
+        </div>
+
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if delete_error %}
+    <div class="jb-errors jb-usage-error">
+      <div class="jb-usage-title">{{ delete_error }}</div>
+      {% if delete_label %}
+      <div class="jb-usage-label">Record: <strong>{{ delete_label }}</strong></div>
+      {% endif %}
+      {% if delete_usage %}
+      <div class="jb-usage-list">
+        {% for row in delete_usage %}
+        <div class="jb-usage-row">
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:materialshade_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <select name="kind" class="jb-select" aria-label="Filter by material kind">
+          <option value="">All Kinds</option>
+          {% for value, label in kind_choices %}
+          <option value="{{ value }}" {% if selected_kind == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search shade, code, notes or kind"
+          autocomplete="off"
+          aria-label="Search material shades"
+        >
+
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="jb-tool-actions">
+        {% if q or selected_kind %}
+        <a class="jb-secondary" href="{% url 'accounts:materialshade_list' %}{% if not full_page %}?embed=1{% endif %}">
+          Clear
+        </a>
+        {% endif %}
+
+        <a class="jb-add" href="{% url 'accounts:materialshade_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Add Shade
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Material Kind</th>
+            <th>Notes</th>
+            <th style="width: 96px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for shade in shades %}
+          <tr>
+            <td>{{ shade.name }}</td>
+            <td class="ms-code">{{ shade.code|default:"—" }}</td>
+            <td>
+              <span class="ms-kind-badge">
+                {{ shade.get_material_kind_display|default:shade.material_kind|default:"—" }}
+              </span>
+            </td>
+            <td class="ms-notes">{{ shade.notes|default:"—"|truncatechars:140 }}</td>
+            <td class="ms-actions-cell">
+              <div class="jb-actions">
+                <a
+                  class="jb-link jb-link-icon jb-link-edit"
+                  href="{% url 'accounts:materialshade_edit' shade.id %}{% if not full_page %}?embed=1{% endif %}"
+                  aria-label="Edit {{ shade.name }}"
+                  title="Edit"
+                >
+                  <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z"></path>
+                    <path d="M14.06 4.94l3.75 3.75"></path>
+                  </svg>
+                </a>
+
+                <form
+                  method="post"
+                  action="{% url 'accounts:materialshade_delete' shade.id %}{% if not full_page %}?embed=1{% endif %}"
+                  class="jb-inline-delete js-jb-delete-form"
+                  data-delete-label="material shade &quot;{{ shade.name|escape }}&quot;"
+                >
+                  {% csrf_token %}
+                  {% if not full_page %}
+                  <input type="hidden" name="embed" value="1">
+                  {% endif %}
+                  <button
+                    class="jb-link jb-link-icon jb-link-danger jb-link-delete jb-link-button"
+                    type="submit"
+                    aria-label="Delete {{ shade.name }}"
+                    title="Delete"
+                  >
+                    <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 7h16"></path>
+                      <path d="M10 11v6"></path>
+                      <path d="M14 11v6"></path>
+                      <path d="M6 7l1 12h10l1-12"></path>
+                      <path d="M9 7V4h6v3"></path>
+                    </svg>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="jb-empty">No material shades found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+</div>

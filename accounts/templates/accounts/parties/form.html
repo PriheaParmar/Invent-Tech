@@ -1,0 +1,16 @@
+{% load static %}
+{% extends "accounts/base_app.html" %}
+
+{% block title %}{% if mode == "add" %}Add Party{% else %}Edit Party{% endif %}{% endblock %}
+{% block page_title %}{% if mode == "add" %}Add Party{% else %}Edit Party{% endif %}{% endblock %}
+{% block page_subtitle %}Manage party details{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/parties/form_embed.html" with full_page=1 %}
+</div>
+{% endblock %}

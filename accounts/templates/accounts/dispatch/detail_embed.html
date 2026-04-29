@@ -1,0 +1,499 @@
+{% load static %}
+<style>
+  :root{
+    --dd-bg:#f4f7fc;
+    --dd-card:#ffffff;
+    --dd-card-soft:#fbfdff;
+    --dd-line:rgba(37,99,235,.10);
+    --dd-line-strong:rgba(37,99,235,.16);
+    --dd-text:#0f172a;
+    --dd-soft:#64748b;
+    --dd-faint:#94a3b8;
+    --dd-blue:#2563eb;
+    --dd-blue-dark:#1d4ed8;
+    --dd-blue-soft:#eaf2ff;
+    --dd-cyan:#0ea5e9;
+    --dd-shadow:0 14px 34px rgba(37,99,235,.08);
+    --dd-shadow-soft:0 8px 18px rgba(37,99,235,.06);
+    --dd-radius-xl:24px;
+    --dd-radius-lg:18px;
+    --dd-radius-md:14px;
+    --dd-radius-sm:11px;
+    --dd-font-display:Georgia,"Times New Roman",serif;
+    --dd-font-body:"Inter","Segoe UI",Arial,sans-serif;
+    --dd-font-data:"IBM Plex Sans","Inter","Segoe UI",Arial,sans-serif;
+  }
+
+  .dd-shell{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-width:0;
+    color:var(--dd-text);
+    font-family:var(--dd-font-body);
+  }
+
+  .dd-hero{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px;
+    align-items:start;
+    padding:16px 16px 14px;
+    background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%);
+    border:1px solid var(--dd-line);
+    border-radius:var(--dd-radius-xl);
+    box-shadow:var(--dd-shadow);
+  }
+
+  .dd-title{
+    min-width:0;
+  }
+
+  .dd-kicker{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin:0 0 8px;
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--dd-blue);
+    font-family:var(--dd-font-body);
+  }
+
+  .dd-kicker::before{
+    content:"";
+    width:24px;
+    height:1px;
+    background:rgba(37,99,235,.35);
+  }
+
+  .dd-title h2{
+    margin:0;
+    font-size:28px;
+    line-height:1.02;
+    font-weight:700;
+    letter-spacing:-.03em;
+    color:var(--dd-text);
+    font-family:var(--dd-font-display);
+  }
+
+  .dd-title p{
+    margin:7px 0 0;
+    max-width:760px;
+    color:var(--dd-soft);
+    font-size:11.8px;
+    line-height:1.6;
+    font-weight:500;
+  }
+
+  .dd-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .dd-btn{
+    appearance:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:38px;
+    padding:0 13px;
+    border-radius:12px;
+    border:none;
+    background:#fff;
+    color:var(--dd-text);
+    text-decoration:none;
+    font-weight:800;
+    font-size:10.8px;
+    line-height:1;
+    font-family:var(--dd-font-body);
+    letter-spacing:.04em;
+    box-shadow:inset 0 0 0 1px var(--dd-line);
+    transition:all .18s ease;
+    white-space:nowrap;
+    cursor:pointer;
+    gap:8px;
+  }
+
+  .dd-btn:hover{
+    transform:translateY(-1px);
+  }
+
+  .dd-btn-primary{
+    background:linear-gradient(180deg,var(--dd-blue) 0%, var(--dd-blue-dark) 100%);
+    color:#fff;
+    box-shadow:0 10px 20px rgba(37,99,235,.18);
+  }
+
+  .dd-btn-primary:hover{
+    background:linear-gradient(180deg,var(--dd-blue-dark) 0%, #1e40af 100%);
+    color:#fff;
+  }
+
+  .dd-btn-secondary:hover{
+    color:var(--dd-blue);
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.22), 0 8px 18px rgba(37,99,235,.08);
+  }
+
+  .dd-btn-svg{
+    width:16px;
+    height:16px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    flex:0 0 auto;
+  }
+
+  .dd-top-stats{
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+    margin-top:12px;
+  }
+
+  .dd-stat{
+    min-width:108px;
+    padding:9px 10px;
+    border-radius:16px;
+    background:linear-gradient(180deg,#ffffff 0%,#f6faff 100%);
+    border:1px solid var(--dd-line);
+    box-shadow:var(--dd-shadow-soft);
+  }
+
+  .dd-stat-label{
+    display:block;
+    margin:0 0 6px;
+    color:var(--dd-faint);
+    font-size:9px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .dd-stat-value{
+    display:block;
+    color:var(--dd-text);
+    font-family:var(--dd-font-display);
+    font-size:20px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:-.03em;
+  }
+
+  .dd-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    align-items:start;
+  }
+
+  .dd-card{
+    background:var(--dd-card);
+    border:1px solid var(--dd-line);
+    border-radius:var(--dd-radius-xl);
+    box-shadow:var(--dd-shadow);
+    overflow:hidden;
+    min-width:0;
+  }
+
+  .dd-card-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 16px 12px;
+    border-bottom:1px solid var(--dd-line);
+    background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%);
+  }
+
+  .dd-card-head h3{
+    margin:0;
+    font-size:15px;
+    line-height:1.1;
+    font-weight:700;
+    letter-spacing:-.02em;
+    color:var(--dd-text);
+    font-family:var(--dd-font-display);
+  }
+
+  .dd-card-head p{
+    margin:5px 0 0;
+    font-size:11px;
+    line-height:1.5;
+    color:var(--dd-soft);
+    font-weight:500;
+  }
+
+  .dd-card-body{
+    padding:14px 16px 16px;
+  }
+
+  .dd-meta-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .dd-meta{
+    min-width:0;
+    padding:11px 12px;
+    border-radius:14px;
+    background:linear-gradient(180deg,#fbfdff 0%,#ffffff 100%);
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.08);
+  }
+
+  .dd-meta-full{
+    grid-column:1 / -1;
+  }
+
+  .dd-label{
+    margin-bottom:6px;
+    font-size:9px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+    color:var(--dd-faint);
+  }
+
+  .dd-value{
+    font-size:12.7px;
+    line-height:1.5;
+    font-weight:700;
+    color:var(--dd-text);
+    word-break:break-word;
+  }
+
+  .dd-value-code{
+    font-family:var(--dd-font-display);
+    letter-spacing:-.02em;
+  }
+
+  .dd-value-data{
+    font-family:var(--dd-font-data);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .dd-pill-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:10px;
+  }
+
+  .dd-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:28px;
+    padding:0 11px;
+    border-radius:999px;
+    font-size:10.5px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    background:var(--dd-blue-soft);
+    color:var(--dd-blue);
+    white-space:nowrap;
+  }
+
+  .dd-pill-warm{
+    background:rgba(14,165,233,.10);
+    color:var(--dd-cyan);
+  }
+
+  @media (max-width:980px){
+    .dd-hero{
+      grid-template-columns:1fr;
+    }
+
+    .dd-actions{
+      justify-content:flex-start;
+    }
+
+    .dd-grid{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width:760px){
+    .dd-meta-grid{
+      grid-template-columns:1fr;
+    }
+
+    .dd-meta-full{
+      grid-column:auto;
+    }
+
+    .dd-actions > *{
+      flex:1 1 auto;
+    }
+
+    .dd-title h2{
+      font-size:26px;
+    }
+  }
+</style>
+
+<div class="dd-shell">
+  <div class="dd-hero">
+    <div class="dd-title">
+      <div class="dd-kicker">Sales Dispatch</div>
+      <h2>{{ challan.challan_no }}</h2>
+      <p>
+        Dispatch challan linked with program {{ program.program_no }} with client, transport, and shipment details in one clean view.
+      </p>
+
+      <div class="dd-top-stats">
+        <div class="dd-stat">
+          <span class="dd-stat-label">Program</span>
+          <span class="dd-stat-value">{{ program.program_no|default:"-" }}</span>
+        </div>
+        <div class="dd-stat">
+          <span class="dd-stat-label">Client</span>
+          <span class="dd-stat-value">{{ challan.client.name|default:"-" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dd-actions">
+      <a href="{% url 'accounts:dispatch_print' challan.pk %}" target="_blank" class="dd-btn dd-btn-primary">
+        <svg class="dd-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 8V4h10v4"></path>
+          <path d="M7 17H6a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-1"></path>
+          <path d="M7 14h10v6H7z"></path>
+        </svg>
+        <span>Print</span>
+      </a>
+
+      <a href="{% url 'accounts:dispatch_list' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dd-btn dd-btn-secondary">
+        <svg class="dd-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+        <span>Back</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="dd-grid">
+    <div class="dd-card">
+      <div class="dd-card-head">
+        <div>
+          <h3>Program Details</h3>
+          <p>Production summary linked to this challan.</p>
+        </div>
+      </div>
+
+      <div class="dd-card-body">
+        <div class="dd-meta-grid">
+          <div class="dd-meta">
+            <div class="dd-label">Program No</div>
+            <div class="dd-value dd-value-code">{{ program.program_no }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">Finishing Date</div>
+            <div class="dd-value dd-value-data">{{ program.finishing_date|date:"d M Y"|default:"-" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">SKU</div>
+            <div class="dd-value dd-value-code">{{ program.bom.sku|default:"-" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">Product</div>
+            <div class="dd-value">{{ program.bom.product_name|default:"-" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">Firm</div>
+            <div class="dd-value">{{ program.firm.firm_name|default:"-" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">Total Qty</div>
+            <div class="dd-value dd-value-data">{{ program.total_qty|default:"0" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">Cost Price</div>
+            <div class="dd-value dd-value-data">{{ program.cost_price|default:"0" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">Average</div>
+            <div class="dd-value dd-value-data">{{ program.avg_price|default:"0" }}</div>
+          </div>
+        </div>
+
+        <div class="dd-pill-row">
+          <span class="dd-pill">Dispatch Linked</span>
+          <span class="dd-pill dd-pill-warm">Program Summary</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dd-card">
+      <div class="dd-card-head">
+        <div>
+          <h3>Challan Details</h3>
+          <p>Shipment, client, and transport information.</p>
+        </div>
+      </div>
+
+      <div class="dd-card-body">
+        <div class="dd-meta-grid">
+          <div class="dd-meta">
+            <div class="dd-label">Client</div>
+            <div class="dd-value">{{ challan.client.name|default:"-" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">Challan Date</div>
+            <div class="dd-value dd-value-data">{{ challan.challan_date|date:"d M Y" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">Driver Name</div>
+            <div class="dd-value">{{ challan.driver_name|default:"-" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">LR No</div>
+            <div class="dd-value">{{ challan.lr_no|default:"-" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">Transport</div>
+            <div class="dd-value">{{ challan.transport_name|default:"-" }}</div>
+          </div>
+
+          <div class="dd-meta">
+            <div class="dd-label">Vehicle No</div>
+            <div class="dd-value">{{ challan.vehicle_no|default:"-" }}</div>
+          </div>
+
+          <div class="dd-meta dd-meta-full">
+            <div class="dd-label">Remarks</div>
+            <div class="dd-value">{{ challan.remarks|default:"-"|linebreaksbr }}</div>
+          </div>
+        </div>
+
+        <div class="dd-pill-row">
+          <span class="dd-pill">Client Dispatch</span>
+          <span class="dd-pill dd-pill-warm">Shipment Ready</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Dispatch Pending Report{% endblock %}
+{% block page_title %}Dispatch Pending Report{% endblock %}
+{% block page_subtitle %}Produced, dispatched and pending program quantities.{% endblock %}
+
+{% block content %}
+  {% include "accounts/reports/dispatch_pending_embed.html" %}
+{% endblock %}

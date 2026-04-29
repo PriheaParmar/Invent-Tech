@@ -1,0 +1,31 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}
+  {% if mode == "add" %}
+    Add Inward Type - InventTech
+  {% else %}
+    Edit Inward Type - InventTech
+  {% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if mode == "add" %}
+    Add Inward Type
+  {% else %}
+    Edit Inward Type
+  {% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+  {% if mode == "add" %}
+    Create a reusable inward type
+  {% else %}
+    Update the selected inward type
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/inward_types/form_embed.html" with full_page=True %}
+</div>
+{% endblock %}

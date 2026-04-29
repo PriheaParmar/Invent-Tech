@@ -1,0 +1,341 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Program Costing - InventTech{% endblock %}
+{% block page_title %}Program Costing{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+    --cost-blue: rgba(28, 109, 216, 1);
+    --cost-pink: rgb(238, 61, 133);
+    --cost-orange: rgba(250, 189, 100, 1);
+    --cost-ink:#172033;
+    --cost-muted:#788399;
+    --cost-line:#edf0f7;
+    --cost-soft:#f8faff;
+    --cost-card:#ffffff;
+  }
+
+  .cost-page{
+    padding:10px 12px 22px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color:var(--cost-ink);
+    background:
+      radial-gradient(circle at 10% 0%, rgba(28,109,216,.12), transparent 28%),
+      radial-gradient(circle at 92% 8%, rgba(238,61,133,.10), transparent 26%),
+      linear-gradient(180deg, #fbfcff 0%, #f7f8fc 100%);
+    border-radius:24px;
+  }
+
+  .cost-shell{max-width:100%;margin:0 auto;}
+
+  .cost-hero{
+    position:relative;
+    overflow:hidden;
+    border:1px solid rgba(226,232,240,.95);
+    border-radius:26px;
+    background:linear-gradient(135deg, rgba(255,255,255,.96), rgba(248,251,255,.92));
+    box-shadow:0 18px 46px rgba(15,23,42,.08);
+  }
+
+  .cost-hero:before{
+    content:"";
+    position:absolute;
+    inset:0 0 auto 0;
+    height:5px;
+    background:linear-gradient(90deg,var(--cost-blue),var(--cost-pink),var(--cost-orange));
+  }
+
+  .cost-head{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:18px 20px 14px;
+    border-bottom:1px solid var(--cost-line);
+  }
+
+  .cost-kicker{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:6px;
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:900;
+    color:var(--cost-blue);
+  }
+
+  .cost-dot{width:8px;height:8px;border-radius:999px;background:var(--cost-pink);box-shadow:14px 0 0 var(--cost-orange);}
+
+  .cost-title{
+    margin:0;
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-size:clamp(25px,3vw,38px);
+    line-height:1.05;
+    font-weight:800;
+    letter-spacing:-.04em;
+    color:#111827;
+  }
+
+  .cost-title span{
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    color:var(--cost-pink);
+    letter-spacing:-.03em;
+  }
+
+  .cost-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+  }
+
+  .cost-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:28px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(226,232,240,.95);
+    background:#fff;
+    color:#526078;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .cost-chip strong{color:#172033;margin-left:5px;}
+
+  .cost-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .cost-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-height:38px;
+    padding:0 13px;
+    border-radius:14px;
+    border:1px solid rgba(226,232,240,.95);
+    background:#fff;
+    color:#172033;
+    text-decoration:none;
+    font-size:12px;
+    font-weight:900;
+    box-shadow:0 8px 18px rgba(15,23,42,.05);
+    transition:.18s ease;
+  }
+  .cost-btn:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(15,23,42,.09);}
+  .cost-btn--close{width:38px;padding:0;font-size:20px;color:#64748b;}
+
+  .cost-body{padding:14px 16px 18px;}
+
+  .cost-summary{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+    margin-bottom:12px;
+  }
+
+  .cost-stat{
+    position:relative;
+    overflow:hidden;
+    border:1px solid var(--cost-line);
+    border-radius:20px;
+    background:#fff;
+    padding:14px 14px 13px;
+    box-shadow:0 10px 24px rgba(15,23,42,.04);
+  }
+  .cost-stat:after{content:"";position:absolute;right:-20px;top:-22px;width:72px;height:72px;border-radius:50%;background:rgba(28,109,216,.08);}
+  .cost-stat:nth-child(2):after{background:rgba(238,61,133,.08);}
+  .cost-stat:nth-child(3):after{background:rgba(250,189,100,.16);}
+  .cost-stat:nth-child(4):after{background:rgba(28,109,216,.10);}
+  .cost-stat-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.11em;color:#7b879c;}
+  .cost-stat-value{position:relative;margin-top:7px;font-family:Georgia, Cambria, serif;font-size:24px;font-weight:900;line-height:1;color:#111827;}
+
+  .cost-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(340px,.9fr);gap:12px;align-items:start;}
+
+  .cost-panel{
+    border:1px solid var(--cost-line);
+    border-radius:22px;
+    background:rgba(255,255,255,.96);
+    box-shadow:0 12px 30px rgba(15,23,42,.055);
+    overflow:hidden;
+  }
+  .cost-panel-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:13px 15px;
+    border-bottom:1px solid var(--cost-line);
+    background:linear-gradient(180deg,#fff,#fbfcff);
+  }
+  .cost-section-title{
+    margin:0;
+    font-family:Georgia, Cambria, serif;
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:-.02em;
+    color:#172033;
+  }
+  .cost-section-pill{font-size:11px;font-weight:900;color:var(--cost-blue);background:rgba(28,109,216,.08);border:1px solid rgba(28,109,216,.12);border-radius:999px;padding:6px 9px;}
+
+  .cost-table-wrap{overflow:auto;}
+  .cost-table{width:100%;border-collapse:separate;border-spacing:0;min-width:760px;}
+  .cost-table thead th{
+    position:sticky;top:0;z-index:1;
+    padding:10px 12px;
+    background:#f8faff;
+    border-bottom:1px solid var(--cost-line);
+    color:#667085;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-weight:950;
+    text-align:left;
+    white-space:nowrap;
+  }
+  .cost-table tbody td{
+    padding:11px 12px;
+    border-bottom:1px solid #f1f4f9;
+    color:#263247;
+    font-size:13px;
+    font-weight:700;
+    vertical-align:middle;
+  }
+  .cost-table tbody tr:hover td{background:#fbfcff;}
+  .cost-table tbody tr.total-row td{background:linear-gradient(90deg,rgba(28,109,216,.06),rgba(238,61,133,.04));font-weight:950;color:#111827;}
+  .cost-right{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .cost-empty{text-align:center!important;color:#8a94a7!important;padding:24px!important;font-weight:800!important;}
+
+  .break-table{width:100%;border-collapse:separate;border-spacing:0;}
+  .break-table td{padding:12px 14px;border-bottom:1px solid #f1f4f9;vertical-align:middle;font-size:13px;}
+  .break-table tr:hover td{background:#fbfcff;}
+  .break-label{color:#263247;font-weight:900;line-height:1.35;}
+  .break-sub{display:block;margin-top:2px;color:#7b879c;font-size:12px;font-weight:700;font-style:italic;}
+  .break-amount{width:150px;text-align:right;color:#172033;font-weight:950;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .break-table tr.final-row td{background:linear-gradient(90deg,rgba(238,61,133,.09),rgba(250,189,100,.14));border-bottom:0;}
+  .break-table tr.final-row .break-label,.break-table tr.final-row .break-amount{font-size:16px;color:#111827;}
+
+  .snapshot-list{display:grid;gap:9px;padding:12px;}
+  .snapshot-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid #eef2f7;border-radius:16px;background:#fff;}
+  .snapshot-row span:first-child{font-size:12px;font-weight:900;color:#69758b;}
+  .snapshot-row span:last-child{font-size:14px;font-weight:950;color:#172033;font-variant-numeric:tabular-nums;}
+
+  @media (max-width: 1050px){.cost-grid{grid-template-columns:1fr}.cost-summary{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  @media (max-width: 720px){.cost-page{padding:8px;border-radius:18px}.cost-head{align-items:flex-start;flex-direction:column}.cost-actions{width:100%;justify-content:flex-end}.cost-summary{grid-template-columns:1fr}.cost-body{padding:10px}.cost-title{font-size:26px}.cost-table{min-width:720px}}
+</style>
+
+<section class="cost-page">
+  <div class="cost-shell">
+    <article class="cost-hero">
+      <header class="cost-head">
+        <div>
+          <div class="cost-kicker"><span class="cost-dot"></span> Live Cost Sheet</div>
+          <h1 class="cost-title">Costing Details <span>{{ program.program_no }}</span></h1>
+          <div class="cost-meta">
+            <span class="cost-chip">SKU <strong>{{ program.bom.sku|default:"-" }}</strong></span>
+            {% if program.bom.product_name %}<span class="cost-chip">Product <strong>{{ program.bom.product_name }}</strong></span>{% endif %}
+            {% if program.firm %}<span class="cost-chip">Firm <strong>{{ program.firm.name }}</strong></span>{% endif %}
+          </div>
+        </div>
+        <div class="cost-actions">
+          <a href="{% url 'accounts:program_list' %}" class="cost-btn">Back to Programs</a>
+          <a href="{% url 'accounts:program_list' %}" class="cost-btn cost-btn--close" title="Close">×</a>
+        </div>
+      </header>
+
+      <div class="cost-body">
+        <div class="cost-summary">
+          <div class="cost-stat"><div class="cost-stat-label">Material Total</div><div class="cost-stat-value">{{ material_final_total|default:"0.00" }}</div></div>
+          <div class="cost-stat"><div class="cost-stat-label">Cutting Qty</div><div class="cost-stat-value">{{ cutting_qty|default:program.total_qty|default:"0" }}</div></div>
+          <div class="cost-stat"><div class="cost-stat-label">Damage %</div><div class="cost-stat-value">{{ damage_percent|default:program.damage|default:"0" }}</div></div>
+          <div class="cost-stat"><div class="cost-stat-label">Final Cost</div><div class="cost-stat-value">{{ final_cost|default:"0.00" }}</div></div>
+        </div>
+
+        <div class="cost-grid">
+          <section class="cost-panel">
+            <div class="cost-panel-head">
+              <h2 class="cost-section-title">Material Costing Breakup</h2>
+              <span class="cost-section-pill">BOM + Lot usage</span>
+            </div>
+            <div class="cost-table-wrap">
+              <table class="cost-table">
+                <thead>
+                  <tr>
+                    <th>Lot NOs</th>
+                    <th>Material Name</th>
+                    <th class="cost-right">Material Price</th>
+                    <th class="cost-right">Used Qty</th>
+                    <th class="cost-right">Final Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in material_rows %}
+                  <tr>
+                    <td>{{ row.lot_no }}</td>
+                    <td>{{ row.material_name }}</td>
+                    <td class="cost-right">{{ row.material_price }}</td>
+                    <td class="cost-right">{{ row.used_qty }}</td>
+                    <td class="cost-right">{{ row.final_total }}</td>
+                  </tr>
+                  {% empty %}
+                    {% for label, value in costing_rows %}
+                    <tr>
+                      <td>-</td>
+                      <td>{{ label }}</td>
+                      <td class="cost-right">-</td>
+                      <td class="cost-right">-</td>
+                      <td class="cost-right">{{ value }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="cost-empty">No costing rows found.</td></tr>
+                    {% endfor %}
+                  {% endfor %}
+
+                  {% if material_rows %}
+                  <tr class="total-row">
+                    <td>Total</td>
+                    <td></td>
+                    <td class="cost-right">{{ material_price_total }}</td>
+                    <td class="cost-right">{{ material_used_total }}</td>
+                    <td class="cost-right">{{ material_final_total }}</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="cost-panel">
+            <div class="cost-panel-head">
+              <h2 class="cost-section-title">Program Breakup</h2>
+              <span class="cost-section-pill">Per piece cost</span>
+            </div>
+            <table class="break-table">
+              <tbody>
+                {% for row in breakdown_rows %}
+                <tr class="{% if row.label == 'Final Cost' %}final-row{% endif %}">
+                  <td>
+                    <div class="break-label">{{ row.label }}{% if row.subtext %}<span class="break-sub">{{ row.subtext }}</span>{% endif %}</div>
+                  </td>
+                  <td class="break-amount">{{ row.amount }}</td>
+                </tr>
+                {% empty %}
+                  {% for label, value in costing_rows %}
+                  <tr class="{% if label == 'Total Cost' or label == 'MRP' %}final-row{% endif %}">
+                    <td><div class="break-label">{{ label }}</div></td>
+                    <td class="break-amount">{{ value }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="2" class="cost-empty">No program costing breakup found.</td></tr>
+                  {% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+{% endblock %}

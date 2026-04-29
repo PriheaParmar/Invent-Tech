@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Categories - InventTech{% endblock %}
+{% block page_title %}Categories{% endblock %}
+{% block page_subtitle %}Manage garment categories like Kurti, Jeans and Salwar{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/categories/list_embed.html" with full_page=True %}
+</div>
+{% endblock %}

@@ -1,0 +1,602 @@
+{% load static %}
+<style>
+  :root{
+    --dl-bg:#f4f7fc;
+    --dl-surface:#ffffff;
+    --dl-surface-soft:#f8fbff;
+    --dl-line:rgba(37,99,235,.10);
+    --dl-line-strong:rgba(37,99,235,.18);
+    --dl-text:#0f172a;
+    --dl-muted:#5f6f8a;
+    --dl-faint:#8a98b3;
+    --dl-blue:#2563eb;
+    --dl-blue-dark:#1d4ed8;
+    --dl-blue-soft:#eaf2ff;
+    --dl-cyan:#0ea5e9;
+    --dl-danger:#be123c;
+    --dl-danger-soft:rgba(190,18,60,.06);
+    --dl-shadow:0 14px 34px rgba(37,99,235,.08);
+    --dl-shadow-soft:0 8px 18px rgba(37,99,235,.06);
+    --dl-radius-xl:24px;
+    --dl-radius-lg:18px;
+    --dl-radius-md:14px;
+    --dl-radius-sm:11px;
+    --dl-font-display:Georgia,"Times New Roman",serif;
+    --dl-font-body:"Inter","Segoe UI",Arial,sans-serif;
+    --dl-font-data:"IBM Plex Sans","Inter","Segoe UI",Arial,sans-serif;
+  }
+
+  .dispatch-form-ui{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-width:0;
+    color:var(--dl-text);
+    font-family:var(--dl-font-body);
+  }
+
+  .dispatch-form-hero{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:10px;
+    align-items:start;
+    padding:16px 16px 14px;
+    background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%);
+    border:1px solid var(--dl-line);
+    border-radius:var(--dl-radius-xl);
+    box-shadow:var(--dl-shadow);
+  }
+
+  .dispatch-form-hero-main{
+    min-width:0;
+  }
+
+  .dispatch-overline{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin:0 0 8px;
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--dl-blue);
+    font-family:var(--dl-font-body);
+  }
+
+  .dispatch-overline::before{
+    content:"";
+    width:26px;
+    height:1px;
+    background:rgba(37,99,235,.35);
+  }
+
+  .dispatch-form-title{
+    margin:0;
+    font-family:var(--dl-font-display);
+    font-size:28px;
+    line-height:1.02;
+    letter-spacing:-.03em;
+    font-weight:700;
+    color:var(--dl-text);
+  }
+
+  .dispatch-form-subtitle{
+    margin:7px 0 0;
+    max-width:760px;
+    color:var(--dl-muted);
+    font-size:11.8px;
+    line-height:1.55;
+    font-weight:500;
+  }
+
+  .dispatch-form-hero-side{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:10px;
+  }
+
+  .dispatch-form-stats{
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .dispatch-stat{
+    min-width:96px;
+    padding:9px 10px;
+    border-radius:16px;
+    background:linear-gradient(180deg,#ffffff 0%,#f6faff 100%);
+    border:1px solid var(--dl-line);
+    box-shadow:var(--dl-shadow-soft);
+  }
+
+  .dispatch-stat-label{
+    display:block;
+    margin:0 0 6px;
+    color:var(--dl-faint);
+    font-size:9px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .dispatch-stat-value{
+    display:block;
+    color:var(--dl-text);
+    font-family:var(--dl-font-display);
+    font-size:20px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:-.03em;
+  }
+
+  .dispatch-form-grid{
+    display:grid;
+    grid-template-columns:minmax(320px,.95fr) minmax(460px,1.05fr);
+    gap:10px;
+    align-items:start;
+  }
+
+  .dispatch-card{
+    background:#fff;
+    border:1px solid var(--dl-line);
+    border-radius:var(--dl-radius-xl);
+    box-shadow:var(--dl-shadow);
+    overflow:hidden;
+    min-width:0;
+  }
+
+  .dispatch-card-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 16px 12px;
+    border-bottom:1px solid var(--dl-line);
+    background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%);
+  }
+
+  .dispatch-card-head h3{
+    margin:0;
+    font-size:15px;
+    line-height:1.1;
+    font-weight:700;
+    color:var(--dl-text);
+    font-family:var(--dl-font-display);
+    letter-spacing:-.02em;
+  }
+
+  .dispatch-card-head p{
+    margin:5px 0 0;
+    font-size:11px;
+    line-height:1.5;
+    color:var(--dl-muted);
+    font-weight:500;
+  }
+
+  .dispatch-card-body{
+    padding:14px 16px 16px;
+  }
+
+  .dispatch-meta-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .dispatch-meta{
+    padding:11px 12px;
+    border-radius:14px;
+    background:linear-gradient(180deg,#fbfdff 0%,#ffffff 100%);
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.08);
+    min-width:0;
+  }
+
+  .dispatch-label{
+    margin-bottom:6px;
+    font-size:9px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+    color:var(--dl-faint);
+  }
+
+  .dispatch-value{
+    font-size:12.7px;
+    line-height:1.45;
+    font-weight:700;
+    color:var(--dl-text);
+    word-break:break-word;
+  }
+
+  .dispatch-value-code{
+    font-family:var(--dl-font-display);
+    letter-spacing:-.02em;
+  }
+
+  .dispatch-value-data{
+    font-family:var(--dl-font-data);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .dispatch-errors{
+    margin:0 0 12px;
+    padding:11px 12px;
+    border:1px solid rgba(190,18,60,.14);
+    background:var(--dl-danger-soft);
+    border-radius:14px;
+    color:var(--dl-danger);
+    font-size:12px;
+    line-height:1.5;
+    font-weight:600;
+  }
+
+  .dispatch-form-fields{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .dispatch-field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+  }
+
+  .dispatch-field-full{
+    grid-column:1 / -1;
+  }
+
+  .dispatch-field label{
+    font-size:9px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+    color:var(--dl-faint);
+  }
+
+  .dispatch-field input,
+  .dispatch-field select,
+  .dispatch-field textarea{
+    width:100%;
+    border:none;
+    outline:none;
+    border-radius:12px;
+    padding:0 12px;
+    min-height:40px;
+    background:#fff;
+    color:var(--dl-text);
+    box-shadow:inset 0 0 0 1px var(--dl-line);
+    font-size:12.6px;
+    font-weight:600;
+    font-family:var(--dl-font-body);
+    transition:all .18s ease;
+  }
+
+  .dispatch-field textarea{
+    min-height:96px;
+    resize:vertical;
+    padding:11px 12px;
+  }
+
+  .dispatch-field select{
+    appearance:none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgba(15,23,42,.45) 50%),
+      linear-gradient(135deg, rgba(15,23,42,.45) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 17px, calc(100% - 11px) 17px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+    padding-right:34px;
+  }
+
+  .dispatch-field input::placeholder,
+  .dispatch-field textarea::placeholder{
+    color:var(--dl-faint);
+    font-weight:500;
+  }
+
+  .dispatch-field input:focus,
+  .dispatch-field select:focus,
+  .dispatch-field textarea:focus{
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.28), 0 0 0 4px rgba(37,99,235,.09);
+    background:#fff;
+  }
+
+  .dispatch-field .errorlist{
+    margin:0;
+    padding:0;
+    list-style:none;
+  }
+
+  .dispatch-help{
+    font-size:11px;
+    line-height:1.45;
+    color:var(--dl-danger);
+    font-weight:600;
+  }
+
+  .dispatch-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px solid var(--dl-line);
+  }
+
+  .dispatch-btn{
+    appearance:none;
+    border:none;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    min-height:38px;
+    padding:0 12px;
+    border-radius:12px;
+    font-size:10.8px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.04em;
+    cursor:pointer;
+    transition:all .18s ease;
+    white-space:nowrap;
+    font-family:var(--dl-font-body);
+  }
+
+  .dispatch-btn svg{
+    width:16px;
+    height:16px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    flex:0 0 auto;
+  }
+
+  .dispatch-btn-save{
+    background:linear-gradient(180deg,var(--dl-blue) 0%, var(--dl-blue-dark) 100%);
+    color:#fff;
+    box-shadow:0 10px 20px rgba(37,99,235,.20);
+  }
+
+  .dispatch-btn-save:hover{
+    transform:translateY(-1px);
+    background:linear-gradient(180deg,var(--dl-blue-dark) 0%, #1e40af 100%);
+  }
+
+  .dispatch-btn-back{
+    background:#fff;
+    color:var(--dl-text);
+    box-shadow:inset 0 0 0 1px var(--dl-line);
+  }
+
+  .dispatch-btn-back:hover{
+    color:var(--dl-blue);
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.22), 0 8px 18px rgba(37,99,235,.08);
+    transform:translateY(-1px);
+  }
+
+  @media (max-width:1080px){
+    .dispatch-form-grid{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width:960px){
+    .dispatch-form-hero{
+      grid-template-columns:1fr;
+    }
+
+    .dispatch-form-hero-side{
+      align-items:flex-start;
+    }
+
+    .dispatch-form-stats{
+      justify-content:flex-start;
+    }
+  }
+
+  @media (max-width:760px){
+    .dispatch-form-fields,
+    .dispatch-meta-grid{
+      grid-template-columns:1fr;
+    }
+
+    .dispatch-actions > *{
+      flex:1 1 auto;
+    }
+
+    .dispatch-form-title{
+      font-size:26px;
+    }
+  }
+</style>
+
+<div class="dispatch-form-ui">
+  <section class="dispatch-form-hero">
+    <div class="dispatch-form-hero-main">
+      <div class="dispatch-overline">Sales Dispatch</div>
+      <h2 class="dispatch-form-title">Create Dispatch Challan</h2>
+      <p class="dispatch-form-subtitle">
+        Create a clean dispatch entry for the selected program with the same visual language as the dispatch register.
+      </p>
+    </div>
+
+    <div class="dispatch-form-hero-side">
+      <div class="dispatch-form-stats">
+        <div class="dispatch-stat">
+          <span class="dispatch-stat-label">Program</span>
+          <span class="dispatch-stat-value">{{ program.program_no|default:"-" }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dispatch-form-grid">
+    <div class="dispatch-card">
+      <div class="dispatch-card-head">
+        <div>
+          <h3>Program Details</h3>
+          <p>Dispatch source information pulled from the selected production program.</p>
+        </div>
+      </div>
+
+      <div class="dispatch-card-body">
+        <div class="dispatch-meta-grid">
+          <div class="dispatch-meta">
+            <div class="dispatch-label">Program Number</div>
+            <div class="dispatch-value dispatch-value-code">{{ program.program_no|default:"-" }}</div>
+          </div>
+
+          <div class="dispatch-meta">
+            <div class="dispatch-label">Finishing Date</div>
+            <div class="dispatch-value dispatch-value-data">{{ program.finishing_date|date:"d M Y"|default:"-" }}</div>
+          </div>
+
+          <div class="dispatch-meta">
+            <div class="dispatch-label">SKU</div>
+            <div class="dispatch-value dispatch-value-code">{{ program.bom.sku|default:"-" }}</div>
+          </div>
+
+          <div class="dispatch-meta">
+            <div class="dispatch-label">Product</div>
+            <div class="dispatch-value">{{ program.bom.product_name|default:"-" }}</div>
+          </div>
+
+          <div class="dispatch-meta">
+            <div class="dispatch-label">Firm</div>
+            <div class="dispatch-value">{{ program.firm.firm_name|default:"-" }}</div>
+          </div>
+
+          <div class="dispatch-meta">
+            <div class="dispatch-label">Total Qty</div>
+            <div class="dispatch-value dispatch-value-data">{{ program.total_qty|default:"0" }}</div>
+          </div>
+
+          <div class="dispatch-meta">
+            <div class="dispatch-label">Cost Price</div>
+            <div class="dispatch-value dispatch-value-data">{{ program.cost_price|default:"0" }}</div>
+          </div>
+
+          <div class="dispatch-meta">
+            <div class="dispatch-label">Average</div>
+            <div class="dispatch-value dispatch-value-data">{{ program.avg_price|default:"0" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dispatch-card">
+      <div class="dispatch-card-head">
+        <div>
+          <h3>Challan Entry</h3>
+          <p>Enter dispatch, transport, client, and movement details.</p>
+        </div>
+      </div>
+
+      <div class="dispatch-card-body">
+        {% if form.non_field_errors %}
+          <div class="dispatch-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="dispatch-form-fields">
+            <div class="dispatch-field">
+              <label for="{{ form.challan_no.id_for_label }}">Challan No</label>
+              {{ form.challan_no }}
+              {% if form.challan_no.errors %}<div class="dispatch-help">{{ form.challan_no.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="dispatch-field">
+              <label for="{{ form.challan_date.id_for_label }}">Challan Date</label>
+              {{ form.challan_date }}
+              {% if form.challan_date.errors %}<div class="dispatch-help">{{ form.challan_date.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="dispatch-field dispatch-field-full">
+              <label for="{{ form.client.id_for_label }}">Client</label>
+              {{ form.client }}
+              {% if form.client.errors %}<div class="dispatch-help">{{ form.client.errors|striptags }}</div>{% endif %}
+            </div>
+
+            {% if form.program %}
+            <div class="dispatch-field">
+              <label for="{{ form.program.id_for_label }}">Program</label>
+              {{ form.program }}
+              {% if form.program.errors %}<div class="dispatch-help">{{ form.program.errors|striptags }}</div>{% endif %}
+            </div>
+            {% endif %}
+
+            {% if form.firm %}
+            <div class="dispatch-field">
+              <label for="{{ form.firm.id_for_label }}">Firm</label>
+              {{ form.firm }}
+              {% if form.firm.errors %}<div class="dispatch-help">{{ form.firm.errors|striptags }}</div>{% endif %}
+            </div>
+            {% endif %}
+
+            <div class="dispatch-field">
+              <label for="{{ form.driver_name.id_for_label }}">Driver Name</label>
+              {{ form.driver_name }}
+              {% if form.driver_name.errors %}<div class="dispatch-help">{{ form.driver_name.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="dispatch-field">
+              <label for="{{ form.lr_no.id_for_label }}">LR No</label>
+              {{ form.lr_no }}
+              {% if form.lr_no.errors %}<div class="dispatch-help">{{ form.lr_no.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="dispatch-field">
+              <label for="{{ form.transport_name.id_for_label }}">Transport</label>
+              {{ form.transport_name }}
+              {% if form.transport_name.errors %}<div class="dispatch-help">{{ form.transport_name.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="dispatch-field">
+              <label for="{{ form.vehicle_no.id_for_label }}">Vehicle No</label>
+              {{ form.vehicle_no }}
+              {% if form.vehicle_no.errors %}<div class="dispatch-help">{{ form.vehicle_no.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <div class="dispatch-field dispatch-field-full">
+              <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+              {{ form.remarks }}
+              {% if form.remarks.errors %}<div class="dispatch-help">{{ form.remarks.errors|striptags }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="dispatch-actions">
+            <button type="submit" class="dispatch-btn dispatch-btn-save">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12l5 5L20 7"></path>
+              </svg>
+              <span>Save Challan</span>
+            </button>
+
+            <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-btn dispatch-btn-back">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6"></path>
+              </svg>
+              <span>Back</span>
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,133 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'css/shared/master_form.css' %}?v=1">
+
+<div class="master-form-ui jobber-form-ui">
+  <section class="mf-panel">
+    <div class="mf-head">
+      <div>
+        <h2 class="mf-title">
+          {% if mode == "add" %}Create Jobber{% else %}Edit Jobber{% endif %}
+        </h2>
+      </div>
+
+      <div class="mf-head-actions">
+        <a
+          class="mf-iconbtn mf-back"
+          href="{% url 'accounts:jobber_list' %}{% if not full_page %}?embed=1{% endif %}"
+          aria-label="Back"
+        >
+          <svg class="mf-back-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M15.5 19 8.5 12l7-7"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="mf-iconbtn mf-close" data-embed-close aria-label="Close">
+          <svg class="mf-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if mode == "add" %}
+      {% url "accounts:jobber_add" as action_url %}
+    {% else %}
+      {% url "accounts:jobber_edit" jobber.id as action_url %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="mf-errors">
+      {% for error in form.non_field_errors %}
+        <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="mf-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="mf-section">
+        <div class="mf-grid">
+          <div class="mf-field">
+            <label for="{{ form.name.id_for_label }}">Jobber Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.jobber_type.id_for_label }}">Process Type</label>
+            {{ form.jobber_type }}
+            {% if form.jobber_type.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.jobber_type.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.phone.id_for_label }}">Phone</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.phone.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.email.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field mf-full">
+            <label for="{{ form.address.id_for_label }}">Address</label>
+            {{ form.address }}
+            {% if form.address.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.address.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="mf-field mf-full">
+            <label>Status</label>
+            <div class="mf-check-row">
+              {{ form.is_active }}
+              <div class="mf-check-copy">
+                <div class="mf-check-title">Active Jobber</div>
+              </div>
+            </div>
+            {% if form.is_active.errors %}
+            <div class="mf-field-errors">
+              {% for error in form.is_active.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-footer">
+        <a class="mf-btn-secondary" href="{% url 'accounts:jobber_list' %}{% if not full_page %}?embed=1{% endif %}">
+          Cancel
+        </a>
+        <button type="submit" class="mf-btn-primary">Save Jobber</button>
+      </div>
+    </form>
+  </section>
+</div>

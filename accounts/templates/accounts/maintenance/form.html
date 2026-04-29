@@ -1,0 +1,792 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}{% if mode == "edit" %}Edit Maintenance{% else %}Add Maintenance{% endif %}{% endblock %}
+{% block page_title %}{% if mode == "edit" %}Edit Maintenance{% else %}Add Maintenance{% endif %}{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@500;600;700;800&display=swap');
+
+  .mt-form-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .mt-panel{
+    background:#fff;
+    border:1px solid #e7e7e7;
+    border-radius:16px;
+    box-shadow:0 10px 28px rgba(15,23,42,.05);
+    overflow:hidden;
+  }
+
+  .mt-panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:18px 20px 14px;
+    border-bottom:1px solid #efefef;
+    background:#fff;
+  }
+
+  .mt-panel-title{
+    margin:0;
+    font-family:"Cormorant Garamond", serif;
+    font-size:34px;
+    line-height:1;
+    font-weight:700;
+    color:#111;
+    letter-spacing:.02em;
+  }
+
+  .mt-loading{
+    font:800 12px "Inter", sans-serif;
+    color:#111;
+  }
+
+  .mt-panel-body{
+    padding:18px 20px 20px;
+  }
+
+  .mt-grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:14px;
+  }
+
+  .mt-field{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+  }
+
+  .mt-field-full{
+    grid-column:1 / -1;
+  }
+
+  .mt-label{
+    font:800 11px "Inter", sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:#666;
+  }
+
+  .mt-help{
+    font:700 11px "Inter", sans-serif;
+    color:#8b8b8b;
+  }
+
+  .mt-error{
+    margin-top:2px;
+    font:700 12px "Inter", sans-serif;
+    color:#c81e1e;
+  }
+
+  .mt-grid input,
+  .mt-grid select,
+  .mt-grid textarea,
+  .mt-table input,
+  .mt-table select{
+    width:100%;
+    min-height:44px;
+    border:1px solid #dddddd;
+    border-radius:12px;
+    background:#fff;
+    padding:10px 12px;
+    box-sizing:border-box;
+    color:#111;
+    font:600 14px "Inter", sans-serif;
+    outline:none;
+    transition:.18s ease;
+  }
+
+  .mt-grid textarea{
+    min-height:92px;
+    resize:vertical;
+  }
+
+  .mt-grid input:focus,
+  .mt-grid select:focus,
+  .mt-grid textarea:focus,
+  .mt-table input:focus,
+  .mt-table select:focus{
+    border-color:#111;
+  }
+
+  .mt-readonly input{
+    background:#f7f7f7;
+    font-weight:800;
+  }
+
+  .mt-stats{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:12px;
+  }
+
+  .mt-stat{
+    border:1px solid #ececec;
+    border-radius:14px;
+    background:#fafafa;
+    padding:14px 16px;
+  }
+
+  .mt-stat-label{
+    font:800 11px "Inter", sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:#777;
+  }
+
+  .mt-stat-value{
+    margin-top:10px;
+    font-family:"Cormorant Garamond", serif;
+    font-size:30px;
+    line-height:1;
+    font-weight:700;
+    color:#111;
+  }
+
+  .mt-table-box{
+    overflow:auto;
+    border:1px solid #ececec;
+    border-radius:14px;
+    background:#fff;
+  }
+
+  .mt-table{
+    width:100%;
+    min-width:860px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .mt-table th{
+    padding:15px 16px;
+    background:#f7f7f7;
+    border-bottom:1px solid #e9e9e9;
+    text-align:left;
+    color:#666;
+    font:800 11px "Inter", sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    white-space:nowrap;
+  }
+
+  .mt-table td{
+    padding:14px 16px;
+    border-bottom:1px solid #efefef;
+    color:#111;
+    font:700 13px "Inter", sans-serif;
+    background:#fff;
+    vertical-align:middle;
+  }
+
+  .mt-table tbody tr:nth-child(even) td{
+    background:#fcfcfc;
+  }
+
+  .mt-empty{
+    padding:34px 16px !important;
+    text-align:center;
+    color:#777 !important;
+    font:700 14px "Inter", sans-serif !important;
+  }
+
+  .mt-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .mt-toolbar-right,
+  .mt-toolbar-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .mt-btn{
+    min-height:46px;
+    padding:0 18px;
+    border-radius:12px;
+    border:1px solid #dcdcdc;
+    background:#fff;
+    color:#111;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font:800 13px "Inter", sans-serif;
+    cursor:pointer;
+    transition:.18s ease;
+    box-sizing:border-box;
+  }
+
+  .mt-btn:hover{
+    border-color:#111;
+  }
+
+  .mt-btn-dark{
+    background:#111;
+    border-color:#111;
+    color:#fff;
+  }
+
+  .mt-btn-dark:hover{
+    background:#000;
+    border-color:#000;
+    color:#fff;
+  }
+
+  .mt-btn-danger{
+    background:#fff;
+    color:#b42318;
+    border-color:#f0c9c9;
+  }
+
+  .mt-btn-danger:hover{
+    border-color:#b42318;
+  }
+
+  .mt-btn svg{
+    width:15px;
+    height:15px;
+    flex:0 0 15px;
+  }
+
+  .mt-formset-errors{
+    padding:12px 14px;
+    border:1px solid #f0c9c9;
+    background:#fff5f5;
+    color:#b42318;
+    border-radius:12px;
+    font:700 13px "Inter", sans-serif;
+  }
+
+  .mt-total-strip{
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .mt-total-box{
+    min-width:210px;
+    border:1px solid #ececec;
+    border-radius:14px;
+    background:#fafafa;
+    padding:14px 16px;
+    text-align:right;
+  }
+
+  .mt-total-label{
+    display:block;
+    font:800 11px "Inter", sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:#777;
+  }
+
+  .mt-total-value{
+    display:block;
+    margin-top:8px;
+    font-family:"Cormorant Garamond", serif;
+    font-size:30px;
+    line-height:1;
+    font-weight:700;
+    color:#111;
+  }
+
+  .expense-row.is-deleted,
+  .delete-mark{
+    display:none;
+  }
+
+  @media (max-width: 1080px){
+    .mt-grid,
+    .mt-stats{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width: 760px){
+    .mt-panel-head,
+    .mt-panel-body{
+      padding-left:16px;
+      padding-right:16px;
+    }
+
+    .mt-panel-title{
+      font-size:28px;
+    }
+
+    .mt-toolbar-left,
+    .mt-toolbar-right,
+    .mt-btn{
+      width:100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-section is-active">
+  <div class="canvas">
+    <form method="post" novalidate id="maintenance-form">
+      {% csrf_token %}
+
+      <div class="mt-form-wrap">
+
+        <section class="mt-panel">
+          <div class="mt-panel-head">
+            <h2 class="mt-panel-title">{% if mode == "edit" %}Edit Maintenance{% else %}Add Maintenance{% endif %}</h2>
+            <div class="mt-loading" id="month-loading" style="display:none;">Loading...</div>
+          </div>
+
+          <div class="mt-panel-body">
+            <div class="mt-grid">
+              <div class="mt-field">
+                <label class="mt-label" for="{{ form.month_key.id_for_label }}">Month</label>
+                {{ form.month_key }}
+                {% if form.month_key.errors %}
+                  <div class="mt-error">{{ form.month_key.errors|join:", " }}</div>
+                {% endif %}
+              </div>
+
+              <div class="mt-field mt-readonly">
+                <label class="mt-label" for="{{ form.inward_total.id_for_label }}">Total Inwards</label>
+                {{ form.inward_total }}
+                {% if form.inward_total.errors %}
+                  <div class="mt-error">{{ form.inward_total.errors|join:", " }}</div>
+                {% endif %}
+              </div>
+
+              <div class="mt-field mt-readonly">
+                <label class="mt-label">Expense Total</label>
+                <input type="text" id="expense-total-display" value="0.00" readonly>
+              </div>
+
+              <div class="mt-field mt-field-full">
+                <label class="mt-label" for="{{ form.remarks.id_for_label }}">Remarks</label>
+                {{ form.remarks }}
+                {% if form.remarks.errors %}
+                  <div class="mt-error">{{ form.remarks.errors|join:", " }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="mt-stats">
+          <div class="mt-stat">
+            <div class="mt-stat-label">Inwards</div>
+            <div class="mt-stat-value" id="summary-inward-total">0.00</div>
+          </div>
+          <div class="mt-stat">
+            <div class="mt-stat-label">Expense</div>
+            <div class="mt-stat-value" id="summary-expense-total">0.00</div>
+          </div>
+          <div class="mt-stat">
+            <div class="mt-stat-label">Final Cost</div>
+            <div class="mt-stat-value" id="summary-cost-total">0.00</div>
+          </div>
+        </section>
+
+        <section class="mt-panel">
+          <div class="mt-panel-head">
+            <h3 class="mt-panel-title" style="font-size:30px;">Monthly Inwards</h3>
+          </div>
+
+          <div class="mt-panel-body">
+            <div class="mt-table-box">
+              <table class="mt-table">
+                <thead>
+                  <tr>
+                    <th style="width:140px;">Date</th>
+                    <th style="width:170px;">Inward No</th>
+                    <th style="width:170px;">PO No</th>
+                    <th>Type</th>
+                    <th style="width:140px;">Count</th>
+                  </tr>
+                </thead>
+                <tbody id="inward-table-body">
+                  <tr>
+                    <td colspan="5" class="mt-empty">Select month</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="mt-panel">
+          <div class="mt-panel-head">
+            <h3 class="mt-panel-title" style="font-size:30px;">Expenses</h3>
+            <div class="mt-toolbar-right">
+              <button type="button" class="mt-btn" id="add-expense-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 5v14"></path>
+                  <path d="M5 12h14"></path>
+                </svg>
+                Add Row
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-panel-body">
+            {{ expense_formset.management_form }}
+
+            {% if expense_formset.non_form_errors %}
+              <div class="mt-formset-errors">
+                {{ expense_formset.non_form_errors|join:", " }}
+              </div>
+            {% endif %}
+
+            <div class="mt-table-box">
+              <table class="mt-table">
+                <thead>
+                  <tr>
+                    <th style="width:80px;">#</th>
+                    <th>Expense</th>
+                    <th style="width:180px;">Price</th>
+                    <th style="width:120px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="expense-formset-body">
+                  {% for expense_form in expense_formset %}
+                    <tr class="expense-row {% if expense_form.instance.pk and expense_form.DELETE.value %}is-deleted{% endif %}" data-form-index="{{ forloop.counter0 }}">
+                      <td>
+                        <span class="expense-row-number">{{ forloop.counter }}</span>
+                        {% for hidden in expense_form.hidden_fields %}
+                          {% if hidden.name != expense_form.DELETE.html_name %}
+                            {{ hidden }}
+                          {% endif %}
+                        {% endfor %}
+                        <span class="delete-mark">{{ expense_form.DELETE }}</span>
+                      </td>
+
+                      <td>
+                        {{ expense_form.expense }}
+                        {% if expense_form.expense.errors %}
+                          <div class="mt-error">{{ expense_form.expense.errors|join:", " }}</div>
+                        {% endif %}
+                      </td>
+
+                      <td>
+                        {{ expense_form.price }}
+                        {% if expense_form.price.errors %}
+                          <div class="mt-error">{{ expense_form.price.errors|join:", " }}</div>
+                        {% endif %}
+                      </td>
+
+                      <td>
+                        <button type="button" class="mt-btn mt-btn-danger remove-expense-row">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M8 6V4h8v2"></path>
+                            <path d="M19 6l-1 14H6L5 6"></path>
+                            <path d="M10 11v6"></path>
+                            <path d="M14 11v6"></path>
+                          </svg>
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="4" class="mt-empty">No expense rows available.</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-total-strip" style="margin-top:14px;">
+              <div class="mt-total-box">
+                <span class="mt-total-label">Expense</span>
+                <span class="mt-total-value" id="inline-expense-total">0.00</span>
+              </div>
+              <div class="mt-total-box">
+                <span class="mt-total-label">Final Cost</span>
+                <span class="mt-total-value" id="inline-cost-total">0.00</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="mt-toolbar">
+          <div class="mt-toolbar-left">
+            <a href="{% url 'accounts:maintenance_list' %}" class="mt-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5"></path>
+                <path d="M12 19l-7-7 7-7"></path>
+              </svg>
+              Back
+            </a>
+          </div>
+
+          <div class="mt-toolbar-right">
+            <button type="submit" class="mt-btn mt-btn-dark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V7l4-4h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"></path>
+                <path d="M17 21v-8H7v8"></path>
+                <path d="M7 3v4h8"></path>
+              </svg>
+              Save Maintenance
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+<script type="text/template" id="empty-expense-row-template">
+<tr class="expense-row" data-form-index="__prefix__">
+  <td>
+    <span class="expense-row-number">__rownum__</span>
+    {% for hidden in expense_formset.empty_form.hidden_fields %}
+      {% if hidden.name != expense_formset.empty_form.DELETE.html_name %}
+        {{ hidden.as_widget }}
+      {% endif %}
+    {% endfor %}
+    <span class="delete-mark">{{ expense_formset.empty_form.DELETE }}</span>
+  </td>
+  <td>
+    {{ expense_formset.empty_form.expense }}
+  </td>
+  <td>
+    {{ expense_formset.empty_form.price }}
+  </td>
+  <td>
+    <button type="button" class="mt-btn mt-btn-danger remove-expense-row">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 6h18"></path>
+        <path d="M8 6V4h8v2"></path>
+        <path d="M19 6l-1 14H6L5 6"></path>
+        <path d="M10 11v6"></path>
+        <path d="M14 11v6"></path>
+      </svg>
+      Remove
+    </button>
+  </td>
+</tr>
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const monthField = document.getElementById("{{ form.month_key.id_for_label }}");
+  const inwardTotalField = document.getElementById("{{ form.inward_total.id_for_label }}");
+  const loadingEl = document.getElementById("month-loading");
+  const inwardTableBody = document.getElementById("inward-table-body");
+
+  const formsetBody = document.getElementById("expense-formset-body");
+  const addRowBtn = document.getElementById("add-expense-row");
+  const totalFormsInput = document.getElementById("id_expenses-TOTAL_FORMS");
+  const templateHtml = document.getElementById("empty-expense-row-template").innerHTML;
+
+  const expenseTotalDisplay = document.getElementById("expense-total-display");
+  const summaryInwardTotal = document.getElementById("summary-inward-total");
+  const summaryExpenseTotal = document.getElementById("summary-expense-total");
+  const summaryCostTotal = document.getElementById("summary-cost-total");
+  const inlineExpenseTotal = document.getElementById("inline-expense-total");
+  const inlineCostTotal = document.getElementById("inline-cost-total");
+
+  function toNumber(value) {
+    const parsed = parseFloat(String(value || "").replace(/,/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function fmt(value) {
+    return toNumber(value).toFixed(2);
+  }
+
+  function updateSummaryTotals() {
+    const inwardTotal = toNumber(inwardTotalField ? inwardTotalField.value : 0);
+    let expenseTotal = 0;
+
+    formsetBody.querySelectorAll(".expense-row").forEach(function (row) {
+      if (row.classList.contains("is-deleted")) return;
+
+      const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+      if (deleteInput && deleteInput.checked) return;
+
+      const priceInput = row.querySelector('input[name$="-price"]');
+      if (!priceInput) return;
+
+      expenseTotal += toNumber(priceInput.value);
+    });
+
+    if (expenseTotalDisplay) expenseTotalDisplay.value = fmt(expenseTotal);
+    if (summaryInwardTotal) summaryInwardTotal.textContent = fmt(inwardTotal);
+    if (summaryExpenseTotal) summaryExpenseTotal.textContent = fmt(expenseTotal);
+    if (summaryCostTotal) summaryCostTotal.textContent = fmt(inwardTotal + expenseTotal);
+    if (inlineExpenseTotal) inlineExpenseTotal.textContent = fmt(expenseTotal);
+    if (inlineCostTotal) inlineCostTotal.textContent = fmt(inwardTotal + expenseTotal);
+  }
+
+  function renumberRows() {
+    const visibleRows = Array.from(formsetBody.querySelectorAll(".expense-row"))
+      .filter(function (row) {
+        return !row.classList.contains("is-deleted");
+      });
+
+    visibleRows.forEach(function (row, index) {
+      const no = row.querySelector(".expense-row-number");
+      if (no) no.textContent = index + 1;
+    });
+  }
+
+  function bindRowEvents(row) {
+    const removeBtn = row.querySelector(".remove-expense-row");
+    const priceInput = row.querySelector('input[name$="-price"]');
+
+    if (priceInput) {
+      priceInput.addEventListener("input", updateSummaryTotals);
+      priceInput.addEventListener("change", updateSummaryTotals);
+    }
+
+    if (removeBtn) {
+      removeBtn.addEventListener("click", function () {
+        const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+        const rows = formsetBody.querySelectorAll(".expense-row");
+
+        if (rows.length <= 1 && !row.classList.contains("is-deleted")) {
+          const expenseSelect = row.querySelector('select[name$="-expense"]');
+          const priceInputSingle = row.querySelector('input[name$="-price"]');
+          if (expenseSelect) expenseSelect.value = "";
+          if (priceInputSingle) priceInputSingle.value = "";
+          if (deleteInput) deleteInput.checked = false;
+          updateSummaryTotals();
+          return;
+        }
+
+        if (deleteInput) {
+          deleteInput.checked = true;
+          row.classList.add("is-deleted");
+        } else {
+          row.remove();
+        }
+
+        renumberRows();
+        updateSummaryTotals();
+      });
+    }
+  }
+
+  function addExpenseRow() {
+    const currentIndex = parseInt(totalFormsInput.value, 10);
+    let rowHtml = templateHtml.replace(/__prefix__/g, currentIndex);
+    rowHtml = rowHtml.replace(/__rownum__/g, currentIndex + 1);
+
+    const temp = document.createElement("tbody");
+    temp.innerHTML = rowHtml.trim();
+    const row = temp.firstElementChild;
+
+    formsetBody.appendChild(row);
+    totalFormsInput.value = currentIndex + 1;
+
+    bindRowEvents(row);
+    renumberRows();
+    updateSummaryTotals();
+  }
+
+  function renderInwardRows(rows) {
+    if (!rows || !rows.length) {
+      inwardTableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="mt-empty">No inwards found.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    inwardTableBody.innerHTML = rows.map(function (row) {
+      return `
+        <tr>
+          <td>${row.inward_date || "-"}</td>
+          <td>${row.inward_number || "-"}</td>
+          <td>${row.po_number || "-"}</td>
+          <td>${row.material_name || "-"}</td>
+          <td>${row.quantity || "0.00"}</td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function fetchMonthPayload() {
+    const month = monthField ? monthField.value : "";
+    if (!month) {
+      if (inwardTotalField) inwardTotalField.value = "0.00";
+      renderInwardRows([]);
+      updateSummaryTotals();
+      return;
+    }
+
+    if (loadingEl) loadingEl.style.display = "block";
+
+    const url = "{% url 'accounts:maintenance_month_payload' %}?month_key=" + encodeURIComponent(month);
+
+    fetch(url, {
+      headers: {
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error("Failed to load month payload");
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        if (inwardTotalField) {
+          inwardTotalField.value = fmt(data.inward_total || 0);
+        }
+        renderInwardRows(data.inward_rows || []);
+        updateSummaryTotals();
+      })
+      .catch(function (error) {
+        console.error("Maintenance month payload failed:", error);
+        if (inwardTotalField) inwardTotalField.value = "0.00";
+        renderInwardRows([]);
+        updateSummaryTotals();
+      })
+      .finally(function () {
+        if (loadingEl) loadingEl.style.display = "none";
+      });
+  }
+
+  if (addRowBtn) {
+    addRowBtn.addEventListener("click", addExpenseRow);
+  }
+
+  if (monthField) {
+    monthField.addEventListener("change", fetchMonthPayload);
+  }
+
+  formsetBody.querySelectorAll(".expense-row").forEach(function (row) {
+    bindRowEvents(row);
+  });
+
+  updateSummaryTotals();
+
+  if (monthField && monthField.value) {
+    fetchMonthPayload();
+  } else {
+    renderInwardRows([]);
+  }
+})();
+</script>
+{% endblock %}

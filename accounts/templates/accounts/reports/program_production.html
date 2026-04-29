@@ -1,0 +1,8 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+{% block title %}Program Production Report{% endblock %}
+{% block page_title %}Program Production Report{% endblock %}
+{% block page_subtitle %}Program-wise production movement across cutting, stitching and finishing.{% endblock %}
+{% block content %}
+  {% include "accounts/reports/program_production_embed.html" %}
+{% endblock %}

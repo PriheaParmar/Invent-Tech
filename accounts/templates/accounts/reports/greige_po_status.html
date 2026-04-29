@@ -1,0 +1,10 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+
+{% block title %}Greige PO Status Report{% endblock %}
+{% block page_title %}Greige PO Status Report{% endblock %}
+{% block page_subtitle %}Greige PO ordered, inwarded and pending quantities.{% endblock %}
+
+{% block content %}
+  {% include "accounts/reports/greige_po_status_embed.html" %}
+{% endblock %}

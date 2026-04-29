@@ -1,0 +1,175 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Costing Snapshots{% endblock %}
+{% block page_title %}Costing Snapshots{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block content %}
+<style>
+  .cs-page{
+    padding:12px;
+    min-height:calc(100vh - 120px);
+    background:
+      radial-gradient(circle at 8% 2%, rgba(28,109,216,.10), transparent 28%),
+      radial-gradient(circle at 94% 0%, rgba(238,61,133,.08), transparent 26%),
+      linear-gradient(180deg,#fbfcff,#f7f8fc);
+    border-radius:24px;
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    color:#172033;
+  }
+  .cs-shell{max-width:100%;margin:0 auto;}
+  .cs-card{overflow:hidden;border:1px solid #edf0f7;border-radius:26px;background:rgba(255,255,255,.96);box-shadow:0 18px 46px rgba(15,23,42,.08);}
+  .cs-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-bottom:1px solid #edf0f7;background:rgba(255,255,255,.78);backdrop-filter:blur(14px);}
+  .cs-kicker{font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:950;color:rgba(28,109,216,1);}
+  .cs-title{margin:4px 0 0;font-family:Georgia,Cambria,serif;font-size:34px;line-height:1;font-weight:900;letter-spacing:-.04em;color:#111827;}
+  .cs-add{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 14px;border:0;border-radius:14px;background:linear-gradient(90deg,rgba(28,109,216,1),rgb(238,61,133));color:#fff;text-decoration:none;font-size:12px;font-weight:950;box-shadow:0 12px 22px rgba(28,109,216,.16);cursor:pointer;}
+  .cs-add svg{width:16px;height:16px;stroke-width:2.6}
+  .cs-table-wrap{overflow:auto;padding:12px;}
+  .cs-table{width:100%;min-width:760px;border-collapse:separate;border-spacing:0;border:1px solid #edf0f7;border-radius:18px;overflow:hidden;background:#fff;}
+  .cs-table th{padding:11px 12px;background:#f8faff;border-bottom:1px solid #edf0f7;color:#667085;font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:950;text-align:left;}
+  .cs-table td{padding:12px;border-bottom:1px solid #f1f4f9;color:#263247;font-size:13px;font-weight:800;}
+  .cs-table tr:last-child td{border-bottom:0}.cs-table tr:hover td{background:#fbfcff}.cs-num{text-align:right;font-variant-numeric:tabular-nums}.cs-empty{text-align:center!important;color:#8a94a7!important;padding:24px!important;}
+
+  .cs-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(15,23,42,.42);backdrop-filter:blur(12px);}
+  .cs-modal.is-open{display:flex;}
+  .cs-dialog{width:min(920px,100%);max-height:92vh;overflow:hidden;border:1px solid rgba(255,255,255,.55);border-radius:28px;background:#fff;box-shadow:0 28px 90px rgba(15,23,42,.26);}
+  .cs-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid #edf0f7;background:radial-gradient(circle at 12% 0%,rgba(28,109,216,.14),transparent 36%),radial-gradient(circle at 92% 0%,rgba(238,61,133,.11),transparent 32%),#fff;}
+  .cs-modal-title{margin:0;font-family:Georgia,Cambria,serif;font-size:30px;line-height:1;font-weight:900;letter-spacing:-.04em;color:#111827;}
+  .cs-modal-sub{margin-top:5px;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:rgba(250,137,26,1);}
+  .cs-close{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #edf0f7;border-radius:14px;background:#fff;color:#172033;cursor:pointer;}
+  .cs-close svg{width:18px;height:18px;stroke-width:2.5}
+  .cs-form-wrap{max-height:calc(92vh - 84px);overflow:auto;padding:18px 20px 20px;}
+  .cs-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;}
+  .cs-field{display:grid;gap:7px;}
+  .cs-field.cs-wide{grid-column:1/-1;}
+  .cs-field label{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:950;color:#667085;}
+  .cs-field input,.cs-field select,.cs-field textarea{width:100%;min-height:40px;border:1px solid #dfe5ef;border-radius:14px;background:#fbfcff;padding:9px 11px;color:#172033;font-size:13px;font-weight:800;outline:none;box-sizing:border-box;}
+  .cs-field textarea{min-height:86px;resize:vertical;}
+  .cs-field input:focus,.cs-field select:focus,.cs-field textarea:focus{border-color:rgba(28,109,216,.45);box-shadow:0 0 0 4px rgba(28,109,216,.09);background:#fff;}
+  .cs-errors{margin:0;padding:0;list-style:none;color:#b42318;font-size:12px;font-weight:800;}
+  .cs-form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid #edf0f7;}
+  .cs-cancel{min-height:40px;padding:0 14px;border-radius:14px;border:1px solid #edf0f7;background:#fff;color:#172033;font-size:12px;font-weight:950;cursor:pointer;}
+  .cs-save{min-height:40px;border:0;border-radius:14px;background:linear-gradient(90deg,rgba(28,109,216,1),rgb(238,61,133));color:#fff;font-size:12px;font-weight:950;padding:0 18px;box-shadow:0 12px 22px rgba(28,109,216,.16);cursor:pointer;}
+  @media (max-width:720px){.cs-head{align-items:flex-start;flex-direction:column}.cs-form-grid{grid-template-columns:1fr}.cs-title,.cs-modal-title{font-size:28px}}
+</style>
+
+<section class="cs-page">
+  <div class="cs-shell">
+    <div class="cs-card">
+      <div class="cs-head">
+        <div>
+          <div class="cs-kicker">Costing master</div>
+          <h1 class="cs-title">Costing Snapshots</h1>
+        </div>
+        <button type="button" class="cs-add" data-costing-open>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+          Add Snapshot
+        </button>
+      </div>
+
+      <div class="cs-table-wrap">
+        <table class="cs-table">
+          <thead>
+            <tr>
+              <th>BOM</th>
+              <th>Program</th>
+              <th class="cs-num">Total Cost</th>
+              <th class="cs-num">Target Selling</th>
+              <th class="cs-num">MRP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in snapshots %}
+              <tr>
+                <td>{% if s.bom %}{{ s.bom.bom_code }}{% else %}-{% endif %}</td>
+                <td>{% if s.program %}{{ s.program.program_no }}{% else %}-{% endif %}</td>
+                <td class="cs-num">{{ s.total_cost }}</td>
+                <td class="cs-num">{{ s.target_selling_price }}</td>
+                <td class="cs-num">{{ s.mrp }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="cs-empty">No snapshots found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="cs-modal" id="costingSnapshotModal" aria-hidden="true">
+  <div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="costingSnapshotTitle">
+    <div class="cs-modal-head">
+      <div>
+        <h2 class="cs-modal-title" id="costingSnapshotTitle">Add Snapshot</h2>
+        <div class="cs-modal-sub">Costing form</div>
+      </div>
+      <button type="button" class="cs-close" data-costing-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="cs-form-wrap">
+      <form method="post" action="{% url 'accounts:costing_snapshot_add' %}">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <ul class="cs-errors">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+
+        <div class="cs-form-grid">
+          {% for field in form %}
+            <div class="cs-field {% if field.name == 'notes' %}cs-wide{% endif %}">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.errors %}
+                <ul class="cs-errors">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="cs-form-actions">
+          <button type="button" class="cs-cancel" data-costing-close>Cancel</button>
+          <button type="submit" class="cs-save">Save Snapshot</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const modal = document.getElementById("costingSnapshotModal");
+    const openers = document.querySelectorAll("[data-costing-open]");
+    const closers = document.querySelectorAll("[data-costing-close]");
+
+    function openModal(){
+      if(!modal) return;
+      modal.classList.add("is-open");
+      modal.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      const firstInput = modal.querySelector("select, input, textarea, button");
+      if(firstInput) setTimeout(() => firstInput.focus(), 80);
+    }
+
+    function closeModal(){
+      if(!modal) return;
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+      document.documentElement.style.overflow = "";
+    }
+
+    openers.forEach(btn => btn.addEventListener("click", openModal));
+    closers.forEach(btn => btn.addEventListener("click", closeModal));
+
+    if(modal){
+      modal.addEventListener("click", function(e){
+        if(e.target === modal) closeModal();
+      });
+    }
+
+    document.addEventListener("keydown", function(e){
+      if(e.key === "Escape" && modal && modal.classList.contains("is-open")) closeModal();
+    });
+  })();
+</script>
+{% endblock %}

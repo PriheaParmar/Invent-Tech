@@ -1,0 +1,331 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .accessories-embed .jb-head {
+    align-items: center;
+  }
+
+  .accessories-embed .jb-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .accessories-embed .ac-chip {
+    min-width: 70px;
+    padding: 6px 10px;
+    border: 1px solid var(--jb-line);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: var(--jb-shadow-sm);
+    text-align: left;
+  }
+
+  .accessories-embed .ac-chip span {
+    display: block;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--jb-text-soft);
+    line-height: 1.1;
+  }
+
+  .accessories-embed .ac-chip strong {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--jb-font-serif);
+    font-size: 15px;
+    line-height: 1;
+    color: #151d27;
+  }
+
+  .accessories-embed .ac-inlinebar {
+    padding: 10px 14px;
+    background: var(--jb-bg);
+    border-bottom: 1px solid var(--jb-line-soft);
+  }
+
+  .accessories-embed .jb-inline-form {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 180px auto;
+    gap: 8px;
+    align-items: end;
+  }
+
+  .accessories-embed .jb-inline-field {
+    min-width: 0;
+  }
+
+  .accessories-embed .jb-inline-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--jb-text-soft);
+  }
+
+  .accessories-embed .jb-inline-field input,
+  .accessories-embed .jb-inline-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border-radius: 7px;
+    border: 1px solid var(--jb-line);
+    background: #fff;
+    color: var(--jb-text);
+    font-family: var(--jb-font-sans);
+    font-size: 11px;
+    outline: none;
+    transition:
+      border-color .16s ease,
+      box-shadow .16s ease,
+      background .16s ease;
+  }
+
+  .accessories-embed .jb-inline-field input:focus,
+  .accessories-embed .jb-inline-field select:focus {
+    border-color: var(--jb-orange-line);
+    box-shadow: 0 0 0 4px var(--jb-orange-soft);
+  }
+
+  .accessories-embed .jb-inline-form .jb-add {
+    height: 32px;
+    padding: 0 12px;
+    align-self: end;
+  }
+
+  .accessories-embed .jb-table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .accessories-embed .jb-table th:nth-child(1),
+  .accessories-embed .jb-table td:nth-child(1) {
+    width: 48%;
+  }
+
+  .accessories-embed .jb-table th:nth-child(2),
+  .accessories-embed .jb-table td:nth-child(2) {
+    width: 32%;
+  }
+
+  .accessories-embed .jb-table th:nth-child(3),
+  .accessories-embed .jb-table td:nth-child(3) {
+    width: 20%;
+  }
+
+  .accessories-embed .ac-unit {
+    color: var(--jb-text);
+    font-weight: 700;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .accessories-embed .jb-table th:last-child {
+    text-align: center;
+  }
+
+  .accessories-embed .ac-actions-cell {
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .accessories-embed .ac-actions-cell .jb-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .accessories-embed .ac-actions-cell .jb-inline-delete {
+    display: inline;
+    margin: 0;
+  }
+
+  @media (max-width: 860px) {
+    .accessories-embed .jb-inline-form {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .accessories-embed .jb-inline-form .jb-add {
+      grid-column: 1 / -1;
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .accessories-embed .jb-head {
+      align-items: flex-start;
+    }
+
+    .accessories-embed .jb-head-actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .accessories-embed .ac-chip {
+      min-width: 64px;
+    }
+
+    .accessories-embed .jb-inline-form {
+      grid-template-columns: 1fr;
+    }
+
+    .accessories-embed .jb-inline-form .jb-add {
+      width: 100%;
+      grid-column: auto;
+    }
+  }
+</style>
+
+<div class="{% if full_page %}jb-page{% endif %}">
+  <div class="jobbers-embed accessories-embed">
+    <section class="jb-panel">
+      <div class="jb-head">
+        <div>
+          <div class="jb-title">Accessories</div>
+          <div class="jb-sub">Manage reusable accessories for BOM and production costing</div>
+        </div>
+
+        <div class="jb-head-actions">
+          <div class="ac-chip">
+            <span>Total</span>
+            <strong>{{ accessories|length }}</strong>
+          </div>
+
+          {% if not full_page %}
+          <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+            <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 6L6 18"></path>
+              <path d="M6 6l12 12"></path>
+            </svg>
+          </button>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+      <div class="jb-errors">
+        {% for error in form.non_field_errors %}
+        <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="ac-inlinebar">
+        <form method="post"
+              action="{% url 'accounts:accessory_list' %}{% if not full_page %}?embed=1{% endif %}"
+              class="jb-inline-form">
+          {% csrf_token %}
+          {% if not full_page %}
+          <input type="hidden" name="embed" value="1">
+          {% endif %}
+
+          <div class="jb-inline-field">
+            <label for="{{ form.name.id_for_label }}">Accessory Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <div class="jb-field-errors">
+              {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="jb-inline-field">
+            <label for="{{ form.default_unit.id_for_label }}">Default Unit</label>
+            {{ form.default_unit }}
+            {% if form.default_unit.errors %}
+            <div class="jb-field-errors">
+              {% for error in form.default_unit.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <button class="jb-add" type="submit">
+            <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+            Add Accessory
+          </button>
+        </form>
+      </div>
+
+      <div class="jb-tablewrap">
+        <table class="jb-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Default Unit</th>
+              <th style="width: 96px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for accessory in accessories %}
+            <tr>
+              <td>{{ accessory.name }}</td>
+              <td class="ac-unit">{{ accessory.default_unit|default:"—" }}</td>
+              <td class="ac-actions-cell">
+                <div class="jb-actions">
+                  <a
+                    class="jb-link jb-link-icon jb-link-edit"
+                    href="{% url 'accounts:accessory_edit' accessory.id %}{% if not full_page %}?embed=1{% endif %}"
+                    aria-label="Edit {{ accessory.name }}"
+                    title="Edit"
+                  >
+                    <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z"></path>
+                      <path d="M14.06 4.94l3.75 3.75"></path>
+                    </svg>
+                  </a>
+
+                  <form method="post"
+                        action="{% url 'accounts:accessory_delete' accessory.id %}{% if not full_page %}?embed=1{% endif %}"
+                        class="jb-inline-delete js-jb-delete-form"
+                        data-delete-label="accessory &quot;{{ accessory.name|escape }}&quot;">
+                    {% csrf_token %}
+                    {% if not full_page %}
+                    <input type="hidden" name="embed" value="1">
+                    {% endif %}
+                    <button
+                      class="jb-link jb-link-icon jb-link-danger jb-link-delete jb-link-button"
+                      type="submit"
+                      aria-label="Delete {{ accessory.name }}"
+                      title="Delete"
+                    >
+                      <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 7h16"></path>
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M6 7l1 12h10l1-12"></path>
+                        <path d="M9 7V4h6v3"></path>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3" class="jb-empty">No accessories yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+  </div>
+</div>

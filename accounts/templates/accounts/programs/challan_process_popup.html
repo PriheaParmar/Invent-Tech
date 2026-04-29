@@ -1,0 +1,357 @@
+<div class="pcp-backdrop" id="programProcessPopupRoot" aria-hidden="false">
+  <div class="pcp-dialog" role="dialog" aria-modal="true" aria-labelledby="pcpTitle">
+    <style>
+      :root{
+        --pcp-bg:#ffffff;
+        --pcp-line:#e5e7eb;
+        --pcp-line-soft:#f1f3f5;
+        --pcp-text:#222222;
+        --pcp-soft:#6b7280;
+        --pcp-orange:#f59e0b;
+        --pcp-orange-dark:#d97706;
+        --pcp-pink:#ef8c9f;
+        --pcp-pink-dark:#e26f87;
+        --pcp-shadow:0 24px 60px rgba(15,23,42,.18);
+      }
+
+      *{ box-sizing:border-box; }
+
+      .pcp-backdrop{
+        position:fixed;
+        inset:0;
+        z-index:1250;
+        background:rgba(15,23,42,.30);
+        display:flex;
+        align-items:flex-start;
+        justify-content:center;
+        padding:14px;
+        overflow:auto;
+      }
+
+      .pcp-dialog{
+        width:min(1220px, calc(100vw - 28px));
+        background:var(--pcp-bg);
+        border:1px solid var(--pcp-line);
+        border-radius:4px;
+        overflow:hidden;
+        box-shadow:var(--pcp-shadow);
+      }
+
+      .pcp-head{
+        min-height:44px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        padding:10px 14px;
+        border-bottom:1px solid var(--pcp-line);
+        background:#fafafa;
+      }
+
+      .pcp-title{
+        margin:0;
+        font-size:16px;
+        font-weight:700;
+        color:var(--pcp-text);
+      }
+
+      .pcp-close{
+        width:22px;
+        height:22px;
+        border:none;
+        background:transparent;
+        color:#555;
+        cursor:pointer;
+        font-size:18px;
+        line-height:1;
+        padding:0;
+      }
+
+      .pcp-close:hover{ color:#111; }
+
+      .pcp-body{
+        padding:14px;
+        background:#fff;
+      }
+
+      .pcp-table-wrap{
+        width:100%;
+        overflow:auto;
+        border:1px solid var(--pcp-line);
+        background:#fff;
+      }
+
+      .pcp-table{
+        width:100%;
+        min-width:1100px;
+        border-collapse:collapse;
+      }
+
+      .pcp-table thead th{
+        padding:12px 10px;
+        text-align:left;
+        font-size:12px;
+        font-weight:700;
+        color:#444;
+        background:#fafafa;
+        border-bottom:1px solid var(--pcp-line);
+        border-right:1px solid var(--pcp-line-soft);
+        white-space:nowrap;
+      }
+
+      .pcp-table thead th:last-child{ border-right:none; }
+
+      .pcp-table tbody td{
+        padding:13px 10px;
+        font-size:12px;
+        color:#333;
+        border-bottom:1px solid var(--pcp-line-soft);
+        border-right:1px solid var(--pcp-line-soft);
+        vertical-align:middle;
+      }
+
+      .pcp-table tbody td:last-child{ border-right:none; }
+      .pcp-table tbody tr:last-child td{ border-bottom:none; }
+      .pcp-table tbody tr:hover td{ background:#fcfcfc; }
+
+      .pcp-strong{ font-weight:700; color:#333; }
+      .pcp-soft{ color:#666; font-weight:600; }
+
+      .pcp-action-group{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        flex-wrap:wrap;
+      }
+
+      .pcp-round-btn{
+        width:28px;
+        height:28px;
+        border-radius:50%;
+        border:1px solid rgba(245,158,11,.22);
+        background:rgba(245,158,11,.08);
+        color:var(--pcp-orange-dark);
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        text-decoration:none;
+      }
+
+      .pcp-round-btn:hover{
+        background:rgba(245,158,11,.14);
+      }
+
+      .pcp-round-btn svg{
+        width:14px;
+        height:14px;
+        stroke:currentColor;
+        fill:none;
+        stroke-width:2;
+        stroke-linecap:round;
+        stroke-linejoin:round;
+      }
+
+      .pcp-link-btn{
+        min-height:30px;
+        padding:0 10px;
+        border-radius:6px;
+        text-decoration:none;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:6px;
+        font-size:11px;
+        font-weight:800;
+        border:1px solid #f3d39c;
+        background:#fff8ec;
+        color:#9a6700;
+      }
+
+      .pcp-link-btn:hover{
+        background:#fff2d9;
+      }
+
+      .pcp-link-btn--blue{
+        border-color:rgba(28,109,216,.16);
+        background:rgba(28,109,216,.08);
+        color:#1c6dd8;
+      }
+
+      .pcp-link-btn--green{
+        border-color:rgba(17,138,75,.16);
+        background:rgba(17,138,75,.10);
+        color:#118a4b;
+      }
+
+      .pcp-link-btn--disabled{
+        pointer-events:none;
+        opacity:.55;
+      }
+
+      .pcp-empty{
+        padding:28px 16px;
+        text-align:center;
+        color:#777;
+        font-size:13px;
+        font-weight:600;
+      }
+
+      .pcp-footer{
+        display:flex;
+        justify-content:center;
+        padding:18px 14px 14px;
+        border-top:1px solid var(--pcp-line);
+        background:#fafafa;
+      }
+
+      .pcp-btn-close{
+        min-width:98px;
+        height:34px;
+        border:none;
+        border-radius:2px;
+        background:var(--pcp-pink);
+        color:#fff;
+        font-size:12px;
+        font-weight:700;
+        cursor:pointer;
+      }
+
+      .pcp-btn-close:hover{
+        background:var(--pcp-pink-dark);
+      }
+    </style>
+
+    <div class="pcp-head">
+      <h2 class="pcp-title" id="pcpTitle">
+        {% if is_program_level_popup %}
+          Program Inward Details
+        {% elif selected_start_jobber and selected_start_jobber.jobber_type %}
+          {{ selected_start_jobber.jobber_type.name }} Challan Details
+        {% else %}
+          Challan Details
+        {% endif %}
+        {% if selected_start_jobber and selected_start_jobber.jobber %}
+          ({{ selected_start_jobber.jobber.name }})
+        {% endif %}
+      </h2>
+      <button type="button" class="pcp-close" data-popup-close aria-label="Close">×</button>
+    </div>
+
+    <div class="pcp-body">
+      <div class="pcp-table-wrap">
+        <table class="pcp-table">
+          <thead>
+            <tr>
+              {% if is_program_level_popup %}
+                <th>Jobber Type</th>
+                <th>Jobber Name</th>
+              {% endif %}
+              <th>Challan No.</th>
+              <th>Total Issued Quantity</th>
+              <th>Created By</th>
+              <th>Challan Date</th>
+              <th>Inward Quantity</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for challan in challans %}
+              <tr>
+                {% if is_program_level_popup %}
+                  <td class="pcp-soft">
+                    {% if challan.jobber_type %}{{ challan.jobber_type.name }}{% else %}-{% endif %}
+                  </td>
+                  <td class="pcp-soft">
+                    {% if challan.jobber %}{{ challan.jobber.name }}{% else %}-{% endif %}
+                  </td>
+                {% endif %}
+                <td class="pcp-strong">{{ challan.challan_no }}</td>
+                <td class="pcp-strong">{{ challan.total_issued_qty|default:"0" }}</td>
+                <td class="pcp-soft">{{ challan.created_by_name|default:"-" }}</td>
+                <td class="pcp-soft">{{ challan.challan_date|date:"d-m-Y"|default:"-" }}</td>
+                <td class="pcp-strong">{{ challan.inward_qty|default:"0" }}</td>
+                <td>
+                  <div class="pcp-action-group">
+                    {% if challan.next_action_url %}
+                      <a href="{{ challan.next_action_url }}?popup=1"
+                         class="pcp-link-btn {{ challan.next_action_class }}"
+                         data-process-popup-link="1">
+                        {{ challan.next_action_label }}
+                      </a>
+                    {% elif challan.status == "rejected" %}
+                      <span class="pcp-soft">Rejected</span>
+                    {% else %}
+                      <span class="pcp-soft">{{ challan.display_status|default:challan.status|title }}</span>
+                    {% endif %}
+
+                    <a href="{% url 'accounts:program_challan_print' challan.id %}"
+                       target="_blank"
+                       class="pcp-round-btn"
+                       title="Print Challan"
+                       aria-label="Print Challan">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 9V4h12v5"></path>
+                        <path d="M6 14h12v6H6z"></path>
+                        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"></path>
+                      </svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="{% if is_program_level_popup %}8{% else %}6{% endif %}">
+                  <div class="pcp-empty">No challans found for this program.</div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pcp-footer">
+      <button type="button" class="pcp-btn-close" data-popup-close>Close</button>
+    </div>
+
+    <script>
+      (function () {
+        const root = document.getElementById("programProcessPopupRoot");
+        if (!root) return;
+
+        function bindLinks(scope) {
+          scope.querySelectorAll("[data-process-popup-link='1']").forEach(function(link){
+            if (link.dataset.bound === "1") return;
+            link.dataset.bound = "1";
+
+            link.addEventListener("click", function(e){
+              e.preventDefault();
+              fetch(this.getAttribute("href"), {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+              })
+              .then(function(res){ return res.text(); })
+              .then(function(html){
+                root.outerHTML = html;
+              });
+            });
+          });
+        }
+
+        root.addEventListener("click", function (event) {
+          const closeBtn = event.target.closest("[data-popup-close]");
+          if (closeBtn) {
+            event.preventDefault();
+            if (root.parentNode) root.parentNode.removeChild(root);
+            return;
+          }
+
+          if (event.target === root) {
+            if (root.parentNode) root.parentNode.removeChild(root);
+          }
+        });
+
+        bindLinks(root);
+      })();
+    </script>
+  </div>
+</div>

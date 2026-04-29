@@ -1,0 +1,730 @@
+{% load static %}
+<div class="pif-wrap" id="programProcessPopupRoot">
+  <style>
+    :root{
+      --pif-bg:#f6f7fb;
+      --pif-card:#ffffff;
+      --pif-ink:#111827;
+      --pif-text:#253044;
+      --pif-muted:#7b8494;
+      --pif-line:#e6eaf0;
+      --pif-line-2:#f0f2f6;
+      --pif-soft:#fafbfe;
+      --pif-pink:#ee3d85;
+      --pif-pink-2:#d92d73;
+      --pif-pink-soft:rgba(238,61,133,.075);
+      --pif-pink-line:rgba(238,61,133,.22);
+      --pif-good:#15803d;
+      --pif-good-soft:#ecfdf3;
+      --pif-bad:#b42318;
+      --pif-bad-soft:#fff2f0;
+      --pif-shadow:0 24px 70px rgba(15,23,42,.16);
+      --pif-shadow-sm:0 1px 2px rgba(15,23,42,.06);
+      --pif-font:Inter,"Segoe UI",Arial,sans-serif;
+      --pif-serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    }
+
+    *{box-sizing:border-box;}
+
+    .pif-wrap{
+      position:fixed;
+      inset:0;
+      z-index:1260;
+      padding:10px;
+      overflow:auto;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      background:rgba(15,23,42,.34);
+      backdrop-filter:blur(5px);
+      font-family:var(--pif-font);
+      color:var(--pif-text);
+    }
+
+    .pif-dialog{
+      width:min(1240px, calc(100vw - 20px));
+      min-height:min(680px, calc(100vh - 20px));
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      background:var(--pif-card);
+      border:1px solid rgba(226,232,240,.95);
+      border-radius:18px;
+      box-shadow:var(--pif-shadow);
+    }
+
+    .pif-head{
+      min-height:50px;
+      padding:10px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      background:linear-gradient(180deg,#fff,#fbfcff);
+      border-bottom:1px solid var(--pif-line);
+    }
+
+    .pif-head-left{display:flex;align-items:center;gap:10px;min-width:0;}
+
+    .pif-kicker{
+      height:24px;
+      padding:0 11px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      border:1px solid var(--pif-pink-line);
+      background:var(--pif-pink-soft);
+      color:var(--pif-pink-2);
+      font-size:9px;
+      font-weight:900;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .pif-title{
+      margin:0;
+      color:#0f172a;
+      font-family:var(--pif-serif);
+      font-size:22px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:-.025em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .pif-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+    .pif-chip{
+      min-height:28px;
+      padding:0 10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      border:1px solid var(--pif-line);
+      background:#fff;
+      color:#344054;
+      box-shadow:var(--pif-shadow-sm);
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .pif-chip--soft{background:#fbfcff;color:#667085;text-transform:none;letter-spacing:0;}
+    .pif-chip--pink{border-color:var(--pif-pink-line);background:var(--pif-pink-soft);color:var(--pif-pink-2);}
+
+    .pif-close{
+      width:32px;
+      height:32px;
+      border-radius:10px;
+      border:1px solid var(--pif-line);
+      background:#fff;
+      color:#667085;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transition:.16s ease;
+      box-shadow:var(--pif-shadow-sm);
+    }
+
+    .pif-close:hover{transform:translateY(-1px);border-color:var(--pif-pink-line);color:var(--pif-pink-2);}
+    .pif-close svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+    .pif-body{
+      flex:1;
+      min-height:0;
+      overflow:auto;
+      padding:12px;
+      background:linear-gradient(135deg,#fbfcff 0%,#f5f7fb 100%);
+    }
+
+    .pif-error-box{
+      margin-bottom:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid #fecdca;
+      background:var(--pif-bad-soft);
+      color:var(--pif-bad);
+      font-size:12px;
+      font-weight:800;
+    }
+    .pif-error-box ul{margin:0;padding-left:16px;}
+
+    .pif-top-grid{
+      display:grid;
+      grid-template-columns:1fr 1.05fr 1fr;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .pif-panel{
+      background:rgba(255,255,255,.96);
+      border:1px solid var(--pif-line);
+      border-radius:16px;
+      box-shadow:0 10px 30px rgba(15,23,42,.04);
+      overflow:hidden;
+    }
+
+    .pif-panel-head{
+      min-height:38px;
+      padding:9px 11px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid var(--pif-line-2);
+      background:#fff;
+    }
+
+    .pif-panel-title{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      color:#111827;
+      font-size:11px;
+      font-weight:950;
+      letter-spacing:.075em;
+      text-transform:uppercase;
+    }
+    .pif-panel-title:before{
+      content:"";
+      width:3px;
+      height:12px;
+      border-radius:99px;
+      background:var(--pif-pink);
+      box-shadow:0 0 0 4px var(--pif-pink-soft);
+    }
+
+    .pif-panel-body{padding:11px;}
+
+    .pif-mini-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+    }
+
+    .pif-field{display:flex;flex-direction:column;gap:5px;min-width:0;}
+
+    .pif-field label,
+    .pif-col label{
+      color:#667085;
+      font-size:9px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .pif-field input,
+    .pif-field select,
+    .pif-field textarea,
+    .pif-col input,
+    .pif-col select{
+      width:100%;
+      min-height:34px;
+      border:1px solid #dfe5ee;
+      border-radius:10px;
+      background:#fff;
+      color:#172033;
+      padding:7px 9px;
+      font-size:12px;
+      font-weight:800;
+      outline:none;
+      box-shadow:var(--pif-shadow-sm);
+    }
+
+    .pif-field input[readonly],
+    .pif-col input[readonly]{background:#fbfcff;color:#344054;}
+
+    .pif-field input:focus,
+    .pif-field select:focus,
+    .pif-field textarea:focus,
+    .pif-col input:focus,
+    .pif-col select:focus{
+      border-color:var(--pif-pink);
+      box-shadow:0 0 0 4px var(--pif-pink-soft);
+    }
+
+    .pif-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .pif-stat{
+      min-height:64px;
+      border:1px solid var(--pif-line);
+      border-radius:14px;
+      background:linear-gradient(180deg,#fff,#fbfcff);
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .pif-stat-label{color:#667085;font-size:9px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;}
+    .pif-stat-value{margin-top:5px;color:#101828;font-size:20px;font-weight:950;letter-spacing:-.03em;}
+    .pif-stat--pink{border-color:var(--pif-pink-line);background:linear-gradient(180deg,#fff,#fff7fb);}
+
+    .pif-size-card{margin-top:10px;}
+
+    .pif-size-premium{
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      background:linear-gradient(180deg,#fff,#fbfcff);
+    }
+
+    .pif-issued-strip{
+      display:grid;
+      grid-template-columns:repeat(6, minmax(0, 1fr));
+      gap:6px;
+      align-items:stretch;
+    }
+
+    .pif-issued-chip{
+      min-height:54px;
+      padding:8px 7px;
+      border:1px solid #e8ecf3;
+      border-radius:14px;
+      background:linear-gradient(180deg,#fff,#f8fafc);
+      box-shadow:0 1px 2px rgba(15,23,42,.035);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+    }
+
+    .pif-issued-size{
+      color:#667085;
+      font-size:9px;
+      font-weight:950;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      line-height:1;
+    }
+
+    .pif-issued-qty{
+      color:#101828;
+      font-size:14px;
+      font-weight:950;
+      letter-spacing:-.02em;
+      line-height:1;
+    }
+
+    .pif-inward-grid{
+      display:grid;
+      grid-template-columns:repeat(6, minmax(0, 1fr));
+      gap:7px;
+      align-items:stretch;
+    }
+
+    .pif-size-entry{
+      border:1px solid #e6eaf0;
+      border-radius:15px;
+      background:#fff;
+      box-shadow:0 6px 16px rgba(15,23,42,.035);
+      overflow:hidden;
+    }
+
+    .pif-size-entry-head{
+      min-height:32px;
+      padding:7px 9px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:7px;
+      border-bottom:1px solid #f0f2f6;
+      background:#fbfcff;
+    }
+
+    .pif-size-entry-name{
+      color:#111827;
+      font-size:10px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .pif-size-entry-issued{
+      height:21px;
+      min-width:34px;
+      padding:0 8px;
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid var(--pif-pink-line);
+      background:var(--pif-pink-soft);
+      color:var(--pif-pink-2);
+      font-size:10px;
+      font-weight:950;
+      white-space:nowrap;
+    }
+
+    .pif-size-entry-body{
+      padding:9px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:7px;
+    }
+
+    .pif-size-input-group{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:5px;
+    }
+
+    .pif-size-input-group label{
+      color:#667085;
+      font-size:8px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .pif-size-input-group input{
+      width:100%;
+      min-height:32px;
+      border:1px solid #dfe5ee;
+      border-radius:10px;
+      background:#fff;
+      color:#172033;
+      padding:6px 7px;
+      font-size:12px;
+      font-weight:900;
+      text-align:center;
+      outline:none;
+      box-shadow:var(--pif-shadow-sm);
+    }
+
+    .pif-size-input-group input:focus{
+      border-color:var(--pif-pink);
+      box-shadow:0 0 0 4px var(--pif-pink-soft);
+    }
+
+    .pif-size-input-group--reject input:focus{
+      border-color:#f04438;
+      box-shadow:0 0 0 4px rgba(240,68,56,.10);
+    }
+
+    .pif-size-remarks-row{
+      display:grid;
+      grid-template-columns:minmax(260px,1fr);
+    }
+
+    .pif-size-remarks{
+      border:1px solid #e6eaf0;
+      border-radius:15px;
+      background:#fff;
+      padding:9px;
+      box-shadow:0 6px 16px rgba(15,23,42,.035);
+    }
+
+    .pif-size-remarks label{
+      display:block;
+      margin-bottom:5px;
+      color:#667085;
+      font-size:8px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .pif-size-remarks input{
+      width:100%;
+      min-height:34px;
+      border:1px solid #dfe5ee;
+      border-radius:10px;
+      background:#fff;
+      color:#172033;
+      padding:7px 9px;
+      font-size:12px;
+      font-weight:800;
+      outline:none;
+      box-shadow:var(--pif-shadow-sm);
+    }
+
+    .pif-size-remarks input:focus{
+      border-color:var(--pif-pink);
+      box-shadow:0 0 0 4px var(--pif-pink-soft);
+    }
+
+    .pif-row-error{
+      margin:0 10px 8px;
+      padding:7px 9px;
+      border-radius:10px;
+      background:var(--pif-bad-soft);
+      color:var(--pif-bad);
+      font-size:11px;
+      font-weight:850;
+    }
+
+     (max-width: 1180px){
+      .pif-issued-strip,
+      .pif-inward-grid{
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+      }
+    }
+
+     (max-width: 720px){
+      .pif-issued-strip,
+      .pif-inward-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+      }
+    }
+
+     (max-width: 460px){
+      .pif-issued-strip,
+      .pif-inward-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .pif-select-type{
+      padding:0 10px 10px;
+      display:grid;
+      grid-template-columns:minmax(220px,320px);
+    }
+
+    .pif-footer{
+      position:sticky;
+      bottom:0;
+      z-index:5;
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      padding:10px 14px;
+      border-top:1px solid var(--pif-line);
+      background:rgba(255,255,255,.94);
+      backdrop-filter:blur(8px);
+    }
+
+    .pif-btn{
+      min-height:34px;
+      padding:0 13px;
+      border-radius:10px;
+      border:1px solid var(--pif-line);
+      background:#fff;
+      color:#344054;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      font-size:10px;
+      font-weight:950;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      box-shadow:var(--pif-shadow-sm);
+      transition:.16s ease;
+    }
+    .pif-btn:hover{transform:translateY(-1px);}
+    .pif-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+    .pif-btn--submit{border-color:#0f172a;background:#111827;color:#fff;}
+    .pif-btn--submit:hover{background:var(--pif-pink);border-color:var(--pif-pink);box-shadow:0 10px 24px rgba(238,61,133,.25);}
+    .pif-btn--cancel:hover{border-color:var(--pif-pink-line);color:var(--pif-pink-2);background:#fff7fb;}
+
+    @media (max-width: 1000px){
+      .pif-top-grid{grid-template-columns:1fr;}
+      .pif-mini-grid{grid-template-columns:1fr;}
+      .pif-dialog{min-height:auto;}
+    }
+  </style>
+
+  <div class="pif-dialog">
+    <div class="pif-head">
+      <div class="pif-head-left">
+        <span class="pif-kicker">Program Inward</span>
+        <h2 class="pif-title">{{ program.program_no }}</h2>
+      </div>
+
+      <div class="pif-head-actions">
+        <span class="pif-chip pif-chip--pink">{{ challan.challan_no }}</span>
+        <span class="pif-chip pif-chip--soft">{% if challan.jobber_type %}{{ challan.jobber_type.name }}{% else %}No Jobber Type{% endif %}</span>
+        <button type="button" class="pif-close" data-challan-popup-close="1" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <form
+      method="post"
+      action="{% url 'accounts:program_inward_form' challan.id %}?popup=1"
+      data-challan-popup-form="1"
+    >
+      {% csrf_token %}
+      <input type="hidden" name="popup" value="1">
+
+      <div class="pif-body">
+        {% if non_field_errors %}
+          <div class="pif-error-box">
+            <ul>
+              {% for error in non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <div class="pif-top-grid">
+          <section class="pif-panel">
+            <div class="pif-panel-head"><div class="pif-panel-title">Details</div></div>
+            <div class="pif-panel-body">
+              <div class="pif-mini-grid">
+                <div class="pif-field">
+                  <label>Program No</label>
+                  <input type="text" value="{{ program.program_no }}" readonly>
+                </div>
+
+                <div class="pif-field">
+                  <label>Delivery Challan</label>
+                  <select
+                    onchange="(function(sel){var url=sel.value;if(!url)return;fetch(url,{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){return r.text()}).then(function(html){var root=document.getElementById('programProcessPopupRoot'); if(root){ root.outerHTML = html; }});})(this)">
+                    {% for sibling in sibling_challans %}
+                      <option
+                        value="{% url 'accounts:program_inward_form' sibling.id %}?popup=1"
+                        {% if selected_challan_id == sibling.id|stringformat:'s' %}selected{% endif %}>
+                        {{ sibling.challan_no }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="pif-field">
+                  <label>Jobber Type</label>
+                  <input type="text" value="{% if challan.jobber_type %}{{ challan.jobber_type.name }}{% else %}-{% endif %}" readonly>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="pif-panel">
+            <div class="pif-panel-head"><div class="pif-panel-title">Inward Info</div></div>
+            <div class="pif-panel-body">
+              <div class="pif-mini-grid">
+                <div class="pif-field">
+                  <label>Date</label>
+                  <input type="date" name="inward_date" value="{{ inward_date_value }}" required>
+                </div>
+                <div class="pif-field">
+                  <label>Time</label>
+                  <input type="time" name="inward_time" value="{{ inward_time_value }}" required>
+                </div>
+                <div class="pif-field">
+                  <label>Inward Type</label>
+                  <select name="inward_type" required>
+                    <option value="">Select</option>
+                    {% for inward_type in inward_type_options %}
+                      <option value="{{ inward_type.id }}" {% if selected_inward_type == inward_type.id|stringformat:"s" %}selected{% endif %}>
+                        {{ inward_type.name }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="pif-panel">
+            <div class="pif-panel-head"><div class="pif-panel-title">Summary</div></div>
+            <div class="pif-panel-body">
+              <div class="pif-stat-row">
+                <div class="pif-stat pif-stat--pink">
+                  <div class="pif-stat-label">Total</div>
+                  <div class="pif-stat-value">{{ total_issued|default:"0" }}</div>
+                </div>
+                <div class="pif-stat">
+                  <div class="pif-stat-label">Remaining</div>
+                  <div class="pif-stat-value">{{ total_balance|default:"0" }}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <section class="pif-panel pif-size-card">
+          <div class="pif-panel-head">
+            <div class="pif-panel-title">Size Inward</div>
+          </div>
+
+          <div class="pif-size-premium">
+            <div class="pif-issued-strip">
+              {% for item in row_payloads %}
+                <div class="pif-issued-chip">
+                  <div class="pif-issued-size">{{ item.row.size_name }}</div>
+                  <div class="pif-issued-qty">{{ item.row.issued_qty|default:"0" }}</div>
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="pif-inward-grid">
+              {% for item in row_payloads %}
+                <div class="pif-size-entry">
+                  <div class="pif-size-entry-head">
+                    <span class="pif-size-entry-name">{{ item.row.size_name }}</span>
+                    <span class="pif-size-entry-issued">Issued {{ item.row.issued_qty|default:"0" }}</span>
+                  </div>
+
+                  <div class="pif-size-entry-body">
+                    <div class="pif-size-input-group">
+                      <label>Accepted</label>
+                      <input
+                        type="number"
+                        name="row_{{ item.row.id }}_accepted"
+                        step="0.01"
+                        min="0"
+                        value="{{ item.entered_accepted }}"
+                        placeholder="0">
+                    </div>
+
+                    <div class="pif-size-input-group pif-size-input-group--reject">
+                      <label>Rejected</label>
+                      <input
+                        type="number"
+                        name="row_{{ item.row.id }}_rejected"
+                        step="0.01"
+                        min="0"
+                        value="{{ item.entered_rejected }}"
+                        placeholder="0">
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="pif-size-remarks-row">
+              <div class="pif-size-remarks">
+                <label>Remarks</label>
+                <input type="text" name="inward_remarks" value="{{ inward_remarks }}" placeholder="Add inward remarks">
+              </div>
+            </div>
+
+            {% for item in row_payloads %}
+              {% if item.error %}
+                <div class="pif-row-error">{{ item.row.size_name }}: {{ item.error }}</div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+
+      <div class="pif-footer">
+        <button type="button" class="pif-btn pif-btn--cancel" data-challan-popup-close="1">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
+          Cancel
+        </button>
+        <button type="submit" class="pif-btn pif-btn--submit">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
+          Save Inward
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

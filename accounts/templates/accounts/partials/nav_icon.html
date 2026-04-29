@@ -1,0 +1,55 @@
+{% if icon == "home" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10.5z" /></svg>
+{% elif icon == "settings" or icon == "maintenance" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" /><path d="M19.4 15a7.9 7.9 0 0 0 .1-6l2-1.5-2-3.5-2.3 1a8 8 0 0 0-5.2-2L11.5 1h-3L8 3a8 8 0 0 0-4.5 3L1 6.5l2 3.5 2-1.5a8.2 8.2 0 0 0 0 7L3 17l-2 3.5L3 22l2.5-1a8 8 0 0 0 5 2l1 2h3l.6-2a8 8 0 0 0 4.9-2l2.5 1 2-3.5-2.1-1z" /></svg>
+{% elif icon == "po" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"></path><path d="M15 3v3h3"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h4"></path></svg>
+{% elif icon == "inventory" or icon == "lot" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5v10l9 5 9-5V8z"></path><path d="M3 8l9 5 9-5"></path></svg>
+{% elif icon == "quality" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12l2 2 4-4"></path><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path></svg>
+{% elif icon == "qr" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4z"></path><path d="M14 4h6v6h-6z"></path><path d="M4 14h6v6H4z"></path><path d="M14 14h2v2h-2z"></path><path d="M18 14h2v6h-6v-2h4z"></path><path d="M14 18h2v2h-2z"></path></svg>
+{% elif icon == "costing" or icon == "wallet" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path><path d="M16 12h3"></path><path d="M16 9h3"></path></svg>
+{% elif icon == "production" or icon == "program" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h10"></path><path d="M18 17v4"></path><path d="M16 19h4"></path></svg>
+{% elif icon == "dispatch" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17V6a1 1 0 0 1 1-1h12v12H4a1 1 0 0 1-1-1zm13 0h3l2 2v2h-5v-4z" /></svg>
+{% elif icon == "invoice" or icon == "document" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"></path><path d="M15 3v3h3"></path><path d="M9 10h6"></path><path d="M9 14h6"></path><path d="M9 18h4"></path></svg>
+{% elif icon == "material" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10M8 8V6a4 4 0 1 1 8 0v2" /></svg>
+{% elif icon == "party" or icon == "client" or icon == "vendor" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21a8 8 0 0 1 16 0" /></svg>
+{% elif icon == "location" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z"></path><path d="M12 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path></svg>
+{% elif icon == "jobber" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l2.2 4.5 4.8.7-3.5 3.4.8 4.8L12 15l-4.3 2.3.8-4.8L5 9.2l4.8-.7z"></path></svg>
+{% elif icon == "jobber-type" or icon == "layers" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"></path><path d="M3 12l9 5 9-5"></path><path d="M3 16l9 5 9-5"></path></svg>
+{% elif icon == "palette" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.4-.5-.6-.4-1.6.4-2.1.3-.2.7-.3 1.1-.3H17a4 4 0 0 0 0-8h-5z"></path><path d="M7.5 9.5h.01"></path><path d="M9.5 6.5h.01"></path><path d="M14.5 6.5h.01"></path><path d="M16.5 10.5h.01"></path></svg>
+{% elif icon == "scale" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18"></path><path d="M5 7h14"></path><path d="M7 7l-3 6h6l-3-6z"></path><path d="M17 7l-3 6h6l-3-6z"></path></svg>
+{% elif icon == "badge" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>
+{% elif icon == "folder" or icon == "folder-tree" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path></svg>
+{% elif icon == "book" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 0-2 2z"></path><path d="M6 3v18"></path></svg>
+{% elif icon == "grid" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4z"></path><path d="M13 4h7v7h-7z"></path><path d="M4 13h7v7H4z"></path><path d="M13 13h7v7h-7z"></path></svg>
+{% elif icon == "droplet" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s5 5.3 5 9a5 5 0 0 1-10 0c0-3.7 5-9 5-9z"></path></svg>
+{% elif icon == "receipt" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-2-1-2 1-2-1-2 1-2-1-2 1z"></path><path d="M9 8h6"></path><path d="M9 12h6"></path></svg>
+{% elif icon == "inward" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M5 21h14"></path></svg>
+{% elif icon == "tag" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10l-8 8-8-8V4h6z"></path><path d="M7.5 7.5h.01"></path></svg>
+{% elif icon == "firm" %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V7l8-4 8 4v14"></path><path d="M9 21v-6h6v6"></path><path d="M9 10h.01"></path><path d="M15 10h.01"></path></svg>
+{% else %}
+<svg class="{{ icon_class|default:'ico' }}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle></svg>
+{% endif %}

@@ -1,0 +1,467 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .materials-embed .jb-head{
+    align-items: center;
+  }
+
+  .materials-embed .jb-head-actions{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .materials-embed .jb-head-stats{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+  }
+
+  .materials-embed .jb-head-stats .jb-stat{
+    min-width: auto;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 10px;
+    background: rgba(250, 189, 100, 0.12);
+    border: 1px solid rgba(250, 189, 100, 0.35);
+    box-shadow: 0 4px 12px rgba(250, 189, 100, 0.10);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .materials-embed .jb-head-stats .jb-stat span{
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #7d766d;
+    font-family: var(--jb-font-sans);
+    line-height: 1;
+    margin: 0;
+  }
+
+  .materials-embed .jb-head-stats .jb-stat strong{
+    font-family: var(--jb-font-serif);
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #121a24;
+    margin: 0;
+  }
+
+  .materials-embed .jb-search{
+    grid-template-columns: minmax(260px, 1.4fr) 150px 170px 130px auto;
+  }
+
+  .materials-embed .jb-tablewrap{
+  overflow-x: hidden;
+}
+
+.materials-embed .jb-table{
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.materials-embed .jb-table th,
+.materials-embed .jb-table td{
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.materials-embed .jb-table th:nth-child(1),
+.materials-embed .jb-table td:nth-child(1){
+  width: 10%;
+}
+
+.materials-embed .jb-table th:nth-child(2),
+.materials-embed .jb-table td:nth-child(2){
+  width: 10%;
+}
+
+.materials-embed .jb-table th:nth-child(3),
+.materials-embed .jb-table td:nth-child(3){
+  width: 18%;
+}
+
+.materials-embed .jb-table th:nth-child(4),
+.materials-embed .jb-table td:nth-child(4){
+  width: 16%;
+}
+
+.materials-embed .jb-table th:nth-child(5),
+.materials-embed .jb-table td:nth-child(5){
+  width: 8%;
+}
+
+.materials-embed .jb-table th:nth-child(6),
+.materials-embed .jb-table td:nth-child(6){
+  width: 22%;
+}
+
+.materials-embed .jb-table th:nth-child(7),
+.materials-embed .jb-table td:nth-child(7){
+  width: 8%;
+}
+
+.materials-embed .jb-table th:nth-child(8),
+.materials-embed .jb-table td:nth-child(8){
+  width: 88px;
+  text-align: center;
+}
+
+  .materials-embed .jb-code{
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: #5c6572;
+    font-family: var(--jb-font-sans);
+  }
+
+  .materials-embed .mat-badge{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: rgba(250, 189, 100, 0.12);
+    border: 1px solid rgba(250, 189, 100, 0.35);
+    color: #70531c;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    font-family: var(--jb-font-sans);
+  }
+
+  .materials-embed .jb-primary{
+    font-family: var(--jb-font-serif);
+    font-size: 13px;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #111923;
+  }
+
+  .materials-embed .jb-meta{
+    margin-top: 2px;
+    font-size: 10px;
+    line-height: 1.25;
+    color: #7b8592;
+    font-family: var(--jb-font-sans);
+  }
+
+  .materials-embed .jb-classification,
+  .materials-embed .jb-attributes{
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: #4f5865;
+    font-family: var(--jb-font-sans);
+  }
+
+  .materials-embed .jb-classification .jb-meta,
+  .materials-embed .jb-attributes .jb-meta{
+    margin-top: 2px;
+  }
+
+  .materials-embed .jb-actions{
+    justify-content: center;
+  }
+
+  @media (max-width: 1100px){
+    .materials-embed .jb-head{
+      align-items: flex-start;
+    }
+
+    .materials-embed .jb-head-actions{
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+  }
+
+  @media (max-width: 980px){
+    .materials-embed .jb-search{
+      grid-template-columns: minmax(0, 1fr) 130px 150px 120px auto;
+    }
+  }
+
+  @media (max-width: 768px){
+    .materials-embed .jb-search{
+      grid-template-columns: 1fr;
+    }
+
+    .materials-embed .jb-search .jb-search-btn{
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 640px){
+    .materials-embed .jb-head-stats{
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .materials-embed .jb-head-stats .jb-stat{
+      justify-content: space-between;
+    }
+  }
+
+  .materials-embed .jb-primary,
+.materials-embed .jb-meta,
+.materials-embed .jb-classification,
+.materials-embed .jb-attributes,
+.materials-embed .jb-code{
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+</style>
+
+<div class="jobbers-embed materials-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Materials</div>
+        <div class="jb-sub">Core item master for yarn, greige, finished and trims</div>
+      </div>
+
+      <div class="jb-head-actions">
+        <div class="jb-stats jb-stats-inline jb-head-stats">
+          <div class="jb-stat">
+            <span>Total</span>
+            <strong>{{ stats.total }}</strong>
+          </div>
+          <div class="jb-stat">
+            <span>Active</span>
+            <strong>{{ stats.active }}</strong>
+          </div>
+          <div class="jb-stat">
+            <span>Inactive</span>
+            <strong>{{ stats.inactive }}</strong>
+          </div>
+          <div class="jb-stat">
+            <span>Kinds</span>
+            <strong>{{ stats.kinds }}</strong>
+          </div>
+        </div>
+
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if delete_error %}
+    <div class="jb-errors jb-usage-error">
+      <div class="jb-usage-title">{{ delete_error }}</div>
+      {% if delete_label %}
+      <div class="jb-usage-label">Record: <strong>{{ delete_label }}</strong></div>
+      {% endif %}
+      {% if delete_usage %}
+      <div class="jb-usage-list">
+        {% for row in delete_usage %}
+        <div class="jb-usage-row">
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:material_list' %}" id="materialSearchForm">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search code, name, type, shade, unit or HSN"
+          autocomplete="off"
+          aria-label="Search materials"
+          id="materialSearchInput"
+        >
+
+        <select name="kind" aria-label="Filter by kind">
+          <option value="">All kinds</option>
+          {% for key, label in kind_choices %}
+          <option value="{{ key }}" {% if selected_kind == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+
+        <select name="type" aria-label="Filter by type">
+          <option value="">All types</option>
+          {% for t in type_choices %}
+          <option value="{{ t.id }}" {% if selected_type == t.id|stringformat:"s" %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+
+        <select name="status" aria-label="Filter by status">
+          <option value="">All status</option>
+          <option value="active" {% if status == "active" %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status == "inactive" %}selected{% endif %}>Inactive</option>
+        </select>
+
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:material_kind_picker' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Add Material
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Kind</th>
+            <th>Material</th>
+            <th>Classification</th>
+            <th>Unit</th>
+            <th>Key Attributes</th>
+            <th>Status</th>
+            <th style="width: 96px;">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for m in materials %}
+          <tr>
+            <td class="jb-code">{{ m.material_code|default:"—" }}</td>
+
+            <td>
+              <span class="mat-badge">{{ m.get_material_kind_display }}</span>
+            </td>
+
+            <td>
+              <div class="jb-primary">{{ m.name }}</div>
+              {% if m.composition %}
+              <div class="jb-meta">{{ m.composition }}</div>
+              {% endif %}
+              {% if m.hsn_code %}
+              <div class="jb-meta">HSN: {{ m.hsn_code }}{% if m.gst_percent %} • GST: {{ m.gst_percent }}%{% endif %}</div>
+              {% endif %}
+            </td>
+
+            <td class="jb-classification">
+              <div>{{ m.material_type.name|default:"—" }}</div>
+              {% if m.material_sub_type %}
+              <div class="jb-meta">Sub Type: {{ m.material_sub_type.name }}</div>
+              {% endif %}
+              {% if m.material_shade %}
+              <div class="jb-meta">Shade: {{ m.material_shade.name }}</div>
+              {% endif %}
+            </td>
+
+            <td>{{ m.unit.name|default:"—" }}</td>
+
+            <td class="jb-attributes">
+              {% if m.material_kind == "yarn" and m.yarn %}
+                {% if m.yarn.count_denier %}{{ m.yarn.count_denier }}{% endif %}
+                {% if m.yarn.color %} • {{ m.yarn.color }}{% endif %}
+
+              {% elif m.material_kind == "greige" and m.greige %}
+                {{ m.greige.fabric_type|default:"—" }}
+                {% if m.greige.gsm %} • GSM: {{ m.greige.gsm }}{% endif %}
+                {% if m.greige.width %} • W: {{ m.greige.width }}{% endif %}
+                {% if m.greige.construction %} • {{ m.greige.construction }}{% endif %}
+
+              {% elif m.material_kind == "finished" and m.finished %}
+                {{ m.finished.base_fabric_type|default:"—" }}
+                {% if m.finished.get_finish_type_display %} • {{ m.finished.get_finish_type_display }}{% endif %}
+                {% if m.finished.gsm %} • GSM: {{ m.finished.gsm }}{% endif %}
+                {% if m.finished.width %} • W: {{ m.finished.width }}{% endif %}
+                {% if m.finished.end_use %} • {{ m.finished.end_use }}{% endif %}
+
+              {% elif m.material_kind == "trim" and m.trim %}
+                {{ m.trim.trim_type|default:"—" }}
+                {% if m.trim.size %} • {{ m.trim.size }}{% endif %}
+                {% if m.trim.color %} • {{ m.trim.color }}{% endif %}
+                {% if m.trim.brand %} • {{ m.trim.brand }}{% endif %}
+
+              {% else %}
+                —
+              {% endif %}
+            </td>
+
+            <td>
+              {% if m.is_active %}
+              <span class="jb-status is-active">Active</span>
+              {% else %}
+              <span class="jb-status is-inactive">Inactive</span>
+              {% endif %}
+            </td>
+
+            <td class="jb-actions">
+              <a
+                class="jb-link jb-link-icon jb-link-edit"
+                href="{% url 'accounts:material_edit' m.id %}{% if not full_page %}?embed=1{% endif %}"
+                aria-label="Edit {{ m.name }}"
+                title="Edit"
+              >
+                <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z"></path>
+                  <path d="M14.06 4.94l3.75 3.75"></path>
+                </svg>
+              </a>
+
+              <form
+                method="post"
+                action="{% url 'accounts:material_delete' m.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="material &quot;{{ m.name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="jb-link jb-link-icon jb-link-danger jb-link-delete jb-link-button"
+                  aria-label="Delete {{ m.name }}"
+                  title="Delete"
+                >
+                  <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M6 7l1 12h10l1-12"></path>
+                    <path d="M9 7V4h6v3"></path>
+                  </svg>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="jb-empty">No materials found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+</div>

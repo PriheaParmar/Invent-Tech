@@ -1,0 +1,11 @@
+    {% extends "accounts/base_app.html" %}
+
+{% block title %}{% if mode == "edit" %}Edit Expense{% else %}Add Expense{% endif %} - InventTech{% endblock %}
+{% block page_title %}{% if mode == "edit" %}Edit Expense{% else %}Add Expense{% endif %}{% endblock %}
+{% block page_subtitle %}Manage reusable expense master{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/expenses/form_embed.html" with full_page=True %}
+</div>
+{% endblock %}

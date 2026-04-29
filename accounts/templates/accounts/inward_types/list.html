@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Inward Types - InventTech{% endblock %}
+{% block page_title %}Inward Types{% endblock %}
+{% block page_subtitle %}Manage reusable inward type names{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/inward_types/list_embed.html" with full_page=True %}
+</div>
+{% endblock %}

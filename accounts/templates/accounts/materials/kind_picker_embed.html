@@ -1,0 +1,97 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_form.css' %}?v=1">
+
+<div class="master-form-ui material-kind-picker-ui">
+  <section class="mf-panel">
+    <div class="mf-head">
+      <div>
+        <h2 class="mf-title">Choose Material Kind</h2>
+      </div>
+
+      {% if not full_page %}
+      <div class="mf-head-actions">
+        <button type="button" class="mf-iconbtn mf-close" data-embed-close aria-label="Close">
+          <svg class="mf-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="mf-form">
+      <div class="mf-section">
+        <div class="mf-section-title">Material Kinds</div>
+
+        <div class="mf-grid">
+          {% for value, label in kind_choices %}
+          <a
+            href="{% url 'accounts:material_create' %}?kind={{ value }}{% if not full_page %}&embed=1{% endif %}"
+            class="mf-field"
+            style="text-decoration:none;color:inherit;"
+          >
+            <div
+              style="
+                min-height:72px;
+                display:flex;
+                flex-direction:column;
+                justify-content:center;
+                gap:6px;
+                padding:12px 14px;
+                border:1px solid rgba(250, 189, 100, 0.24);
+                border-radius:12px;
+                background:var(--mf-panel-soft);
+                transition:border-color .16s ease, box-shadow .16s ease, background .16s ease, transform .16s ease;
+              "
+              onmouseover="this.style.borderColor='rgba(250, 189, 100, 0.48)';this.style.background='#fffdfa';this.style.transform='translateY(-1px)'"
+              onmouseout="this.style.borderColor='rgba(250, 189, 100, 0.24)';this.style.background='var(--mf-panel-soft)';this.style.transform='translateY(0)'"
+            >
+              <div
+                style="
+                  font-size:10px;
+                  font-weight:800;
+                  letter-spacing:.08em;
+                  text-transform:uppercase;
+                  color:#8a651f;
+                "
+              >
+                Kind
+              </div>
+
+              <div
+                style="
+                  font-size:14px;
+                  font-weight:800;
+                  color:#1b2430;
+                  line-height:1.2;
+                "
+              >
+                {{ label }}
+              </div>
+
+              <div
+                style="
+                  font-size:12px;
+                  color:#707887;
+                  line-height:1.35;
+                "
+              >
+                Create {{ label|lower }} material
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="mf-footer">
+        {% if not full_page %}
+        <button type="button" class="mf-btn-secondary" data-embed-close>Close</button>
+        {% else %}
+        <a class="mf-btn-secondary" href="{% url 'accounts:material_list' %}">Close</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</div>

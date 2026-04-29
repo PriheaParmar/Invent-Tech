@@ -1,0 +1,44 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Invoices - InventTech{% endblock %}
+{% block page_title %}Invoices{% endblock %}
+{% block page_subtitle %}Manage sales invoices{% endblock %}
+{% block content %}
+<style>
+  .iv-page{display:flex;flex-direction:column;gap:14px}.iv-card{background:#fff;border:1px solid #e6ebf2;border-radius:20px;box-shadow:0 12px 30px rgba(15,23,42,.06)}
+  .iv-head{padding:16px 18px;border-bottom:1px solid #eef2f6;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.iv-title{font-size:20px;font-weight:900;color:#111827}.iv-sub{font-size:13px;color:#667085;margin-top:4px}.iv-actions{display:flex;gap:10px;flex-wrap:wrap}.iv-btn{min-height:44px;padding:0 16px;border-radius:14px;text-decoration:none;font-weight:800;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #dbe2ea;background:#fff;color:#111827}.iv-btn--dark{background:#111827;color:#fff;border-color:#111827}.iv-search{display:flex;gap:10px;flex-wrap:wrap}.iv-search input{min-width:260px;height:44px;border:1px solid #dbe2ea;border-radius:14px;padding:0 14px}.iv-table-wrap{overflow:auto}.iv-table{width:100%;min-width:900px;border-collapse:separate;border-spacing:0}.iv-table th,.iv-table td{padding:14px 16px;border-bottom:1px solid #eef2f6;text-align:left}.iv-table th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#667085;font-weight:900}.iv-table td{font-size:13px;color:#111827;font-weight:700}.iv-link{display:inline-flex;padding:7px 12px;border-radius:10px;text-decoration:none;font-size:12px;font-weight:900;background:rgba(28,109,216,.08);color:rgba(28,109,216,1)}
+</style>
+<div class="iv-page">
+  <section class="iv-card">
+    <div class="iv-head">
+      <div><div class="iv-title">Invoice List</div><div class="iv-sub">Invoice id, date, firm, client, final amount, and PDF.</div></div>
+      <div class="iv-actions">
+        <form method="get" class="iv-search">
+          <input type="search" name="q" value="{{ q }}" placeholder="Search invoice no, program, client or firm">
+          <button class="iv-btn" type="submit">Search</button>
+        </form>
+        <a href="{% url 'accounts:invoice_add' %}" class="iv-btn iv-btn--dark">Create Invoice</a>
+      </div>
+    </div>
+    <div class="iv-table-wrap">
+      <table class="iv-table">
+        <thead><tr><th>Invoice ID</th><th>Date</th><th>Firm</th><th>Client</th><th>Program</th><th>Final Amount</th><th>PDF</th></tr></thead>
+        <tbody>
+          {% for invoice in invoices %}
+            <tr>
+              <td><a href="{% url 'accounts:invoice_detail' invoice.id %}" class="iv-link">{{ invoice.invoice_no }}</a></td>
+              <td>{{ invoice.invoice_date|date:'d-m-Y' }}</td>
+              <td>{{ invoice.firm.firm_name|default:'-' }}</td>
+              <td>{{ invoice.client.name|default:'-' }}</td>
+              <td>{{ invoice.program.program_no|default:'-' }}</td>
+              <td>₹ {{ invoice.final_amount|default:'0.00' }}</td>
+              <td><a href="{% url 'accounts:invoice_print' invoice.id %}" target="_blank" class="iv-link">PDF</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7">No invoices found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

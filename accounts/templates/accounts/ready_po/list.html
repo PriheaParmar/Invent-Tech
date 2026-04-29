@@ -1,0 +1,402 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+{% block title %}Ready PO - InventTech{% endblock %}
+{% block page_title %}PO / Ready{% endblock %}
+{% block page_subtitle %}Create and manage ready purchase orders{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/shared/procurement_list.css' %}?v=6">
+<style>
+  .readypo-theme{
+    --po-pink: rgb(16, 185, 129);
+    --po-pink-dark: rgb(5, 150, 105);
+    --po-pink-soft: rgba(16, 185, 129, 0.08);
+    --po-pink-soft-2: rgba(16, 185, 129, 0.13);
+    --po-pink-line: rgba(16, 185, 129, 0.18);
+    --po-line: #d9efe7;
+    --po-line-soft: #e9f7f1;
+    --po-bg-soft: #f7fcfa;
+  }
+
+  .readypo-theme .yarnpo-status.partial{
+    background: rgba(59, 130, 246, 0.14);
+    color: #1d4ed8;
+    border-color: rgba(59, 130, 246, 0.20);
+  }
+
+  .readypo-review-modal-card{
+    width:min(1120px, 100%);
+    max-height:calc(100vh - 48px);
+    overflow:auto;
+    background:#fff;
+    border-radius:22px;
+    box-shadow:0 30px 80px rgba(15,23,42,.28);
+  }
+
+  .readypo-review-modal-mount{min-height:180px;}
+  .readypo-review-loading{padding:48px 24px;text-align:center;font-size:.98rem;font-weight:600;color:#66788d;}
+  body.modal-open{overflow:hidden;}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="yarnpo-list-page readypo-theme">
+      <div class="jobbers-embed">
+        <div class="jb-panel">
+
+          <div class="jb-head">
+            <div>
+              <div class="jb-title">Ready Purchase Orders</div>
+              <div class="jb-sub">Compact list with organized source dyeing linkage, ready item details, inward progress, and actions.</div>
+            </div>
+
+            <div class="jb-head-actions">
+              <a class="jb-secondary" href="{% url 'accounts:ready_inward_tracker' %}">Ready Inwards</a>
+              <a class="jb-add" href="{% url 'accounts:readypo_add' %}">Generate PO</a>
+            </div>
+          </div>
+
+          <div class="jb-tools">
+            <form class="jb-search" method="get">
+              <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search by system no, PO no, vendor, firm...">
+              <button class="jb-search-btn" type="submit">Search</button>
+            </form>
+          </div>
+
+          <div class="yarnpo-list">
+            {% for po in orders %}
+            <div class="yarnpo-card">
+
+              <div class="yarnpo-card-top">
+                <div class="yarnpo-ident">
+                  <div class="yarnpo-ident-top">
+                    <span class="yarnpo-badge">{{ po.system_number }}</span>
+
+                    {% if po.approval_status %}
+                      <span class="yarnpo-status {% if po.approval_status == 'approved' %}approved{% elif po.approval_status == 'rejected' %}rejected{% else %}pending{% endif %}">
+                        {{ po.get_approval_status_display }}
+                      </span>
+                    {% else %}
+                      <span class="yarnpo-status {% if po.total_inward_qty and po.remaining_qty_total == 0 %}approved{% elif po.total_inward_qty %}partial{% else %}pending{% endif %}">
+                        {% if po.total_inward_qty and po.remaining_qty_total == 0 %}Completed{% elif po.total_inward_qty %}Partial Inward{% else %}Pending Inward{% endif %}
+                      </span>
+                    {% endif %}
+                  </div>
+
+                  <div class="yarnpo-po-no">{{ po.po_number|default:"No PO Number" }}</div>
+                  <div class="yarnpo-ident-subtitle">
+                    {% if po.source_dyeing_po %}Ready purchase order · Dyeing linked{% else %}Ready purchase order · Standalone{% endif %}
+                  </div>
+
+                  <div class="yarnpo-meta-line">
+                    <span class="yarnpo-meta-pill"><strong>DATE</strong>&nbsp;{{ po.po_date|date:"d-m-Y" }}</span>
+                    {% if po.source_dyeing_po %}
+                      <span class="yarnpo-meta-pill"><strong>DYEING</strong>&nbsp;{{ po.source_dyeing_po.system_number }}</span>
+                    {% else %}
+                      <span class="yarnpo-meta-pill"><strong>MODE</strong>&nbsp;Manual</span>
+                    {% endif %}
+                    {% if po.firm %}<span class="yarnpo-meta-pill"><strong>FIRM</strong>&nbsp;{{ po.firm.firm_name }}</span>{% endif %}
+                    <span class="yarnpo-meta-pill"><strong>INWARDS</strong>&nbsp;{{ po.inwards.all|length }}</span>
+                  </div>
+                </div>
+
+                <div class="yarnpo-actions">
+                  {% if can_review_ready_po %}
+                    <a
+                      class="yarnpo-action yarnpo-action--review"
+                      href="{% url 'accounts:readypo_review' po.id %}"
+                      data-open-ready-review
+                      data-review-url="{% url 'accounts:readypo_review' po.id %}?embed=1"
+                      title="Review"
+                      aria-label="Review"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 20h9"/>
+                        <path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4z"/>
+                      </svg>
+                    </a>
+                  {% endif %}
+
+                  <div class="pdf-menu">
+                    <button
+                      type="button"
+                      class="pdf-menu-trigger yarnpo-action--pdf"
+                      title="PDF"
+                      aria-label="PDF"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <path d="M14 2v6h6"/>
+                        <path d="M8 13h8"/>
+                        <path d="M8 17h5"/>
+                      </svg>
+                    </button>
+
+                    <div class="pdf-menu-dropdown">
+                      <a class="pdf-menu-item" href="{% url 'accounts:readypo_pdf' po.id %}" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <span>View PDF</span>
+                      </a>
+
+                      <a class="pdf-menu-item" href="{% url 'accounts:readypo_pdf' po.id %}?download=1">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M12 3v12"/>
+                          <path d="m7 10 5 5 5-5"/>
+                          <path d="M5 21h14"/>
+                        </svg>
+                        <span>Download PDF</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  {% if po.approval_status == 'approved' %}
+                    <a
+                      class="yarnpo-action yarnpo-action--inward"
+                      href="{% url 'accounts:readypo_inward' po.id %}"
+                      title="Inward"
+                      aria-label="Inward"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5v14"/>
+                        <path d="m19 12-7 7-7-7"/>
+                      </svg>
+                    </a>
+                  {% else %}
+                    <span
+                      class="yarnpo-action yarnpo-action--inward is-disabled"
+                      title="Admin approval required before inward"
+                      aria-label="Inward disabled"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5v14"/>
+                        <path d="m19 12-7 7-7-7"/>
+                      </svg>
+                    </span>
+                  {% endif %}
+
+                  <a
+                    class="yarnpo-action yarnpo-action--edit"
+                    href="{% url 'accounts:readypo_edit' po.id %}"
+                    title="Edit"
+                    aria-label="Edit"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 20h9"/>
+                      <path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4z"/>
+                    </svg>
+                  </a>
+
+                  <form method="post" action="{% url 'accounts:readypo_delete' po.id %}" class="jb-inline-delete">
+                    {% csrf_token %}
+                    <button
+                      type="submit"
+                      class="yarnpo-action-btn yarnpo-action--delete"
+                      onclick="return confirm('Delete this Ready PO?')"
+                      title="Delete"
+                      aria-label="Delete"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 6h18"/>
+                        <path d="M8 6V4h8v2"/>
+                        <path d="M19 6l-1 14H6L5 6"/>
+                        <path d="M10 11v6"/>
+                        <path d="M14 11v6"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+
+              </div>
+
+              <div class="yarnpo-content">
+                <div class="yarnpo-main">
+                  <div class="yarnpo-main-left">
+                    <div class="yarnpo-panel-grid">
+                      <div class="yarnpo-panel">
+                        <div class="yarnpo-panel-title">Order Snapshot</div>
+                        <div class="yarnpo-kv">
+                          <div class="k">System</div><div class="v">{{ po.system_number }}</div>
+                          <div class="k">PO No</div><div class="v">{{ po.po_number|default:"—" }}</div>
+                          <div class="k">Source</div><div class="v">{% if po.source_dyeing_po %}{{ po.source_dyeing_po.system_number }}{% else %}Standalone Ready PO{% endif %}</div>
+                          <div class="k">Status</div><div class="v">{% if po.approval_status %}{{ po.get_approval_status_display }}{% elif po.total_inward_qty and po.remaining_qty_total == 0 %}Completed{% elif po.total_inward_qty %}Partial Inward{% else %}Pending Inward{% endif %}</div>
+                          <div class="k">Inwards</div><div class="v">{{ po.inwards.all|length }}</div>
+                          {% if po.cancel_date %}<div class="k">Cancel</div><div class="v">{{ po.cancel_date|date:"d-m-Y" }}</div>{% endif %}
+                        </div>
+                      </div>
+
+                      <div class="yarnpo-panel">
+                        <div class="yarnpo-panel-title">Vendor / Contact</div>
+                        <div class="yarnpo-vendor-name">{{ po.vendor.name }}</div>
+                        <div class="yarnpo-vendor-sub">
+                          <div class="yarnpo-vendor-row"><span class="k">Name</span><span class="v">{{ po.vendor.name }}</span></div>
+                          <div class="yarnpo-vendor-row"><span class="k">Person</span><span class="v">{% if po.vendor.contact_person %}{{ po.vendor.contact_person }}{% else %}—{% endif %}</span></div>
+                          <div class="yarnpo-vendor-row"><span class="k">Phone</span><span class="v">{% if po.vendor.phone %}{{ po.vendor.phone }}{% else %}—{% endif %}</span></div>
+                          <div class="yarnpo-vendor-row"><span class="k">Firm</span><span class="v">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="yarnpo-panel">
+                      <div class="yarnpo-panel-title">Ready Items</div>
+                      <div class="yarnpo-items">
+                        {% for item in po.items.all %}
+                        <div class="yarnpo-item">
+                          <div class="yarnpo-item-info">
+                            <div class="yarnpo-item-title">{% if item.finished_material %}{{ item.finished_material.name }}{% else %}{{ item.fabric_name|default:"Ready Item" }}{% endif %}</div>
+                            <div class="yarnpo-item-sub">{% if item.finished_material %}Utilities material linked{% elif item.dyeing_name %}Dyeing reference available{% else %}Ready line with inward progress.{% endif %}</div>
+                            <div class="yarnpo-item-meta">
+                              {% if item.finished_material %}<span class="yarnpo-item-tag">Material: {{ item.finished_material.name }}</span>{% endif %}
+                              {% if item.dyeing_name %}<span class="yarnpo-item-tag">Dyeing: {{ item.dyeing_name }}</span>{% endif %}
+                              <span class="yarnpo-item-tag">Received: {{ item.inward_qty_total|default:"0.00" }}</span>
+                              <span class="yarnpo-item-tag">Remaining: {{ item.remaining_qty_total|default:"0.00" }}</span>
+                            </div>
+                          </div>
+                          <div class="yarnpo-item-qty">{{ item.quantity|default:"0.00" }}{% if item.unit %} {{ item.unit }}{% endif %}</div>
+                        </div>
+                        {% empty %}
+                        <div class="yarnpo-note">No ready lines added.</div>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="yarnpo-main-right">
+                    <div class="yarnpo-panel">
+                      <div class="yarnpo-panel-title">Progress</div>
+                      <div class="yarnpo-stats">
+                        <div class="yarnpo-stat"><div class="yarnpo-stat-label">Weight</div><div class="yarnpo-stat-value">{{ po.total_weight|default:"0.00" }}</div></div>
+                        <div class="yarnpo-stat"><div class="yarnpo-stat-label">Inward</div><div class="yarnpo-stat-value">{{ po.total_inward_qty|default:"0.00" }}</div></div>
+                        <div class="yarnpo-stat"><div class="yarnpo-stat-label">Remaining</div><div class="yarnpo-stat-value">{{ po.remaining_qty_total|default:"0.00" }}</div></div>
+                        <div class="yarnpo-stat"><div class="yarnpo-stat-label">Entries</div><div class="yarnpo-stat-value">{{ po.inwards.all|length }}</div></div>
+                      </div>
+                    </div>
+
+                    <div class="yarnpo-panel">
+                      <div class="yarnpo-panel-title">Notes</div>
+                      <div class="yarnpo-note"><strong>Address:</strong> {{ po.shipping_address|default:"No shipping address"|truncatechars:110 }}</div>
+                      <div class="yarnpo-note"><strong>Remarks:</strong> {{ po.remarks|default:"—"|truncatechars:90 }}</div>
+                      <div class="yarnpo-note">
+                        <strong>Source Dyeing PO:</strong> {% if po.source_dyeing_po %}{{ po.source_dyeing_po.system_number }}{% else %}Standalone Ready PO{% endif %}
+                        <br><strong>Stage:</strong> {% if po.total_inward_qty and po.remaining_qty_total == 0 %}Completed.{% elif po.total_inward_qty %}Inward in progress.{% else %}Waiting for first inward.{% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            {% empty %}
+            <div class="jb-empty">No Ready POs found yet. Generate your first PO.</div>
+            {% endfor %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="readyPoReviewModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-card readypo-review-modal-card">
+    <div id="readyPoReviewMount" class="readypo-review-modal-mount">
+      <div class="readypo-review-loading">Loading review panel...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const modal = document.getElementById("readyPoReviewModal");
+  const mount = document.getElementById("readyPoReviewMount");
+  if (!modal || !mount) return;
+
+  function setLoading(message) {
+    mount.innerHTML = '<div class="readypo-review-loading">' + (message || "Loading review panel...") + '</div>';
+  }
+
+  function openModal() {
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+  }
+
+  function closeModal() {
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+    setLoading("Loading review panel...");
+  }
+
+  async function loadReviewPanel(url) {
+    try {
+      setLoading("Loading review panel...");
+      openModal();
+      const response = await fetch(url, {headers: {"X-Requested-With": "XMLHttpRequest"}});
+      mount.innerHTML = await response.text();
+    } catch (error) {
+      mount.innerHTML = '<div class="readypo-review-loading">Unable to load review panel.</div>';
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    const reviewTrigger = e.target.closest("[data-open-ready-review]");
+    if (reviewTrigger) {
+      e.preventDefault();
+      loadReviewPanel(reviewTrigger.getAttribute("data-review-url"));
+      return;
+    }
+
+    const closeTrigger = e.target.closest("[data-review-close]");
+    if (closeTrigger) {
+      e.preventDefault();
+      closeModal();
+    }
+  });
+
+  modal.addEventListener("click", function (e) {
+    if (e.target === modal) closeModal();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && modal.classList.contains("show")) closeModal();
+  });
+
+  document.addEventListener("submit", async function (e) {
+    const form = e.target.closest("[data-ready-review-form]");
+    if (!form) return;
+
+    e.preventDefault();
+    const formData = new FormData(form);
+    const submitter = e.submitter;
+    if (submitter && submitter.name) formData.set(submitter.name, submitter.value);
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        body: formData,
+        headers: {"X-Requested-With": "XMLHttpRequest"}
+      });
+
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await response.json();
+        if (data.ok) {
+          closeModal();
+          window.location.reload();
+          return;
+        }
+      }
+
+      mount.innerHTML = await response.text();
+    } catch (error) {
+      mount.innerHTML = '<div class="readypo-review-loading">Unable to submit review.</div>';
+    }
+  });
+})();
+</script>
+{% endblock %}

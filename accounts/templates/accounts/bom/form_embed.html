@@ -1,0 +1,1384 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/master_form.css' %}?v=1">
+
+<style>
+  .bom-form-embed .mf-sub,
+  .bom-form-embed .bom-acc-sub,
+  .bom-form-embed .bom-block-sub,
+  .bom-form-embed .bom-file-label,
+  .bom-form-embed .bom-file-note{
+    display:none !important;
+  }
+
+  .bom-form-embed .bom-file-card{
+    align-items:center;
+  }
+
+  .bom-form-embed .bom-file-meta{
+    gap:4px;
+  }
+
+  .bom-form-embed .bom-file-empty{
+    font-size:11px;
+    font-weight:600;
+    color:#6b7280;
+    line-height:1.35;
+  }
+
+  .bom-form-embed .bom-file-preview a{
+    font-size:11px;
+    font-weight:700;
+  }
+
+  .bom-form-embed .bom-row-head > div:last-child{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+</style>
+
+<div class="master-form-ui bom-form-ui bom-form-embed" data-bom-root="1">
+  <section class="mf-panel">
+    <div class="mf-head">
+      <div>
+        <h1 class="mf-title">{% if mode == "add" %}Add BOM{% else %}Edit BOM{% endif %}</h1>
+      </div>
+
+      <div class="mf-head-actions">
+        <a class="mf-iconbtn mf-back" href="{% url 'accounts:bom_list' %}{% if not full_page %}?embed=1{% endif %}" aria-label="Back">
+          <svg class="mf-back-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="mf-iconbtn mf-close" data-embed-close aria-label="Close">
+          <svg class="mf-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="mf-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if material_formset.non_form_errors %}
+    <div class="mf-errors">{% for error in material_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}</div>
+    {% endif %}
+    {% if accessory_formset.non_form_errors %}
+    <div class="mf-errors">{% for error in accessory_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}</div>
+    {% endif %}
+    {% if image_formset.non_form_errors %}
+    <div class="mf-errors">{% for error in image_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}</div>
+    {% endif %}
+    {% if jobber_process_formset.non_form_errors %}
+    <div class="mf-errors">{% for error in jobber_process_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}</div>
+    {% endif %}
+    {% if jobber_detail_formset.non_form_errors %}
+    <div class="mf-errors">{% for error in jobber_detail_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}</div>
+    {% endif %}
+    {% if expense_formset.non_form_errors %}
+    <div class="mf-errors">{% for error in expense_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}</div>
+    {% endif %}
+
+    {% if bom_debug_errors %}
+    <div class="mf-errors">
+      <div><strong>BOM save is blocked.</strong></div>
+      {% for item in bom_debug_errors %}
+        <div>
+          {{ item.section }}
+          {% if item.row %} - Row {{ item.row }}{% endif %}
+          {% if item.field %} - {{ item.field }}{% endif %}: {{ item.message }}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if form.errors or material_formset.errors or accessory_formset.errors or image_formset.errors or jobber_process_formset.errors or jobber_detail_formset.errors or expense_formset.errors %}
+    <div class="mf-errors">
+      <div><strong>Note:</strong> If save fails, choose the image again before resubmitting.</div>
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" enctype="multipart/form-data" class="mf-form" novalidate>
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      {{ material_formset.management_form }}
+      {{ accessory_formset.management_form }}
+      {{ image_formset.management_form }}
+      {{ jobber_process_formset.management_form }}
+      {{ jobber_detail_formset.management_form }}
+      {{ expense_formset.management_form }}
+
+      <div class="bom-acc">
+
+        <!-- Product -->
+        <div class="bom-acc-item is-open" data-acc-item>
+          <button type="button" class="bom-acc-toggle" data-acc-toggle>
+            <div class="bom-acc-left">
+              <div class="bom-acc-title">Product</div>
+            </div>
+            <div class="bom-acc-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </div>
+          </button>
+
+          <div class="bom-acc-body">
+            <div class="bom-block">
+              <div class="bom-main-grid">
+                <div class="bom-field">
+                  <label for="{{ form.bom_code.id_for_label }}">BOM Code</label>
+                  {{ form.bom_code }}
+                  {% if form.bom_code.errors %}<div class="mf-field-errors">{% for error in form.bom_code.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.sku.id_for_label }}">SKU</label>
+                  {{ form.sku }}
+                  {% if form.sku.errors %}<div class="mf-field-errors">{% for error in form.sku.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.product_name.id_for_label }}">Product Name</label>
+                  {{ form.product_name }}
+                  {% if form.product_name.errors %}<div class="mf-field-errors">{% for error in form.product_name.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.size_type.id_for_label }}">Size Type</label>
+                  {{ form.size_type }}
+                  {% if form.size_type.errors %}<div class="mf-field-errors">{% for error in form.size_type.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="bom-block">
+              <div class="bom-block-head">
+                <div>
+                  <div class="bom-block-title">Materials</div>
+                </div>
+                <button type="button" class="bom-icon-btn bom-icon-btn--add" data-bom-add="materials" aria-label="Add Material" title="Add Material">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="bom-repeater" data-bom-list="materials">
+                {% for item_form in material_formset.forms %}
+                <div class="bom-row" data-bom-row="materials">
+                  {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Material Row {{ forloop.counter }}</div>
+                    <div>
+                      {% if item_form.DELETE %}<div class="bom-delete-wrap">{{ item_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {% if item_form.non_field_errors %}
+                  <div class="mf-errors">{% for error in item_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}</div>
+                  {% endif %}
+
+                  <div class="bom-row-grid bom-row-grid--5">
+                    <div class="bom-row-field">
+                      <label>Material</label>
+                      {{ item_form.material }}
+                      {% if item_form.material.errors %}<div class="bom-inline-errors">{% for error in item_form.material.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Unit</label>
+                      {{ item_form.unit }}
+                      {% if item_form.unit.errors %}<div class="bom-inline-errors">{% for error in item_form.unit.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Cost / Unit</label>
+                      {{ item_form.cost_per_unit }}
+                      {% if item_form.cost_per_unit.errors %}<div class="bom-inline-errors">{% for error in item_form.cost_per_unit.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Avg</label>
+                      {{ item_form.avg }}
+                      {% if item_form.avg.errors %}<div class="bom-inline-errors">{% for error in item_form.avg.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Cost</label>
+                      {{ item_form.cost }}
+                      {% if item_form.cost.errors %}<div class="bom-inline-errors">{% for error in item_form.cost.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <template id="materials-empty-form">
+                <div class="bom-row" data-bom-row="materials">
+                  {% for hidden in material_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Material Row</div>
+                    <div>
+                      {% if material_formset.empty_form.DELETE %}<div class="bom-delete-wrap">{{ material_formset.empty_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="bom-row-grid bom-row-grid--5">
+                    <div class="bom-row-field">
+                      <label>Material</label>
+                      {{ material_formset.empty_form.material }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Unit</label>
+                      {{ material_formset.empty_form.unit }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Cost / Unit</label>
+                      {{ material_formset.empty_form.cost_per_unit }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Avg</label>
+                      {{ material_formset.empty_form.avg }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Cost</label>
+                      {{ material_formset.empty_form.cost }}
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <div class="bom-block">
+              <div class="bom-block-head">
+                <div>
+                  <div class="bom-block-title">Accessories</div>
+                </div>
+                <button type="button" class="bom-icon-btn bom-icon-btn--add" data-bom-add="accessories" aria-label="Add Accessory" title="Add Accessory">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="bom-repeater" data-bom-list="accessories">
+                {% for item_form in accessory_formset.forms %}
+                <div class="bom-row" data-bom-row="accessories">
+                  {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Accessory Row {{ forloop.counter }}</div>
+                    <div>
+                      {% if item_form.DELETE %}<div class="bom-delete-wrap">{{ item_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {% if item_form.non_field_errors %}
+                  <div class="mf-errors">{% for error in item_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}</div>
+                  {% endif %}
+
+                  <div class="bom-row-grid bom-row-grid--5">
+                    <div class="bom-row-field">
+                      <label>Accessory</label>
+                      {{ item_form.accessory }}
+                      {% if item_form.accessory.errors %}<div class="bom-inline-errors">{% for error in item_form.accessory.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Unit</label>
+                      {{ item_form.unit }}
+                      {% if item_form.unit.errors %}<div class="bom-inline-errors">{% for error in item_form.unit.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Cost / Unit</label>
+                      {{ item_form.cost_per_unit }}
+                      {% if item_form.cost_per_unit.errors %}<div class="bom-inline-errors">{% for error in item_form.cost_per_unit.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Avg</label>
+                      {{ item_form.avg }}
+                      {% if item_form.avg.errors %}<div class="bom-inline-errors">{% for error in item_form.avg.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Cost</label>
+                      {{ item_form.cost }}
+                      {% if item_form.cost.errors %}<div class="bom-inline-errors">{% for error in item_form.cost.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <template id="accessories-empty-form">
+                <div class="bom-row" data-bom-row="accessories">
+                  {% for hidden in accessory_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Accessory Row</div>
+                    <div>
+                      {% if accessory_formset.empty_form.DELETE %}<div class="bom-delete-wrap">{{ accessory_formset.empty_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="bom-row-grid bom-row-grid--5">
+                    <div class="bom-row-field">
+                      <label>Accessory</label>
+                      {{ accessory_formset.empty_form.accessory }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Unit</label>
+                      {{ accessory_formset.empty_form.unit }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Cost / Unit</label>
+                      {{ accessory_formset.empty_form.cost_per_unit }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Avg</label>
+                      {{ accessory_formset.empty_form.avg }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Cost</label>
+                      {{ accessory_formset.empty_form.cost }}
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Details -->
+        <div class="bom-acc-item" data-acc-item>
+          <button type="button" class="bom-acc-toggle" data-acc-toggle>
+            <div class="bom-acc-left">
+              <div class="bom-acc-title">Details</div>
+            </div>
+            <div class="bom-acc-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </div>
+          </button>
+
+          <div class="bom-acc-body">
+            <div class="bom-block">
+              <div class="bom-main-grid">
+                <div class="bom-field">
+                  <label for="{{ form.catalogue.id_for_label }}">Catalogue</label>
+                  {{ form.catalogue }}
+                  {% if form.catalogue.errors %}<div class="mf-field-errors">{% for error in form.catalogue.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.brand.id_for_label }}">Brand</label>
+                  {{ form.brand }}
+                  {% if form.brand.errors %}<div class="mf-field-errors">{% for error in form.brand.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.category.id_for_label }}">Category</label>
+                  {{ form.category }}
+                  {% if form.category.errors %}<div class="mf-field-errors">{% for error in form.category.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.main_category.id_for_label }}">Main Category</label>
+                  {{ form.main_category }}
+                  {% if form.main_category.errors %}<div class="mf-field-errors">{% for error in form.main_category.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.sub_category.id_for_label }}">Sub Category</label>
+                  {{ form.sub_category }}
+                  {% if form.sub_category.errors %}<div class="mf-field-errors">{% for error in form.sub_category.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.pattern_type.id_for_label }}">Pattern Type</label>
+                  {{ form.pattern_type }}
+                  {% if form.pattern_type.errors %}<div class="mf-field-errors">{% for error in form.pattern_type.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.gender.id_for_label }}">Gender</label>
+                  {{ form.gender }}
+                  {% if form.gender.errors %}<div class="mf-field-errors">{% for error in form.gender.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.color.id_for_label }}">Color</label>
+                  {{ form.color }}
+                  {% if form.color.errors %}<div class="mf-field-errors">{% for error in form.color.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.character_name.id_for_label }}">Character Name</label>
+                  {{ form.character_name }}
+                  {% if form.character_name.errors %}<div class="mf-field-errors">{% for error in form.character_name.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.license_name.id_for_label }}">License Name</label>
+                  {{ form.license_name }}
+                  {% if form.license_name.errors %}<div class="mf-field-errors">{% for error in form.license_name.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field bom-field-full">
+                  <label for="{{ form.notes.id_for_label }}">Notes</label>
+                  {{ form.notes }}
+                  {% if form.notes.errors %}<div class="mf-field-errors">{% for error in form.notes.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="bom-block">
+              <div class="bom-block-head">
+                <div>
+                  <div class="bom-block-title">Photos</div>
+                </div>
+                <button type="button" class="bom-icon-btn bom-icon-btn--add" data-bom-add="images" aria-label="Add Image" title="Add Image">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="bom-repeater" data-bom-list="images">
+                {% for item_form in image_formset.forms %}
+                <div class="bom-row" data-bom-row="images">
+                  {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Photo Row {{ forloop.counter }}</div>
+                    <div>
+                      {% if item_form.DELETE %}<div class="bom-delete-wrap">{{ item_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {% if item_form.non_field_errors %}
+                  <div class="mf-errors">{% for error in item_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}</div>
+                  {% endif %}
+
+                  <div class="bom-row-grid bom-row-grid--3">
+                    <div class="bom-row-field">
+                      <label>Photo</label>
+                      {{ item_form.image }}
+                      {% if item_form.image.errors %}<div class="bom-inline-errors">{% for error in item_form.image.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+
+                      <div class="bom-file-preview">
+                        <div class="bom-file-card">
+                          {% if item_form.instance.pk and item_form.instance.image %}
+                            <img src="{{ item_form.instance.image.url }}" alt="BOM image preview" data-bom-preview-image>
+                          {% else %}
+                            <img src="" alt="Preview" data-bom-preview-image style="display:none;">
+                          {% endif %}
+
+                          <div class="bom-file-meta">
+                            {% if item_form.instance.pk and item_form.instance.image %}
+                              <div class="bom-file-name" data-bom-preview-name>{{ item_form.instance.image.name|cut:"bom/" }}</div>
+                              <a href="{{ item_form.instance.image.url }}" target="_blank" data-bom-preview-link>View image</a>
+                            {% else %}
+                              <div class="bom-file-empty" data-bom-preview-name>No image chosen</div>
+                              <a href="#" target="_blank" data-bom-preview-link style="display:none;">View image</a>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="bom-row-field">
+                      <label>Sort Order</label>
+                      {{ item_form.sort_order }}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <template id="images-empty-form">
+                <div class="bom-row" data-bom-row="images">
+                  {% for hidden in image_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Photo Row</div>
+                    <div>
+                      {% if image_formset.empty_form.DELETE %}<div class="bom-delete-wrap">{{ image_formset.empty_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="bom-row-grid bom-row-grid--3">
+                    <div class="bom-row-field">
+                      <label>Photo</label>
+                      {{ image_formset.empty_form.image }}
+                      <div class="bom-file-preview">
+                        <div class="bom-file-card">
+                          <img src="" alt="Preview" data-bom-preview-image style="display:none;">
+                          <div class="bom-file-meta">
+                            <div class="bom-file-empty" data-bom-preview-name>No image chosen</div>
+                            <a href="#" target="_blank" data-bom-preview-link style="display:none;">View image</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Sort Order</label>
+                      {{ image_formset.empty_form.sort_order }}
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <div class="bom-block">
+              <div class="bom-block-head">
+                <div>
+                  <div class="bom-block-title">Pricing</div>
+                </div>
+              </div>
+
+              <div class="bom-main-grid">
+                <div class="bom-field">
+                  <label for="{{ form.mrp.id_for_label }}">MRP</label>
+                  {{ form.mrp }}
+                  {% if form.mrp.errors %}<div class="mf-field-errors">{% for error in form.mrp.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.drawcord.id_for_label }}">Drawcord</label>
+                  {{ form.drawcord }}
+                  {% if form.drawcord.errors %}<div class="mf-field-errors">{% for error in form.drawcord.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.tie_dye_price.id_for_label }}">Tie Dye Price</label>
+                  {{ form.tie_dye_price }}
+                  {% if form.tie_dye_price.errors %}<div class="mf-field-errors">{% for error in form.tie_dye_price.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.price.id_for_label }}">Base Price</label>
+                  {{ form.price }}
+                  {% if form.price.errors %}<div class="mf-field-errors">{% for error in form.price.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.selling_price.id_for_label }}">Selling Price</label>
+                  {{ form.selling_price }}
+                  {% if form.selling_price.errors %}<div class="mf-field-errors">{% for error in form.selling_price.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.maintenance_price.id_for_label }}">Maintenance Price</label>
+                  {{ form.maintenance_price }}
+                  {% if form.maintenance_price.errors %}<div class="mf-field-errors">{% for error in form.maintenance_price.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.damage_percent.id_for_label }}">Damage %</label>
+                  {{ form.damage_percent }}
+                  {% if form.damage_percent.errors %}<div class="mf-field-errors">{% for error in form.damage_percent.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.final_price.id_for_label }}">Final Price</label>
+                  {{ form.final_price }}
+                  {% if form.final_price.errors %}<div class="mf-field-errors">{% for error in form.final_price.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+
+                <div class="bom-field">
+                  <label for="{{ form.status.id_for_label }}">Status</label>
+                  {{ form.status }}
+                  {% if form.status.errors %}<div class="mf-field-errors">{% for error in form.status.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Process -->
+        <div class="bom-acc-item" data-acc-item>
+          <button type="button" class="bom-acc-toggle" data-acc-toggle>
+            <div class="bom-acc-left">
+              <div class="bom-acc-title">Process</div>
+            </div>
+            <div class="bom-acc-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </div>
+          </button>
+
+          <div class="bom-acc-body">
+            <div class="bom-block">
+              <div class="bom-block-head">
+                <div>
+                  <div class="bom-block-title">Jobber Type Process</div>
+                </div>
+                <button type="button" class="bom-icon-btn bom-icon-btn--add" data-bom-add="jobber_processes" aria-label="Add Process" title="Add Process">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="bom-repeater" data-bom-list="jobber_processes">
+                {% for item_form in jobber_process_formset.forms %}
+                <div class="bom-row" data-bom-row="jobber_processes">
+                  {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Process Row {{ forloop.counter }}</div>
+                    <div>
+                      {% if item_form.DELETE %}<div class="bom-delete-wrap">{{ item_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {% if item_form.non_field_errors %}
+                  <div class="mf-errors">{% for error in item_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}</div>
+                  {% endif %}
+
+                  <div class="bom-row-grid bom-row-grid--3">
+                    <div class="bom-row-field">
+                      <label>Jobber Type</label>
+                      {{ item_form.jobber_type }}
+                      {% if item_form.jobber_type.errors %}<div class="bom-inline-errors">{% for error in item_form.jobber_type.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Price</label>
+                      {{ item_form.price }}
+                      {% if item_form.price.errors %}<div class="bom-inline-errors">{% for error in item_form.price.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Sort Order</label>
+                      {{ item_form.sort_order }}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <template id="jobber_processes-empty-form">
+                <div class="bom-row" data-bom-row="jobber_processes">
+                  {% for hidden in jobber_process_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Process Row</div>
+                    <div>
+                      {% if jobber_process_formset.empty_form.DELETE %}<div class="bom-delete-wrap">{{ jobber_process_formset.empty_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="bom-row-grid bom-row-grid--3">
+                    <div class="bom-row-field">
+                      <label>Jobber Type</label>
+                      {{ jobber_process_formset.empty_form.jobber_type }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Price</label>
+                      {{ jobber_process_formset.empty_form.price }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Sort Order</label>
+                      {{ jobber_process_formset.empty_form.sort_order }}
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jobbers -->
+        <div class="bom-acc-item" data-acc-item>
+          <button type="button" class="bom-acc-toggle" data-acc-toggle>
+            <div class="bom-acc-left">
+              <div class="bom-acc-title">Jobbers</div>
+            </div>
+            <div class="bom-acc-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </div>
+          </button>
+
+          <div class="bom-acc-body">
+            <div class="bom-block">
+              <div class="bom-block-head">
+                <div>
+                  <div class="bom-block-title">Jobber Mapping</div>
+                </div>
+                <button type="button" class="bom-icon-btn bom-icon-btn--add" data-bom-add="jobber_details" aria-label="Add Jobber" title="Add Jobber">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="bom-repeater" data-bom-list="jobber_details">
+                {% for item_form in jobber_detail_formset.forms %}
+                <div class="bom-row" data-bom-row="jobber_details">
+                  {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Jobber Row {{ forloop.counter }}</div>
+                    <div>
+                      {% if item_form.DELETE %}<div class="bom-delete-wrap">{{ item_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {% if item_form.non_field_errors %}
+                  <div class="mf-errors">{% for error in item_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}</div>
+                  {% endif %}
+
+                  <div class="bom-row-grid bom-row-grid--4">
+                    <div class="bom-row-field">
+                      <label>Jobber</label>
+                      {{ item_form.jobber }}
+                      {% if item_form.jobber.errors %}<div class="bom-inline-errors">{% for error in item_form.jobber.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Jobber Type</label>
+                      {{ item_form.jobber_type }}
+                      {% if item_form.jobber_type.errors %}<div class="bom-inline-errors">{% for error in item_form.jobber_type.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Price</label>
+                      {{ item_form.price }}
+                      {% if item_form.price.errors %}<div class="bom-inline-errors">{% for error in item_form.price.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Sort Order</label>
+                      {{ item_form.sort_order }}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <template id="jobber_details-empty-form">
+                <div class="bom-row" data-bom-row="jobber_details">
+                  {% for hidden in jobber_detail_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Jobber Row</div>
+                    <div>
+                      {% if jobber_detail_formset.empty_form.DELETE %}<div class="bom-delete-wrap">{{ jobber_detail_formset.empty_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="bom-row-grid bom-row-grid--4">
+                    <div class="bom-row-field">
+                      <label>Jobber</label>
+                      {{ jobber_detail_formset.empty_form.jobber }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Jobber Type</label>
+                      {{ jobber_detail_formset.empty_form.jobber_type }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Price</label>
+                      {{ jobber_detail_formset.empty_form.price }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Sort Order</label>
+                      {{ jobber_detail_formset.empty_form.sort_order }}
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expenses -->
+        <div class="bom-acc-item" data-acc-item>
+          <button type="button" class="bom-acc-toggle" data-acc-toggle>
+            <div class="bom-acc-left">
+              <div class="bom-acc-title">Expenses</div>
+            </div>
+            <div class="bom-acc-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </div>
+          </button>
+
+          <div class="bom-acc-body">
+            <div class="bom-block">
+              <div class="bom-block-head">
+                <div>
+                  <div class="bom-block-title">Expenses</div>
+                </div>
+                <button type="button" class="bom-icon-btn bom-icon-btn--add" data-bom-add="expenses" aria-label="Add Expense" title="Add Expense">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="bom-repeater" data-bom-list="expenses">
+                {% for item_form in expense_formset.forms %}
+                <div class="bom-row" data-bom-row="expenses">
+                  {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Expense Row {{ forloop.counter }}</div>
+                    <div>
+                      {% if item_form.DELETE %}<div class="bom-delete-wrap">{{ item_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {% if item_form.non_field_errors %}
+                  <div class="mf-errors">{% for error in item_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}</div>
+                  {% endif %}
+
+                  <div class="bom-row-grid bom-row-grid--3">
+                    <div class="bom-row-field">
+                      <label>Expense</label>
+                      {{ item_form.expense }}
+                      {% if item_form.expense.errors %}<div class="bom-inline-errors">{% for error in item_form.expense.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Price</label>
+                      {{ item_form.price }}
+                      {% if item_form.price.errors %}<div class="bom-inline-errors">{% for error in item_form.price.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Sort Order</label>
+                      {{ item_form.sort_order }}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <template id="expenses-empty-form">
+                <div class="bom-row" data-bom-row="expenses">
+                  {% for hidden in expense_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  <div class="bom-row-head">
+                    <div class="bom-row-title">Expense Row</div>
+                    <div>
+                      {% if expense_formset.empty_form.DELETE %}<div class="bom-delete-wrap">{{ expense_formset.empty_form.DELETE }}</div>{% endif %}
+                      <button type="button" class="bom-icon-btn bom-icon-btn--remove" data-bom-remove aria-label="Remove Row" title="Remove Row">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M18 6L6 18"></path>
+                          <path d="M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="bom-row-grid bom-row-grid--3">
+                    <div class="bom-row-field">
+                      <label>Expense</label>
+                      {{ expense_formset.empty_form.expense }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Price</label>
+                      {{ expense_formset.empty_form.price }}
+                    </div>
+                    <div class="bom-row-field">
+                      <label>Sort Order</label>
+                      {{ expense_formset.empty_form.sort_order }}
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <div class="bom-block">
+              <div class="bom-block-head">
+                <div>
+                  <div class="bom-block-title">Summary</div>
+                </div>
+              </div>
+
+              <div class="bom-summary">
+                <div class="bom-summary-card">
+                  <div class="bom-summary-label">Base Price</div>
+                  <div class="bom-summary-value" data-bom-summary-base>₹ 0.00</div>
+                </div>
+                <div class="bom-summary-card">
+                  <div class="bom-summary-label">Tie Dye Price</div>
+                  <div class="bom-summary-value" data-bom-summary-tie-dye>₹ 0.00</div>
+                </div>
+                <div class="bom-summary-card">
+                  <div class="bom-summary-label">Materials Total</div>
+                  <div class="bom-summary-value" data-bom-summary-materials>₹ 0.00</div>
+                </div>
+                <div class="bom-summary-card">
+                  <div class="bom-summary-label">Accessories Total</div>
+                  <div class="bom-summary-value" data-bom-summary-accessories>₹ 0.00</div>
+                </div>
+                <div class="bom-summary-card">
+                  <div class="bom-summary-label">Process Total</div>
+                  <div class="bom-summary-value" data-bom-summary-process>₹ 0.00</div>
+                </div>
+                <div class="bom-summary-card">
+                  <div class="bom-summary-label">Expenses Total</div>
+                  <div class="bom-summary-value" data-bom-summary-expenses>₹ 0.00</div>
+                </div>
+                <div class="bom-summary-card">
+                  <div class="bom-summary-label">Damage Amount</div>
+                  <div class="bom-summary-value" data-bom-summary-damage>₹ 0.00</div>
+                </div>
+                <div class="bom-summary-card">
+                  <div class="bom-summary-label">Final Price</div>
+                  <div class="bom-summary-value" data-bom-summary-final>₹ 0.00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mf-footer bom-footer">
+        <a class="mf-btn-secondary" href="{% url 'accounts:bom_list' %}{% if not full_page %}?embed=1{% endif %}">Cancel</a>
+        <button type="submit" class="mf-btn-primary">
+          {% if mode == "add" %}Save BOM{% else %}Update BOM{% endif %}
+        </button>
+      </div>
+    </form>
+
+    {{ jobber_defaults|json_script:"bom-jobber-defaults" }}
+
+    <script>
+      (function () {
+        const root = document.querySelector('[data-bom-root="1"]');
+        if (!root || root.dataset.bound === "1") return;
+        root.dataset.bound = "1";
+
+        const jobberDefaults = JSON.parse((document.getElementById("bom-jobber-defaults") || {textContent: "{}"}).textContent || "{}");
+
+        function num(value) {
+          const n = parseFloat(value);
+          return isNaN(n) ? 0 : n;
+        }
+
+        function money(value) {
+          return "₹ " + num(value).toFixed(2);
+        }
+
+        function getVisibleRows(prefix) {
+          return Array.from(root.querySelectorAll('[data-bom-row="' + prefix + '"]')).filter(function (row) {
+            return !row.classList.contains("is-hidden");
+          });
+        }
+
+        function getProcessPriceMap() {
+          const map = {};
+          getVisibleRows("jobber_processes").forEach(function (row) {
+            const typeSelect = row.querySelector('[name$="-jobber_type"]');
+            const priceInput = row.querySelector('[name$="-price"]');
+            const typeId = typeSelect && typeSelect.value ? String(typeSelect.value) : "";
+            if (!typeId) return;
+            map[typeId] = num(priceInput && priceInput.value);
+          });
+          return map;
+        }
+
+        function setJobberPriceFromType(row) {
+          if (!row || row.classList.contains("is-hidden")) return;
+
+          const typeSelect = row.querySelector('[name$="-jobber_type"]');
+          const priceInput = row.querySelector('[name$="-price"]');
+          if (!typeSelect || !priceInput) return;
+
+          const typeId = String(typeSelect.value || "");
+          const processPriceMap = getProcessPriceMap();
+
+          if (typeId && Object.prototype.hasOwnProperty.call(processPriceMap, typeId)) {
+            priceInput.value = num(processPriceMap[typeId]).toFixed(2);
+          } else {
+            priceInput.value = "";
+          }
+        }
+
+        function syncJobberRow(row, forceTypeFromJobber) {
+          if (!row || row.classList.contains("is-hidden")) return;
+
+          const jobberSelect = row.querySelector('[name$="-jobber"]');
+          const typeSelect = row.querySelector('[name$="-jobber_type"]');
+          const priceInput = row.querySelector('[name$="-price"]');
+
+          if (!jobberSelect || !typeSelect || !priceInput) return;
+
+          const defaults = jobberDefaults[String(jobberSelect.value || "")] || null;
+
+          if (forceTypeFromJobber && defaults && defaults.jobber_type_id) {
+            typeSelect.value = String(defaults.jobber_type_id);
+          }
+
+          if (!typeSelect.value && defaults && defaults.jobber_type_id) {
+            typeSelect.value = String(defaults.jobber_type_id);
+          }
+
+          setJobberPriceFromType(row);
+        }
+
+        function syncAllJobberRows() {
+          getVisibleRows("jobber_details").forEach(function (row) {
+            syncJobberRow(row);
+          });
+        }
+
+        function retitle(prefix, label) {
+          getVisibleRows(prefix).forEach(function (row, index) {
+            const title = row.querySelector(".bom-row-title");
+            if (title) {
+              title.textContent = label + " " + (index + 1);
+            }
+          });
+        }
+
+        function calculateCostRows(prefix) {
+          let total = 0;
+          getVisibleRows(prefix).forEach(function (row) {
+            const cpu = row.querySelector('[name$="-cost_per_unit"]');
+            const avg = row.querySelector('[name$="-avg"]');
+            const cost = row.querySelector('[name$="-cost"]');
+            const value = num(cpu && cpu.value) * num(avg && avg.value);
+            if (cost) cost.value = value.toFixed(2);
+            total += value;
+          });
+          return total;
+        }
+
+        function calculateExpenseRows() {
+          let total = 0;
+          getVisibleRows("expenses").forEach(function (row) {
+            const price = row.querySelector('[name$="-price"]');
+            total += num(price && price.value);
+          });
+          return total;
+        }
+
+        function calculateProcessRows(prefix) {
+          let total = 0;
+          getVisibleRows(prefix).forEach(function (row) {
+            const price = row.querySelector('[name$="-price"]');
+            total += num(price && price.value);
+          });
+          return total;
+        }
+
+        function refreshSummary() {
+          const materialsTotal = calculateCostRows("materials");
+          const accessoriesTotal = calculateCostRows("accessories");
+          const processMappingTotal = calculateProcessRows("jobber_processes");
+          const jobberDetailTotal = calculateProcessRows("jobber_details");
+          const processTotal = jobberDetailTotal > 0 ? jobberDetailTotal : processMappingTotal;
+          const expensesTotal = calculateExpenseRows();
+
+          const tieDyeInput = root.querySelector('[name="tie_dye_price"]');
+          const priceInput = root.querySelector('[name="price"]');
+          const damageInput = root.querySelector('[name="damage_percent"]');
+          const finalInput = root.querySelector('[name="final_price"]');
+
+          const basePrice = num(priceInput && priceInput.value);
+          const tieDyePrice = num(tieDyeInput && tieDyeInput.value);
+          const damagePercent = num(damageInput && damageInput.value);
+
+          const subTotal =
+            basePrice +
+            tieDyePrice +
+            materialsTotal +
+            accessoriesTotal +
+            processTotal +
+            expensesTotal;
+
+          const damageAmount = subTotal * (damagePercent / 100);
+          const finalValue = subTotal + damageAmount;
+
+          const baseTarget = root.querySelector("[data-bom-summary-base]");
+          const tieDyeTarget = root.querySelector("[data-bom-summary-tie-dye]");
+          const materialsTarget = root.querySelector("[data-bom-summary-materials]");
+          const accessoriesTarget = root.querySelector("[data-bom-summary-accessories]");
+          const processTarget = root.querySelector("[data-bom-summary-process]");
+          const expensesTarget = root.querySelector("[data-bom-summary-expenses]");
+          const damageTarget = root.querySelector("[data-bom-summary-damage]");
+          const finalTarget = root.querySelector("[data-bom-summary-final]");
+
+          if (baseTarget) baseTarget.textContent = money(basePrice);
+          if (tieDyeTarget) tieDyeTarget.textContent = money(tieDyePrice);
+          if (materialsTarget) materialsTarget.textContent = money(materialsTotal);
+          if (accessoriesTarget) accessoriesTarget.textContent = money(accessoriesTotal);
+          if (processTarget) processTarget.textContent = money(processTotal);
+          if (expensesTarget) expensesTarget.textContent = money(expensesTotal);
+          if (damageTarget) damageTarget.textContent = money(damageAmount);
+          if (finalTarget) finalTarget.textContent = money(finalValue);
+
+          if (finalInput) {
+            finalInput.value = finalValue.toFixed(2);
+          }
+        }
+
+        function addRow(prefix, label) {
+          const totalInput = root.querySelector("#id_" + prefix + "-TOTAL_FORMS");
+          const container = root.querySelector('[data-bom-list="' + prefix + '"]');
+          const template = root.querySelector("#" + prefix + "-empty-form");
+
+          if (!totalInput || !container || !template) return;
+
+          const index = parseInt(totalInput.value || "0", 10);
+          const html = template.innerHTML.replace(/__prefix__/g, index);
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = html.trim();
+          const row = wrapper.firstElementChild;
+          if (!row) return;
+
+          container.appendChild(row);
+          totalInput.value = index + 1;
+
+          retitle(prefix, label);
+          bindFilePreview(row);
+
+          if (prefix === "jobber_details") {
+            syncJobberRow(row);
+          }
+          if (prefix === "jobber_processes") {
+            syncAllJobberRows();
+          }
+
+          refreshSummary();
+        }
+
+        function removeRow(button) {
+          const row = button.closest("[data-bom-row]");
+          if (!row) return;
+
+          const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+          if (deleteInput) deleteInput.checked = true;
+          row.classList.add("is-hidden");
+
+          const prefix = row.getAttribute("data-bom-row");
+          if (prefix === "materials") retitle("materials", "Material Row");
+          if (prefix === "accessories") retitle("accessories", "Accessory Row");
+          if (prefix === "jobber_processes") retitle("jobber_processes", "Process Row");
+          if (prefix === "jobber_details") retitle("jobber_details", "Jobber Row");
+          if (prefix === "expenses") retitle("expenses", "Expense Row");
+          if (prefix === "images") retitle("images", "Photo Row");
+
+          if (prefix === "jobber_processes") syncAllJobberRows();
+
+          refreshSummary();
+        }
+
+        function bindFilePreview(scope) {
+          const fileInputs = scope.querySelectorAll('input[type="file"]');
+          fileInputs.forEach(function (input) {
+            if (input.dataset.previewBound === "1") return;
+            input.dataset.previewBound = "1";
+
+            input.addEventListener("change", function () {
+              const row = input.closest("[data-bom-row]");
+              if (!row) return;
+
+              const img = row.querySelector("[data-bom-preview-image]");
+              const name = row.querySelector("[data-bom-preview-name]");
+              const link = row.querySelector("[data-bom-preview-link]");
+
+              const file = input.files && input.files[0];
+              if (!file) {
+                if (name) name.textContent = "No image chosen";
+                if (link) {
+                  link.style.display = "none";
+                  link.removeAttribute("href");
+                }
+                return;
+              }
+
+              if (name) name.textContent = file.name;
+
+              const reader = new FileReader();
+              reader.onload = function (e) {
+                if (img) {
+                  img.src = e.target.result;
+                  img.style.display = "block";
+                }
+                if (link) {
+                  link.href = e.target.result;
+                  link.style.display = "inline-flex";
+                  link.textContent = "View image";
+                }
+              };
+              reader.readAsDataURL(file);
+            });
+          });
+        }
+
+        function initAccordion() {
+          const items = root.querySelectorAll("[data-acc-item]");
+          items.forEach(function (item) {
+            const btn = item.querySelector("[data-acc-toggle]");
+            if (!btn) return;
+
+            btn.addEventListener("click", function () {
+              item.classList.toggle("is-open");
+            });
+          });
+
+          items.forEach(function (item) {
+            const hasErrors =
+              item.querySelector(".mf-errors") ||
+              item.querySelector(".mf-field-errors") ||
+              item.querySelector(".bom-inline-errors");
+
+            if (hasErrors) {
+              item.classList.add("is-open");
+            }
+          });
+        }
+
+        root.addEventListener("click", function (e) {
+          const addBtn = e.target.closest("[data-bom-add]");
+          if (addBtn) {
+            e.preventDefault();
+            const prefix = addBtn.getAttribute("data-bom-add");
+            if (prefix === "materials") addRow("materials", "Material Row");
+            if (prefix === "accessories") addRow("accessories", "Accessory Row");
+            if (prefix === "jobber_processes") addRow("jobber_processes", "Process Row");
+            if (prefix === "jobber_details") addRow("jobber_details", "Jobber Row");
+            if (prefix === "expenses") addRow("expenses", "Expense Row");
+            if (prefix === "images") addRow("images", "Photo Row");
+            return;
+          }
+
+          const removeBtn = e.target.closest("[data-bom-remove]");
+          if (removeBtn) {
+            e.preventDefault();
+            removeRow(removeBtn);
+          }
+        });
+
+        root.addEventListener("change", function (e) {
+          const t = e.target;
+          if (!t) return;
+
+          if (t.matches('[name$="-jobber"]')) {
+            const row = t.closest('[data-bom-row="jobber_details"]');
+            if (row) {
+              syncJobberRow(row, true);
+              refreshSummary();
+            }
+            return;
+          }
+
+          if (t.matches('[data-bom-row="jobber_details"] [name$="-jobber_type"]')) {
+            const row = t.closest('[data-bom-row="jobber_details"]');
+            if (row) {
+              setJobberPriceFromType(row);
+              refreshSummary();
+            }
+            return;
+          }
+
+          if (
+            t.matches('[data-bom-row="jobber_processes"] [name$="-jobber_type"]') ||
+            t.matches('[data-bom-row="jobber_processes"] [name$="-price"]')
+          ) {
+            syncAllJobberRows();
+            refreshSummary();
+          }
+        });
+
+        root.addEventListener("input", function (e) {
+          const t = e.target;
+          if (
+            t.matches('[name$="-cost_per_unit"]') ||
+            t.matches('[name$="-avg"]') ||
+            t.matches('[name$="-price"]') ||
+            t.matches('[name="price"]') ||
+            t.matches('[name="tie_dye_price"]') ||
+            t.matches('[name="damage_percent"]')
+          ) {
+            if (t.closest('[data-bom-row="jobber_processes"]')) {
+              syncAllJobberRows();
+            }
+            refreshSummary();
+          }
+        });
+
+        bindFilePreview(root);
+        initAccordion();
+        retitle("materials", "Material Row");
+        retitle("accessories", "Accessory Row");
+        retitle("jobber_processes", "Process Row");
+        retitle("jobber_details", "Jobber Row");
+        retitle("expenses", "Expense Row");
+        retitle("images", "Photo Row");
+        syncAllJobberRows();
+        refreshSummary();
+      })();
+    </script>
+
+  </section>
+</div>

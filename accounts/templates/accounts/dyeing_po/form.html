@@ -1,0 +1,1899 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}{% if mode == 'edit' %}Edit Dyeing PO{% else %}Generate Dyeing PO{% endif %} - InventTech{% endblock %}
+{% block page_title %}{% if mode == 'edit' %}Edit Dyeing PO{% else %}Generate Dyeing PO{% endif %}{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{
+    --yp-bg:#f6f6f8;
+    --yp-surface:#ffffff;
+    --yp-surface-soft:#f8f8fa;
+    --yp-border:#e7e2e8;
+    --yp-border-strong:#cbbcc8;
+    --yp-text:#20171f;
+    --yp-muted:#766b75;
+    --yp-pink:rgb(238, 61, 133);
+    --yp-pink-dark:rgb(238, 61, 133);
+    --yp-pink-soft:#f2ebef;
+    --yp-danger:#c62828;
+    --yp-font-ui:Inter, "Segoe UI", Arial, sans-serif;
+    --yp-font-serif:Georgia, "Times New Roman", serif;
+    --yp-font-mono:"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  .canvas{
+    grid-template-columns:1fr !important;
+    width:100%;
+    min-width:0;
+    padding:15px;
+  }
+
+  .yp-page,
+  .yp-layout,
+  .yp-main,
+  .yp-side,
+  .yp-hero-main{
+    min-width:0;
+  }
+
+  .jobbers-embed{
+    padding:4px 4px 10px;
+  }
+
+  .yp-shell{
+    background:var(--yp-surface);
+    border:1px solid var(--yp-border);
+    border-radius:18px;
+    padding:10px 10px 8px;
+    overflow:hidden;
+  }
+
+  .yp-form{
+    display:grid;
+    gap:8px;
+    font-family:var(--yp-font-ui);
+    color:var(--yp-text);
+  }
+
+  .yp-btn,
+  .yp-btn-primary,
+  .yp-btn-secondary,
+  .yp-add-row-btn,
+  .yp-remove-btn{
+    appearance:none;
+    border:none;
+    outline:none;
+    text-decoration:none;
+    cursor:pointer;
+    transition:.16s ease;
+    font-family:var(--yp-font-ui);
+  }
+
+  .yp-btn,
+  .yp-btn-secondary{
+    min-height:32px;
+    padding:0 11px;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    background:#fff;
+    border:1px solid var(--yp-border);
+    color:var(--yp-text);
+    font-size:10px;
+    font-weight:700;
+  }
+
+  .yp-btn:hover,
+  .yp-btn-secondary:hover{
+    border-color:var(--yp-border-strong);
+    color:var(--yp-pink-dark);
+    background:var(--yp-surface-soft);
+  }
+
+  .yp-btn-primary{
+    min-height:33px;
+    padding:0 13px;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    background:var(--yp-pink);
+    color:#fff;
+    font-size:10.5px;
+    font-weight:800;
+    letter-spacing:.02em;
+  }
+
+  .yp-btn-primary:hover{
+    background:var(--yp-pink-dark);
+  }
+
+  .yp-hero{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+    padding-bottom:4px;
+    border-bottom:1px solid var(--yp-border);
+  }
+
+  .yp-hero-main{
+    display:grid;
+    gap:8px;
+    padding:0;
+    background:transparent;
+    border:none;
+    box-shadow:none;
+  }
+
+  .yp-hero-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .yp-hero-brand{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    min-width:0;
+  }
+
+  .yp-brand-icon{
+    width:34px;
+    height:34px;
+    border-radius:11px;
+    flex:0 0 auto;
+    display:grid;
+    place-items:center;
+    background:var(--yp-pink-dark);
+  }
+
+  .yp-brand-icon svg{
+    width:19px;
+    height:19px;
+    display:block;
+  }
+
+  .yp-title{
+    margin:0;
+    color:var(--yp-text);
+    font-family:var(--yp-font-serif);
+    font-size:22px;
+    line-height:1.05;
+    font-weight:700;
+    letter-spacing:-.03em;
+  }
+
+  .yp-hero-actions{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+  }
+
+  .yp-hero-grid{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+
+  .yp-glance{
+    min-width:122px;
+    padding:7px 9px;
+    border-radius:10px;
+    background:#fff;
+    border:1px solid var(--yp-border);
+  }
+
+  .yp-glance-label{
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--yp-muted);
+  }
+
+  .yp-glance-value{
+    margin-top:4px;
+    color:var(--yp-text);
+    font-size:12px;
+    line-height:1.25;
+    font-weight:700;
+    word-break:break-word;
+    font-family:var(--yp-font-ui);
+  }
+
+  .yp-glance-value.is-pink{
+    color:var(--yp-pink-dark);
+    font-family:var(--yp-font-mono);
+  }
+
+  .yp-errors{
+    padding:8px 10px;
+    border:1px solid #efcfd7;
+    border-radius:10px;
+    background:#fcf7f9;
+    color:#9f234a;
+    font-size:10px;
+    font-weight:700;
+  }
+
+  .yp-alert{
+    padding:8px 10px;
+    border:1px solid #fde0cb;
+    border-radius:10px;
+    background:#fff7ed;
+    color:#9a3412;
+    font-size:10px;
+    font-weight:700;
+    line-height:1.45;
+  }
+
+  .yp-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 296px;
+    gap:12px;
+    align-items:start;
+  }
+
+  .yp-main,
+  .yp-side-stack{
+    display:grid;
+    gap:8px;
+  }
+
+  .yp-side-stack{
+    position:sticky;
+    top:10px;
+  }
+
+  .yp-panel{
+    background:#fff;
+    border:1px solid var(--yp-border);
+    border-radius:12px;
+    overflow:hidden;
+  }
+
+  .yp-panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--yp-border);
+    background:rgb(238, 61, 133);
+  }
+
+  .yp-panel-head-left{
+    min-width:0;
+  }
+
+  .yp-panel-title{
+    margin:0;
+    color:white;
+    font-family:var(--yp-font-serif);
+    font-size:15px;
+    line-height:1.1;
+    font-weight:700;
+    letter-spacing:-.02em;
+  }
+
+  .yp-pill{
+    display:inline-flex;
+    align-items:center;
+    min-height:22px;
+    padding:0 8px;
+    border-radius:999px;
+    background:var(--yp-pink-soft);
+    border:1px solid #e7d9df;
+    color:var(--yp-pink-dark);
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  .yp-panel-body,
+  .yp-summary-grid{
+    padding:9px;
+  }
+
+  .yp-grid{
+    display:grid;
+    gap:8px;
+    grid-template-columns:repeat(4, minmax(0,1fr));
+  }
+
+  .yp-order-grid{
+    grid-template-columns:repeat(4, minmax(0,1fr));
+  }
+
+  .yp-source-grid{
+    grid-template-columns:repeat(4, minmax(0,1fr));
+  }
+
+  .yp-field{
+    display:grid;
+    gap:4px;
+    min-width:0;
+  }
+
+  .yp-field.span-2{ grid-column:span 2; }
+  .yp-field.span-3{ grid-column:span 3; }
+  .yp-field.span-4{ grid-column:1 / -1; }
+
+  .yp-field label{
+    color:var(--yp-text);
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .yp-field input,
+  .yp-field select,
+  .yp-field textarea{
+    width:100%;
+    box-sizing:border-box;
+    min-height:34px;
+    padding:7px 9px;
+    border-radius:10px;
+    border:1px solid var(--yp-border);
+    background:#fff;
+    outline:none;
+    color:var(--yp-text);
+    font-family:var(--yp-font-ui);
+    font-size:12px;
+    font-weight:600;
+    transition:.16s ease;
+    appearance:none;
+  }
+
+  .yp-field textarea{
+    min-height:62px;
+    resize:vertical;
+    line-height:1.5;
+  }
+
+  .yp-field input:focus,
+  .yp-field select:focus,
+  .yp-field textarea:focus{
+    border-color:var(--yp-border-strong);
+    box-shadow:0 0 0 3px rgba(147,72,106,.08);
+  }
+
+  .yp-field input[readonly]{
+    background:#faf9fb;
+    color:#685765;
+    font-family:var(--yp-font-mono);
+  }
+
+  .yp-field select{
+    padding-right:30px;
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgba(118,107,117,.9) 50%),
+      linear-gradient(135deg, rgba(118,107,117,.9) 50%, transparent 50%);
+    background-position:calc(100% - 17px) 16px, calc(100% - 12px) 16px;
+    background-size:5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+  }
+
+  .yp-static-value{
+    min-height:34px;
+    display:flex;
+    align-items:center;
+    padding:7px 10px;
+    border-radius:10px;
+    border:1px solid var(--yp-border);
+    background:#faf9fb;
+    color:#685765;
+    font-family:var(--yp-font-ui);
+    font-size:12px;
+    font-weight:700;
+    line-height:1.35;
+    word-break:break-word;
+  }
+
+  .yp-err{
+    color:#b42318;
+    font-size:9px;
+    font-weight:700;
+    line-height:1.35;
+  }
+
+  .yp-lines{
+    padding:9px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .yp-items-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    padding:9px 9px 0;
+  }
+
+  .yp-items-caption{
+    font-size:10px;
+    font-weight:700;
+    color:var(--yp-muted);
+  }
+
+  .yp-add-row-btn{
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:#fff;
+    border:1px solid var(--yp-border);
+    color:var(--yp-pink-dark);
+  }
+
+  .yp-add-row-btn:hover{
+    border-color:var(--yp-border-strong);
+    background:var(--yp-surface-soft);
+  }
+
+  .yp-add-row-btn svg{
+    stroke:currentColor;
+  }
+
+  .yp-row{
+    border:1px solid var(--yp-border);
+    border-radius:11px;
+    background:#fff;
+    overflow:hidden;
+  }
+
+  .yp-row.is-deleted{
+    opacity:.45;
+  }
+
+  .yp-row-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:7px 9px;
+    background:#fbfafc;
+    border-bottom:1px solid var(--yp-border);
+  }
+
+  .yp-row-top-left{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    flex-wrap:wrap;
+    min-width:0;
+  }
+
+  .yp-row-badge,
+  .yp-row-meta{
+    display:inline-flex;
+    align-items:center;
+    min-height:20px;
+    padding:0 7px;
+    border-radius:999px;
+    font-size:8.5px;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .yp-row-badge{
+    background:var(--yp-pink-soft);
+    color:var(--yp-pink-dark);
+    border:1px solid #e7d9df;
+  }
+
+  .yp-row-meta{
+    background:#fff;
+    border:1px solid var(--yp-border);
+    color:var(--yp-muted);
+  }
+
+  .yp-remove-btn{
+    width:26px;
+    height:26px;
+    border-radius:999px;
+    border:1px solid var(--yp-border);
+    background:#fff;
+    color:#9e3458;
+    font-size:15px;
+    line-height:1;
+    display:grid;
+    place-items:center;
+  }
+
+  .yp-remove-btn:hover{
+    background:#faf5f7;
+    border-color:var(--yp-border-strong);
+  }
+
+  .yp-row-body{
+    padding:9px;
+    display:grid;
+    gap:8px;
+  }
+
+  .yp-row-main{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0,1fr));
+    gap:7px;
+    align-items:end;
+  }
+
+  .yp-row-specbox{
+    border-top:1px solid var(--yp-border);
+    padding-top:8px;
+  }
+
+  .yp-row-specbox-title{
+    margin-bottom:8px;
+    color:var(--yp-pink-dark);
+    font-size:8.5px;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .yp-row-specs{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(0,1fr));
+    gap:7px;
+    align-items:end;
+  }
+
+  .yp-total-box{
+    margin:10px 10px 0;
+    padding:9px;
+    border-radius:10px;
+    border:2px solid var(--yp-pink-dark);
+    color:#000;
+  }
+
+  .yp-total-label{
+    font-size:8.5px;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:#000;
+  }
+
+  .yp-total-value{
+    margin-top:4px;
+    font-size:19px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:-.03em;
+    font-family:var(--yp-font-mono);
+    word-break:break-word;
+  }
+
+  .yp-summary-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .yp-notes-grid{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .yp-actions{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    align-items:stretch;
+    gap:7px;
+    margin-top:2px;
+  }
+
+  .yp-actions .yp-btn-primary,
+  .yp-actions .yp-btn-secondary{
+    width:100%;
+    flex:none;
+  }
+
+  .yp-hidden{
+    display:none !important;
+  }
+
+  .yp-master-preview{
+    grid-column:1 / -1;
+    margin-top:2px;
+    padding:8px 9px;
+    border:1px dashed var(--yp-border-strong);
+    border-radius:10px;
+    background:var(--yp-surface-soft);
+  }
+
+  .yp-master-preview-title{
+    margin-bottom:7px;
+    color:var(--yp-pink-dark);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .yp-master-preview-grid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0,1fr));
+    gap:7px;
+  }
+
+  .yp-master-chip{
+    min-width:0;
+    padding:7px 8px;
+    border:1px solid var(--yp-border);
+    border-radius:9px;
+    background:#fff;
+  }
+
+  .yp-master-chip-label{
+    display:block;
+    margin-bottom:3px;
+    color:var(--yp-muted);
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .yp-master-chip-value{
+    display:block;
+    color:var(--yp-text);
+    font-size:11px;
+    font-weight:700;
+    line-height:1.3;
+    word-break:break-word;
+  }
+
+  @media (max-width: 1360px){
+    .yp-layout{
+      grid-template-columns:minmax(0,1fr) 280px;
+    }
+
+    .yp-row-main{
+      grid-template-columns:repeat(3, minmax(0,1fr));
+    }
+
+    .yp-row-specs{
+      grid-template-columns:repeat(3, minmax(0,1fr));
+    }
+  }
+
+  @media (max-width: 1140px){
+    .yp-layout,
+    .yp-order-grid,
+    .yp-source-grid{
+      grid-template-columns:1fr;
+    }
+
+    .yp-side-stack{
+      position:static;
+    }
+
+    .yp-grid,
+    .yp-order-grid,
+    .yp-source-grid{
+      grid-template-columns:repeat(2, minmax(0,1fr));
+    }
+
+    .yp-field.span-2,
+    .yp-field.span-3,
+    .yp-field.span-4{
+      grid-column:1 / -1;
+    }
+
+    .yp-row-main,
+    .yp-row-specs{
+      grid-template-columns:repeat(2, minmax(0,1fr));
+    }
+  }
+
+  @media (max-width: 900px){
+    .yp-master-preview-grid{
+      grid-template-columns:repeat(2, minmax(0,1fr));
+    }
+  }
+
+  @media (max-width: 760px){
+    .yp-shell{
+      padding:8px;
+      border-radius:14px;
+    }
+
+    .yp-hero-top,
+    .yp-hero-actions,
+    .yp-panel-head,
+    .yp-row-topbar,
+    .yp-items-toolbar{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .yp-grid,
+    .yp-order-grid,
+    .yp-source-grid,
+    .yp-row-main,
+    .yp-row-specs,
+    .yp-notes-grid,
+    .yp-actions{
+      grid-template-columns:1fr;
+    }
+
+    .yp-title{
+      font-size:20px;
+    }
+
+    .yp-glance{
+      width:100%;
+    }
+
+    .yp-btn,
+    .yp-btn-primary,
+    .yp-btn-secondary{
+      width:100%;
+    }
+  }
+
+  @media (max-width: 520px){
+    .yp-master-preview-grid{
+      grid-template-columns:1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-section is-active">
+  <div class="canvas">
+    <div class="yp-page">
+      <div class="jobbers-embed">
+        <div class="yp-shell">
+          <form method="post" class="yp-form">
+            {% csrf_token %}
+            {{ formset.management_form }}
+
+            {% if form.source_greige_po and source_greige_po %}
+              {{ form.source_greige_po.as_hidden }}
+            {% endif %}
+
+            <section class="yp-hero">
+              <div class="yp-hero-main">
+                <div class="yp-hero-top">
+                  <div class="yp-hero-brand">
+                    <div class="yp-brand-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4.75 7.25A1.5 1.5 0 0 1 6.25 5.75h8.2l4.8 4.8v7.2a1.5 1.5 0 0 1-1.5 1.5h-11.5a1.5 1.5 0 0 1-1.5-1.5v-10.5Z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+                        <path d="M14.45 5.9v3.35a1 1 0 0 0 1 1h3.35" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 14.25h5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M8 11.25h3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+                      </svg>
+                    </div>
+
+                    <div>
+                      <h1 class="yp-title">{% if mode == 'edit' %}Edit Dyeing Purchase Order{% else %}Create Dyeing Purchase Order{% endif %}</h1>
+                    </div>
+                  </div>
+
+                  <div class="yp-hero-actions">
+                    <a class="yp-btn" href="{% url 'accounts:dyeingpo_list' %}">Back to List</a>
+                  </div>
+                </div>
+
+                <div class="yp-hero-grid">
+                  <div class="yp-glance">
+                    <div class="yp-glance-label">System Number</div>
+                    <div class="yp-glance-value is-pink">{{ system_number_preview }}</div>
+                  </div>
+
+                  <div class="yp-glance">
+                    <div class="yp-glance-label">Source Greige PO</div>
+                    <div class="yp-glance-value">
+                      {% if source_greige_po %}{{ source_greige_po.system_number }}{% else %}Not selected{% endif %}
+                    </div>
+                  </div>
+
+                  <div class="yp-glance">
+                    <div class="yp-glance-label">Source Inward</div>
+                    <div class="yp-glance-value">
+                      {% if selected_source_inward %}{{ selected_source_inward.inward_number }}{% else %}Not selected{% endif %}
+                    </div>
+                  </div>
+
+                  <div class="yp-glance">
+                    <div class="yp-glance-label">Final Amount</div>
+                    <div class="yp-glance-value" id="grandTotalTextMirrorTop">
+                      ₹{% if po_obj and po_obj.final_amount %}{{ po_obj.final_amount }}{% else %}0.00{% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {% if form.non_field_errors or formset.non_form_errors %}
+            <div class="yp-errors">
+              {{ form.non_field_errors }}
+              {{ formset.non_form_errors }}
+            </div>
+            {% endif %}
+
+            {% if existing_po and mode == 'add' %}
+            <div class="yp-alert">
+              A Dyeing PO already exists for this source.
+              <a href="{% url 'accounts:dyeingpo_detail' existing_po.id %}" style="color:inherit;text-decoration:underline;">Open existing PO</a>
+            </div>
+            {% endif %}
+
+            <div class="yp-layout">
+              <div class="yp-main">
+
+                <section class="yp-panel">
+                  <div class="yp-panel-head">
+                    <div class="yp-panel-head-left">
+                      <div class="yp-panel-title">Order Details</div>
+                    </div>
+                  </div>
+
+                  <div class="yp-panel-body">
+                    <div class="yp-grid yp-order-grid">
+
+                     {% if form.source_greige_po and not source_greige_po %}
+<div class="yp-field span-2">
+  <label for="{{ form.source_greige_po.id_for_label }}">Source Greige PO</label>
+  {{ form.source_greige_po }}
+  {% for err in form.source_greige_po.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{% if form.vendor %}
+<div class="yp-field">
+  <label for="{{ form.vendor.id_for_label }}">Vendor</label>
+  {{ form.vendor }}
+  {% for err in form.vendor.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{% if form.firm %}
+<div class="yp-field">
+  <label for="{{ form.firm.id_for_label }}">Firm</label>
+  {{ form.firm }}
+  {% for err in form.firm.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+<div class="yp-field">
+  <label>PO Number</label>
+  <input type="text" value="{{ system_number_preview }}" readonly>
+</div>
+
+{% if form.po_number %}
+<div class="yp-field">
+  <label for="{{ form.po_number.id_for_label }}">Reference No.</label>
+  {{ form.po_number }}
+  {% for err in form.po_number.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{% if form.internal_po_number %}
+<div class="yp-field">
+  <label for="{{ form.internal_po_number.id_for_label }}">Internal PO Number</label>
+  {{ form.internal_po_number }}
+  {% for err in form.internal_po_number.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{% if form.po_date %}
+<div class="yp-field">
+  <label for="{{ form.po_date.id_for_label }}">PO Date</label>
+  {{ form.po_date }}
+  {% for err in form.po_date.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{% if form.expected_delivery_date %}
+<div class="yp-field">
+  <label for="{{ form.expected_delivery_date.id_for_label }}">Expected Delivery</label>
+  {{ form.expected_delivery_date }}
+  {% for err in form.expected_delivery_date.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{% if form.cancel_date %}
+<div class="yp-field">
+  <label for="{{ form.cancel_date.id_for_label }}">Cancel Date</label>
+  {{ form.cancel_date }}
+  {% for err in form.cancel_date.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{% if form.shipping_address_choice %}
+<div class="yp-field span-2">
+  <label for="{{ form.shipping_address_choice.id_for_label }}">Shipping Address Source</label>
+  {{ form.shipping_address_choice }}
+  {% for err in form.shipping_address_choice.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{% if form.shipping_address %}
+<div class="yp-field span-4">
+  <label for="{{ form.shipping_address.id_for_label }}">Shipping Address</label>
+  {{ form.shipping_address }}
+  {% for err in form.shipping_address.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+                    </div>
+                  </div>
+                </section>
+                <section class="yp-panel">
+                  <div class="yp-panel-head">
+                    <div class="yp-panel-head-left">
+                      <div class="yp-panel-title">Source Greige PO Details</div>
+                    </div>
+                    <div class="yp-pill">{% if source_greige_po %}{{ source_greige_po.system_number }}{% else %}No Source{% endif %}</div>
+                  </div>
+
+                  <div class="yp-panel-body">
+                    <div class="yp-grid yp-source-grid">
+                      <div class="yp-field">
+                        <label>Greige PO Number</label>
+                        <div class="yp-static-value">{% if source_greige_po %}{{ source_greige_po.system_number }}{% else %}—{% endif %}</div>
+                      </div>
+
+                      <div class="yp-field">
+                        <label>Vendor</label>
+                        <div class="yp-static-value">{% if source_greige_po and source_greige_po.vendor %}{{ source_greige_po.vendor.name }}{% else %}—{% endif %}</div>
+                      </div>
+
+                      <div class="yp-field">
+                        <label>PO Date</label>
+                        <div class="yp-static-value">{% if source_greige_po and source_greige_po.po_date %}{{ source_greige_po.po_date|date:"d-m-Y" }}{% else %}—{% endif %}</div>
+                      </div>
+
+                      <div class="yp-field">
+                        <label>Firm</label>
+                        <div class="yp-static-value">
+                          {% if source_greige_po and source_greige_po.source_yarn_po and source_greige_po.source_yarn_po.firm %}
+                            {{ source_greige_po.source_yarn_po.firm.firm_name }}
+                          {% elif source_greige_po and source_greige_po.firm %}
+                            {{ source_greige_po.firm.firm_name }}
+                          {% else %}
+                            —
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="yp-panel">
+                  <div class="yp-panel-head">
+                    <div class="yp-panel-head-left">
+                      <div class="yp-panel-title">Source Greige Inward Details</div>
+                    </div>
+                    <div class="yp-pill">{% if selected_source_inward %}{{ selected_source_inward.inward_number }}{% else %}No Inward{% endif %}</div>
+                  </div>
+
+                  <div class="yp-panel-body">
+                    <div class="yp-grid yp-source-grid">
+                      <div class="yp-field">
+                        <label>Inward Number</label>
+                        <div class="yp-static-value">
+                          {% if selected_source_inward %}{{ selected_source_inward.inward_number }}{% else %}No inward selected{% endif %}
+                        </div>
+                      </div>
+
+                      <div class="yp-field">
+                        <label>Inward Date</label>
+                        <div class="yp-static-value">
+                          {% if selected_source_inward and selected_source_inward.inward_date %}{{ selected_source_inward.inward_date|date:"d-m-Y" }}{% else %}—{% endif %}
+                        </div>
+                      </div>
+
+                      <div class="yp-field">
+                        <label>Vendor</label>
+                        <div class="yp-static-value">
+                          {% if source_greige_po and source_greige_po.vendor %}{{ source_greige_po.vendor.name }}{% else %}—{% endif %}
+                        </div>
+                      </div>
+
+                      <div class="yp-field">
+                        <label>Items</label>
+                        <div class="yp-static-value">
+                          {% if selected_source_inward %}{{ selected_source_inward.items.count|default:"0" }}{% elif source_inwards %}{{ source_inwards|length }}{% else %}0{% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="yp-panel">
+                  <div class="yp-panel-head">
+                    <div class="yp-panel-head-left">
+                      <div class="yp-panel-title">Dyeing Lot Details</div>
+                    </div>
+
+                    <button type="button" class="yp-add-row-btn" id="addDyeingRow" aria-label="Add row">
+                      <svg style="width:16px;height:16px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5v14"></path>
+                        <path d="M5 12h14"></path>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="yp-items-toolbar">
+                    <div class="yp-items-caption">Select source greige item, then finished material and linked dyeing master.</div>
+                  </div>
+
+                  <div id="poRows" class="yp-lines">
+                    {% for item_form in formset.forms %}
+                    <div class="yp-row" data-row>
+                      {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                      <div class="yp-row-topbar">
+                        <div class="yp-row-top-left">
+                          <span class="yp-row-badge">Line {{ forloop.counter }}</span>
+                          <span class="yp-row-meta">Dyeing Lot</span>
+                        </div>
+
+                        <div>
+                          <button type="button" class="yp-remove-btn po-row-remove" title="Remove row">×</button>
+                          <div class="yp-hidden">{{ item_form.DELETE }}</div>
+                        </div>
+                      </div>
+
+                      <div class="yp-row-body">
+                        <div class="yp-row-main">
+                          <div class="yp-field">
+                            <label>Source Greige Item</label>
+                            {{ item_form.source_greige_po_item }}
+                            {% for err in item_form.source_greige_po_item.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Greige Name</label>
+                            {{ item_form.greige_name }}
+                            {% for err in item_form.greige_name.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Finished Material</label>
+                            {{ item_form.finished_material }}
+                            {% for err in item_form.finished_material.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                          </div>
+
+                          <div class="yp-field">
+                            <label>Dyeing Master</label>
+                            {{ item_form.dyeing_master_detail }}
+                            {% for err in item_form.dyeing_master_detail.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                          </div>
+                        </div>
+
+                        <div class="yp-master-preview" data-master-preview>
+                          <div class="yp-master-preview-title">Dyeing Master Details</div>
+                          <div class="yp-master-preview-grid">
+                            <div class="yp-master-chip">
+                              <span class="yp-master-chip-label">Type</span>
+                              <span class="yp-master-chip-value" data-master-type>—</span>
+                            </div>
+                            <div class="yp-master-chip">
+                              <span class="yp-master-chip-label">Name</span>
+                              <span class="yp-master-chip-value" data-master-name>—</span>
+                            </div>
+                            <div class="yp-master-chip">
+                              <span class="yp-master-chip-label">Colors</span>
+                              <span class="yp-master-chip-value" data-master-colors>—</span>
+                            </div>
+                            <div class="yp-master-chip">
+                              <span class="yp-master-chip-label">Finished Material</span>
+                              <span class="yp-master-chip-value" data-master-finished-material>—</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="yp-row-specbox">
+                          <div class="yp-row-specbox-title">Process & Charges</div>
+
+                          <div class="yp-row-specs">
+                            <div class="yp-field">
+                              <label>Fabric Name</label>
+                              {{ item_form.fabric_name }}
+                              {% for err in item_form.fabric_name.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Dyeing Type</label>
+                              {{ item_form.dyeing_type }}
+                              {% for err in item_form.dyeing_type.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Dyeing Name</label>
+                              {{ item_form.dyeing_name }}
+                              {% for err in item_form.dyeing_name.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Unit</label>
+                              {{ item_form.unit }}
+                              {% for err in item_form.unit.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Total Qty</label>
+                              {{ item_form.total_qty }}
+                              {% for err in item_form.total_qty.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Source Input Qty</label>
+                              {{ item_form.source_input_qty }}
+                              {% for err in item_form.source_input_qty.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Expected Loss %</label>
+                              {{ item_form.expected_loss_percent }}
+                              {% for err in item_form.expected_loss_percent.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Expected Output Qty</label>
+                              {{ item_form.expected_output_qty }}
+                              {% for err in item_form.expected_output_qty.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Rate</label>
+                              {{ item_form.rate }}
+                              {% for err in item_form.rate.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="yp-field">
+                              <label>Line Final Amount</label>
+                              {{ item_form.line_final_amount }}
+                              {% for err in item_form.line_final_amount.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="yp-field span-2">
+                              <label>Remark</label>
+                              {{ item_form.remark }}
+                              {% for err in item_form.remark.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {% empty %}
+                    <div class="yp-static-value">Add a dyeing lot row to continue.</div>
+                    {% endfor %}
+                  </div>
+
+                  <template id="emptyDyeingRowTemplate">
+                    {% with item_form=formset.empty_form %}
+                    <div class="yp-row" data-row>
+                      {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                      <div class="yp-row-topbar">
+                        <div class="yp-row-top-left">
+                          <span class="yp-row-badge">Line</span>
+                          <span class="yp-row-meta">Dyeing Lot</span>
+                        </div>
+
+                        <div>
+                          <button type="button" class="yp-remove-btn po-row-remove" title="Remove row">×</button>
+                          <div class="yp-hidden">{{ item_form.DELETE }}</div>
+                        </div>
+                      </div>
+
+                      <div class="yp-row-body">
+                        <div class="yp-row-main">
+                          <div class="yp-field"><label>Source Greige Item</label>{{ item_form.source_greige_po_item }}</div>
+                          <div class="yp-field"><label>Greige Name</label>{{ item_form.greige_name }}</div>
+                          <div class="yp-field"><label>Finished Material</label>{{ item_form.finished_material }}</div>
+                          <div class="yp-field"><label>Dyeing Master</label>{{ item_form.dyeing_master_detail }}</div>
+                        </div>
+
+                        <div class="yp-master-preview" data-master-preview>
+                          <div class="yp-master-preview-title">Dyeing Master Details</div>
+                          <div class="yp-master-preview-grid">
+                            <div class="yp-master-chip">
+                              <span class="yp-master-chip-label">Type</span>
+                              <span class="yp-master-chip-value" data-master-type>—</span>
+                            </div>
+                            <div class="yp-master-chip">
+                              <span class="yp-master-chip-label">Name</span>
+                              <span class="yp-master-chip-value" data-master-name>—</span>
+                            </div>
+                            <div class="yp-master-chip">
+                              <span class="yp-master-chip-label">Colors</span>
+                              <span class="yp-master-chip-value" data-master-colors>—</span>
+                            </div>
+                            <div class="yp-master-chip">
+                              <span class="yp-master-chip-label">Finished Material</span>
+                              <span class="yp-master-chip-value" data-master-finished-material>—</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="yp-row-specbox">
+                          <div class="yp-row-specbox-title">Process & Charges</div>
+
+                          <div class="yp-row-specs">
+                            <div class="yp-field"><label>Fabric Name</label>{{ item_form.fabric_name }}</div>
+                            <div class="yp-field"><label>Dyeing Type</label>{{ item_form.dyeing_type }}</div>
+                            <div class="yp-field"><label>Dyeing Name</label>{{ item_form.dyeing_name }}</div>
+                            <div class="yp-field"><label>Unit</label>{{ item_form.unit }}</div>
+                            <div class="yp-field"><label>Total Qty</label>{{ item_form.total_qty }}</div>
+                            <div class="yp-field"><label>Source Input Qty</label>{{ item_form.source_input_qty }}</div>
+                            <div class="yp-field"><label>Expected Loss %</label>{{ item_form.expected_loss_percent }}</div>
+                            <div class="yp-field"><label>Expected Output Qty</label>{{ item_form.expected_output_qty }}</div>
+                            <div class="yp-field"><label>Rate</label>{{ item_form.rate }}</div>
+                            <div class="yp-field"><label>Line Final Amount</label>{{ item_form.line_final_amount }}</div>
+                            <div class="yp-field span-2"><label>Remark</label>{{ item_form.remark }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {% endwith %}
+                  </template>
+                </section>
+
+              </div>
+
+              <aside class="yp-side">
+                <div class="yp-side-stack">
+
+                  <section class="yp-panel">
+                    <div class="yp-panel-head">
+                      <div class="yp-panel-head-left">
+                        <div class="yp-panel-title">Summary</div>
+                      </div>
+                    </div>
+
+                    <div class="yp-total-box">
+                      <div class="yp-total-label">Final Amount</div>
+                      <div class="yp-total-value" id="grandTotalTextMirror">
+                        ₹{% if po_obj and po_obj.final_amount %}{{ po_obj.final_amount }}{% else %}0.00{% endif %}
+                      </div>
+                    </div>
+
+                    <div class="yp-summary-grid">
+                      <div class="yp-field">
+                        <label>Total Weight</label>
+                        <input type="text" id="totalWeightPreview" value="{% if po_obj and po_obj.total_weight %}{{ po_obj.total_weight }}{% else %}0.00{% endif %}" readonly>
+                      </div>
+
+                      <div class="yp-field">
+                        <label>Sub Total</label>
+                        <input type="text" id="subtotalPreview" value="{% if po_obj and po_obj.subtotal %}{{ po_obj.subtotal }}{% else %}0.00{% endif %}" readonly>
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.discount_percent.id_for_label }}">Discount (%)</label>
+                        {{ form.discount_percent }}
+                        {% for err in form.discount_percent.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+
+                      <div class="yp-field">
+                        <label>After Discount</label>
+                        <input type="text" id="afterDiscountPreview" value="{% if po_obj and po_obj.after_discount_value %}{{ po_obj.after_discount_value }}{% else %}0.00{% endif %}" readonly>
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.others.id_for_label }}">Others</label>
+                        {{ form.others }}
+                        {% for err in form.others.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.gst_percent.id_for_label }}">GST (%)</label>
+                        {{ form.gst_percent }}
+                        {% for err in form.gst_percent.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+
+                      <div class="yp-field">
+                        <label for="{{ form.tcs_percent.id_for_label }}">TCS (%)</label>
+                        {{ form.tcs_percent }}
+                        {% for err in form.tcs_percent.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                      </div>
+
+                      <div class="yp-field">
+                        <label>Grand Total</label>
+                        <input type="text" id="grandTotalPreview" value="{% if po_obj and po_obj.final_amount %}{{ po_obj.final_amount }}{% else %}0.00{% endif %}" readonly>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="yp-panel">
+                    <div class="yp-panel-head">
+                      <div class="yp-panel-head-left">
+                        <div class="yp-panel-title">Notes &amp; Terms</div>
+                      </div>
+                    </div>
+
+                    <div class="yp-panel-body">
+                      <div class="yp-grid yp-notes-grid">
+                        {% if form.terms_template %}
+                        <div class="yp-field">
+                          <label for="{{ form.terms_template.id_for_label }}">Terms Template</label>
+                          {{ form.terms_template }}
+                          {% for err in form.terms_template.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% if form.terms_conditions %}
+                        <div class="yp-field">
+                          <label for="{{ form.terms_conditions.id_for_label }}">Terms &amp; Conditions</label>
+                          {{ form.terms_conditions }}
+                          {% for err in form.terms_conditions.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% if form.remarks %}
+                        <div class="yp-field">
+                          <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+                          {{ form.remarks }}
+                          {% for err in form.remarks.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="yp-actions">
+                          <button type="submit" class="yp-btn-primary">{% if mode == 'edit' %}Update Dyeing PO{% else %}Save Dyeing PO{% endif %}</button>
+                          <a class="yp-btn-secondary" href="{% url 'accounts:dyeingpo_list' %}">Cancel</a>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                </div>
+              </aside>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{{ dyeing_master_map_json|json_script:"dyeing-master-map" }}
+{{ source_item_map_json|json_script:"source-item-map" }}
+{{ greige_item_material_map_json|json_script:"greige-item-material-map" }}
+
+{{ terms_condition_map|json_script:"dp-terms-map" }}
+{{ shipping_address_map|json_script:"dp-shipping-map" }}
+{{ firm_shipping_map|json_script:"dp-firm-shipping-map" }}
+<script>
+  (function () {
+    const totalForms = document.getElementById("id_items-TOTAL_FORMS");
+    const rowsWrap = document.getElementById("poRows");
+    const addBtn = document.getElementById("addDyeingRow");
+    const template = document.getElementById("emptyDyeingRowTemplate");
+
+const dyeingMasterMapEl = document.getElementById("dyeing-master-map");
+const termsMapNode = document.getElementById("dp-terms-map");
+const shippingMapNode = document.getElementById("dp-shipping-map");
+const firmShippingNode = document.getElementById("dp-firm-shipping-map");
+
+const termsMap = termsMapNode ? JSON.parse(termsMapNode.textContent) : {};
+const shippingMap = shippingMapNode ? JSON.parse(shippingMapNode.textContent) : {};
+const firmShippingMap = firmShippingNode ? JSON.parse(firmShippingNode.textContent) : {};
+
+const firmEl = document.getElementById("{{ form.firm.id_for_label|default:'' }}");
+const shippingChoiceEl = document.getElementById("{{ form.shipping_address_choice.id_for_label|default:'' }}");
+const shippingTextEl = document.getElementById("{{ form.shipping_address.id_for_label|default:'' }}");
+const termsSelectEl = document.getElementById("{{ form.terms_template.id_for_label|default:'' }}");
+const termsTextEl = document.getElementById("{{ form.terms_conditions.id_for_label|default:'' }}");
+const sourceItemMapEl = document.getElementById("source-item-map");
+const greigeItemMaterialMapEl = document.getElementById("greige-item-material-map");
+
+const dyeingMasterMap = dyeingMasterMapEl ? JSON.parse(dyeingMasterMapEl.textContent) : {};
+const sourceItemMap = sourceItemMapEl ? JSON.parse(sourceItemMapEl.textContent) : {};
+const greigeItemMaterialMap = greigeItemMaterialMapEl ? JSON.parse(greigeItemMaterialMapEl.textContent) : {};
+
+    const allMasters = Object.values(dyeingMasterMap);
+    const vendorEl = document.getElementById("{{ form.vendor.id_for_label }}");
+
+    const subtotalPreview = document.getElementById("subtotalPreview");
+    const totalWeightPreview = document.getElementById("totalWeightPreview");
+    const afterDiscountPreview = document.getElementById("afterDiscountPreview");
+    const grandTotalPreview = document.getElementById("grandTotalPreview");
+    const grandTotalTextMirror = document.getElementById("grandTotalTextMirror");
+    const grandTotalTextMirrorTop = document.getElementById("grandTotalTextMirrorTop");
+
+    const discountEl = document.getElementById("{{ form.discount_percent.id_for_label }}");
+    const othersEl = document.getElementById("{{ form.others.id_for_label }}");
+    const gstEl = document.getElementById("{{ form.gst_percent.id_for_label }}");
+    const tcsEl = document.getElementById("{{ form.tcs_percent.id_for_label }}");
+
+    function num(v) {
+      const n = parseFloat(v || 0);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function getSelectedVendorId() {
+      return vendorEl ? (vendorEl.value || "") : "";
+    }
+
+    function getRowSourceItemId(row) {
+      const sourceSelect = row.querySelector('select[name$="-source_greige_po_item"]');
+      return sourceSelect ? (sourceSelect.value || "") : "";
+    }
+
+    function getRowMaterialId(row) {
+      const sourceItemId = getRowSourceItemId(row);
+      if (!sourceItemId) return "";
+      return greigeItemMaterialMap[String(sourceItemId)] || "";
+    }
+
+    function resetMasterPreview(row) {
+      const masterTypeEl = row.querySelector('[data-master-type]');
+      const masterNameEl = row.querySelector('[data-master-name]');
+      const masterColorsEl = row.querySelector('[data-master-colors]');
+      const masterFinishedMaterialEl = row.querySelector('[data-master-finished-material]');
+
+      if (masterTypeEl) masterTypeEl.textContent = "—";
+      if (masterNameEl) masterNameEl.textContent = "—";
+      if (masterColorsEl) masterColorsEl.textContent = "—";
+      if (masterFinishedMaterialEl) masterFinishedMaterialEl.textContent = "—";
+    }
+
+    function refreshRowLabels() {
+      const visibleRows = [...rowsWrap.querySelectorAll("[data-row]")].filter((row) => row.style.display !== "none");
+      visibleRows.forEach((row, index) => {
+        const badge = row.querySelector(".yp-row-badge");
+        if (badge) badge.textContent = `Line ${index + 1}`;
+      });
+    }
+
+    function refreshTotals() {
+      let subtotal = 0;
+      let totalWeight = 0;
+
+      rowsWrap.querySelectorAll("[data-row]").forEach((row) => {
+        if (row.style.display === "none") return;
+
+        const totalQty = row.querySelector('input[name$="-total_qty"]');
+        const rate = row.querySelector('input[name$="-rate"]');
+        const sourceInputQty = row.querySelector('input[name$="-source_input_qty"]');
+        const expectedLoss = row.querySelector('input[name$="-expected_loss_percent"]');
+        const expectedOutput = row.querySelector('input[name$="-expected_output_qty"]');
+        const lineFinal = row.querySelector('input[name$="-line_final_amount"]');
+
+        const qtyVal = num(totalQty && totalQty.value);
+        const rateVal = num(rate && rate.value);
+        const lossVal = num(expectedLoss && expectedLoss.value);
+
+        const outputQty = qtyVal - ((qtyVal * lossVal) / 100);
+        const rowFinal = qtyVal * rateVal;
+
+        if (sourceInputQty) sourceInputQty.value = qtyVal.toFixed(2);
+        if (expectedOutput) expectedOutput.value = outputQty.toFixed(2);
+        if (lineFinal) lineFinal.value = rowFinal.toFixed(2);
+
+        subtotal += rowFinal;
+        totalWeight += qtyVal;
+      });
+
+      const discount = num(discountEl && discountEl.value);
+      const others = num(othersEl && othersEl.value);
+      const gst = num(gstEl && gstEl.value);
+      const tcs = num(tcsEl && tcsEl.value);
+
+      const afterDiscount = subtotal - (subtotal * discount / 100);
+      const afterOthers = afterDiscount + others;
+      const gstAmount = afterOthers * gst / 100;
+      const tcsAmount = afterOthers * tcs / 100;
+      const grandTotal = afterOthers + gstAmount + tcsAmount;
+
+      if (subtotalPreview) subtotalPreview.value = subtotal.toFixed(2);
+      if (totalWeightPreview) totalWeightPreview.value = totalWeight.toFixed(2);
+      if (afterDiscountPreview) afterDiscountPreview.value = afterDiscount.toFixed(2);
+      if (grandTotalPreview) grandTotalPreview.value = grandTotal.toFixed(2);
+      if (grandTotalTextMirror) grandTotalTextMirror.textContent = `₹${grandTotal.toFixed(2)}`;
+      if (grandTotalTextMirrorTop) grandTotalTextMirrorTop.textContent = `₹${grandTotal.toFixed(2)}`;
+
+      refreshRowLabels();
+    }
+
+
+    // Terms auto fill
+if (termsSelectEl && termsTextEl) {
+  termsSelectEl.addEventListener("change", () => {
+    const val = termsSelectEl.value;
+    if (val && termsMap[val]) {
+      termsTextEl.value = termsMap[val];
+    }
+  });
+}
+
+// Shipping source → textarea
+if (shippingChoiceEl && shippingTextEl) {
+  shippingChoiceEl.addEventListener("change", () => {
+    const val = shippingChoiceEl.value;
+    if (val && shippingMap[val]) {
+      shippingTextEl.value = shippingMap[val];
+    }
+  });
+}
+
+// Firm → rebuild shipping options
+function rebuildShippingForFirm(firmId) {
+  if (!shippingChoiceEl || !shippingTextEl) return;
+
+  const items = firmId && firmShippingMap[firmId] ? firmShippingMap[firmId] : [];
+
+  shippingChoiceEl.innerHTML = '<option value="">Select address</option>';
+
+  items.forEach((item, index) => {
+    const opt = document.createElement("option");
+    opt.value = item.id;
+    opt.textContent = item.label;
+    shippingChoiceEl.appendChild(opt);
+
+    if (index === 0) {
+      shippingChoiceEl.value = item.id;
+      shippingTextEl.value = item.value;
+    }
+  });
+
+  if (!items.length) shippingTextEl.value = "";
+}
+
+// Firm change trigger
+if (firmEl) {
+  firmEl.addEventListener("change", () => {
+    rebuildShippingForFirm(firmEl.value);
+  });
+}
+
+// Initial load fix
+if (firmEl && firmEl.value) {
+  rebuildShippingForFirm(firmEl.value);
+}
+    function rebuildSourceItemOptions(row) {
+      const sourceSelect = row.querySelector('select[name$="-source_greige_po_item"]');
+      if (!sourceSelect) return;
+
+      const currentValue = sourceSelect.value || "";
+      const sourceItems = Object.values(sourceItemMap);
+
+      sourceSelect.innerHTML = '<option value="">Select Source Greige Item</option>';
+
+      sourceItems.forEach((item) => {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = item.fabric_name || item.material_name || `Item ${item.id}`;
+        sourceSelect.appendChild(option);
+      });
+
+      if (currentValue && sourceItemMap[currentValue]) {
+        sourceSelect.value = currentValue;
+      } else if (sourceItems.length) {
+        sourceSelect.value = sourceItems[0].id;
+      } else {
+        sourceSelect.value = "";
+      }
+
+      applySourceItemRow(row);
+    }
+
+    function buildFinishedMaterialOptions(row, autoSelectFirst = true) {
+      const finishedMaterialSelect = row.querySelector('select[name$="-finished_material"]');
+      if (!finishedMaterialSelect) return;
+
+      const currentValue = finishedMaterialSelect.value || "";
+      const vendorId = getSelectedVendorId();
+
+      finishedMaterialSelect.innerHTML = '<option value="">Select Finished Material</option>';
+
+      if (!vendorId) {
+        finishedMaterialSelect.value = "";
+        return;
+      }
+
+      const materialMap = new Map();
+
+      allMasters.forEach((master) => {
+        const vendorMatch = String(master.vendor_id || "") === String(vendorId);
+        if (vendorMatch && master.finished_material_id) {
+          materialMap.set(
+            String(master.finished_material_id),
+            master.finished_material_name || "Finished Material"
+          );
+        }
+      });
+
+      [...materialMap.entries()]
+        .sort((a, b) => String(a[1]).localeCompare(String(b[1])))
+        .forEach(([id, label]) => {
+          const option = document.createElement("option");
+          option.value = id;
+          option.textContent = label;
+          finishedMaterialSelect.appendChild(option);
+        });
+
+      if (currentValue && materialMap.has(String(currentValue))) {
+        finishedMaterialSelect.value = currentValue;
+      } else if (autoSelectFirst) {
+        const first = [...materialMap.keys()][0];
+        finishedMaterialSelect.value = first || "";
+      } else {
+        finishedMaterialSelect.value = "";
+      }
+    }
+
+    function buildMasterOptions(row, autoSelectFirst = true) {
+      const masterSelect = row.querySelector('select[name$="-dyeing_master_detail"]');
+      const finishedMaterialSelect = row.querySelector('select[name$="-finished_material"]');
+      if (!masterSelect) return;
+
+      const currentValue = masterSelect.value || "";
+      const vendorId = getSelectedVendorId();
+      const finishedMaterialId = finishedMaterialSelect ? (finishedMaterialSelect.value || "") : "";
+
+      masterSelect.innerHTML = '<option value="">Select Dyeing Master</option>';
+
+      if (!vendorId || !finishedMaterialId) {
+        masterSelect.value = "";
+        resetMasterPreview(row);
+        return;
+      }
+
+      const filteredMasters = allMasters.filter((master) => {
+        const vendorMatch = String(master.vendor_id || "") === String(vendorId);
+        const finishedMaterialMatch = String(master.finished_material_id || "") === String(finishedMaterialId);
+        return vendorMatch && finishedMaterialMatch;
+      });
+
+      filteredMasters.forEach((master) => {
+        const option = document.createElement("option");
+        option.value = master.id;
+        option.textContent = `${master.dyeing_name || "-"} | ${master.dyeing_type || "-"} | ${master.finished_material_name || "-"}`;
+        masterSelect.appendChild(option);
+      });
+
+      const stillExists = filteredMasters.some((master) => String(master.id) === String(currentValue));
+
+      if (stillExists) {
+        masterSelect.value = currentValue;
+      } else if (autoSelectFirst && filteredMasters.length) {
+        masterSelect.value = filteredMasters[0].id;
+      } else {
+        masterSelect.value = "";
+      }
+
+      applyDyeingMasterRow(row);
+    }
+
+    function applySourceItemRow(row) {
+      const sourceSelect = row.querySelector('select[name$="-source_greige_po_item"]');
+      const greigeNameInput = row.querySelector('input[name$="-greige_name"]');
+      const totalQtyInput = row.querySelector('input[name$="-total_qty"]');
+      if (!sourceSelect) return;
+
+      const sourceItemId = sourceSelect.value || "";
+      const selectedItem = sourceItemMap[String(sourceItemId)] || null;
+      const selectedOption = sourceSelect.options[sourceSelect.selectedIndex];
+
+      if (!sourceItemId) {
+        if (greigeNameInput) greigeNameInput.value = "";
+        return;
+      }
+
+      if (greigeNameInput) {
+        greigeNameInput.value = selectedItem?.fabric_name || selectedItem?.material_name || selectedOption?.text || "";
+      }
+
+      if (totalQtyInput && (!totalQtyInput.value || parseFloat(totalQtyInput.value || "0") === 0)) {
+        totalQtyInput.value = selectedItem?.quantity || "0";
+      }
+    }
+
+    function applyDyeingMasterRow(row) {
+      const masterSelect = row.querySelector('select[name$="-dyeing_master_detail"]');
+      const finishedMaterialSelect = row.querySelector('select[name$="-finished_material"]');
+      const fabricNameInput = row.querySelector('input[name$="-fabric_name"]');
+      const dyeingTypeInput = row.querySelector('input[name$="-dyeing_type"]');
+      const dyeingNameInput = row.querySelector('input[name$="-dyeing_name"]');
+      const rateInput = row.querySelector('input[name$="-rate"]');
+      const lossInput = row.querySelector('input[name$="-expected_loss_percent"]');
+      const unitInput = row.querySelector('input[name$="-unit"]');
+      const qtyInput = row.querySelector('input[name$="-total_qty"]');
+      const sourceInput = row.querySelector('input[name$="-source_input_qty"]');
+      const expectedOutput = row.querySelector('input[name$="-expected_output_qty"]');
+
+      const masterTypeEl = row.querySelector('[data-master-type]');
+      const masterNameEl = row.querySelector('[data-master-name]');
+      const masterColorsEl = row.querySelector('[data-master-colors]');
+      const masterFinishedMaterialEl = row.querySelector('[data-master-finished-material]');
+
+      if (!masterSelect) return;
+
+      const selected = dyeingMasterMap[masterSelect.value];
+      const vendorId = getSelectedVendorId();
+
+      if (!selected) {
+        resetMasterPreview(row);
+        if (dyeingTypeInput) dyeingTypeInput.value = "";
+        if (dyeingNameInput) dyeingNameInput.value = "";
+        if (unitInput) unitInput.value = "";
+        if (fabricNameInput && (!finishedMaterialSelect || !finishedMaterialSelect.value)) fabricNameInput.value = "";
+        refreshTotals();
+        return;
+      }
+
+      if (vendorId && String(selected.vendor_id || "") !== String(vendorId)) {
+        masterSelect.value = "";
+        resetMasterPreview(row);
+        refreshTotals();
+        return;
+      }
+
+      if (masterTypeEl) masterTypeEl.textContent = selected.dyeing_type || "—";
+      if (masterNameEl) masterNameEl.textContent = selected.dyeing_name || "—";
+
+      if (masterColorsEl) {
+        const colorsVal = parseFloat(selected.percentage_no_of_colors || "0");
+        masterColorsEl.textContent = colorsVal > 0 ? colorsVal.toFixed(2) : "—";
+      }
+
+      if (masterFinishedMaterialEl) masterFinishedMaterialEl.textContent = selected.finished_material_name || "—";
+
+      if (finishedMaterialSelect && selected.finished_material_id) finishedMaterialSelect.value = selected.finished_material_id;
+      if (fabricNameInput) fabricNameInput.value = selected.finished_material_name || "";
+      if (dyeingTypeInput) dyeingTypeInput.value = selected.dyeing_type || "";
+      if (dyeingNameInput) dyeingNameInput.value = selected.dyeing_name || "";
+      if (rateInput) rateInput.value = selected.rate || "0";
+      if (lossInput) lossInput.value = selected.expected_loss_percent || "0";
+      if (unitInput) unitInput.value = selected.unit || "";
+
+      const qtyVal = parseFloat(qtyInput?.value || "0");
+      const lossVal = parseFloat(lossInput?.value || "0");
+
+      if (sourceInput) sourceInput.value = qtyVal.toFixed(2);
+      if (expectedOutput) {
+        const out = qtyVal - ((qtyVal * lossVal) / 100);
+        expectedOutput.value = out.toFixed(2);
+      }
+
+      refreshTotals();
+    }
+
+    function bindRow(row) {
+      row.querySelectorAll("input, select, textarea").forEach((field) => {
+        field.addEventListener("input", refreshTotals);
+        field.addEventListener("change", refreshTotals);
+      });
+
+      const removeBtn = row.querySelector(".po-row-remove");
+      const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+      const sourceInput = row.querySelector('input[name$="-source_input_qty"]');
+      const expectedOutput = row.querySelector('input[name$="-expected_output_qty"]');
+      const lineFinal = row.querySelector('input[name$="-line_final_amount"]');
+      const sourceSelect = row.querySelector('select[name$="-source_greige_po_item"]');
+      const masterSelect = row.querySelector('select[name$="-dyeing_master_detail"]');
+      const finishedMaterialSelect = row.querySelector('select[name$="-finished_material"]');
+
+      if (sourceInput) sourceInput.setAttribute("readonly", "readonly");
+      if (expectedOutput) expectedOutput.setAttribute("readonly", "readonly");
+      if (lineFinal) lineFinal.setAttribute("readonly", "readonly");
+
+rebuildSourceItemOptions(row);
+applySourceItemRow(row);
+buildFinishedMaterialOptions(row, true);
+buildMasterOptions(row, true);
+applyDyeingMasterRow(row);
+
+      sourceSelect?.addEventListener("change", () => {
+        const finishedInput = row.querySelector('select[name$="-finished_material"]');
+        const masterInput = row.querySelector('select[name$="-dyeing_master_detail"]');
+
+        if (finishedInput) finishedInput.value = "";
+        if (masterInput) masterInput.value = "";
+
+        resetMasterPreview(row);
+        rebuildSourceItemOptions(row);
+        applySourceItemRow(row);
+        buildFinishedMaterialOptions(row, true);
+        buildMasterOptions(row, true);
+        applyDyeingMasterRow(row);
+      });
+
+      finishedMaterialSelect?.addEventListener("change", () => {
+        const masterInput = row.querySelector('select[name$="-dyeing_master_detail"]');
+        if (masterInput) {
+          masterInput.value = "";
+        }
+        resetMasterPreview(row);
+        buildMasterOptions(row, true);
+        applyDyeingMasterRow(row);
+      });
+
+      masterSelect?.addEventListener("change", () => {
+        applyDyeingMasterRow(row);
+      });
+
+      removeBtn?.addEventListener("click", () => {
+        if (deleteInput) deleteInput.checked = true;
+        row.style.display = "none";
+        refreshTotals();
+      });
+    }
+
+    function rebuildAllMasterDropdowns() {
+      rowsWrap?.querySelectorAll("[data-row]").forEach((row) => {
+        if (row.style.display === "none") return;
+
+        resetMasterPreview(row);
+        rebuildSourceItemOptions(row);
+        applySourceItemRow(row);
+        buildFinishedMaterialOptions(row, true);
+        buildMasterOptions(row, true);
+        applyDyeingMasterRow(row);
+      });
+    }
+
+    rowsWrap?.querySelectorAll("[data-row]").forEach(bindRow);
+
+    addBtn?.addEventListener("click", () => {
+      if (!totalForms || !template || !rowsWrap) return;
+      const idx = parseInt(totalForms.value || "0", 10);
+      const html = template.innerHTML.replaceAll("__prefix__", idx);
+      const temp = document.createElement("div");
+      temp.innerHTML = html.trim();
+      const row = temp.firstElementChild;
+      rowsWrap.appendChild(row);
+      totalForms.value = idx + 1;
+      bindRow(row);
+      refreshTotals();
+    });
+
+vendorEl?.addEventListener("change", () => {
+  rowsWrap.querySelectorAll("[data-row]").forEach((row) => {
+    if (row.style.display === "none") return;
+
+    const finishedInput = row.querySelector('select[name$="-finished_material"]');
+    const masterInput = row.querySelector('select[name$="-dyeing_master_detail"]');
+
+    if (finishedInput) finishedInput.value = "";
+    if (masterInput) masterInput.value = "";
+
+    resetMasterPreview(row);
+    rebuildSourceItemOptions(row);
+    applySourceItemRow(row);
+    buildFinishedMaterialOptions(row, true);
+    buildMasterOptions(row, true);
+    applyDyeingMasterRow(row);
+  });
+});
+
+    [discountEl, othersEl, gstEl, tcsEl].forEach((el) => {
+      if (!el) return;
+      el.addEventListener("input", refreshTotals);
+      el.addEventListener("change", refreshTotals);
+    });
+
+    rebuildAllMasterDropdowns();
+    refreshTotals();
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,244 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .vendor-master-list .jb-search{
+    grid-template-columns:minmax(240px,1.5fr) 170px 140px auto;
+  }
+
+  .vendor-master-list .jb-search select{
+    min-width:0;
+  }
+
+  .vendor-master-list .jb-table{
+    min-width:980px;
+  }
+
+  .vendor-master-list .jb-table th:nth-child(2),
+  .vendor-master-list .jb-table td:nth-child(2){
+    min-width:220px;
+  }
+
+  .vendor-master-list .jb-table th:nth-child(6),
+  .vendor-master-list .jb-table td:nth-child(6){
+    min-width:150px;
+  }
+
+  .vendor-master-list .jb-table th:nth-child(9),
+  .vendor-master-list .jb-table td:nth-child(9){
+    text-align:center;
+  }
+
+  .vendor-master-list .jb-table td:nth-child(1){
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:#5c6572;
+    font-family:var(--jb-font-sans);
+  }
+
+  .vendor-master-list .jb-primary{
+    font-family:var(--jb-font-serif);
+    font-size:13px;
+    line-height:1.15;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    color:#111923;
+  }
+
+  .vendor-master-list .jb-meta{
+    margin-top:2px;
+    font-size:10px;
+    line-height:1.2;
+    color:#7b8592;
+    font-family:var(--jb-font-sans);
+  }
+
+  .vendor-master-list .jb-actions{
+    justify-content:center;
+  }
+
+  @media (max-width: 980px){
+    .vendor-master-list .jb-search{
+      grid-template-columns:minmax(0,1fr) 150px 130px auto;
+    }
+  }
+
+  @media (max-width: 768px){
+    .vendor-master-list .jb-search{
+      grid-template-columns:1fr;
+    }
+
+    .vendor-master-list .jb-search .jb-search-btn{
+      width:100%;
+    }
+  }
+</style>
+
+<div class="jobbers-embed vendor-master-list">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Vendors</div>
+        <div class="jb-sub">Procurement suppliers for yarn, greige, ready and trims</div>
+      </div>
+
+      {% if not full_page %}
+      <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+        <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+
+    {% if delete_error %}
+    <div class="jb-errors jb-usage-error">
+      <div class="jb-usage-title">{{ delete_error }}</div>
+      {% if delete_label %}
+      <div class="jb-usage-label">Record: <strong>{{ delete_label }}</strong></div>
+      {% endif %}
+      {% if delete_usage %}
+      <div class="jb-usage-list">
+        {% for row in delete_usage %}
+        <div class="jb-usage-row">
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:vendor_list' %}" id="vendorSearchForm">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search code, vendor, contact, mobile, GST or city"
+          autocomplete="off"
+          aria-label="Search vendors"
+          id="vendorSearchInput"
+        >
+
+        <select name="vendor_type" aria-label="Filter by type">
+          <option value="">All types</option>
+          {% for key, label in vendor_type_choices %}
+          <option value="{{ key }}" {% if vendor_type == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+
+        <select name="status" aria-label="Filter by status">
+          <option value="">All status</option>
+          <option value="active" {% if status == "active" %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status == "inactive" %}selected{% endif %}>Inactive</option>
+        </select>
+
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="jb-tool-actions">
+        <a class="jb-add" href="{% url 'accounts:vendor_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Add Vendor
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Vendor</th>
+            <th>Type</th>
+            <th>Contact</th>
+            <th>Mobile</th>
+            <th>GST</th>
+            <th>City</th>
+            <th>Status</th>
+            <th style="width: 96px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for vendor in vendors %}
+          <tr>
+            <td>{{ vendor.vendor_code|default:"—" }}</td>
+            <td>
+              <div class="jb-primary">{{ vendor.name }}</div>
+              {% if vendor.email %}
+              <div class="jb-meta">{{ vendor.email }}</div>
+              {% endif %}
+            </td>
+            <td>{{ vendor.get_vendor_type_display }}</td>
+            <td>{{ vendor.contact_person|default:"—" }}</td>
+            <td>{{ vendor.phone|default:"—" }}</td>
+            <td>{{ vendor.gst_number|default:"—" }}</td>
+            <td>{{ vendor.city|default:"—" }}</td>
+            <td>
+              {% if vendor.is_active %}
+              <span class="jb-status is-active">Active</span>
+              {% else %}
+              <span class="jb-status is-inactive">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="jb-actions">
+              <a
+                class="jb-link jb-link-icon jb-link-edit"
+                href="{% url 'accounts:vendor_edit' vendor.id %}{% if not full_page %}?embed=1{% endif %}"
+                aria-label="Edit {{ vendor.name }}"
+                title="Edit"
+              >
+                <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z"></path>
+                  <path d="M14.06 4.94l3.75 3.75"></path>
+                </svg>
+              </a>
+
+              <form
+                method="post"
+                action="{% url 'accounts:vendor_delete' vendor.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="vendor &quot;{{ vendor.name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                <button
+                  class="jb-link jb-link-icon jb-link-danger jb-link-delete jb-link-button"
+                  type="submit"
+                  aria-label="Delete {{ vendor.name }}"
+                  title="Delete"
+                >
+                  <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M6 7l1 12h10l1-12"></path>
+                    <path d="M9 7V4h6v3"></path>
+                  </svg>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="jb-empty">No vendors found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+</div>

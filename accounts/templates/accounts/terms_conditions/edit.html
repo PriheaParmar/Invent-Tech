@@ -1,0 +1,11 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Edit Terms & Conditions - InventTech{% endblock %}
+{% block page_title %}Edit Terms & Conditions{% endblock %}
+{% block page_subtitle %}Update the selected terms entry{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/terms_conditions/edit_embed.html" with full_page=True %}
+</div>
+{% endblock %}

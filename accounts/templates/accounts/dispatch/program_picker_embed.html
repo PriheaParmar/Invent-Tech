@@ -1,0 +1,591 @@
+{% load static %}
+<style>
+  :root{
+    --dp-bg:#f4f7fc;
+    --dp-card:#ffffff;
+    --dp-card-soft:#fbfdff;
+    --dp-line:rgba(37,99,235,.10);
+    --dp-line-strong:rgba(37,99,235,.16);
+    --dp-text:#0f172a;
+    --dp-soft:#64748b;
+    --dp-faint:#94a3b8;
+    --dp-blue:#2563eb;
+    --dp-blue-dark:#1d4ed8;
+    --dp-blue-soft:#eaf2ff;
+    --dp-cyan:#0ea5e9;
+    --dp-shadow:0 14px 34px rgba(37,99,235,.08);
+    --dp-shadow-soft:0 8px 18px rgba(37,99,235,.06);
+    --dp-radius-xl:24px;
+    --dp-radius-lg:18px;
+    --dp-radius-md:14px;
+    --dp-radius-sm:11px;
+    --dp-font-display:Georgia,"Times New Roman",serif;
+    --dp-font-body:"Inter","Segoe UI",Arial,sans-serif;
+    --dp-font-data:"IBM Plex Sans","Inter","Segoe UI",Arial,sans-serif;
+  }
+
+  .dp-shell{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-width:0;
+    color:var(--dp-text);
+    font-family:var(--dp-font-body);
+  }
+
+  .dp-header{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px;
+    align-items:start;
+    padding:16px 16px 14px;
+    background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%);
+    border:1px solid var(--dp-line);
+    border-radius:var(--dp-radius-xl);
+    box-shadow:var(--dp-shadow);
+  }
+
+  .dp-titlebox{
+    min-width:0;
+  }
+
+  .dp-kicker{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin:0 0 8px;
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--dp-blue);
+    font-family:var(--dp-font-body);
+  }
+
+  .dp-kicker::before{
+    content:"";
+    width:24px;
+    height:1px;
+    background:rgba(37,99,235,.35);
+  }
+
+  .dp-title{
+    margin:0;
+    font-size:28px;
+    line-height:1.02;
+    color:var(--dp-text);
+    font-weight:700;
+    letter-spacing:-.03em;
+    font-family:var(--dp-font-display);
+  }
+
+  .dp-sub{
+    margin:7px 0 0;
+    max-width:760px;
+    color:var(--dp-soft);
+    font-size:11.8px;
+    line-height:1.6;
+    font-weight:500;
+  }
+
+  .dp-stats{
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .dp-stat{
+    min-width:104px;
+    padding:9px 10px;
+    border-radius:16px;
+    background:linear-gradient(180deg,#ffffff 0%,#f6faff 100%);
+    border:1px solid var(--dp-line);
+    box-shadow:var(--dp-shadow-soft);
+  }
+
+  .dp-stat-label{
+    display:block;
+    margin:0 0 6px;
+    color:var(--dp-faint);
+    font-size:9px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .dp-stat-value{
+    display:block;
+    color:var(--dp-text);
+    font-family:var(--dp-font-display);
+    font-size:20px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:-.03em;
+  }
+
+  .dp-toolbar{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:10px;
+    align-items:center;
+    background:#fff;
+    border:1px solid var(--dp-line);
+    border-radius:20px;
+    box-shadow:var(--dp-shadow);
+    padding:12px;
+  }
+
+  .dp-search-form{
+    display:grid;
+    grid-template-columns:minmax(240px,1fr) auto auto;
+    gap:8px;
+    align-items:center;
+    min-width:0;
+  }
+
+  .dp-input{
+    width:100%;
+    min-width:0;
+    min-height:38px;
+    border:none;
+    outline:none;
+    border-radius:12px;
+    padding:0 13px;
+    font-size:12.6px;
+    font-weight:600;
+    color:var(--dp-text);
+    background:#fff;
+    box-shadow:inset 0 0 0 1px var(--dp-line);
+    transition:all .18s ease;
+    font-family:var(--dp-font-body);
+  }
+
+  .dp-input::placeholder{
+    color:var(--dp-faint);
+    font-weight:500;
+  }
+
+  .dp-input:focus{
+    background:#fff;
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.28), 0 0 0 4px rgba(37,99,235,.09);
+  }
+
+  .dp-btn{
+    appearance:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:38px;
+    padding:0 13px;
+    border-radius:12px;
+    border:none;
+    background:#fff;
+    color:var(--dp-text);
+    text-decoration:none;
+    font-weight:800;
+    font-size:10.8px;
+    line-height:1;
+    font-family:var(--dp-font-body);
+    letter-spacing:.04em;
+    box-shadow:inset 0 0 0 1px var(--dp-line);
+    transition:all .18s ease;
+    white-space:nowrap;
+    cursor:pointer;
+    gap:8px;
+  }
+
+  .dp-btn:hover{
+    transform:translateY(-1px);
+  }
+
+  .dp-btn-primary{
+    background:linear-gradient(180deg,var(--dp-blue) 0%, var(--dp-blue-dark) 100%);
+    color:#fff;
+    box-shadow:0 10px 20px rgba(37,99,235,.18);
+  }
+
+  .dp-btn-primary:hover{
+    background:linear-gradient(180deg,var(--dp-blue-dark) 0%, #1e40af 100%);
+    color:#fff;
+  }
+
+  .dp-btn-clear:hover{
+    color:var(--dp-blue);
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.22), 0 8px 18px rgba(37,99,235,.08);
+  }
+
+  .dp-btn-search{
+    width:38px;
+    min-width:38px;
+    padding:0;
+  }
+
+  .dp-btn-svg{
+    width:16px;
+    height:16px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    flex:0 0 auto;
+  }
+
+  .dp-toolbar-note{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .dp-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:30px;
+    padding:0 12px;
+    border-radius:999px;
+    background:var(--dp-blue-soft);
+    color:var(--dp-blue);
+    font-size:10.5px;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  .dp-list{
+    background:#fff;
+    border:1px solid var(--dp-line);
+    border-radius:var(--dp-radius-xl);
+    box-shadow:var(--dp-shadow);
+    overflow:hidden;
+  }
+
+  .dp-list-top{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 16px 12px;
+    border-bottom:1px solid var(--dp-line);
+    background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%);
+  }
+
+  .dp-list-title{
+    font-size:15px;
+    line-height:1.1;
+    font-weight:700;
+    letter-spacing:-.02em;
+    color:var(--dp-text);
+    font-family:var(--dp-font-display);
+  }
+
+  .dp-list-sub{
+    margin-top:5px;
+    font-size:11px;
+    line-height:1.5;
+    color:var(--dp-soft);
+    font-weight:500;
+  }
+
+  .dp-list-count{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:30px;
+    padding:0 12px;
+    border-radius:999px;
+    background:var(--dp-blue-soft);
+    color:var(--dp-blue);
+    font-size:10.8px;
+    font-weight:800;
+    letter-spacing:.06em;
+    white-space:nowrap;
+  }
+
+  .dp-table-wrap{
+    overflow:auto;
+  }
+
+  .dp-table{
+    width:100%;
+    min-width:980px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .dp-table th{
+    background:#fff;
+    color:var(--dp-faint);
+    font-size:9.8px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    padding:12px 12px;
+    border-bottom:1px solid var(--dp-line-strong);
+    text-align:left;
+    white-space:nowrap;
+    font-family:var(--dp-font-body);
+    position:sticky;
+    top:0;
+    z-index:2;
+  }
+
+  .dp-table td{
+    padding:13px 12px;
+    border-bottom:1px solid rgba(15,23,42,.06);
+    vertical-align:top;
+    color:var(--dp-text);
+    font-size:12px;
+    line-height:1.5;
+    background:transparent;
+  }
+
+  .dp-table tr:last-child td{
+    border-bottom:none;
+  }
+
+  .dp-table tbody tr:hover td{
+    background:#fbfdff;
+  }
+
+  .dp-meta{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    min-width:0;
+  }
+
+  .dp-main{
+    font-weight:700;
+    color:var(--dp-text);
+    font-size:12.6px;
+    line-height:1.35;
+    word-break:break-word;
+  }
+
+  .dp-main-code{
+    font-family:var(--dp-font-display);
+    font-size:13px;
+    letter-spacing:-.02em;
+    font-weight:700;
+  }
+
+  .dp-subline{
+    font-size:11px;
+    line-height:1.45;
+    color:var(--dp-soft);
+    font-weight:500;
+  }
+
+  .dp-date{
+    font-family:var(--dp-font-data);
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--dp-text);
+  }
+
+  .dp-count{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    background:var(--dp-blue-soft);
+    color:var(--dp-blue);
+    font-weight:800;
+    font-size:10.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  .dp-empty{
+    text-align:center;
+    padding:48px 18px;
+    color:var(--dp-soft);
+    font-size:12.5px;
+    line-height:1.6;
+    font-weight:500;
+  }
+
+  @media (max-width:1100px){
+    .dp-toolbar{
+      grid-template-columns:1fr;
+    }
+
+    .dp-toolbar-note{
+      justify-content:flex-start;
+    }
+  }
+
+  @media (max-width:920px){
+    .dp-header{
+      grid-template-columns:1fr;
+    }
+
+    .dp-stats{
+      justify-content:flex-start;
+    }
+  }
+
+  @media (max-width:760px){
+    .dp-search-form{
+      grid-template-columns:1fr;
+    }
+
+    .dp-btn-search,
+    .dp-btn-clear{
+      width:100%;
+    }
+
+    .dp-list-top{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+
+    .dp-title{
+      font-size:26px;
+    }
+  }
+</style>
+
+<div class="dp-shell">
+  <div class="dp-header">
+    <div class="dp-titlebox">
+      <div class="dp-kicker">Sales Dispatch</div>
+      <h2 class="dp-title">Select Program</h2>
+      <p class="dp-sub">
+        Choose a production program to create a dispatch challan with linked SKU, firm, and product details.
+      </p>
+    </div>
+
+    <div class="dp-stats">
+      <div class="dp-stat">
+        <span class="dp-stat-label">Programs</span>
+        <span class="dp-stat-value">{{ programs|length }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dp-toolbar">
+    <form method="get" class="dp-search-form">
+      {% if request.GET.embed == '1' %}
+        <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <input
+        type="text"
+        name="q"
+        value="{{ q }}"
+        class="dp-input"
+        placeholder="Search program no, SKU, product name..."
+      >
+
+      <button type="submit" class="dp-btn dp-btn-primary dp-btn-search" aria-label="Search programs" title="Search programs">
+        <svg class="dp-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+      </button>
+
+      <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dp-btn dp-btn-clear" aria-label="Clear program search" title="Clear program search">
+        <svg class="dp-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+        <span>Clear</span>
+      </a>
+    </form>
+
+    <div class="dp-toolbar-note">
+      <span class="dp-pill">Dispatch Register</span>
+    </div>
+  </div>
+
+  <div class="dp-list">
+    <div class="dp-list-top">
+      <div>
+        <div class="dp-list-title">Program Register</div>
+        <div class="dp-list-sub">Programs available for dispatch challan creation</div>
+      </div>
+      <div class="dp-list-count">{{ programs|length }} Row{{ programs|length|pluralize }}</div>
+    </div>
+
+    <div class="dp-table-wrap">
+      <table class="dp-table">
+        <thead>
+          <tr>
+            <th>Program No</th>
+            <th>Finishing Date</th>
+            <th>SKU</th>
+            <th>Product</th>
+            <th>Firm</th>
+            <th>Challans</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for program in programs %}
+            <tr>
+              <td>
+                <div class="dp-meta">
+                  <div class="dp-main dp-main-code">{{ program.program_no }}</div>
+                  <div class="dp-subline">Program date: {{ program.program_date|date:"d M Y" }}</div>
+                </div>
+              </td>
+
+              <td>
+                <span class="dp-date">{{ program.finishing_date|date:"d M Y"|default:"-" }}</span>
+              </td>
+
+              <td>
+                <div class="dp-meta">
+                  <div class="dp-main dp-main-code">{{ program.bom.sku|default:"-" }}</div>
+                </div>
+              </td>
+
+              <td>
+                <div class="dp-meta">
+                  <div class="dp-main">{{ program.bom.product_name|default:"-" }}</div>
+                  <div class="dp-subline">Qty: {{ program.total_qty|default:"0" }}</div>
+                </div>
+              </td>
+
+              <td>
+                <div class="dp-meta">
+                  <div class="dp-main">{{ program.firm.firm_name|default:"-" }}</div>
+                </div>
+              </td>
+
+              <td>
+                <span class="dp-count">{{ program.challan_count|default:0 }}</span>
+              </td>
+
+              <td>
+                <a href="{% url 'accounts:dispatch_create' program.pk %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dp-btn dp-btn-primary">
+                  <svg class="dp-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12h14"></path>
+                    <path d="M13 6l6 6-6 6"></path>
+                  </svg>
+                  <span>Select</span>
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="dp-empty">No programs found for dispatch challan creation.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

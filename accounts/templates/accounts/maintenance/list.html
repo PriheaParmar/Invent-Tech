@@ -1,0 +1,414 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Maintenance - InventTech{% endblock %}
+{% block page_title %}Maintenance{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@500;600;700;800&display=swap');
+
+  .mt-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .mt-panel{
+    background:#fff;
+    box-shadow:0 10px 28px rgba(15,23,42,.05);
+    overflow:hidden;
+  }
+
+  .mt-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+    padding:20px 22px 16px;
+    border-bottom:1px solid #efefef;
+    background:#fff;
+  }
+
+  .mt-title{
+    margin:0;
+    font-family:"Cormorant Garamond", serif;
+    font-size:32px;
+    line-height:1;
+    font-weight:800;
+    color:#111;
+  }
+
+  .mt-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .mt-search{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .mt-search input{
+    width:320px;
+    max-width:100%;
+    height:46px;
+    border:1px solid #dddddd;
+    border-radius:12px;
+    background:#fff;
+    padding:0 14px;
+    font:600 14px "Inter", sans-serif;
+    color:#111;
+    outline:none;
+    box-sizing:border-box;
+  }
+
+  .mt-search input:focus{
+    border-color:#111;
+  }
+
+  .mt-btn{
+    min-height:46px;
+    padding:0 18px;
+    border-radius:12px;
+    border:1px solid #dcdcdc;
+    background:#fff;
+    color:#111;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font:800 13px "Inter", sans-serif;
+    cursor:pointer;
+    transition:.18s ease;
+    box-sizing:border-box;
+  }
+
+  .mt-btn:hover{
+    border-color:#111;
+  }
+
+  .mt-btn-dark{
+    background:#111;
+    border-color:#111;
+    color:#fff;
+  }
+
+  .mt-btn-dark:hover{
+    background:#000;
+    border-color:#000;
+    color:#fff;
+  }
+
+  .mt-btn svg{
+    width:15px;
+    height:15px;
+    flex:0 0 15px;
+  }
+
+  .mt-stats{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:12px;
+    padding:16px 16px 0;
+  }
+
+  .mt-stat{
+    border:1px solid #ececec;
+    border-radius:14px;
+    background:#fafafa;
+    padding:14px 16px;
+  }
+
+  .mt-stat-label{
+    font:800 11px "Inter", sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:#777;
+  }
+
+  .mt-stat-value{
+    margin-top:10px;
+    font-family:"Cormorant Garamond", serif;
+    font-size:30px;
+    line-height:1;
+    font-weight:700;
+    color:#111;
+  }
+
+  .mt-table-box{
+    padding:16px;
+  }
+
+  .mt-table-wrap{
+    overflow:auto;
+    border:1px solid #ececec;
+    border-radius:14px;
+    background:#fff;
+  }
+
+  .mt-table{
+    width:100%;
+    min-width:900px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .mt-table th{
+    padding:15px 18px;
+    background:#f7f7f7;
+    border-bottom:1px solid #e9e9e9;
+    text-align:left;
+    color:#666;
+    font:800 11px "Inter", sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    white-space:nowrap;
+  }
+
+  .mt-table td{
+    padding:16px 18px;
+    border-bottom:1px solid #efefef;
+    color:#111;
+    font:700 13px "Inter", sans-serif;
+    background:#fff;
+    vertical-align:middle;
+  }
+
+  .mt-table tbody tr:nth-child(even) td{
+    background:#fcfcfc;
+  }
+
+  .mt-month{
+    font-family:"Cormorant Garamond", serif;
+    font-size:20px;
+    font-weight:700;
+    color:#111;
+    line-height:1;
+  }
+
+  .mt-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:84px;
+    padding:8px 14px;
+    border-radius:999px;
+    background:#111;
+    color:#fff;
+    font:800 12px "Inter", sans-serif;
+  }
+
+  .mt-money{
+    font:800 14px "Inter", sans-serif;
+    color:#111;
+  }
+
+  .mt-date{
+    font:800 13px "Inter", sans-serif;
+    color:#111;
+  }
+
+  .mt-empty{
+    text-align:center;
+    padding:36px 16px !important;
+    color:#777 !important;
+    font:700 14px "Inter", sans-serif !important;
+  }
+
+  @media (max-width: 1080px){
+    .mt-stats{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px){
+    .mt-head{
+      padding:16px;
+    }
+
+    .mt-title{
+      font-size:34px;
+    }
+
+    .mt-actions,
+    .mt-search{
+      width:100%;
+    }
+
+    .mt-search input,
+    .mt-btn{
+      width:100%;
+    }
+
+    .mt-stats{
+      grid-template-columns:1fr;
+      padding:14px 14px 0;
+    }
+
+    .mt-table-box{
+      padding:14px;
+    }
+  }
+</style>
+
+<div class="mt-wrap">
+  <section class="mt-panel">
+    <div class="mt-head">
+      <h2 class="mt-title">Maintenance</h2>
+
+      <div class="mt-actions">
+        <form method="get" class="mt-search">
+          <input type="search" name="q" value="{{ q }}" placeholder="Search">
+          <button class="mt-btn" type="submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M20 20l-3.5-3.5"></path>
+            </svg>
+            Search
+          </button>
+        </form>
+
+        <button type="button" class="mt-btn mt-btn-dark" id="openMaintenancePopup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Add Maintenance
+        </button>
+      </div>
+    </div>
+
+
+
+    <div class="mt-table-box">
+      <div class="mt-table-wrap">
+        <table class="mt-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Total Inwards</th>
+              <th>Expense Total</th>
+              <th>Final Cost</th>
+              <th>Entry Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in records %}
+              <tr>
+                <td><div class="mt-month">{{ row.month_display }}</div></td>
+                <td><span class="mt-pill">{{ row.inward_total }}</span></td>
+                <td><span class="mt-money">₹ {{ row.expense_total }}</span></td>
+                <td><span class="mt-money">₹ {{ row.cost_total }}</span></td>
+                <td><span class="mt-date">{{ row.entry_date|date:"d-m-Y" }}</span></td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="mt-empty">No maintenance record found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="mt-modal" id="maintenanceModal">
+  <div class="mt-modal-backdrop"></div>
+  <div class="mt-modal-dialog">
+    <button type="button" class="mt-modal-close" id="closeMaintenancePopup">&times;</button>
+    <iframe id="maintenancePopupFrame" src="" frameborder="0"></iframe>
+  </div>
+</div>
+
+<style>
+  .mt-modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    z-index:1200;
+  }
+
+  .mt-modal.is-open{
+    display:block;
+  }
+
+  .mt-modal-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.55);
+  }
+
+  .mt-modal-dialog{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:min(1280px, 96vw);
+    height:min(90vh, 900px);
+    background:#fff;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.28);
+  }
+
+  .mt-modal-close{
+    position:absolute;
+    top:12px;
+    right:14px;
+    width:38px;
+    height:38px;
+    border:none;
+    border-radius:999px;
+    background:#111;
+    color:#fff;
+    font-size:22px;
+    line-height:1;
+    cursor:pointer;
+    z-index:2;
+  }
+
+  #maintenancePopupFrame{
+    width:100%;
+    height:100%;
+    border:none;
+    background:#fff;
+  }
+</style>
+
+<script>
+  (function () {
+    const openBtn = document.getElementById("openMaintenancePopup");
+    const closeBtn = document.getElementById("closeMaintenancePopup");
+    const modal = document.getElementById("maintenanceModal");
+    const frame = document.getElementById("maintenancePopupFrame");
+
+    if (openBtn) {
+      openBtn.addEventListener("click", function () {
+        frame.src = "{% url 'accounts:maintenance_add' %}?popup=1";
+        modal.classList.add("is-open");
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function () {
+        modal.classList.remove("is-open");
+        frame.src = "";
+      });
+    }
+
+    modal.addEventListener("click", function (e) {
+      if (e.target.classList.contains("mt-modal-backdrop")) {
+        modal.classList.remove("is-open");
+        frame.src = "";
+      }
+    });
+  })();
+</script>
+{% endblock %}

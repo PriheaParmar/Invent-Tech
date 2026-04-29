@@ -1,0 +1,273 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .subcategories-embed .jb-head {
+    align-items: center;
+  }
+
+  .subcategories-embed .jb-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .subcategories-embed .sc-chip {
+    min-width: 74px;
+    padding: 6px 10px;
+    border: 1px solid var(--jb-line);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: var(--jb-shadow-sm);
+    text-align: left;
+  }
+
+  .subcategories-embed .sc-chip span {
+    display: block;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--jb-text-soft);
+    line-height: 1.1;
+  }
+
+  .subcategories-embed .sc-chip strong {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--jb-font-serif);
+    font-size: 15px;
+    line-height: 1;
+    color: #151d27;
+  }
+
+  .subcategories-embed .jb-table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .subcategories-embed .jb-table th:nth-child(1),
+  .subcategories-embed .jb-table td:nth-child(1) {
+    width: 28%;
+  }
+
+  .subcategories-embed .jb-table th:nth-child(2),
+  .subcategories-embed .jb-table td:nth-child(2) {
+    width: 24%;
+  }
+
+  .subcategories-embed .jb-table th:nth-child(3),
+  .subcategories-embed .jb-table td:nth-child(3) {
+    width: 33%;
+  }
+
+  .subcategories-embed .jb-table th:nth-child(4),
+  .subcategories-embed .jb-table td:nth-child(4) {
+    width: 15%;
+  }
+
+  .subcategories-embed .sc-main {
+    color: var(--jb-text);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .subcategories-embed .sc-desc {
+    color: var(--jb-text);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .subcategories-embed .jb-table th:last-child {
+    text-align: center;
+  }
+
+  .subcategories-embed .sc-actions-cell {
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .subcategories-embed .sc-actions-cell .jb-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .subcategories-embed .sc-actions-cell .jb-inline-delete {
+    display: inline;
+    margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    .subcategories-embed .jb-head {
+      align-items: flex-start;
+    }
+
+    .subcategories-embed .jb-head-actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .subcategories-embed .sc-chip {
+      min-width: 68px;
+    }
+  }
+</style>
+
+<div class="jobbers-embed subcategories-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Sub Categories</div>
+        <div class="jb-sub">Maintain second-level product grouping</div>
+      </div>
+
+      <div class="jb-head-actions">
+        <div class="sc-chip">
+          <span>Total</span>
+          <strong>{{ stats.total|default:0 }}</strong>
+        </div>
+        <div class="sc-chip">
+          <span>With Description</span>
+          <strong>{{ stats.with_description|default:0 }}</strong>
+        </div>
+
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if delete_error %}
+    <div class="jb-errors jb-usage-error">
+      <div class="jb-usage-title">{{ delete_error }}</div>
+      {% if delete_label %}
+      <div class="jb-usage-label">Record: <strong>{{ delete_label }}</strong></div>
+      {% endif %}
+      {% if delete_usage %}
+      <div class="jb-usage-list">
+        {% for row in delete_usage %}
+        <div class="jb-usage-row">
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:subcategory_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search sub category, description or main category"
+          autocomplete="off"
+          aria-label="Search sub categories"
+        >
+
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="jb-tool-actions">
+        {% if q %}
+        <a class="jb-secondary" href="{% url 'accounts:subcategory_list' %}{% if not full_page %}?embed=1{% endif %}">
+          Clear
+        </a>
+        {% endif %}
+
+        <a class="jb-add" href="{% url 'accounts:subcategory_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Add Sub Category
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Main Category</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th style="width: 96px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sub_category in sub_categories %}
+          <tr>
+            <td class="sc-main">{{ sub_category.main_category|default:"—" }}</td>
+            <td>{{ sub_category.name }}</td>
+            <td class="sc-desc">{{ sub_category.description|default:"—"|truncatechars:140 }}</td>
+            <td class="sc-actions-cell">
+              <div class="jb-actions">
+                <a
+                  class="jb-link jb-link-icon jb-link-edit"
+                  href="{% url 'accounts:subcategory_edit' sub_category.id %}{% if not full_page %}?embed=1{% endif %}"
+                  aria-label="Edit {{ sub_category.name }}"
+                  title="Edit"
+                >
+                  <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z"></path>
+                    <path d="M14.06 4.94l3.75 3.75"></path>
+                  </svg>
+                </a>
+
+                <form
+                  method="post"
+                  action="{% url 'accounts:subcategory_delete' sub_category.id %}{% if not full_page %}?embed=1{% endif %}"
+                  class="jb-inline-delete js-jb-delete-form"
+                  data-delete-label="sub category &quot;{{ sub_category.name|escape }}&quot;"
+                >
+                  {% csrf_token %}
+                  {% if not full_page %}
+                  <input type="hidden" name="embed" value="1">
+                  {% endif %}
+                  <button
+                    class="jb-link jb-link-icon jb-link-danger jb-link-delete jb-link-button"
+                    type="submit"
+                    aria-label="Delete {{ sub_category.name }}"
+                    title="Delete"
+                  >
+                    <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 7h16"></path>
+                      <path d="M10 11v6"></path>
+                      <path d="M14 11v6"></path>
+                      <path d="M6 7l1 12h10l1-12"></path>
+                      <path d="M9 7V4h6v3"></path>
+                    </svg>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="jb-empty">No sub categories found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+</div>

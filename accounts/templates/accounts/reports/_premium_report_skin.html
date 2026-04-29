@@ -1,0 +1,639 @@
+<style>
+  :root {
+    --r-bg: #f6f8fc;
+    --r-panel: #ffffff;
+    --r-line: #dbe3f0;
+    --r-line-strong: #c6d3e6;
+    --r-text: #182433;
+    --r-muted: #6c7a89;
+    --r-blue: #2563eb;
+    --r-blue-soft: #edf4ff;
+    --r-blue-line: #cfe0ff;
+    --r-green: #16a34a;
+    --r-green-soft: #ecfdf3;
+    --r-shadow: 0 12px 30px rgba(15, 23, 42, .06);
+    --r-radius: 18px;
+  }
+
+  .yps-page,
+  .gps-page,
+  .dps-page,
+  .rps-page,
+  .ppr-page,
+  .psf-page,
+  .pjr-page,
+  .dpr-page,
+  .ils-page,
+  .uls-page,
+  .rfpr-page,
+  .uldr-page,
+  .st-page,
+  .report-page {
+    padding: 16px;
+    background: var(--r-bg);
+  }
+
+  .yps-shell,
+  .gps-shell,
+  .dps-shell,
+  .rps-shell,
+  .ppr-shell,
+  .psf-shell,
+  .pjr-shell,
+  .dpr-shell,
+  .ils-shell,
+  .uls-shell,
+  .rfpr-shell,
+  .uldr-shell,
+  .st-shell,
+  .report-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .yps-toolbar,
+  .gps-toolbar,
+  .dps-toolbar,
+  .rps-toolbar,
+  .ppr-toolbar,
+  .psf-toolbar,
+  .pjr-toolbar,
+  .dpr-toolbar,
+  .ils-toolbar,
+  .uls-toolbar,
+  .rfpr-toolbar,
+  .uldr-toolbar,
+  .st-toolbar,
+  .filter-wrap {
+    display: flex !important;
+    align-items: end !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    background: var(--r-panel) !important;
+    border: 1px solid var(--r-line) !important;
+    border-radius: var(--r-radius) !important;
+    box-shadow: var(--r-shadow) !important;
+    padding: 16px 18px !important;
+  }
+
+  .yps-toolbar-left,
+  .gps-toolbar-left,
+  .dps-toolbar-left,
+  .rps-toolbar-left,
+  .ppr-toolbar-left,
+  .psf-toolbar-left,
+  .pjr-toolbar-left,
+  .dpr-toolbar-left,
+  .ils-toolbar-left,
+  .uls-toolbar-left,
+  .rfpr-toolbar-left,
+  .uldr-toolbar-left,
+  .st-toolbar-left,
+  .filter-grid {
+    display: flex !important;
+    align-items: end !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .yps-field,
+  .gps-field,
+  .dps-field,
+  .rps-field,
+  .ppr-field,
+  .psf-field,
+  .pjr-field,
+  .dpr-field,
+  .ils-field,
+  .uls-field,
+  .rfpr-field,
+  .uldr-field,
+  .st-field,
+  .field {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    min-width: 210px !important;
+  }
+
+  .yps-field label,
+  .gps-field label,
+  .dps-field label,
+  .rps-field label,
+  .ppr-field label,
+  .psf-field label,
+  .pjr-field label,
+  .dpr-field label,
+  .ils-field label,
+  .uls-field label,
+  .rfpr-field label,
+  .uldr-field label,
+  .st-field label,
+  .field label {
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    color: var(--r-muted) !important;
+    letter-spacing: .02em !important;
+  }
+
+  .yps-field input,
+  .gps-field input,
+  .dps-field input,
+  .rps-field input,
+  .ppr-field input,
+  .psf-field input,
+  .pjr-field input,
+  .dpr-field input,
+  .ils-field input,
+  .uls-field input,
+  .rfpr-field input,
+  .uldr-field input,
+  .st-field input,
+  .field input,
+  .field select {
+    height: 42px !important;
+    border: 1px solid var(--r-line) !important;
+    border-radius: 12px !important;
+    padding: 0 12px !important;
+    font-size: 14px !important;
+    color: var(--r-text) !important;
+    background: #fff !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .yps-field input:focus,
+  .gps-field input:focus,
+  .dps-field input:focus,
+  .rps-field input:focus,
+  .ppr-field input:focus,
+  .psf-field input:focus,
+  .pjr-field input:focus,
+  .dpr-field input:focus,
+  .ils-field input:focus,
+  .uls-field input:focus,
+  .rfpr-field input:focus,
+  .uldr-field input:focus,
+  .st-field input:focus,
+  .field input:focus,
+  .field select:focus {
+    border-color: #9dbcfb !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .08) !important;
+  }
+
+  .yps-btn,
+  .gps-btn,
+  .dps-btn,
+  .rps-btn,
+  .ppr-btn,
+  .psf-btn,
+  .pjr-btn,
+  .dpr-btn,
+  .ils-btn,
+  .uls-btn,
+  .rfpr-btn,
+  .uldr-btn,
+  .st-btn,
+  .btn {
+    height: 42px !important;
+    padding: 0 16px !important;
+    border-radius: 12px !important;
+    border: 1px solid transparent !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+  }
+
+  .yps-btn-primary,
+  .gps-btn-primary,
+  .dps-btn-primary,
+  .rps-btn-primary,
+  .ppr-btn-primary,
+  .psf-btn-primary,
+  .pjr-btn-primary,
+  .dpr-btn-primary,
+  .ils-btn-primary,
+  .uls-btn-primary,
+  .rfpr-btn-primary,
+  .uldr-btn-primary,
+  .st-btn-primary,
+  .btn-primary {
+    background: var(--r-blue) !important;
+    color: #fff !important;
+  }
+
+  .yps-btn-light,
+  .gps-btn-light,
+  .dps-btn-light,
+  .rps-btn-light,
+  .ppr-btn-light,
+  .psf-btn-light,
+  .pjr-btn-light,
+  .dpr-btn-light,
+  .ils-btn-light,
+  .uls-btn-light,
+  .rfpr-btn-light,
+  .uldr-btn-light,
+  .st-btn-light,
+  .btn-light {
+    background: #fff !important;
+    color: var(--r-text) !important;
+    border-color: var(--r-line) !important;
+  }
+
+  .yps-btn-excel,
+  .gps-btn-excel,
+  .dps-btn-excel,
+  .rps-btn-excel,
+  .ppr-btn-excel,
+  .psf-btn-excel,
+  .pjr-btn-excel,
+  .dpr-btn-excel,
+  .ils-btn-excel,
+  .uls-btn-excel,
+  .rfpr-btn-excel,
+  .uldr-btn-excel,
+  .st-btn-excel {
+    background: #fff !important;
+    color: var(--r-green) !important;
+    border-color: #bbf7d0 !important;
+  }
+
+  .yps-sheet,
+  .gps-sheet,
+  .dps-sheet,
+  .rps-sheet,
+  .ppr-sheet,
+  .psf-sheet,
+  .pjr-sheet,
+  .dpr-sheet,
+  .ils-sheet,
+  .uls-sheet,
+  .rfpr-sheet,
+  .uldr-sheet,
+  .st-sheet,
+  .report-card {
+    background: var(--r-panel) !important;
+    border: 1px solid var(--r-line) !important;
+    border-radius: var(--r-radius) !important;
+    box-shadow: var(--r-shadow) !important;
+    overflow: hidden !important;
+  }
+
+  .yps-sheet-head,
+  .gps-sheet-head,
+  .dps-sheet-head,
+  .rps-sheet-head,
+  .ppr-sheet-head,
+  .psf-sheet-head,
+  .pjr-sheet-head,
+  .dpr-sheet-head,
+  .ils-sheet-head,
+  .uls-sheet-head,
+  .rfpr-sheet-head,
+  .uldr-sheet-head,
+  .st-sheet-head,
+  .report-head {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 18px 20px 14px !important;
+    border-bottom: 1px solid #eef2f8 !important;
+    background: #fff !important;
+  }
+
+  .yps-sheet-title,
+  .gps-sheet-title,
+  .dps-sheet-title,
+  .rps-sheet-title,
+  .ppr-sheet-title,
+  .psf-sheet-title,
+  .pjr-sheet-title,
+  .dpr-sheet-title,
+  .ils-sheet-title,
+  .uls-sheet-title,
+  .rfpr-sheet-title,
+  .uldr-sheet-title,
+  .st-sheet-title,
+  .report-title {
+    margin: 0 !important;
+    font-size: 22px !important;
+    line-height: 1.1 !important;
+    color: var(--r-text) !important;
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-weight: 700 !important;
+  }
+
+  .yps-sheet-meta,
+  .gps-sheet-meta,
+  .dps-sheet-meta,
+  .rps-sheet-meta,
+  .ppr-sheet-meta,
+  .psf-sheet-meta,
+  .pjr-sheet-meta,
+  .dpr-sheet-meta,
+  .ils-sheet-meta,
+  .uls-sheet-meta,
+  .rfpr-sheet-meta,
+  .uldr-sheet-meta,
+  .st-meta,
+  .report-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    border: 1px solid var(--r-blue-line) !important;
+    background: var(--r-blue-soft) !important;
+    color: var(--r-blue) !important;
+    border-radius: 999px !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+  }
+
+  .yps-table-wrap,
+  .gps-table-wrap,
+  .dps-table-wrap,
+  .rps-table-wrap,
+  .ppr-table-wrap,
+  .psf-table-wrap,
+  .pjr-table-wrap,
+  .dpr-table-wrap,
+  .ils-table-wrap,
+  .uls-table-wrap,
+  .rfpr-table-wrap,
+  .uldr-table-wrap,
+  .table-wrap,
+  .table-scroll {
+    width: 100% !important;
+    overflow: auto !important;
+    border-top: 1px solid #eef2f8 !important;
+  }
+
+  .yps-table,
+  .gps-table,
+  .dps-table,
+  .rps-table,
+  .ppr-table,
+  .psf-table,
+  .pjr-table,
+  .dpr-table,
+  .ils-table,
+  .uls-table,
+  .rfpr-table,
+  .uldr-table,
+  .table,
+  .report-table {
+    width: max-content !important;
+    min-width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    font-size: 13px !important;
+    color: var(--r-text) !important;
+    table-layout: auto !important;
+  }
+
+  .yps-table thead th,
+  .gps-table thead th,
+  .dps-table thead th,
+  .rps-table thead th,
+  .ppr-table thead th,
+  .psf-table thead th,
+  .pjr-table thead th,
+  .dpr-table thead th,
+  .ils-table thead th,
+  .uls-table thead th,
+  .rfpr-table thead th,
+  .uldr-table thead th,
+  .table thead th,
+  .report-table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2 !important;
+    background: #f9fbff !important;
+    color: #4a5b72 !important;
+    font-weight: 800 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: .03em !important;
+    border: none !important;
+    border-bottom: 1px solid var(--r-line-strong) !important;
+    padding: 12px 10px !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  .yps-table tbody td,
+  .gps-table tbody td,
+  .dps-table tbody td,
+  .rps-table tbody td,
+  .ppr-table tbody td,
+  .psf-table tbody td,
+  .pjr-table tbody td,
+  .dpr-table tbody td,
+  .ils-table tbody td,
+  .uls-table tbody td,
+  .rfpr-table tbody td,
+  .uldr-table tbody td,
+  .table tbody td,
+  .report-table tbody td,
+  .yps-table tfoot td,
+  .gps-table tfoot td,
+  .dps-table tfoot td,
+  .rps-table tfoot td,
+  .ppr-table tfoot td,
+  .psf-table tfoot td,
+  .pjr-table tfoot td,
+  .dpr-table tfoot td,
+  .ils-table tfoot td,
+  .uls-table tfoot td,
+  .rfpr-table tfoot td,
+  .uldr-table tfoot td,
+  .table tfoot td,
+  .report-table tfoot td {
+    padding: 11px 10px !important;
+    border: none !important;
+    border-bottom: 1px solid #eef2f8 !important;
+    white-space: nowrap !important;
+    background: #fff !important;
+    line-height: 1.35 !important;
+  }
+
+  .yps-table tbody tr:hover td,
+  .gps-table tbody tr:hover td,
+  .dps-table tbody tr:hover td,
+  .rps-table tbody tr:hover td,
+  .ppr-table tbody tr:hover td,
+  .psf-table tbody tr:hover td,
+  .pjr-table tbody tr:hover td,
+  .dpr-table tbody tr:hover td,
+  .ils-table tbody tr:hover td,
+  .uls-table tbody tr:hover td,
+  .rfpr-table tbody tr:hover td,
+  .uldr-table tbody tr:hover td,
+  .table tbody tr:hover td,
+  .report-table tbody tr:hover td {
+    background: #fbfdff !important;
+  }
+
+  .yps-table tfoot td,
+  .gps-table tfoot td,
+  .dps-table tfoot td,
+  .rps-table tfoot td,
+  .ppr-table tfoot td,
+  .psf-table tfoot td,
+  .pjr-table tfoot td,
+  .dpr-table tfoot td,
+  .ils-table tfoot td,
+  .uls-table tfoot td,
+  .rfpr-table tfoot td,
+  .uldr-table tfoot td,
+  .table tfoot td,
+  .report-table tfoot td {
+    font-weight: 800 !important;
+    background: #f8fbff !important;
+    border-top: 1px solid var(--r-line-strong) !important;
+    border-bottom: none !important;
+  }
+
+  .status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 5px 10px !important;
+    border-radius: 999px !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    border: 1px solid #dbeafe !important;
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+  }
+
+  .num {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+
+  .center {
+    text-align: center !important;
+  }
+
+  .yps-empty,
+  .gps-empty,
+  .dps-empty,
+  .rps-empty,
+  .ppr-empty,
+  .psf-empty,
+  .pjr-empty,
+  .dpr-empty,
+  .ils-empty,
+  .uls-empty,
+  .rfpr-empty,
+  .uldr-empty,
+  .st-empty,
+  .empty-state {
+    padding: 28px 20px 30px !important;
+    text-align: center !important;
+    color: var(--r-muted) !important;
+    font-size: 14px !important;
+  }
+
+  @media (max-width:900px) {
+
+    .yps-page,
+    .gps-page,
+    .dps-page,
+    .rps-page,
+    .ppr-page,
+    .psf-page,
+    .pjr-page,
+    .dpr-page,
+    .ils-page,
+    .uls-page,
+    .rfpr-page,
+    .uldr-page,
+    .st-page,
+    .report-page {
+      padding: 10px !important;
+    }
+
+    .yps-toolbar,
+    .gps-toolbar,
+    .dps-toolbar,
+    .rps-toolbar,
+    .ppr-toolbar,
+    .psf-toolbar,
+    .pjr-toolbar,
+    .dpr-toolbar,
+    .ils-toolbar,
+    .uls-toolbar,
+    .rfpr-toolbar,
+    .uldr-toolbar,
+    .st-toolbar,
+    .filter-wrap {
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+
+    .yps-toolbar-left,
+    .gps-toolbar-left,
+    .dps-toolbar-left,
+    .rps-toolbar-left,
+    .ppr-toolbar-left,
+    .psf-toolbar-left,
+    .pjr-toolbar-left,
+    .dpr-toolbar-left,
+    .ils-toolbar-left,
+    .uls-toolbar-left,
+    .rfpr-toolbar-left,
+    .uldr-toolbar-left,
+    .st-toolbar-left,
+    .filter-grid {
+      width: 100% !important;
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+    }
+
+    .yps-field,
+    .gps-field,
+    .dps-field,
+    .rps-field,
+    .ppr-field,
+    .psf-field,
+    .pjr-field,
+    .dpr-field,
+    .ils-field,
+    .uls-field,
+    .rfpr-field,
+    .uldr-field,
+    .st-field,
+    .field {
+      min-width: 100% !important;
+    }
+
+    .yps-btn,
+    .gps-btn,
+    .dps-btn,
+    .rps-btn,
+    .ppr-btn,
+    .psf-btn,
+    .pjr-btn,
+    .dpr-btn,
+    .ils-btn,
+    .uls-btn,
+    .rfpr-btn,
+    .uldr-btn,
+    .st-btn,
+    .btn {
+      width: 100% !important;
+    }
+  }
+</style>

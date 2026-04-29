@@ -1,0 +1,238 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .pattern-types-embed .jb-head{
+    align-items: center;
+  }
+
+  .pattern-types-embed .jb-head-actions{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pattern-types-embed .pt-inline-form{
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+    width: 100%;
+  }
+
+  .pattern-types-embed .pt-inline-field{
+    min-width: 0;
+  }
+
+  .pattern-types-embed .pt-inline-field label{
+    display: block;
+    margin: 0 0 6px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-family: var(--jb-font-sans);
+  }
+
+  .pattern-types-embed .pt-inline-field input{
+    appearance: none;
+    width: 100%;
+    box-sizing: border-box;
+    height: 29px;
+    padding: 0 10px;
+    border-radius: 7px;
+    border: 1px solid var(--jb-line);
+    background: #fff;
+    color: var(--jb-text);
+    font-family: var(--jb-font-sans);
+    font-size: 11px;
+    outline: none;
+    transition:
+      border-color .16s ease,
+      box-shadow .16s ease,
+      background .16s ease;
+  }
+
+  .pattern-types-embed .pt-inline-field input::placeholder{
+    color: #9aa1ab;
+  }
+
+  .pattern-types-embed .pt-inline-field input:focus{
+    border-color: var(--jb-orange-line);
+    box-shadow: 0 0 0 4px var(--jb-orange-soft);
+  }
+
+  .pattern-types-embed .jb-tablewrap{
+    overflow-x: hidden;
+  }
+
+  .pattern-types-embed .jb-table{
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .pattern-types-embed .jb-table th,
+  .pattern-types-embed .jb-table td{
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+  }
+
+  .pattern-types-embed .jb-table th:nth-child(1),
+  .pattern-types-embed .jb-table td:nth-child(1){
+    width: auto;
+  }
+
+  .pattern-types-embed .jb-table th:nth-child(2),
+  .pattern-types-embed .jb-table td:nth-child(2){
+    width: 96px;
+    text-align: center;
+  }
+
+  .pattern-types-embed .pt-name{
+    font-family: var(--jb-font-serif);
+    font-size: 13px;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #111923;
+  }
+
+  .pattern-types-embed .jb-actions{
+    justify-content: center;
+  }
+
+  @media (max-width: 768px){
+    .pattern-types-embed .pt-inline-form{
+      grid-template-columns: 1fr;
+    }
+
+    .pattern-types-embed .pt-inline-form .jb-add{
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="{% if full_page %}jb-page{% endif %}">
+  <div class="jobbers-embed pattern-types-embed">
+    <section class="jb-panel">
+      <div class="jb-head">
+        <div>
+          <div class="jb-title">Pattern Types</div>
+          <div class="jb-sub">Manage pattern categories</div>
+        </div>
+
+        <div class="jb-head-actions">
+          {% if not full_page %}
+          <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+            <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 6L6 18"></path>
+              <path d="M6 6l12 12"></path>
+            </svg>
+          </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="jb-tools">
+        <form
+          method="post"
+          action="{% url 'accounts:patterntype_list' %}{% if not full_page %}?embed=1{% endif %}"
+          class="pt-inline-form"
+        >
+          {% csrf_token %}
+          {% if not full_page %}
+          <input type="hidden" name="embed" value="1">
+          {% endif %}
+
+          <div class="pt-inline-field">
+            <label for="{{ form.name.id_for_label }}">New Type</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <div class="jb-field-errors">
+              {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <button class="jb-add" type="submit">
+            <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+            Add Type
+          </button>
+        </form>
+      </div>
+
+      <div class="jb-tablewrap">
+        <table class="jb-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th style="width: 96px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pattern_type in pattern_types %}
+            <tr>
+              <td>
+                <div class="pt-name">{{ pattern_type.name }}</div>
+              </td>
+
+              <td class="jb-actions">
+                <a
+                  class="jb-link jb-link-icon jb-link-edit"
+                  href="{% url 'accounts:patterntype_edit' pattern_type.id %}{% if not full_page %}?embed=1{% endif %}"
+                  aria-label="Edit {{ pattern_type.name }}"
+                  title="Edit"
+                >
+                  <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z"></path>
+                    <path d="M14.06 4.94l3.75 3.75"></path>
+                  </svg>
+                </a>
+
+                <form
+                  method="post"
+                  action="{% url 'accounts:patterntype_delete' pattern_type.id %}{% if not full_page %}?embed=1{% endif %}"
+                  class="jb-inline-delete js-jb-delete-form"
+                  data-delete-label="pattern type &quot;{{ pattern_type.name|escape }}&quot;"
+                >
+                  {% csrf_token %}
+                  {% if not full_page %}
+                  <input type="hidden" name="embed" value="1">
+                  {% endif %}
+                  <button
+                    class="jb-link jb-link-icon jb-link-danger jb-link-delete jb-link-button"
+                    type="submit"
+                    aria-label="Delete {{ pattern_type.name }}"
+                    title="Delete"
+                  >
+                    <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 7h16"></path>
+                      <path d="M10 11v6"></path>
+                      <path d="M14 11v6"></path>
+                      <path d="M6 7l1 12h10l1-12"></path>
+                      <path d="M9 7V4h6v3"></path>
+                    </svg>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="2" class="jb-empty">No pattern types yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+    </section>
+  </div>
+</div>

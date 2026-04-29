@@ -1,0 +1,42 @@
+<div class="pverify-overlay" aria-hidden="false">
+  <style>
+    .pverify-overlay{position:fixed;inset:0;z-index:1300;background:rgba(15,23,42,.42);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px;font-family:Inter,"Segoe UI",Arial,sans-serif;color:#172033;}
+    .pverify-card{width:min(520px,94vw);background:#fff;border:1px solid #f0dce7;border-radius:22px;box-shadow:0 26px 80px rgba(15,23,42,.24);overflow:hidden;}
+    .pverify-head{padding:18px 20px;background:linear-gradient(135deg,#fff,#fff2f8);border-bottom:1px solid #f0dce7;display:flex;justify-content:space-between;gap:12px;}
+    .pverify-title{font-family:Georgia,"Times New Roman",serif;font-size:24px;font-weight:800;color:#111827;line-height:1;}
+    .pverify-sub{margin-top:8px;font-size:12px;font-weight:800;color:#667085;line-height:1.45;}
+    .pverify-close{width:36px;height:36px;border-radius:12px;border:1px solid #ead8e3;background:#fff;color:#6b7280;font-size:22px;line-height:1;cursor:pointer;}
+    .pverify-body{padding:18px 20px;display:grid;gap:12px;}
+    .pverify-alert{padding:13px 14px;border-radius:16px;background:#fff8ed;border:1px solid #f5d9a8;color:#7a4a06;font-size:12px;font-weight:850;line-height:1.45;}
+    .pverify-actions{display:flex;justify-content:flex-end;gap:10px;padding:15px 20px;border-top:1px solid #f0dce7;}
+    .pverify-btn{min-height:38px;padding:0 16px;border-radius:13px;border:1px solid #e7d8e1;background:#fff;color:#475467;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;}
+  </style>
+  <div class="pverify-card" role="dialog" aria-modal="true">
+    <div class="pverify-head">
+      <div>
+        <div class="pverify-title">Verification Required</div>
+        <div class="pverify-sub">{{ program.program_no|default:"Program" }}</div>
+      </div>
+      <button type="button" class="pverify-close" data-program-verify-close="1" data-popup-close="1" aria-label="Close">×</button>
+    </div>
+    <div class="pverify-body">
+      <div class="pverify-alert">{{ message|default:"Admin verification is required before continuing." }}</div>
+    </div>
+    <div class="pverify-actions">
+      <button type="button" class="pverify-btn" data-program-verify-close="1" data-popup-close="1">Close</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const root = document.currentScript && document.currentScript.previousElementSibling ? document.currentScript.previousElementSibling : document.querySelector('.pverify-overlay');
+  document.querySelectorAll('[data-popup-close="1"], [data-program-verify-close="1"]').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      const overlay = btn.closest('.pverify-overlay');
+      if (overlay && overlay.parentNode) overlay.parentNode.innerHTML = '';
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>

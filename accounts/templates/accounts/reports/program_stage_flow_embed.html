@@ -1,0 +1,85 @@
+{% load static %}
+<style>
+  :root{
+    --r-bg:#f5f7fb;
+    --r-card:#ffffff;
+    --r-card-2:#fbfcff;
+    --r-line:#e6eaf2;
+    --r-line-soft:#f0f3f8;
+    --r-text:#182235;
+    --r-muted:#667085;
+    --r-blue:#1c6dd8;
+    --r-pink:#ee3d85;
+    --r-orange:#fabd64;
+    --r-blue-soft:#eaf2ff;
+    --r-pink-soft:#fff0f6;
+    --r-orange-soft:#fff7e8;
+    --r-green:#16a34a;
+    --r-shadow:0 18px 45px rgba(24,34,53,.08);
+    --r-radius:22px;
+    --font-ui:"Inter","Segoe UI","Aptos",Arial,sans-serif;
+    --font-title:"Playfair Display","Cormorant Garamond",Georgia,"Times New Roman",serif;
+    --font-data:"IBM Plex Sans","Segoe UI",Arial,sans-serif;
+    --font-number:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    color:var(--r-text);
+    font-family:var(--font-ui);
+    background:
+      linear-gradient(135deg,rgba(28,109,216,.08),transparent 28%),
+      linear-gradient(315deg,rgba(238,61,133,.055),transparent 30%),
+      var(--r-bg);
+    min-height:100vh;
+  }
+  .report-page{min-height:100vh;padding:14px;background-image:radial-gradient(circle at 14px 14px,rgba(28,109,216,.055) 1px,transparent 1px);background-size:22px 22px}
+  .report-shell{max-width:100%;margin:0 auto}
+  .report-card{background:var(--r-card);border:1px solid var(--r-line);border-radius:var(--r-radius);box-shadow:var(--r-shadow);overflow:hidden}
+  .report-card:before{content:"";display:block;height:3px;background:linear-gradient(90deg,var(--r-blue) 0%,var(--r-blue) 42%,var(--r-pink) 42%,var(--r-pink) 70%,var(--r-orange) 70%,var(--r-orange) 100%)}
+  .report-head{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:16px 18px;background:linear-gradient(180deg,#fff,var(--r-card-2));border-bottom:1px solid var(--r-line-soft)}
+  .report-title{margin:0;font-size:24px;line-height:1.1;color:var(--r-text);font-family:var(--font-title);font-weight:900;letter-spacing:-.04em}
+  .report-sub{margin-top:5px;color:var(--r-muted);font-size:12px;font-family:var(--font-data);font-weight:700;letter-spacing:.01em}
+  .report-badge{display:inline-flex;align-items:center;gap:7px;border:1px solid #d9e7fb;background:var(--r-blue-soft);color:var(--r-blue);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:900;white-space:nowrap}
+  .report-badge:before{content:"";width:7px;height:7px;border-radius:999px;background:linear-gradient(135deg,var(--r-pink),var(--r-orange))}
+  .filter-wrap{padding:14px 18px 16px;background:#fff;border-bottom:1px solid var(--r-line-soft)}
+  .filter-grid{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:10px}
+  .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .field label{font-size:10.5px;font-weight:900;color:#5f6f85;text-transform:uppercase;letter-spacing:.055em}
+  .field input,.field select{font-family:var(--font-data);height:39px;border:1px solid #dfe6f0;border-radius:12px;padding:0 11px;font-size:13px;color:var(--r-text);background:#fff;outline:none;width:100%;box-shadow:0 1px 0 rgba(24,34,53,.03);transition:.16s ease}
+  .field input:hover,.field select:hover{border-color:#cdd9eb}
+  .field input:focus,.field select:focus{border-color:rgba(28,109,216,.58);box-shadow:0 0 0 3px rgba(28,109,216,.10)}
+  .filter-actions{display:flex;gap:9px;align-items:flex-end;margin-top:12px;flex-wrap:wrap}
+  .btn{font-family:var(--font-ui);letter-spacing:.015em;height:38px;padding:0 14px;border-radius:12px;border:1px solid transparent;font-size:12px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;white-space:nowrap;transition:.16s ease}
+  .btn:hover{transform:translateY(-1px)}
+  .btn-primary{background:var(--r-blue);color:#fff;box-shadow:0 10px 20px rgba(28,109,216,.16)}
+  .btn-light{background:#fff;color:var(--r-text);border-color:#dfe6f0}
+  .btn-excel{background:#102033;color:#fff;box-shadow:0 10px 20px rgba(16,32,51,.12)}
+  .summary-bar{display:flex;gap:10px;flex-wrap:wrap;padding:14px 18px;background:linear-gradient(180deg,#fff,#fbfcff);border-bottom:1px solid var(--r-line-soft)}
+  .summary-chip{min-width:145px;background:#fff;border:1px solid var(--r-line);border-radius:16px;padding:10px 12px;box-shadow:0 8px 20px rgba(24,34,53,.045);position:relative;overflow:hidden}
+  .summary-chip:nth-child(3n+1){background:linear-gradient(180deg,#fff,var(--r-blue-soft))}
+  .summary-chip:nth-child(3n+2){background:linear-gradient(180deg,#fff,var(--r-pink-soft))}
+  .summary-chip:nth-child(3n+3){background:linear-gradient(180deg,#fff,var(--r-orange-soft))}
+  .summary-chip:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--r-blue)}
+  .summary-chip:nth-child(3n+2):before{background:var(--r-pink)}
+  .summary-chip:nth-child(3n+3):before{background:var(--r-orange)}
+  .summary-chip .k{display:block;font-size:10px;font-weight:900;color:var(--r-muted);text-transform:uppercase;letter-spacing:.055em;margin-bottom:4px}
+  .summary-chip .v{display:block;font-size:20px;font-family:var(--font-title);font-weight:900;color:var(--r-text);letter-spacing:-.035em}
+  .table-scroll{width:100%;overflow:auto;background:#fff}
+  table.report-table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:12px;color:var(--r-text);font-family:var(--font-data)}
+  .report-table th{font-family:var(--font-ui);position:sticky;top:0;z-index:2;background:#f8fafc;color:#4b5d74;font-weight:900;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--r-line);padding:11px 10px;white-space:nowrap;text-align:left}
+  .report-table td{padding:9px 10px;border-bottom:1px solid #edf1f6;white-space:nowrap;background:#fff}
+  .report-table tbody tr:nth-child(even) td{background:#fbfcff}
+  .report-table tbody tr:hover td{background:#f5f9ff}
+  .report-table tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--r-pink)}
+  .report-table tfoot td{font-weight:900;background:#f8fafc;border-top:1px solid var(--r-line)}
+  .num{text-align:right;font-family:var(--font-number);font-variant-numeric:tabular-nums}.center{text-align:center}.muted{color:var(--r-muted)}
+  .status-pill{font-family:var(--font-ui);letter-spacing:.01em;display:inline-flex;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid #dfe6f0;background:#f8fafc;color:#374151}
+  .status-approved{background:#ecfdf5;border-color:#bbf7d0;color:#15803d}.status-pending{background:#fff7ed;border-color:#fed7aa;color:#c2410c}.status-rejected{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
+  .empty-state{padding:30px 18px 34px;text-align:center;color:var(--r-muted);font-size:13px;font-weight:700;background:#fff}
+  @media(max-width:1200px){.filter-grid{grid-template-columns:repeat(2,minmax(160px,1fr))}}
+  @media(max-width:700px){.report-page{padding:10px}.report-head{flex-direction:column;align-items:flex-start}.filter-grid{grid-template-columns:1fr}.filter-actions{flex-direction:column}.btn{width:100%}.summary-chip{width:100%}}
+</style>
+
+
+<div class="report-page"><div class="report-card"><div class="report-head"><div><h1 class="report-title">Program Stage Flow Report</h1><div class="report-sub">Cutting, stitching and finishing movement by program.</div></div><div class="report-badge">Rows: {{ rows|length }}</div></div><form method="get" class="filter-wrap"><input type="hidden" name="embed" value="1"><div class="filter-grid"><div class="field"><label>Search</label><input type="text" name="q" value="{{ filters.q }}" placeholder="Program no, SKU, product, brand"></div><div class="field"><label>From Date</label><input type="date" name="from_date" value="{{ filters.from_date }}"></div><div class="field"><label>To Date</label><input type="date" name="to_date" value="{{ filters.to_date }}"></div><div class="field"><label>Program Status</label><select name="status"><option value="">All status</option>{% for value,label in status_options %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div></div><div class="filter-actions"><button class="btn btn-primary" type="submit">Apply Filters</button><a class="btn btn-light" href="{% url 'accounts:report_program_stage_flow' %}?embed=1">Reset</a><a class="btn btn-excel" href="{% url 'accounts:report_program_stage_flow_excel' %}?q={{ filters.q|urlencode }}&from_date={{ filters.from_date|urlencode }}&to_date={{ filters.to_date|urlencode }}&status={{ filters.status|urlencode }}">Export Excel</a></div></form><div class="summary-bar"><div class="summary-chip"><span class="k">Program Qty</span><span class="v">{{ totals.program_qty|floatformat:0 }}</span></div><div class="summary-chip"><span class="k">Cutting Pending</span><span class="v">{{ totals.cutting_pending|floatformat:0 }}</span></div><div class="summary-chip"><span class="k">Stitching Pending</span><span class="v">{{ totals.stitching_pending|floatformat:0 }}</span></div><div class="summary-chip"><span class="k">Finishing Pending</span><span class="v">{{ totals.finishing_pending|floatformat:0 }}</span></div></div>{% if rows %}<div class="table-scroll"><table class="report-table"><thead><tr><th>Program No.</th><th>Program Date</th><th>SKU</th><th>Product</th><th>Brand</th><th>Main Category</th><th>Sub Category</th><th>Pattern</th><th class="num">Program Qty</th><th class="num">Cutting Sent</th><th class="num">Cutting Received</th><th class="num">Cutting Pending</th><th class="num">Stitching Sent</th><th class="num">Stitching Received</th><th class="num">Stitching Pending</th><th class="num">Finishing Sent</th><th class="num">Finishing Received</th><th class="num">Finishing Pending</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ row.program_no }}</td><td>{% if row.program_date %}{{ row.program_date|date:"d-m-Y" }}{% else %}-{% endif %}</td><td>{{ row.sku_name }}</td><td>{{ row.product_name }}</td><td>{{ row.brand }}</td><td>{{ row.main_category }}</td><td>{{ row.sub_category }}</td><td>{{ row.pattern_name }}</td><td class="num">{{ row.program_qty|floatformat:0 }}</td><td class="num">{{ row.cutting_sent|floatformat:0 }}</td><td class="num">{{ row.cutting_received|floatformat:0 }}</td><td class="num">{{ row.cutting_pending|floatformat:0 }}</td><td class="num">{{ row.stitching_sent|floatformat:0 }}</td><td class="num">{{ row.stitching_received|floatformat:0 }}</td><td class="num">{{ row.stitching_pending|floatformat:0 }}</td><td class="num">{{ row.finishing_sent|floatformat:0 }}</td><td class="num">{{ row.finishing_received|floatformat:0 }}</td><td class="num">{{ row.finishing_pending|floatformat:0 }}</td></tr>{% endfor %}</tbody><tfoot><tr><td>Total</td><td colspan="7"></td><td class="num">{{ totals.program_qty|floatformat:0 }}</td><td class="num">{{ totals.cutting_sent|floatformat:0 }}</td><td class="num">{{ totals.cutting_received|floatformat:0 }}</td><td class="num">{{ totals.cutting_pending|floatformat:0 }}</td><td class="num">{{ totals.stitching_sent|floatformat:0 }}</td><td class="num">{{ totals.stitching_received|floatformat:0 }}</td><td class="num">{{ totals.stitching_pending|floatformat:0 }}</td><td class="num">{{ totals.finishing_sent|floatformat:0 }}</td><td class="num">{{ totals.finishing_received|floatformat:0 }}</td><td class="num">{{ totals.finishing_pending|floatformat:0 }}</td></tr></tfoot></table></div>{% else %}<div class="empty-state">No program stage flow data found.</div>{% endif %}</div></div>

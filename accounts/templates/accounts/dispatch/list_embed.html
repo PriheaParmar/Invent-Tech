@@ -1,0 +1,590 @@
+{% load static %}
+<style>
+  :root{
+    --dl-bg:#f4f7fc;
+    --dl-surface:#ffffff;
+    --dl-surface-soft:#f8fbff;
+    --dl-line:rgba(37,99,235,.10);
+    --dl-line-strong:rgba(37,99,235,.18);
+    --dl-text:#0f172a;
+    --dl-muted:#5f6f8a;
+    --dl-faint:#8a98b3;
+    --dl-blue:#2563eb;
+    --dl-blue-dark:#1d4ed8;
+    --dl-blue-soft:#eaf2ff;
+    --dl-cyan:#0ea5e9;
+    --dl-shadow:0 14px 34px rgba(37,99,235,.08);
+    --dl-shadow-soft:0 8px 18px rgba(37,99,235,.06);
+    --dl-radius-xl:24px;
+    --dl-radius-lg:18px;
+    --dl-radius-md:14px;
+    --dl-radius-sm:11px;
+    --dl-font-display:Georgia,"Times New Roman",serif;
+    --dl-font-body:"Inter","Segoe UI",Arial,sans-serif;
+    --dl-font-data:"IBM Plex Sans","Inter","Segoe UI",Arial,sans-serif;
+  }
+
+  .dispatch-ui{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-width:0;
+  color:var(--dl-text);
+  font-family:var(--dl-font-body);
+  padding:20px 20px 14px;
+}
+
+.dispatch-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:start;
+  padding:20px 20px 14px;
+    background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%);
+    border:1px solid var(--dl-line);
+    border-radius:var(--dl-radius-xl);
+    box-shadow:var(--dl-shadow);
+  }
+
+  .dispatch-hero-main{
+    min-width:0;
+  }
+
+  .dispatch-overline{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin:0 0 8px;
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--dl-blue);
+    font-family:var(--dl-font-body);
+  }
+
+  .dispatch-overline::before{
+    content:"";
+    width:26px;
+    height:1px;
+    background:rgba(37,99,235,.35);
+  }
+
+.dispatch-title{
+  margin:0;
+  font-family:var(--dl-font-display);
+  font-size:28px;
+    line-height:1.02;
+    letter-spacing:-.03em;
+    font-weight:700;
+    color:var(--dl-text);
+  }
+
+  .dispatch-subtitle{
+  margin:7px 0 0;
+  max-width:760px;
+  color:rgba(239,246,255,.88);
+  font-size:11.8px;
+  line-height:1.55;
+  font-weight:500;
+}
+
+  .dispatch-hero-side{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:10px;
+  }
+
+  .dispatch-stats{
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+.dispatch-stat{
+  min-width:96px;
+  padding:9px 10px;
+    border-radius:16px;
+    background:linear-gradient(180deg,#ffffff 0%,#f6faff 100%);
+    border:1px solid var(--dl-line);
+    box-shadow:var(--dl-shadow-soft);
+  }
+
+  .dispatch-stat-label{
+    display:block;
+    margin:0 0 6px;
+    color:var(--dl-faint);
+    font-size:9px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+.dispatch-stat-value{
+  display:block;
+  color:#ffffff;
+  font-family:var(--dl-font-display);
+  font-size:20px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:-.03em;
+  }
+
+  .dispatch-toolbar{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px;
+    align-items:center;
+  }
+
+  .dispatch-search{
+    display:grid;
+    grid-template-columns:minmax(260px,1fr) auto auto;
+    gap:8px;
+    align-items:center;
+    min-width:0;
+  }
+
+.dispatch-search-input{
+  width:100%;
+  min-width:0;
+  height:38px;
+  padding:0 12px;
+    border:none;
+    outline:none;
+    border-radius:13px;
+    background:#fff;
+    color:var(--dl-text);
+    box-shadow:inset 0 0 0 1px var(--dl-line);
+    font-size:12.6px;
+    font-weight:600;
+    font-family:var(--dl-font-body);
+    transition:all .18s ease;
+  }
+
+  .dispatch-search-input::placeholder{
+    color:var(--dl-faint);
+    font-weight:500;
+  }
+
+  .dispatch-search-input:focus{
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.28), 0 0 0 4px rgba(37,99,235,.09);
+    background:#fff;
+  }
+
+.dispatch-btn{
+  appearance:none;
+  border:none;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:38px;
+  padding:0 12px;
+  border-radius:12px;
+  font-size:10.8px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.04em;
+    cursor:pointer;
+    transition:all .18s ease;
+    white-space:nowrap;
+    font-family:var(--dl-font-body);
+  }
+
+  .dispatch-btn svg{
+    width:16px;
+    height:16px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    flex:0 0 auto;
+  }
+
+.dispatch-btn-search{
+  width:38px;
+  min-width:38px;
+    padding:0;
+    background:linear-gradient(180deg,var(--dl-blue) 0%, var(--dl-blue-dark) 100%);
+    color:#fff;
+    box-shadow:0 10px 20px rgba(37,99,235,.20);
+  }
+
+  .dispatch-btn-search:hover{
+    transform:translateY(-1px);
+    background:linear-gradient(180deg,var(--dl-blue-dark) 0%, #1e40af 100%);
+  }
+
+  .dispatch-btn-clear{
+    background:#fff;
+    color:var(--dl-text);
+    box-shadow:inset 0 0 0 1px var(--dl-line);
+  }
+
+  .dispatch-btn-clear:hover{
+    color:var(--dl-blue);
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.22), 0 8px 18px rgba(37,99,235,.08);
+    transform:translateY(-1px);
+  }
+
+  .dispatch-btn-create{
+    background:linear-gradient(180deg,#ffffff 0%,#f4f8ff 100%);
+    color:var(--dl-blue-dark);
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.14), var(--dl-shadow-soft);
+  }
+
+  .dispatch-btn-create:hover{
+    color:var(--dl-blue-dark);
+    transform:translateY(-1px);
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.24), 0 10px 22px rgba(37,99,235,.10);
+  }
+
+  .dispatch-table-shell{
+    background:#fff;
+    border:1px solid var(--dl-line);
+    border-radius:var(--dl-radius-xl);
+    box-shadow:var(--dl-shadow);
+    overflow:hidden;
+  }
+
+  .dispatch-table-wrap{
+    overflow:auto;
+  }
+
+  .dispatch-table{
+    width:100%;
+    min-width:1220px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+.dispatch-table thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:linear-gradient(180deg,#eff6ff 0%, #dbeafe 100%);
+  border-bottom:1px solid var(--dl-line-strong);
+  padding:10px 12px;
+  text-align:left;
+  font-size:8.8px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+    color:#7990b5;
+    white-space:nowrap;
+  }
+
+ .dispatch-table tbody td{
+  padding:10px 12px;
+  border-bottom:1px solid rgba(37,99,235,.08);
+  vertical-align:middle;
+  background:transparent;
+}
+
+  .dispatch-table tbody tr:last-child td{
+    border-bottom:none;
+  }
+
+  .dispatch-table tbody tr:hover td{
+    background:#f8fbff;
+  }
+
+  .dispatch-cell-stack{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+
+.dispatch-code{
+  margin:0;
+  color:var(--dl-blue-900);
+  font-size:12.8px;
+  line-height:1.12;
+    font-weight:700;
+    font-family:var(--dl-font-display);
+    letter-spacing:-.02em;
+  }
+
+  .dispatch-primary{
+  margin:0;
+  color:var(--dl-text);
+  font-size:11.7px;
+  line-height:1.22;
+  font-weight:700;
+}
+
+ .dispatch-secondary{
+  margin:0;
+  color:var(--dl-muted);
+  font-size:10px;
+  line-height:1.25;
+  font-weight:500;
+}
+
+.dispatch-date{
+  color:var(--dl-blue-900);
+  font-size:11.2px;
+  line-height:1.15;
+  font-weight:700;
+  font-family:var(--dl-font-data);
+}
+
+.dispatch-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:24px;
+  padding:0 9px;
+    border-radius:999px;
+    background:var(--dl-blue-soft);
+    color:var(--dl-blue-dark);
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+ .dispatch-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.dispatch-link{
+  min-height:28px;
+  padding:0 9px;
+  border-radius:9px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  white-space:nowrap;
+  font-size:10px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.03em;
+    transition:all .18s ease;
+    font-family:var(--dl-font-body);
+  }
+
+  .dispatch-link-view{
+    color:var(--dl-blue-dark);
+    background:#fff;
+    box-shadow:inset 0 0 0 1px rgba(37,99,235,.16);
+  }
+
+  .dispatch-link-view:hover{
+    transform:translateY(-1px);
+    color:#fff;
+    background:var(--dl-blue);
+    box-shadow:0 8px 18px rgba(37,99,235,.16);
+  }
+
+  .dispatch-link-print{
+    color:#fff;
+    background:linear-gradient(180deg,#0f172a 0%, #1e3a8a 100%);
+    box-shadow:0 8px 18px rgba(30,58,138,.16);
+  }
+
+  .dispatch-link-print:hover{
+    transform:translateY(-1px);
+    background:linear-gradient(180deg,var(--dl-blue) 0%, var(--dl-cyan) 100%);
+    box-shadow:0 10px 20px rgba(14,165,233,.18);
+  }
+
+  .dispatch-empty{
+    padding:50px 18px;
+    text-align:center;
+    color:var(--dl-muted);
+    font-size:12.6px;
+    line-height:1.7;
+    font-weight:500;
+  }
+
+  @media (max-width:960px){
+    .dispatch-hero{
+      grid-template-columns:1fr;
+    }
+
+    .dispatch-hero-side{
+      align-items:flex-start;
+    }
+
+    .dispatch-stats{
+      justify-content:flex-start;
+    }
+
+    .dispatch-toolbar{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width:680px){
+    .dispatch-search{
+      grid-template-columns:1fr;
+    }
+
+    .dispatch-btn-search,
+    .dispatch-btn-clear,
+    .dispatch-btn-create{
+      width:100%;
+    }
+
+    .dispatch-title{
+      font-size:26px;
+    }
+  }
+</style>
+
+<div class="dispatch-ui">
+  <section class="dispatch-hero">
+    <div class="dispatch-hero-main">
+      <div class="dispatch-overline">Sales Dispatch</div>
+      <h2 class="dispatch-title">Dispatch Challans</h2>
+      <p class="dispatch-subtitle">
+        Keep your dispatch register clean, readable, and easy to track across challan number, client, program,
+        transport, LR detail, and vehicle movement.
+      </p>
+    </div>
+
+    <div class="dispatch-hero-side">
+      <div class="dispatch-stats">
+        <div class="dispatch-stat">
+          <span class="dispatch-stat-label">Records</span>
+          <span class="dispatch-stat-value">{{ challans|length }}</span>
+        </div>
+      </div>
+
+      <a href="{% url 'accounts:dispatch_program_picker' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-btn dispatch-btn-create">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5v14"></path>
+          <path d="M5 12h14"></path>
+        </svg>
+        Create Challan
+      </a>
+    </div>
+  </section>
+
+  <section class="dispatch-toolbar">
+    <form method="get" class="dispatch-search">
+      {% if request.GET.embed == '1' %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <input
+        type="text"
+        name="q"
+        value="{{ q }}"
+        class="dispatch-search-input"
+        placeholder="Search challan no, program no, SKU, client, LR no, vehicle..."
+      >
+
+      <button type="submit" class="dispatch-btn dispatch-btn-search" aria-label="Search">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+      </button>
+
+      <a href="{% url 'accounts:dispatch_list' %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-btn dispatch-btn-clear">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+        Clear
+      </a>
+    </form>
+  </section>
+
+  <section class="dispatch-table-shell">
+    <div class="dispatch-table-wrap">
+      <table class="dispatch-table">
+        <thead>
+          <tr>
+            <th>Challan</th>
+            <th>Date</th>
+            <th>Program</th>
+            <th>SKU / Product</th>
+            <th>Client</th>
+            <th>Transport</th>
+            <th>Vehicle</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for challan in challans %}
+          <tr>
+            <td>
+              <div class="dispatch-cell-stack">
+                <p class="dispatch-code">{{ challan.challan_no }}</p>
+                <p class="dispatch-secondary">LR No: {{ challan.lr_no|default:"-" }}</p>
+              </div>
+            </td>
+
+            <td>
+              <span class="dispatch-date">{{ challan.challan_date|date:"d M Y" }}</span>
+            </td>
+
+            <td>
+              <div class="dispatch-cell-stack">
+                <p class="dispatch-code">{{ challan.program.program_no }}</p>
+                <p class="dispatch-secondary">Finish: {{ challan.program.finishing_date|date:"d M Y"|default:"-" }}</p>
+              </div>
+            </td>
+
+            <td>
+              <div class="dispatch-cell-stack">
+                <p class="dispatch-primary">{{ challan.program.bom.sku|default:"-" }}</p>
+                <p class="dispatch-secondary">{{ challan.program.bom.product_name|default:"-" }}</p>
+              </div>
+            </td>
+
+            <td>
+              <div class="dispatch-cell-stack">
+                <p class="dispatch-primary">{{ challan.client.name|default:"-" }}</p>
+              </div>
+            </td>
+
+            <td>
+              <div class="dispatch-cell-stack">
+                <p class="dispatch-primary">{{ challan.transport_name|default:"-" }}</p>
+                <p class="dispatch-secondary">Driver: {{ challan.driver_name|default:"-" }}</p>
+              </div>
+            </td>
+
+            <td>
+              <span class="dispatch-badge">{{ challan.vehicle_no|default:"-" }}</span>
+            </td>
+
+            <td>
+              <div class="dispatch-actions">
+                <a href="{% url 'accounts:dispatch_detail' challan.pk %}{% if request.GET.embed == '1' %}?embed=1{% endif %}" class="dispatch-link dispatch-link-view">
+                  View
+                </a>
+                <a href="{% url 'accounts:dispatch_print' challan.pk %}" target="_blank" class="dispatch-link dispatch-link-print">
+                  Print
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="dispatch-empty">No dispatch challans found yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

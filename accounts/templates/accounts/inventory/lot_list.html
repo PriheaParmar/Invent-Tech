@@ -1,0 +1,514 @@
+{% extends "accounts/base_app.html" %}
+
+{% block title %}Inventory Lots - InventTech{% endblock %}
+{% block page_title %}Inventory Lots{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+    --il-bg:#eef5ff;
+    --il-bg-2:#f7fbff;
+
+    --il-panel:#ffffff;
+    --il-panel-soft:#f8fbff;
+    --il-panel-blue:#eef5ff;
+    --il-panel-blue-2:#e8f1ff;
+
+    --il-line:#d7e6ff;
+    --il-line-soft:#e9f1ff;
+    --il-line-strong:#b8d2ff;
+
+    --il-text:#0f172a;
+    --il-muted:#64748b;
+    --il-muted-2:#8aa0c5;
+
+    --il-blue:#2563eb;
+    --il-blue-dark:#1d4ed8;
+    --il-blue-deep:#163b95;
+    --il-blue-soft:#eaf2ff;
+    --il-blue-soft-2:#f5f9ff;
+
+    --il-shadow:0 14px 30px rgba(37,99,235,.08);
+    --il-shadow-soft:0 8px 20px rgba(37,99,235,.05);
+  }
+
+  .il-page{
+    padding:12px;
+    background:
+      radial-gradient(circle at top left, rgba(37,99,235,.08) 0, rgba(37,99,235,0) 28%),
+      linear-gradient(180deg, var(--il-bg) 0%, var(--il-bg-2) 100%);
+    color:var(--il-text);
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .il-shell{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .il-card{
+    background:linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    border:1px solid var(--il-line);
+    border-radius:18px;
+    padding:14px;
+    box-shadow:var(--il-shadow-soft);
+  }
+
+  .il-hero{
+    background:
+      linear-gradient(135deg, rgba(37,99,235,.10) 0%, rgba(37,99,235,.04) 18%, #ffffff 18%, #f7fbff 100%);
+    border-color:var(--il-line-strong);
+    box-shadow:var(--il-shadow);
+  }
+
+  .il-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+
+  .il-title-wrap{
+    min-width:0;
+  }
+
+  .il-title{
+    margin:0;
+    font-size:22px;
+    line-height:1.04;
+    font-weight:800;
+    color:#0f172a;
+    letter-spacing:-.02em;
+    font-family:ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  }
+
+  .il-sub{
+    margin-top:6px;
+    font-size:11px;
+    color:var(--il-muted);
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+
+  .il-sub svg{
+    width:14px;
+    height:14px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .il-count{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:34px;
+    padding:0 12px;
+    border:1px solid var(--il-line-strong);
+    border-radius:999px;
+    background:var(--il-blue-soft);
+    font-size:11px;
+    font-weight:900;
+    color:var(--il-blue-dark);
+    white-space:nowrap;
+    letter-spacing:.04em;
+  }
+
+  .il-filter{
+    display:grid;
+    grid-template-columns:minmax(260px,1fr) auto;
+    gap:8px;
+  }
+
+  .il-search{
+    position:relative;
+  }
+
+  .il-search svg{
+    position:absolute;
+    left:11px;
+    top:50%;
+    transform:translateY(-50%);
+    width:15px;
+    height:15px;
+    stroke:#7f96be;
+    stroke-width:2;
+    fill:none;
+    pointer-events:none;
+  }
+
+  .il-filter input{
+    width:100%;
+    height:38px;
+    border:1px solid var(--il-line);
+    border-radius:12px;
+    background:#fff;
+    padding:0 12px 0 36px;
+    font-size:12px;
+    color:#0f172a;
+    outline:none;
+    transition:.18s ease;
+    box-sizing:border-box;
+  }
+
+  .il-filter input::placeholder{
+    color:#8ea4ca;
+    font-weight:700;
+  }
+
+  .il-filter input:focus{
+    border-color:var(--il-blue);
+    box-shadow:0 0 0 4px rgba(37,99,235,.10);
+  }
+
+  .il-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    min-height:38px;
+    padding:0 14px;
+    border-radius:12px;
+    border:1px solid var(--il-blue);
+    background:linear-gradient(180deg, var(--il-blue) 0%, var(--il-blue-dark) 100%);
+    color:#fff;
+    text-decoration:none;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.04em;
+    transition:.18s ease;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+
+  .il-btn svg{
+    width:14px;
+    height:14px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .il-btn:hover{
+    background:linear-gradient(180deg, var(--il-blue-dark) 0%, var(--il-blue-deep) 100%);
+    border-color:var(--il-blue-dark);
+  }
+
+  .il-table-wrap{
+    width:100%;
+    overflow-x:auto;
+    border:1px solid var(--il-line-soft);
+    border-radius:14px;
+    background:#fff;
+  }
+
+  .il-table{
+    width:100%;
+    min-width:860px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .il-table thead th{
+    background:linear-gradient(180deg, #edf5ff 0%, #e6f0ff 100%);
+    color:#64748b;
+    font-size:9px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    text-align:left;
+    padding:11px 12px;
+    border-bottom:1px solid var(--il-line);
+    white-space:nowrap;
+  }
+
+  .il-table thead th:first-child{border-top-left-radius:12px}
+  .il-table thead th:last-child{border-top-right-radius:12px}
+
+  .il-table tbody td{
+    padding:12px;
+    border-bottom:1px solid var(--il-line-soft);
+    font-size:11.5px;
+    color:#0f172a;
+    vertical-align:middle;
+    background:#fff;
+  }
+
+  .il-table tbody tr:last-child td{
+    border-bottom:none;
+  }
+
+  .il-table tbody tr:hover td{
+    background:var(--il-blue-soft-2);
+  }
+
+  .il-lot{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+  }
+
+  .il-lot-ico{
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    border:1px solid var(--il-line);
+    background:var(--il-blue-soft);
+    color:var(--il-blue-dark);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+  }
+
+  .il-lot-ico svg{
+    width:15px;
+    height:15px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+  }
+
+  .il-lot-text{
+    min-width:0;
+  }
+
+  .il-lot-code{
+    font-size:12px;
+    font-weight:900;
+    color:#0f172a;
+    line-height:1.2;
+  }
+
+  .il-lot-meta{
+    margin-top:2px;
+    font-size:10px;
+    color:var(--il-muted);
+    font-weight:700;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .il-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    min-height:24px;
+    padding:0 9px;
+    border-radius:999px;
+    border:1px solid var(--il-line);
+    background:#fff;
+    font-size:10px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .il-pill svg{
+    width:11px;
+    height:11px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+    flex:none;
+  }
+
+  .il-pill-stage{
+    background:var(--il-blue-soft);
+    border-color:var(--il-line-strong);
+    color:var(--il-blue-dark);
+  }
+
+  .il-pill-qc{
+    background:var(--il-panel-soft);
+    color:#334155;
+  }
+
+  .il-material{
+    font-size:11.5px;
+    font-weight:800;
+    color:#0f172a;
+  }
+
+  .il-num{
+    font-size:12px;
+    font-weight:800;
+    color:#0f172a;
+  }
+
+  .il-num-strong{
+    color:var(--il-blue-dark);
+    font-weight:900;
+  }
+
+  .il-actions{
+    display:flex;
+    justify-content:flex-end;
+  }
+
+  .il-action-btn{
+    min-width:32px;
+    height:32px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    border:1px solid var(--il-line);
+    background:linear-gradient(180deg, #ffffff 0%, #eef5ff 100%);
+    color:var(--il-blue-dark);
+    text-decoration:none;
+    transition:.18s ease;
+    box-shadow:0 6px 14px rgba(37,99,235,.08);
+  }
+
+  .il-action-btn svg{
+    width:15px;
+    height:15px;
+    stroke:currentColor;
+    stroke-width:2;
+    fill:none;
+  }
+
+  .il-action-btn:hover{
+    border-color:var(--il-blue);
+    background:linear-gradient(180deg, var(--il-blue) 0%, var(--il-blue-dark) 100%);
+    color:#fff;
+    transform:translateY(-1px);
+  }
+
+  .il-empty{
+    padding:18px 12px;
+    text-align:center;
+    font-size:11.5px;
+    color:var(--il-muted);
+    background:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  }
+
+  @media (max-width:720px){
+    .il-page{padding:8px}
+    .il-filter{grid-template-columns:1fr}
+    .il-top{flex-direction:column;align-items:flex-start}
+  }
+</style>
+
+<div class="il-page">
+  <div class="il-shell">
+    <div class="il-card il-hero">
+      <div class="il-top">
+        <div class="il-title-wrap">
+          <h2 class="il-title">Inventory Lots</h2>
+          <div class="il-sub">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 7l9-4 9 4-9 4-9-4z"></path>
+              <path d="M3 7v10l9 4 9-4V7"></path>
+              <path d="M12 11v10"></path>
+            </svg>
+            inventory lot list with stage, material, stock, and QC
+          </div>
+        </div>
+        <div class="il-count">{{ lots|length }} Records</div>
+      </div>
+
+      <form method="get" class="il-filter">
+        <div class="il-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.5-3.5"></path>
+          </svg>
+          <input type="text" name="q" value="{{ q }}" placeholder="Search lot, stage, material, or QC">
+        </div>
+        <button type="submit" class="il-btn">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.5-3.5"></path>
+          </svg>
+          Search
+        </button>
+      </form>
+    </div>
+
+    <div class="il-card">
+      <div class="il-table-wrap">
+        <table class="il-table">
+          <thead>
+            <tr>
+              <th>Lot</th>
+              <th>Stage</th>
+              <th>Material</th>
+              <th>Accepted</th>
+              <th>Available</th>
+              <th>QC</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for lot in lots %}
+            <tr>
+              <td>
+                <div class="il-lot">
+                  <span class="il-lot-ico">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M3 7l9-4 9 4-9 4-9-4z"></path>
+                      <path d="M3 7v10l9 4 9-4V7"></path>
+                    </svg>
+                  </span>
+                  <div class="il-lot-text">
+                    <div class="il-lot-code">{{ lot.lot_code }}</div>
+                    <div class="il-lot-meta">{{ lot.location_name|default:"No location" }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="il-pill il-pill-stage">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-4z"></path>
+                  </svg>
+                  {{ lot.get_stage_display }}
+                </span>
+              </td>
+              <td><div class="il-material">{{ lot.material.name }}</div></td>
+              <td><span class="il-num">{{ lot.accepted_qty }}</span></td>
+              <td><span class="il-num il-num-strong">{{ lot.available_qty }}</span></td>
+              <td>
+                <span class="il-pill il-pill-qc">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                  </svg>
+                  {{ lot.get_qc_status_display }}
+                </span>
+              </td>
+              <td>
+                <div class="il-actions">
+                  <a href="{% url 'accounts:inventory_lot_detail' lot.id %}" class="il-action-btn" aria-label="Open lot" title="Open lot">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7"><div class="il-empty">No lots found.</div></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

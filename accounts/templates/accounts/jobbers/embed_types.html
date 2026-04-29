@@ -1,0 +1,251 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .jb-types-embed .jb-head-actions{
+    align-items:center;
+  }
+
+  .jb-types-embed .jb-inline-form{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8px;
+    align-items:end;
+    padding:8px 14px;
+    background:var(--jb-bg);
+    border-bottom:1px solid var(--jb-line-soft);
+  }
+
+  .jb-types-embed .jb-inline-field{
+    min-width:0;
+  }
+
+  .jb-types-embed .jb-inline-field label{
+    display:block;
+    margin:0 0 5px;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--jb-text-soft);
+    font-family:var(--jb-font-sans);
+  }
+
+  .jb-types-embed .jb-inline-field input{
+    appearance:none;
+    width:100%;
+    min-width:180px;
+    height:29px;
+    padding:0 10px;
+    box-sizing:border-box;
+    border-radius:7px;
+    border:1px solid var(--jb-line);
+    background:#fff;
+    color:var(--jb-text);
+    font-family:var(--jb-font-sans);
+    font-size:11px;
+    outline:none;
+    transition:
+      border-color .16s ease,
+      box-shadow .16s ease,
+      background .16s ease;
+  }
+
+  .jb-types-embed .jb-inline-field input::placeholder{
+    color:#9aa1ab;
+  }
+
+  .jb-types-embed .jb-inline-field input:focus{
+    border-color:var(--jb-orange-line);
+    box-shadow:0 0 0 4px var(--jb-orange-soft);
+  }
+
+  .jb-types-embed .jb-table{
+    min-width:640px;
+  }
+
+  .jb-types-embed .jb-table th:nth-child(1),
+  .jb-types-embed .jb-table td:nth-child(1){
+    min-width:260px;
+  }
+
+  .jb-types-embed .jb-table th:nth-child(3),
+  .jb-types-embed .jb-table td:nth-child(3){
+    text-align:center;
+  }
+
+  .jb-types-embed .jb-type-name{
+    font-family:var(--jb-font-serif);
+    font-size:13px;
+    line-height:1.15;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    color:#111923;
+  }
+
+  .jb-types-embed .jb-count{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:28px;
+    height:20px;
+    padding:0 7px;
+    border-radius:5px;
+    background:var(--jb-orange-soft);
+    border:1px solid rgba(250, 189, 100, 0.38);
+    color:#70531c;
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:.06em;
+    font-family:var(--jb-font-sans);
+  }
+
+  .jb-types-embed .jb-actions{
+    justify-content:center;
+  }
+
+  @media (max-width: 860px){
+    .jb-types-embed .jb-inline-form{
+      grid-template-columns:1fr;
+    }
+  }
+</style>
+
+<div class="jobbers-embed jb-types-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Jobber Types</div>
+        <div class="jb-sub">Process categories for vendors and contractors</div>
+      </div>
+
+      <div class="jb-head-actions">
+        <a
+          class="jb-iconbtn jb-back"
+          href="{% url 'accounts:jobber_list' %}{% if not full_page %}?embed=1{% endif %}"
+          aria-label="Back to jobbers"
+          title="Back"
+        >
+          <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if delete_error %}
+    <div class="jb-errors jb-usage-error">
+      <div class="jb-usage-title">{{ delete_error }}</div>
+      {% if delete_label %}
+      <div class="jb-usage-label">Record: <strong>{{ delete_label }}</strong></div>
+      {% endif %}
+      {% if delete_usage %}
+      <div class="jb-usage-list">
+        {% for row in delete_usage %}
+        <div class="jb-usage-row">
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'accounts:jobbertype_list' %}{% if not full_page %}?embed=1{% endif %}" class="jb-inline-form">
+      {% csrf_token %}
+      {% if not full_page %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
+
+      <div class="jb-inline-field">
+        <label for="{{ form.name.id_for_label }}">New Process Type</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+        <div class="jb-field-errors">
+          {% for error in form.name.errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <button class="jb-add" type="submit">
+        <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5v14"></path>
+          <path d="M5 12h14"></path>
+        </svg>
+        Add Type
+      </button>
+    </form>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Linked Jobbers</th>
+            <th style="width: 96px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in types %}
+          <tr>
+            <td class="jb-type-name">{{ t.name }}</td>
+            <td><span class="jb-count">{{ t.jobber_count }}</span></td>
+            <td class="jb-actions">
+              <a
+                class="jb-link jb-link-icon jb-link-edit"
+                href="{% url 'accounts:jobbertype_edit' t.id %}{% if not full_page %}?embed=1{% endif %}"
+                aria-label="Edit {{ t.name }}"
+                title="Edit"
+              >
+                <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z"></path>
+                  <path d="M14.06 4.94l3.75 3.75"></path>
+                </svg>
+              </a>
+
+              <form
+                method="post"
+                action="{% url 'accounts:jobbertype_delete' t.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="jobber type &quot;{{ t.name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                <button
+                  class="jb-link jb-link-icon jb-link-danger jb-link-delete jb-link-button"
+                  type="submit"
+                  aria-label="Delete {{ t.name }}"
+                  title="Delete"
+                >
+                  <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M6 7l1 12h10l1-12"></path>
+                    <path d="M9 7V4h6v3"></path>
+                  </svg>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="jb-empty">No jobber types found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+</div>

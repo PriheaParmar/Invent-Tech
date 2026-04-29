@@ -1,0 +1,991 @@
+<style>
+  :root{
+    --rv-bg:#ffffff;
+    --rv-surface:#fafafa;
+    --rv-surface-2:#f6f6f7;
+    --rv-line:#d9dee5;
+    --rv-line-soft:#e9edf1;
+
+    --rv-text:#1f2937;
+    --rv-dark:#111827;
+    --rv-muted:#6b7280;
+
+    --rv-accent:#f97316;
+    --rv-accent-dark:#ea580c;
+    --rv-accent-soft:#fff4ec;
+
+    --rv-success:#15803d;
+    --rv-success-soft:#eef8f0;
+
+    --rv-danger:#b91c1c;
+    --rv-danger-soft:#fff3f2;
+
+    --shadow-soft:0 10px 24px rgba(17,24,39,.05);
+
+    --font-main:Inter,"Segoe UI",Arial,sans-serif;
+    --font-display:Georgia,"Times New Roman",serif;
+    --font-mono:"SFMono-Regular",Consolas,Menlo,monospace;
+  }
+
+  .yrev,
+  .yrev *{
+    box-sizing:border-box;
+  }
+
+  .yrev{
+    width:100%;
+    font-family:var(--font-main);
+    color:var(--rv-text);
+  }
+
+  .yrev-shell{
+    background:var(--rv-bg);
+    border:1px solid var(--rv-line);
+    border-radius:14px;
+    box-shadow:var(--shadow-soft);
+    overflow:hidden;
+  }
+
+  .yrev-form{
+    display:grid;
+    gap:0;
+  }
+
+  .yrev-top{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px;
+    align-items:center;
+    padding:12px 14px;
+    border-bottom:1px solid var(--rv-line);
+    background:#fff;
+  }
+
+  .yrev-brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+
+  .yrev-icon{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    flex:0 0 auto;
+    display:grid;
+    place-items:center;
+    background:var(--rv-accent);
+    box-shadow:0 8px 18px rgba(249,115,22,.18);
+  }
+
+  .yrev-icon svg{
+    width:18px;
+    height:18px;
+    display:block;
+  }
+
+  .yrev-title{
+    margin:0;
+    font-family:var(--font-display);
+    color:var(--rv-dark);
+    font-size:22px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:-.025em;
+  }
+
+  .yrev-sub{
+    margin-top:4px;
+    font-size:11px;
+    line-height:1.4;
+    color:var(--rv-muted);
+    font-weight:600;
+  }
+
+  .yrev-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .yrev-btn,
+  .yrev-btn-accent,
+  .yrev-btn-danger{
+    appearance:none;
+    border:none;
+    outline:none;
+    text-decoration:none;
+    cursor:pointer;
+    transition:.18s ease;
+    min-height:36px;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    flex:0 0 auto;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.02em;
+  }
+
+  .yrev-btn.icon-only,
+  .yrev-btn-accent.icon-only,
+  .yrev-btn-danger.icon-only{
+    width:36px;
+    height:36px;
+    padding:0;
+  }
+
+  .yrev-btn.with-label,
+  .yrev-btn-accent.with-label,
+  .yrev-btn-danger.with-label{
+    padding:0 14px;
+    min-width:108px;
+  }
+
+  .yrev-btn svg,
+  .yrev-btn-accent svg,
+  .yrev-btn-danger svg{
+    width:17px;
+    height:17px;
+    display:block;
+    flex:0 0 auto;
+  }
+
+  .yrev-btn{
+    background:#fff;
+    color:var(--rv-text);
+    border:1px solid var(--rv-line);
+  }
+
+  .yrev-btn:hover{
+    border-color:#c5ccd5;
+    background:#fafafa;
+  }
+
+  .yrev-btn-accent{
+    background:var(--rv-accent);
+    color:#fff;
+  }
+
+  .yrev-btn-accent:hover{
+    background:var(--rv-accent-dark);
+  }
+
+  .yrev-btn-danger{
+    background:#fff;
+    color:var(--rv-danger);
+    border:1px solid #efc8c5;
+  }
+
+  .yrev-btn-danger:hover{
+    background:var(--rv-danger-soft);
+  }
+
+  .yrev-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 320px;
+    align-items:start;
+  }
+
+  .yrev-main{
+    min-width:0;
+    border-right:1px solid var(--rv-line);
+    background:#fff;
+  }
+
+  .yrev-side{
+    min-width:0;
+    background:var(--rv-surface);
+  }
+
+  .yrev-strip{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:0;
+    border-bottom:1px solid var(--rv-line);
+  }
+
+  .yrev-strip-item{
+    min-width:0;
+    padding:10px 14px;
+    border-right:1px solid var(--rv-line-soft);
+  }
+
+  .yrev-strip-item:last-child{
+    border-right:none;
+  }
+
+  .yrev-strip-item.alt{
+    background:var(--rv-surface-2);
+  }
+
+  .yrev-strip-label{
+    font-size:8px;
+    line-height:1.2;
+    font-weight:800;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--rv-muted);
+  }
+
+  .yrev-strip-value{
+    margin-top:4px;
+    font-size:12px;
+    line-height:1.3;
+    font-weight:800;
+    color:var(--rv-dark);
+    word-break:break-word;
+  }
+
+  .yrev-strip-value.mono{
+    font-family:var(--font-mono);
+    color:var(--rv-accent-dark);
+  }
+
+  .yrev-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:24px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    white-space:nowrap;
+    background:var(--rv-accent-soft);
+    color:var(--rv-accent-dark);
+  }
+
+  .yrev-status.is-approved{
+    background:var(--rv-success-soft);
+    color:var(--rv-success);
+  }
+
+  .yrev-status.is-rejected{
+    background:var(--rv-danger-soft);
+    color:var(--rv-danger);
+  }
+
+  .yrev-status.is-pending{
+    background:var(--rv-accent-soft);
+    color:var(--rv-accent-dark);
+  }
+
+  .yrev-side-head{
+    padding:11px 14px;
+    border-bottom:1px solid var(--rv-line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    background:#fff;
+  }
+
+  .yrev-side-title{
+    margin:0;
+    font-size:11px;
+    line-height:1.2;
+    font-weight:900;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--rv-dark);
+  }
+
+  .yrev-chip{
+    min-height:22px;
+    padding:0 9px;
+    border-radius:999px;
+    font-size:8.5px;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--rv-accent-soft);
+    color:var(--rv-accent-dark);
+  }
+
+  .yrev-side-body{
+    padding:12px 14px 14px;
+    display:grid;
+    gap:10px;
+  }
+
+  .yrev-note{
+    padding:10px 11px;
+    border-radius:10px;
+    font-size:11px;
+    line-height:1.45;
+    font-weight:800;
+    border:1px solid #cfe7d2;
+    background:var(--rv-success-soft);
+    color:var(--rv-success);
+  }
+
+  .yrev-note.is-rejected{
+    border-color:#efc8c5;
+    background:var(--rv-danger-soft);
+    color:var(--rv-danger);
+  }
+
+  .yrev-note.is-pending{
+    border-color:#ffd8bf;
+    background:var(--rv-accent-soft);
+    color:var(--rv-accent-dark);
+  }
+
+  .yrev-checks{
+    display:grid;
+    gap:0;
+    border:1px solid var(--rv-line);
+    border-radius:10px;
+    overflow:hidden;
+    background:#fff;
+  }
+
+  .yrev-check{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:8px;
+    padding:10px 11px;
+    border-bottom:1px solid var(--rv-line-soft);
+  }
+
+  .yrev-check:last-child{
+    border-bottom:none;
+  }
+
+  .yrev-check-label{
+    font-size:11px;
+    font-weight:800;
+    color:#374151;
+  }
+
+  .yrev-check-value{
+    font-size:11px;
+    font-weight:900;
+    color:var(--rv-success);
+  }
+
+  .yrev-note-box label{
+    display:block;
+    margin-bottom:5px;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--rv-muted);
+  }
+
+  .yrev-note-box textarea{
+    width:100%;
+    min-height:82px;
+    border:1px solid var(--rv-line);
+    border-radius:10px;
+    padding:10px 11px;
+    resize:vertical;
+    outline:none;
+    background:#fff;
+    color:var(--rv-text);
+    font:inherit;
+    font-size:12px;
+  }
+
+  .yrev-note-box textarea:focus{
+    border-color:#fdba74;
+    box-shadow:0 0 0 4px rgba(249,115,22,.10);
+  }
+
+  .yrev-error{
+    margin-top:6px;
+    font-size:11px;
+    font-weight:700;
+    color:var(--rv-danger);
+  }
+
+  .yrev-existing{
+    margin-top:7px;
+    padding:9px 10px;
+    border-radius:10px;
+    background:#fff;
+    border:1px solid #ffd8bf;
+    color:var(--rv-accent-dark);
+    font-size:10.5px;
+    line-height:1.4;
+    font-weight:700;
+  }
+
+  .yrev-reviewer{
+    display:grid;
+    gap:6px;
+    padding-top:1px;
+  }
+
+  .yrev-reviewer-row{
+    display:grid;
+    grid-template-columns:92px 1fr;
+    gap:8px;
+    align-items:center;
+    font-size:11px;
+  }
+
+  .yrev-reviewer-row span{
+    color:var(--rv-muted);
+    font-weight:700;
+  }
+
+  .yrev-reviewer-row strong{
+    color:var(--rv-dark);
+    font-weight:900;
+    text-align:right;
+  }
+
+  .yrev-section{
+    border-bottom:1px solid var(--rv-line);
+  }
+
+  .yrev-section:last-child{
+    border-bottom:none;
+  }
+
+  .yrev-section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:11px 14px;
+    border-bottom:1px solid var(--rv-line-soft);
+    background:#fff;
+  }
+
+  .yrev-section-title{
+    margin:0;
+    font-size:11px;
+    line-height:1.2;
+    font-weight:900;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--rv-dark);
+  }
+
+  .yrev-summary{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:0;
+  }
+
+  .yrev-summary-item{
+    min-width:0;
+    padding:11px 14px;
+    border-right:1px solid var(--rv-line-soft);
+    background:#fff;
+  }
+
+  .yrev-summary-item:nth-child(even){
+    background:var(--rv-surface-2);
+  }
+
+  .yrev-summary-item:last-child{
+    border-right:none;
+  }
+
+  .yrev-summary-label{
+    font-size:8px;
+    font-weight:800;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--rv-muted);
+  }
+
+  .yrev-summary-value{
+    margin-top:4px;
+    font-size:12px;
+    line-height:1.3;
+    font-weight:900;
+    color:var(--rv-dark);
+    word-break:break-word;
+  }
+
+  .yrev-items{
+    display:grid;
+  }
+
+  .yrev-item-head{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 120px 120px 90px 130px;
+    background:var(--rv-surface);
+    border-bottom:1px solid var(--rv-line-soft);
+  }
+
+  .yrev-item-head div{
+    padding:9px 14px;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--rv-muted);
+    border-right:1px solid var(--rv-line-soft);
+  }
+
+  .yrev-item-head div:last-child{
+    border-right:none;
+  }
+
+  .yrev-item{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 120px 120px 90px 130px;
+    gap:0;
+    align-items:stretch;
+    border-bottom:1px solid var(--rv-line-soft);
+  }
+
+  .yrev-item:last-child{
+    border-bottom:none;
+  }
+
+  .yrev-item-main,
+  .yrev-item-cell{
+    padding:11px 14px;
+  }
+
+  .yrev-item-main{
+    min-width:0;
+    background:#fff;
+  }
+
+  .yrev-item-name{
+    font-size:14px;
+    line-height:1.2;
+    font-weight:900;
+    color:var(--rv-dark);
+  }
+
+  .yrev-item-sub{
+    margin-top:4px;
+    font-size:10.5px;
+    line-height:1.4;
+    color:var(--rv-muted);
+    font-weight:600;
+  }
+
+  .yrev-item-cell{
+    border-left:1px solid var(--rv-line-soft);
+    min-width:0;
+    background:#fff;
+  }
+
+  .yrev-item-value{
+    font-size:12px;
+    line-height:1.3;
+    font-weight:800;
+    color:var(--rv-dark);
+    word-break:break-word;
+  }
+
+  .yrev-bottom{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:11px 14px;
+    border-top:1px solid var(--rv-line);
+    background:#fff;
+    flex-wrap:wrap;
+  }
+
+  .yrev-bottom-title{
+    font-size:12px;
+    font-weight:900;
+    color:var(--rv-dark);
+  }
+
+  .yrev-bottom-sub{
+    margin-top:2px;
+    font-size:10.5px;
+    line-height:1.4;
+    color:var(--rv-muted);
+    font-weight:600;
+  }
+
+  .yrev-bottom-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  @media (max-width: 1180px){
+    .yrev-layout{
+      grid-template-columns:1fr;
+    }
+
+    .yrev-main{
+      border-right:none;
+      border-bottom:1px solid var(--rv-line);
+    }
+  }
+
+  @media (max-width: 900px){
+    .yrev-top{
+      grid-template-columns:1fr;
+    }
+
+    .yrev-strip,
+    .yrev-summary{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .yrev-item-head,
+    .yrev-item{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .yrev-item-head div:first-child,
+    .yrev-item-main{
+      grid-column:1 / -1;
+    }
+  }
+
+  @media (max-width: 640px){
+    .yrev-strip,
+    .yrev-summary,
+    .yrev-item-head,
+    .yrev-item{
+      grid-template-columns:1fr;
+    }
+
+    .yrev-strip-item,
+    .yrev-summary-item,
+    .yrev-item-head div{
+      border-right:none;
+      border-bottom:1px solid var(--rv-line-soft);
+    }
+
+    .yrev-strip-item:last-child,
+    .yrev-summary-item:last-child,
+    .yrev-item-head div:last-child{
+      border-bottom:none;
+    }
+
+    .yrev-actions,
+    .yrev-bottom-actions{
+      width:100%;
+      display:grid;
+      grid-template-columns:1fr;
+    }
+
+    .yrev-bottom{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .yrev-reviewer-row{
+      grid-template-columns:1fr;
+    }
+
+    .yrev-reviewer-row strong{
+      text-align:left;
+    }
+  }
+</style>
+
+<form
+  method="post"
+  action="{% url 'accounts:readypo_review' po.id %}{% if embed_mode %}?embed=1{% endif %}"
+  class="yrev yrev-shell yrev-form"
+  data-ready-review-form
+>
+  {% csrf_token %}
+
+  <div class="yrev-top">
+    <div class="yrev-brand">
+      <div class="yrev-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M6 7.5h12M6 12h12M6 16.5h8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div>
+        <h2 class="yrev-title">Ready PO Review</h2>
+        <div class="yrev-sub">Compact review layout with right-side action panel.</div>
+      </div>
+    </div>
+
+    <div class="yrev-actions">
+      {% if embed_mode %}
+        <button type="button" class="yrev-btn icon-only" data-review-close title="Close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      {% else %}
+        <a href="{% url 'accounts:readypo_list' %}" class="yrev-btn icon-only" title="Back" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="yrev-layout">
+    <div class="yrev-main">
+
+      <div class="yrev-strip">
+        <div class="yrev-strip-item">
+          <div class="yrev-strip-label">System No</div>
+          <div class="yrev-strip-value mono">{{ po.system_number|default:"—" }}</div>
+        </div>
+
+        <div class="yrev-strip-item alt">
+          <div class="yrev-strip-label">PO No</div>
+          <div class="yrev-strip-value">{{ po.po_number|default:"—" }}</div>
+        </div>
+
+        <div class="yrev-strip-item">
+          <div class="yrev-strip-label">Vendor</div>
+          <div class="yrev-strip-value">{{ po.vendor.name|default:"—" }}</div>
+        </div>
+
+        <div class="yrev-strip-item alt">
+          <div class="yrev-strip-label">Date</div>
+          <div class="yrev-strip-value">{{ po.po_date|date:"d-m-Y" }}</div>
+        </div>
+
+        <div class="yrev-strip-item">
+          <div class="yrev-strip-label">Status</div>
+          <div class="yrev-strip-value">
+            <span class="yrev-status {% if po.approval_status == 'approved' %}is-approved{% elif po.approval_status == 'rejected' %}is-rejected{% else %}is-pending{% endif %}">
+              {{ po.get_approval_status_display }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <section class="yrev-section">
+        <div class="yrev-section-head">
+          <span class="yrev-chip">Compact View</span>
+        </div>
+
+        <div class="yrev-summary">
+          <div class="yrev-summary-item">
+            <div class="yrev-summary-label">Firm</div>
+            <div class="yrev-summary-value">{% if po.firm %}{{ po.firm.firm_name }}{% else %}—{% endif %}</div>
+          </div>
+
+          <div class="yrev-summary-item">
+            <div class="yrev-summary-label">Items</div>
+            <div class="yrev-summary-value">{{ po.items.count }}</div>
+          </div>
+
+          <div class="yrev-summary-item">
+            <div class="yrev-summary-label">Subtotal</div>
+            <div class="yrev-summary-value">₹{{ po.subtotal|default:"0.00" }}</div>
+          </div>
+
+          <div class="yrev-summary-item">
+            <div class="yrev-summary-label">Grand Total</div>
+            <div class="yrev-summary-value">₹{{ po.grand_total|default:"0.00" }}</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="yrev-section">
+        <div class="yrev-section-head">
+          <h3 class="yrev-section-title">Ready Items</h3>
+          <span class="yrev-chip">{{ po.items.count }} Item{{ po.items.count|pluralize }}</span>
+        </div>
+
+        <div class="yrev-items">
+          <div class="yrev-item-head">
+            <div>Material</div>
+            <div>Qty</div>
+            <div>Rate</div>
+            <div>Unit</div>
+            <div>Amount</div>
+          </div>
+
+          {% for item in po.items.all %}
+            <div class="yrev-item">
+              <div class="yrev-item-main">
+                <div class="yrev-item-name">
+                  {% if item.material %}
+                    {{ item.material.name }}
+                  {% elif item.material_type %}
+                    {{ item.material_type.name }}
+                  {% else %}
+                    Ready Item
+                  {% endif %}
+                </div>
+
+                <div class="yrev-item-sub">
+                  {% if item.remark %}
+                    {{ item.remark }}
+                  {% else %}
+                    Order line details
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="yrev-item-cell">
+                <div class="yrev-item-value">{{ item.quantity|default:"0.00" }}</div>
+              </div>
+
+              <div class="yrev-item-cell">
+                <div class="yrev-item-value">₹{{ item.rate|default:"0.00" }}</div>
+              </div>
+
+              <div class="yrev-item-cell">
+                <div class="yrev-item-value">{{ item.unit|default:"—" }}</div>
+              </div>
+
+              <div class="yrev-item-cell">
+                <div class="yrev-item-value">₹{{ item.final_amount|default:"0.00" }}</div>
+              </div>
+            </div>
+          {% empty %}
+            <div style="padding:12px 14px; font-size:11px; color:var(--rv-accent-dark); font-weight:700;">
+              No ready items found in this PO.
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="yrev-section">
+        <div class="yrev-section-head">
+          <h3 class="yrev-section-title">Amount Summary</h3>
+          <span class="yrev-chip">Commercial</span>
+        </div>
+
+        <div class="yrev-summary">
+          <div class="yrev-summary-item">
+            <div class="yrev-summary-label">After Discount</div>
+            <div class="yrev-summary-value">₹{{ po.after_discount_value|default:"0.00" }}</div>
+          </div>
+
+          <div class="yrev-summary-item">
+            <div class="yrev-summary-label">Other Charges</div>
+            <div class="yrev-summary-value">₹{{ po.others|default:"0.00" }}</div>
+          </div>
+
+          <div class="yrev-summary-item">
+            <div class="yrev-summary-label">Tax</div>
+            <div class="yrev-summary-value">{{ po.cgst_percent|default:"0" }}% + {{ po.sgst_percent|default:"0" }}%</div>
+          </div>
+
+          <div class="yrev-summary-item">
+            <div class="yrev-summary-label">Final Total</div>
+            <div class="yrev-summary-value">₹{{ po.grand_total|default:"0.00" }}</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="yrev-side">
+      <div class="yrev-side-head">
+        <h3 class="yrev-side-title">Review Action</h3>
+        <span class="yrev-chip">Admin</span>
+      </div>
+
+      <div class="yrev-side-body">
+        {% if po.approval_status == 'approved' %}
+          <div class="yrev-note">Approved PO — no further action required.</div>
+        {% elif po.approval_status == 'rejected' %}
+          <div class="yrev-note is-rejected">Rejected PO — check reason below.</div>
+        {% else %}
+          <div class="yrev-note is-pending">Pending review — take action.</div>
+        {% endif %}
+
+        <div class="yrev-checks">
+          <div class="yrev-check">
+            <div class="yrev-check-label">Header</div>
+            <div class="yrev-check-value">{% if review_checks.has_header %}OK{% else %}Missing{% endif %}</div>
+          </div>
+
+          <div class="yrev-check">
+            <div class="yrev-check-label">Firm</div>
+            <div class="yrev-check-value">{% if review_checks.has_firm %}OK{% else %}Missing{% endif %}</div>
+          </div>
+
+          <div class="yrev-check">
+            <div class="yrev-check-label">Items</div>
+            <div class="yrev-check-value">{% if review_checks.has_items %}OK{% else %}Missing{% endif %}</div>
+          </div>
+        </div>
+
+        <div class="yrev-note-box">
+          <label for="{{ review_form.rejection_reason.id_for_label }}">Review Note / Rejection Reason</label>
+          {{ review_form.rejection_reason }}
+          {% for err in review_form.rejection_reason.errors %}
+            <div class="yrev-error">{{ err }}</div>
+          {% endfor %}
+
+          {% if po.rejection_reason %}
+            <div class="yrev-note is-rejected">
+              <strong>Rejection Reason:</strong><br>
+              {{ po.rejection_reason }}
+            </div>
+          {% endif %}
+        </div>
+
+        {% if po.reviewed_by %}
+          <div class="yrev-reviewer">
+            <div class="yrev-reviewer-row">
+              <span>Reviewed by</span>
+              <strong>{{ po.reviewed_by.username }}</strong>
+            </div>
+            <div class="yrev-reviewer-row">
+              <span>Date</span>
+              <strong>{% if po.reviewed_at %}{{ po.reviewed_at|date:"d-m-Y H:i" }}{% else %}—{% endif %}</strong>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+
+  <div class="yrev-bottom">
+    <div>
+      <div class="yrev-bottom-title">Final Review</div>
+      <div class="yrev-bottom-sub">Approve or reject after checking the important ready PO details..</div>
+    </div>
+
+    {% if can_review_ready_po %}
+      <div class="yrev-bottom-actions">
+        <button type="submit" name="decision" value="reject" class="yrev-btn-danger with-label" title="Reject" aria-label="Reject">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <span>Reject</span>
+        </button>
+
+        <button type="submit" name="decision" value="approve" class="yrev-btn-accent with-label" title="Approve" aria-label="Approve">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12.5l4.2 4.2L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Approve</span>
+        </button>
+      </div>
+    {% endif %}
+  </div>
+</form>
+
+<script>
+document.querySelector('[data-ready-review-form]')?.addEventListener('submit', function(e){
+  const decision = document.activeElement?.value;
+  if (decision === 'reject') {
+    const textarea = this.querySelector('textarea[name$="rejection_reason"]');
+    if (!textarea || !textarea.value.trim()) {
+      e.preventDefault();
+      alert("Please enter rejection reason before rejecting.");
+      if (textarea) textarea.focus();
+    }
+  }
+});
+</script>

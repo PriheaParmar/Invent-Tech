@@ -1,0 +1,205 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .materialunit-edit-embed .jb-head {
+    align-items: center;
+  }
+
+  .materialunit-edit-embed .jb-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .materialunit-edit-embed .mu-chip {
+    min-width: 76px;
+    padding: 6px 10px;
+    border: 1px solid var(--jb-line);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: var(--jb-shadow-sm);
+    text-align: left;
+  }
+
+  .materialunit-edit-embed .mu-chip span {
+    display: block;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--jb-text-soft);
+    line-height: 1.1;
+  }
+
+  .materialunit-edit-embed .mu-chip strong {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--jb-font-serif);
+    font-size: 15px;
+    line-height: 1;
+    color: #151d27;
+    word-break: break-word;
+  }
+
+  .materialunit-edit-embed .mu-formbar {
+    padding: 12px 14px 14px;
+    background: var(--jb-bg);
+    border-top: 1px solid var(--jb-line-soft);
+  }
+
+  .materialunit-edit-embed .jb-inline-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+  }
+
+  .materialunit-edit-embed .jb-inline-field {
+    min-width: 0;
+  }
+
+  .materialunit-edit-embed .jb-inline-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--jb-text-soft);
+  }
+
+  .materialunit-edit-embed .jb-inline-field input,
+  .materialunit-edit-embed .jb-inline-field select,
+  .materialunit-edit-embed .jb-inline-field textarea {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border-radius: 7px;
+    border: 1px solid var(--jb-line);
+    background: #fff;
+    color: var(--jb-text);
+    font-family: var(--jb-font-sans);
+    font-size: 11px;
+    outline: none;
+    transition:
+      border-color .16s ease,
+      box-shadow .16s ease,
+      background .16s ease;
+  }
+
+  .materialunit-edit-embed .jb-inline-field input:focus,
+  .materialunit-edit-embed .jb-inline-field select:focus,
+  .materialunit-edit-embed .jb-inline-field textarea:focus {
+    border-color: var(--jb-orange-line);
+    box-shadow: 0 0 0 4px var(--jb-orange-soft);
+  }
+
+  .materialunit-edit-embed .jb-inline-form .jb-add {
+    height: 32px;
+    padding: 0 12px;
+    align-self: end;
+  }
+
+  @media (max-width: 640px) {
+    .materialunit-edit-embed .jb-head {
+      align-items: flex-start;
+    }
+
+    .materialunit-edit-embed .jb-head-actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .materialunit-edit-embed .mu-chip {
+      min-width: 68px;
+    }
+
+    .materialunit-edit-embed .jb-inline-form {
+      grid-template-columns: 1fr;
+    }
+
+    .materialunit-edit-embed .jb-inline-form .jb-add {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="jobbers-embed materialunit-edit-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Edit Material Unit</div>
+        <div class="jb-sub">Update the selected unit</div>
+      </div>
+
+      <div class="jb-head-actions">
+        <div class="mu-chip">
+          <span>Editing</span>
+          <strong>{{ unit.name }}</strong>
+        </div>
+
+        <a class="jb-iconbtn jb-back"
+           href="{% url 'accounts:materialunit_list' %}{% if not full_page %}?embed=1{% endif %}"
+           aria-label="Back">
+          <svg class="jb-back-ico" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24">
+            <path d="M22.0003 13.0001L22.0004 11.0002L5.82845 11.0002L9.77817 7.05044L8.36396 5.63623L2 12.0002L8.36396 18.3642L9.77817 16.9499L5.8284 13.0002L22.0003 13.0001Z"></path>
+          </svg>
+        </a>
+
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="jb-errors">
+      {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="mu-formbar">
+      <form method="post"
+            action="{% url 'accounts:materialunit_edit' unit.id %}{% if not full_page %}?embed=1{% endif %}"
+            class="jb-inline-form">
+        {% csrf_token %}
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <div class="jb-inline-field">
+          <label for="{{ form.name.id_for_label }}">Unit Name</label>
+          {{ form.name }}
+          {% if form.name.errors %}
+          <div class="jb-field-errors">
+            {% for error in form.name.errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <button class="jb-add" type="submit">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Update Unit
+        </button>
+      </form>
+    </div>
+  </section>
+</div>

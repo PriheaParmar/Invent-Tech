@@ -1,0 +1,10 @@
+{# accounts/_messages_embed.html #}
+{% if messages %}
+<div class="toast-stack">
+    {% for message in messages %}
+    <div class="toast-msg {{ message.tags|default:'' }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

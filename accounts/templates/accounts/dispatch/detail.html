@@ -1,0 +1,7 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Dispatch Challan {{ challan.challan_no }} - InventTech{% endblock %}
+{% block page_title %}Dispatch{% endblock %}
+{% block page_subtitle %}Challan details{% endblock %}
+{% block content %}
+  {% include "accounts/dispatch/detail_embed.html" with full_page=1 %}
+{% endblock %}

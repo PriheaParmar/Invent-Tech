@@ -1,0 +1,14 @@
+{% load static %}
+{% extends "accounts/base.html" %}
+
+{% block title %}Delete Jobber{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/jobbers/delete.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="jb-page">
+  {% include "accounts/jobbers/embed_confirm_delete.html" with full_page=1 %}
+</div>
+{% endblock %}

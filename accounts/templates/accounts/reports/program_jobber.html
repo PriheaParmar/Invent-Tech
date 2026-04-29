@@ -1,0 +1,8 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+{% block title %}Program Jobber Report{% endblock %}
+{% block page_title %}Program Jobber Report{% endblock %}
+{% block page_subtitle %}Jobber challan sent, inward and pending quantities.{% endblock %}
+{% block content %}
+  {% include "accounts/reports/program_jobber_embed.html" %}
+{% endblock %}

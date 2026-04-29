@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ program.program_no }} - Program Review</title>
+  <style>
+    :root{
+      --blue: rgba(28,109,216,1);
+      --pink: rgb(238,61,133);
+      --orange: rgba(250,189,100,1);
+      --green:#118a4b;
+      --red:#d92d20;
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --soft:#f8fafc;
+      --line:#e5eaf2;
+      --text:#0f172a;
+      --muted:#667085;
+      --shadow:0 14px 30px rgba(15,23,42,.06);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      padding:24px;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Arial, sans-serif;
+    }
+    .page{
+      max-width:1320px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:14px 16px;
+      box-shadow:var(--shadow);
+    }
+    .toolbar-left,.toolbar-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      min-height:42px;
+      padding:0 16px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      text-decoration:none;
+      font-size:13px;
+      font-weight:800;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+    }
+    .btn-dark{background:#111827;color:#fff;border-color:#111827}
+    .btn-blue{background:rgba(28,109,216,.08);color:var(--blue);border-color:rgba(28,109,216,.16)}
+    .btn-pink{background:rgba(238,61,133,.08);color:var(--pink);border-color:rgba(238,61,133,.16)}
+    .btn-orange{background:rgba(250,189,100,.18);color:#9a6700;border-color:rgba(250,189,100,.28)}
+    .hero{
+      display:grid;
+      grid-template-columns:minmax(0,1.7fr) minmax(280px,.9fr);
+      gap:16px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .hero-main{
+      padding:22px 22px 18px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .kicker{
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--muted);
+    }
+    .title{
+      font-size:32px;
+      line-height:1.04;
+      font-weight:950;
+      letter-spacing:-.03em;
+      margin:0;
+    }
+    .sub{
+      font-size:14px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .pills{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{
+      min-height:30px;
+      padding:0 12px;
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      font-weight:900;
+      border:1px solid transparent;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    .pill-firm{background:#f8fafc;border-color:#e4e7ec;color:#344054;text-transform:none;font-size:12px;letter-spacing:0}
+    .pill-open{background:rgba(250,189,100,.18);border-color:rgba(250,189,100,.28);color:#9a6700}
+    .pill-closed{background:rgba(217,45,32,.08);border-color:rgba(217,45,32,.14);color:var(--red)}
+    .pill-verified{background:rgba(28,109,216,.08);border-color:rgba(28,109,216,.14);color:var(--blue)}
+    .pill-unverified{background:rgba(238,61,133,.08);border-color:rgba(238,61,133,.14);color:var(--pink)}
+    .pill-started{background:rgba(17,138,75,.08);border-color:rgba(17,138,75,.14);color:var(--green)}
+    .pill-not-started{background:rgba(250,189,100,.18);border-color:rgba(250,189,100,.28);color:#9a6700}
+    .hero-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px;
+    }
+    .stat{
+      min-height:90px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:var(--soft);
+      padding:14px 15px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:6px;
+    }
+    .stat-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .stat-value{font-size:22px;font-weight:950;line-height:1.05}
+    .stat-sub{font-size:12px;color:var(--muted);font-weight:700}
+    .hero-side{
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    .imgbox{
+      width:100%;
+      aspect-ratio:4 / 5;
+      border:1px solid var(--line);
+      border-radius:20px;
+      overflow:hidden;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .imgbox img{width:100%;height:100%;object-fit:cover}
+    .empty{
+      color:#98a2b3;
+      font-size:14px;
+      font-weight:800;
+      text-align:center;
+      padding:18px;
+    }
+    .side-list{display:flex;flex-direction:column;gap:10px}
+    .meta-row{
+      min-height:42px;
+      padding:0 12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:var(--soft);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .meta-key{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+    .meta-val{font-size:13px;font-weight:900;color:var(--text);text-align:right}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:16px;
+    }
+    .section-head{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .section-title{font-size:18px;font-weight:950;line-height:1.05}
+    .section-sub{font-size:13px;color:var(--muted);font-weight:700;margin-top:4px}
+    .section-body{padding:16px 18px}
+    .info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .info-box{border:1px solid var(--line);border-radius:18px;background:var(--soft);padding:14px}
+    .info-label{font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+    .info-value{font-size:16px;font-weight:900;color:var(--text);margin-top:6px;line-height:1.25}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:separate;border-spacing:0}
+    th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top}
+    th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:900;background:#fafbfd}
+    tr:last-child td{border-bottom:0}
+    .right{text-align:right}
+    .center{text-align:center}
+    .workflow-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .workflow-box{border:1px solid var(--line);border-radius:18px;background:var(--soft);padding:14px}
+    .workflow-value{font-size:24px;font-weight:950;line-height:1.05}
+    .muted-line{font-size:12px;color:var(--muted);font-weight:700;margin-top:6px}
+    .notice{padding:14px 16px;border-radius:16px;background:#fff7ed;border:1px solid rgba(250,189,100,.28);color:#9a6700;font-size:13px;font-weight:800}
+    @media print{
+      body{padding:0;background:#fff}
+      .toolbar{display:none}
+      .page{max-width:none}
+      .card{box-shadow:none;break-inside:avoid}
+    }
+    @media(max-width:1100px){
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+      .hero-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .workflow-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media(max-width:700px){
+      body{padding:14px}
+      .hero-grid,.info-grid,.workflow-grid{grid-template-columns:1fr}
+      .title{font-size:26px}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <a href="{% url 'accounts:program_list' %}" class="btn">Back to Programs</a>
+        <a href="{% url 'accounts:program_edit' program.id %}" class="btn btn-blue">Edit Program</a>
+        <a href="{% url 'accounts:program_start_modal' program.id %}" class="btn {% if program.start_record and program.start_record.is_started %}btn-blue{% else %}btn-dark{% endif %}">{% if program.start_record and program.start_record.is_started %}Edit Start{% else %}Start Program{% endif %}</a>
+        <a href="{% url 'accounts:program_challan_manage' program.id %}" class="btn btn-orange">Manage Challans</a>
+        <a href="{% url 'accounts:program_costing_detail' program.id %}" class="btn btn-pink">Costings</a>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn" onclick="window.print()">Print</button>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="card hero-main">
+        <div>
+          <div class="kicker">Program Review</div>
+          <h1 class="title">{{ program.program_no }}</h1>
+          <div class="sub">{{ program.bom.sku|default:'-' }}{% if program.bom.product_name %} • {{ program.bom.product_name }}{% endif %}</div>
+        </div>
+
+        <div class="pills">
+          {% if program.firm %}<span class="pill pill-firm">{{ program.firm.firm_name }}</span>{% endif %}
+          <span class="pill {% if program.status == 'open' %}pill-open{% else %}pill-closed{% endif %}">{{ program.get_status_display|default:program.status }}</span>
+          <span class="pill {% if program.is_verified %}pill-verified{% else %}pill-unverified{% endif %}">{% if program.is_verified %}Verified{% else %}Not Verified{% endif %}</span>
+          <span class="pill {% if program.start_record and program.start_record.is_started %}pill-started{% else %}pill-not-started{% endif %}">{% if program.start_record and program.start_record.is_started %}Started{% else %}Not Started{% endif %}</span>
+        </div>
+
+        <div class="hero-grid">
+          <div class="stat">
+            <div class="stat-label">Program Date</div>
+            <div class="stat-value">{{ program.program_date|date:"d-m-Y" }}</div>
+            <div class="stat-sub">Created {{ program.created_at|date:"d M Y" }}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Finishing Date</div>
+            <div class="stat-value">{% if program.finishing_date %}{{ program.finishing_date|date:"d-m-Y" }}{% else %}—{% endif %}</div>
+            <div class="stat-sub">Planning target date</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Total Qty</div>
+            <div class="stat-value">{{ program.total_qty }}</div>
+            <div class="stat-sub">Ratio {{ program.ratio|default:'-' }}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Costs</div>
+            <div class="stat-value">₹ {{ program.cost_price }}</div>
+            <div class="stat-sub">Base ₹ {{ program.avg_price }}</div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card hero-side">
+        <div class="imgbox">
+          {% if program.preview_image_url %}
+            <img src="{{ program.preview_image_url }}" alt="{{ program.bom.sku }}">
+          {% else %}
+            <div class="empty">No BOM preview image</div>
+          {% endif %}
+        </div>
+
+        <div class="side-list">
+          <div class="meta-row"><span class="meta-key">Brand</span><span class="meta-val">{{ program.bom.brand.name|default:'-' }}</span></div>
+          <div class="meta-row"><span class="meta-key">Category</span><span class="meta-val">{{ program.bom.category.name|default:'-' }}</span></div>
+          <div class="meta-row"><span class="meta-key">Main / Sub</span><span class="meta-val">{{ program.bom.main_category.name|default:'-' }} / {{ program.bom.sub_category.name|default:'-' }}</span></div>
+          <div class="meta-row"><span class="meta-key">Pattern</span><span class="meta-val">{{ program.bom.pattern_type.name|default:'-' }}</span></div>
+          <div class="meta-row"><span class="meta-key">Color</span><span class="meta-val">{{ program.bom.color|default:'-' }}</span></div>
+          <div class="meta-row"><span class="meta-key">MRP</span><span class="meta-val">₹ {{ program.bom.mrp|default:'0.00' }}</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Planning Summary</div>
+            <div class="section-sub">Main program and production control values</div>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="info-grid">
+            <div class="info-box"><div class="info-label">Firm</div><div class="info-value">{{ program.firm.firm_name|default:'-' }}</div></div>
+            <div class="info-box"><div class="info-label">SKU</div><div class="info-value">{{ program.bom.sku|default:'-' }}</div></div>
+            <div class="info-box"><div class="info-label">Product Name</div><div class="info-value">{{ program.bom.product_name|default:'-' }}</div></div>
+            <div class="info-box"><div class="info-label">Damage</div><div class="info-value">{{ program.damage|default:'0' }}</div></div>
+            <div class="info-box"><div class="info-label">GLT Days</div><div class="info-value">{{ program.glt_days|default:'0' }}</div></div>
+            <div class="info-box"><div class="info-label">GLT on 100 Days</div><div class="info-value">{{ program.glt_on_100_days|default:'0' }}</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Workflow Snapshot</div>
+            <div class="section-sub">Quick status before starting or managing jobber flow</div>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="workflow-grid">
+            <div class="workflow-box">
+              <div class="info-label">Start Rows</div>
+              <div class="workflow-value">{% if program.start_record %}Yes{% else %}No{% endif %}</div>
+              <div class="muted-line">{% if program.start_record and program.start_record.is_started %}Program started{% elif program.start_record %}Start draft saved{% else %}Not created yet{% endif %}</div>
+            </div>
+            <div class="workflow-box">
+              <div class="info-label">Challans</div>
+              <div class="workflow-value">{{ program.jobber_challans.count }}</div>
+              <div class="muted-line">Issued to jobbers</div>
+            </div>
+            <div class="workflow-box">
+              <div class="info-label">Dispatch</div>
+              <div class="workflow-value">{{ program.dispatch_challans.count }}</div>
+              <div class="muted-line">Customer dispatch challans</div>
+            </div>
+            <div class="workflow-box">
+              <div class="info-label">Invoices</div>
+              <div class="workflow-value">{{ program.invoices.count }}</div>
+              <div class="muted-line">Program billing records</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Planned Jobber Pricing</div>
+            <div class="section-sub">Planned rows saved on the main program</div>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Jobber Type</th>
+                  <th>Jobber</th>
+                  <th class="right">Price</th>
+                  <th class="right">Issued Qty</th>
+                  <th class="right">Inward Qty</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in program.jobber_rows.all %}
+                  <tr>
+                    <td>{{ row.jobber_type.name|default:'-' }}</td>
+                    <td>{{ row.jobber.name|default:'-' }}</td>
+                    <td class="right">₹ {{ row.price }}</td>
+                    <td class="right">{{ row.issued_qty }}</td>
+                    <td class="right">{{ row.inward_qty }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="5" class="center">No planned jobber rows found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Program Start Snapshot</div>
+            <div class="section-sub">Execution side rows created from the program</div>
+          </div>
+        </div>
+        <div class="section-body">
+          {% if program.start_record %}
+            <div class="info-grid" style="margin-bottom:12px;">
+              <div class="info-box"><div class="info-label">Started At</div><div class="info-value">{{ program.start_record.started_at|date:"d-m-Y H:i" }}</div></div>
+              <div class="info-box"><div class="info-label">Remarks</div><div class="info-value">{{ program.start_record.remarks|default:'-' }}</div></div>
+              <div class="info-box"><div class="info-label">Fabric Rows</div><div class="info-value">{{ program.start_record.fabric_rows.count }}</div></div>
+              <div class="info-box"><div class="info-label">Assigned Jobbers</div><div class="info-value">{{ program.start_record.jobber_rows.count }}</div></div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Jobber Type</th>
+                    <th>Jobber</th>
+                    <th class="right">Jobber Price</th>
+                    <th>Allocation Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in program.start_record.jobber_rows.all %}
+                    <tr>
+                      <td>{{ row.jobber_type.name|default:'-' }}</td>
+                      <td>{{ row.jobber.name|default:'-' }}</td>
+                      <td class="right">₹ {{ row.jobber_price }}</td>
+                      <td>{{ row.allocation_date|date:"d-m-Y"|default:'-' }}</td>
+                    </tr>
+                  {% empty %}
+                    <tr><td colspan="4" class="center">No start jobber rows found.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="notice">Program Start has not been created yet. Start the program first to generate fabric, size, and jobber execution rows.</div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Size Chart Review</div>
+          <div class="section-sub">Main size breakup saved against the program</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Line</th>
+                <th class="right">XS</th>
+                <th class="right">S</th>
+                <th class="right">M</th>
+                <th class="right">L</th>
+                <th class="right">XL</th>
+                <th class="right">XXL</th>
+                <th class="right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in program.size_rows.all %}
+                <tr>
+                  <td>{{ row.line_name }}</td>
+                  <td class="right">{{ row.xs_qty }}</td>
+                  <td class="right">{{ row.s_qty }}</td>
+                  <td class="right">{{ row.m_qty }}</td>
+                  <td class="right">{{ row.l_qty }}</td>
+                  <td class="right">{{ row.xl_qty }}</td>
+                  <td class="right">{{ row.xxl_qty }}</td>
+                  <td class="right">{{ row.xs_qty|add:row.s_qty|add:row.m_qty|add:row.l_qty|add:row.xl_qty|add:row.xxl_qty }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="8" class="center">No size chart rows found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

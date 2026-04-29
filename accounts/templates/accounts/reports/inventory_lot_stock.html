@@ -1,0 +1,8 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+{% block title %}Inventory Lot Stock Report{% endblock %}
+{% block page_title %}Inventory Lot Stock Report{% endblock %}
+{% block page_subtitle %}Lot-wise received, accepted, used and available stock.{% endblock %}
+{% block content %}
+  {% include "accounts/reports/inventory_lot_stock_embed.html" %}
+{% endblock %}

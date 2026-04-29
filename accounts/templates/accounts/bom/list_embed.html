@@ -1,0 +1,366 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+
+<style>
+  .bomu-embed .jb-head{
+    align-items: center;
+  }
+
+  .bomu-embed .jb-head-actions{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bomu-embed .jb-search{
+    grid-template-columns: minmax(260px, 1fr) auto;
+  }
+
+  .bomu-embed .jb-tablewrap{
+    overflow-x: hidden;
+  }
+
+  .bomu-embed .jb-table{
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .bomu-embed .jb-table th,
+  .bomu-embed .jb-table td{
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+  }
+
+  .bomu-embed .jb-table th:nth-child(1),
+  .bomu-embed .jb-table td:nth-child(1){
+    width: 14%;
+  }
+
+  .bomu-embed .jb-table th:nth-child(2),
+  .bomu-embed .jb-table td:nth-child(2){
+    width: 22%;
+  }
+
+  .bomu-embed .jb-table th:nth-child(3),
+  .bomu-embed .jb-table td:nth-child(3){
+    width: 22%;
+  }
+
+  .bomu-embed .jb-table th:nth-child(4),
+  .bomu-embed .jb-table td:nth-child(4){
+    width: 11%;
+  }
+
+  .bomu-embed .jb-table th:nth-child(5),
+  .bomu-embed .jb-table td:nth-child(5){
+    width: 11%;
+  }
+
+  .bomu-embed .jb-table th:nth-child(6),
+  .bomu-embed .jb-table td:nth-child(6){
+    width: 10%;
+  }
+
+  .bomu-embed .jb-table th:nth-child(7),
+  .bomu-embed .jb-table td:nth-child(7){
+    width: 96px;
+    text-align: center;
+  }
+
+  .bomu-embed .bomu-product,
+  .bomu-embed .bomu-class{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .bomu-embed .bomu-product-main,
+  .bomu-embed .bomu-class-main{
+    font-family: var(--jb-font-serif);
+    font-size: 13px;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #111923;
+  }
+
+  .bomu-embed .bomu-product-sub,
+  .bomu-embed .bomu-class-sub{
+    font-size: 10px;
+    line-height: 1.25;
+    color: #7b8592;
+    font-family: var(--jb-font-sans);
+  }
+
+  .bomu-embed .bomu-meta{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .bomu-embed .bomu-chip{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: rgba(250, 189, 100, 0.12);
+    border: 1px solid rgba(250, 189, 100, 0.35);
+    color: #70531c;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    font-family: var(--jb-font-sans);
+  }
+
+  .bomu-embed .bomu-price{
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .bomu-embed .bomu-price-sub{
+    display: block;
+    margin-top: 2px;
+    font-size: 10px;
+    color: #6b7280;
+    font-weight: 600;
+  }
+
+  .bomu-embed .bomu-status{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 5px;
+    font-family: var(--jb-font-sans);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+
+  .bomu-embed .bomu-status--active{
+    background: var(--jb-orange-soft);
+    color: #70531c;
+    border-color: rgba(250, 189, 100, 0.42);
+  }
+
+  .bomu-embed .bomu-status--inactive{
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #e5e7eb;
+  }
+
+  .bomu-embed .jb-actions{
+    justify-content: center;
+  }
+
+  @media (max-width: 980px){
+    .bomu-embed .jb-search{
+      grid-template-columns: 1fr auto;
+    }
+  }
+
+  @media (max-width: 768px){
+    .bomu-embed .jb-search{
+      grid-template-columns: 1fr;
+    }
+
+    .bomu-embed .jb-search .jb-search-btn{
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="jobbers-embed bomu-embed">
+  <section class="jb-panel">
+    <div class="jb-head">
+      <div>
+        <div class="jb-title">Bill of Materials</div>
+        <div class="jb-sub">Manage SKU BOMs, costing masters, and production-ready setup.</div>
+      </div>
+
+      <div class="jb-head-actions">
+        {% if not full_page %}
+        <button type="button" class="jb-iconbtn jb-close" data-embed-close aria-label="Close">
+          <svg class="jb-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if delete_error %}
+    <div class="jb-errors jb-usage-error">
+      <div class="jb-usage-title">{{ delete_error }}</div>
+      {% if delete_usage %}
+      <div class="jb-usage-list">
+        {% for row in delete_usage %}
+        <div class="jb-usage-row">
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="jb-tools">
+      <form class="jb-search" method="get" action="{% url 'accounts:bom_list' %}">
+        {% if not full_page %}
+        <input type="hidden" name="embed" value="1">
+        {% endif %}
+
+        <input
+          type="search"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Search BOM code, SKU or product name"
+          autocomplete="off"
+          aria-label="Search BOM"
+        >
+
+        <button class="jb-search-btn" type="submit">Search</button>
+      </form>
+
+      <div class="jb-tool-actions">
+        {% if q %}
+        <a class="jb-secondary" href="{% url 'accounts:bom_list' %}{% if not full_page %}?embed=1{% endif %}">Clear</a>
+        {% endif %}
+
+        <a class="jb-add" href="{% url 'accounts:bom_add' %}{% if not full_page %}?embed=1{% endif %}">
+          <svg class="jb-ico jb-add-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+          Add BOM
+        </a>
+      </div>
+    </div>
+
+    <div class="jb-tablewrap">
+      <table class="jb-table">
+        <thead>
+          <tr>
+            <th>BOM / SKU</th>
+            <th>Product</th>
+            <th>Classification</th>
+            <th>Base Price</th>
+            <th>Final Price</th>
+            <th>Status</th>
+            <th style="width: 96px;">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for b in boms %}
+          <tr>
+            <td>
+              <div class="bomu-product">
+                <div class="bomu-product-main">{{ b.bom_code|default:"—" }}</div>
+                <div class="bomu-product-sub">SKU: {{ b.sku|default:"—" }}</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="bomu-product">
+                <div class="bomu-product-main">{{ b.product_name|default:"—" }}</div>
+                <div class="bomu-meta">
+                  <span class="bomu-chip">{{ b.get_size_type_display|default:b.size_type|default:"regular" }}</span>
+                  {% if b.gender %}<span class="bomu-chip">{{ b.gender }}</span>{% endif %}
+                  {% if b.color %}<span class="bomu-chip">{{ b.color }}</span>{% endif %}
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div class="bomu-class">
+                <div class="bomu-class-main">{{ b.brand.name|default:"—" }} / {{ b.category.name|default:"—" }}</div>
+                <div class="bomu-class-sub">
+                  Catalogue: {{ b.catalogue.name|default:"—" }}
+                  {% if b.pattern_type %} • Pattern: {{ b.pattern_type.name }}{% endif %}
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <span class="bomu-price">₹ {{ b.price|default:"0.00" }}</span>
+              <span class="bomu-price-sub">Manual base</span>
+            </td>
+
+            <td>
+              <span class="bomu-price">₹ {{ b.final_price|default:"0.00" }}</span>
+              <span class="bomu-price-sub">Rolled-up total</span>
+            </td>
+
+            <td>
+              <span class="bomu-status {% if b.status == 'active' %}bomu-status--active{% else %}bomu-status--inactive{% endif %}">
+                {{ b.status|default:"inactive" }}
+              </span>
+            </td>
+
+            <td class="jb-actions">
+              <a
+                class="jb-link jb-link-icon jb-link-edit"
+                href="{% url 'accounts:bom_edit' b.id %}{% if not full_page %}?embed=1{% endif %}"
+                aria-label="Edit BOM"
+                title="Edit"
+              >
+                <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z"></path>
+                  <path d="M14.06 4.94l3.75 3.75"></path>
+                </svg>
+              </a>
+
+              <form
+                method="post"
+                action="{% url 'accounts:bom_delete' b.id %}{% if not full_page %}?embed=1{% endif %}"
+                class="jb-inline-delete js-jb-delete-form"
+                data-delete-label="BOM &quot;{{ b.bom_code|default:b.product_name|escape }}&quot;"
+              >
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="jb-link jb-link-icon jb-link-danger jb-link-delete jb-link-button"
+                  aria-label="Delete BOM"
+                  title="Delete"
+                >
+                  <svg class="jb-action-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M6 7l1 12h10l1-12"></path>
+                    <path d="M9 7V4h6v3"></path>
+                  </svg>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="jb-empty">No BOM found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% include "accounts/jobbers/_delete_confirm_modal.html" %}
+</div>

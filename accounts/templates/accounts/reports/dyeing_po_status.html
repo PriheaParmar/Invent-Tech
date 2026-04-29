@@ -1,0 +1,8 @@
+{% extends "accounts/base_app.html" %}
+{% load static %}
+{% block title %}Dyeing PO Status Report{% endblock %}
+{% block page_title %}Dyeing PO Status Report{% endblock %}
+{% block page_subtitle %}Dyeing PO ordered, inwarded and pending quantities.{% endblock %}
+{% block content %}
+  {% include "accounts/reports/dyeing_po_status_embed.html" %}
+{% endblock %}
