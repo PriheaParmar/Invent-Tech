@@ -5304,7 +5304,6 @@ def _greige_source_queryset():
             ),
         )
     )
-
 def _attach_greige_po_metrics(po):
     total_inward = Decimal("0")
     remaining_qty = Decimal("0")
@@ -5313,8 +5312,8 @@ def _attach_greige_po_metrics(po):
         total_inward += Decimal(item.inward_qty_total or 0)
         remaining_qty += Decimal(item.remaining_qty_total or 0)
 
-    po.total_inward_qty = total_inward
-    po.remaining_qty_total = remaining_qty
+    po.metric_total_inward_qty = total_inward
+    po.metric_remaining_qty_total = remaining_qty
     return po
 
 def _greige_po_queryset():
