@@ -31,7 +31,56 @@
     .pverify-btn--approve{background:#1c6dd8;color:#fff;border-color:#1c6dd8;box-shadow:0 10px 22px rgba(28,109,216,.18);}
     .pverify-btn[disabled]{opacity:.55;cursor:not-allowed;transform:none;}
     @media(max-width:680px){.pverify-grid{grid-template-columns:1fr}.pverify-head{padding:16px}.pverify-body{padding:16px}.pverify-form{padding:14px 16px;justify-content:stretch}.pverify-btn{flex:1 1 auto}.pverify-title{font-size:23px}}
-  </style>
+  
+
+
+    /* Batch UI polish: compact verification modal */
+    .pverify-overlay{
+      padding:14px !important;
+      background:rgba(15,23,42,.34) !important;
+      backdrop-filter:blur(5px) !important;
+    }
+    .pverify-card{
+      border-radius:18px !important;
+      border-color:rgba(238,61,133,.16) !important;
+      box-shadow:0 24px 60px rgba(15,23,42,.16) !important;
+    }
+    .pverify-head{
+      padding:14px 16px !important;
+      background:linear-gradient(180deg,#fff,#fff8fb) !important;
+      border-bottom-color:#eadde5 !important;
+    }
+    .pverify-title{
+      font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif !important;
+      font-size:20px !important;
+      font-weight:800 !important;
+      letter-spacing:-.02em !important;
+    }
+    .pverify-body{
+      padding:14px !important;
+      background:#fff8fb !important;
+    }
+    .pverify-box,
+    .pverify-section,
+    .pverify-info{
+      border-radius:14px !important;
+      border-color:rgba(238,61,133,.16) !important;
+      background:#fff !important;
+      box-shadow:none !important;
+    }
+    .pverify-actions{
+      padding:10px 14px !important;
+      background:rgba(255,255,255,.96) !important;
+      border-top:1px solid #eadde5 !important;
+    }
+    .pverify-btn,
+    .pverify-close,
+    button[class*="pverify"]{
+      border-radius:10px !important;
+      min-height:34px !important;
+    }
+
+</style>
 
   <div class="pverify-card" role="dialog" aria-modal="true" aria-label="Program Verification">
     <div class="pverify-head">

@@ -451,7 +451,121 @@
         .spm-card:nth-of-type(5){ grid-column:1 !important; grid-row:auto !important; }
       }
 
-    </style>
+    
+
+
+      /* Batch UI polish: Start Program modal matched to Program List */
+      .spm-backdrop{
+        padding:14px;
+        background:rgba(15,23,42,.34);
+        backdrop-filter:blur(5px);
+      }
+      .spm-dialog{
+        width:min(1120px, calc(100vw - 28px));
+        max-height:calc(100vh - 28px);
+        border-radius:18px;
+        border-color:rgba(238,61,133,.16);
+        box-shadow:0 24px 60px rgba(15,23,42,.16);
+      }
+      .spm-head,
+      .spm-header{
+        min-height:50px;
+        background:linear-gradient(180deg,#fff,#fff8fb);
+        border-bottom-color:#eadde5;
+      }
+      .spm-title{
+        font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+        font-size:21px;
+        font-weight:800;
+        letter-spacing:-.02em;
+      }
+      .spm-body{
+        padding:10px;
+        background:radial-gradient(circle at top right,rgba(238,61,133,.08),transparent 26%),#fff8fb;
+      }
+      .spm-card,
+      .spm-panel,
+      .spm-section,
+      .spm-summary-card{
+        border-radius:15px;
+        border-color:rgba(238,61,133,.16);
+        box-shadow:none;
+        background:#fff;
+      }
+      .spm-panel-head,
+      .spm-section-head,
+      .spm-card-head{
+        background:linear-gradient(180deg,#fff,#fffafd);
+        border-bottom-color:#f1dce8;
+        min-height:36px;
+      }
+      .spm-grid,
+      .spm-top-grid,
+      .spm-summary-grid{
+        gap:9px;
+      }
+      .spm-field input,
+      .spm-field select,
+      .spm-field textarea,
+      .spm-form input,
+      .spm-form select,
+      .spm-form textarea{
+        min-height:34px;
+        border-radius:10px;
+        box-shadow:none;
+      }
+      .spm-table-wrap{
+        border-radius:14px;
+        border-color:rgba(238,61,133,.16);
+        background:#fff;
+        padding:8px;
+      }
+      .spm-table{
+        border-collapse:separate;
+        border-spacing:0 7px;
+        background:transparent;
+      }
+      .spm-table thead th{
+        background:#fff4fa;
+        border-top:1px solid rgba(238,61,133,.14);
+        border-bottom:1px solid rgba(238,61,133,.14);
+        color:#5b6470;
+        font-size:9px;
+        font-weight:900;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+      }
+      .spm-table tbody td{
+        background:#fff;
+        border-top:1px solid rgba(234,221,229,.75);
+        border-bottom:1px solid rgba(234,221,229,.75);
+      }
+      .spm-table tbody td:first-child{
+        border-left:1px solid rgba(234,221,229,.75);
+        border-top-left-radius:12px;
+        border-bottom-left-radius:12px;
+      }
+      .spm-table tbody td:last-child{
+        border-right:1px solid rgba(234,221,229,.75);
+        border-top-right-radius:12px;
+        border-bottom-right-radius:12px;
+      }
+      .spm-footer,
+      .spm-actions{
+        position:sticky;
+        bottom:0;
+        background:rgba(255,255,255,.96);
+        backdrop-filter:blur(10px);
+        border-top:1px solid #eadde5;
+        padding:9px 12px;
+      }
+      .spm-btn,
+      .spm-action,
+      .spm-close{
+        border-radius:10px;
+      }
+
+</style>
 
     <div class="spm-head">
       <div class="spm-head-copy">

@@ -10,7 +10,56 @@
     .pverify-alert{padding:13px 14px;border-radius:16px;background:#fff8ed;border:1px solid #f5d9a8;color:#7a4a06;font-size:12px;font-weight:850;line-height:1.45;}
     .pverify-actions{display:flex;justify-content:flex-end;gap:10px;padding:15px 20px;border-top:1px solid #f0dce7;}
     .pverify-btn{min-height:38px;padding:0 16px;border-radius:13px;border:1px solid #e7d8e1;background:#fff;color:#475467;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;}
-  </style>
+  
+
+
+    /* Batch UI polish: compact verification modal */
+    .pverify-overlay{
+      padding:14px !important;
+      background:rgba(15,23,42,.34) !important;
+      backdrop-filter:blur(5px) !important;
+    }
+    .pverify-card{
+      border-radius:18px !important;
+      border-color:rgba(238,61,133,.16) !important;
+      box-shadow:0 24px 60px rgba(15,23,42,.16) !important;
+    }
+    .pverify-head{
+      padding:14px 16px !important;
+      background:linear-gradient(180deg,#fff,#fff8fb) !important;
+      border-bottom-color:#eadde5 !important;
+    }
+    .pverify-title{
+      font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif !important;
+      font-size:20px !important;
+      font-weight:800 !important;
+      letter-spacing:-.02em !important;
+    }
+    .pverify-body{
+      padding:14px !important;
+      background:#fff8fb !important;
+    }
+    .pverify-box,
+    .pverify-section,
+    .pverify-info{
+      border-radius:14px !important;
+      border-color:rgba(238,61,133,.16) !important;
+      background:#fff !important;
+      box-shadow:none !important;
+    }
+    .pverify-actions{
+      padding:10px 14px !important;
+      background:rgba(255,255,255,.96) !important;
+      border-top:1px solid #eadde5 !important;
+    }
+    .pverify-btn,
+    .pverify-close,
+    button[class*="pverify"]{
+      border-radius:10px !important;
+      min-height:34px !important;
+    }
+
+</style>
   <div class="pverify-card" role="dialog" aria-modal="true">
     <div class="pverify-head">
       <div>

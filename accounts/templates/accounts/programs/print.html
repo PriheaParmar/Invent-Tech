@@ -237,7 +237,120 @@
       .hero-grid,.info-grid,.workflow-grid{grid-template-columns:1fr}
       .title{font-size:26px}
     }
-  </style>
+  
+
+
+    /* Batch UI polish: premium Program print output */
+    body{
+      background:radial-gradient(circle at top right,rgba(238,61,133,.08),transparent 26%),#fff8fb;
+      font-family:Inter,"Segoe UI",Arial,sans-serif;
+      padding:18px;
+    }
+    .page{
+      max-width:1180px;
+      gap:12px;
+    }
+    .toolbar{
+      position:sticky;
+      top:10px;
+      z-index:20;
+      padding:10px 12px;
+      border:1px solid rgba(238,61,133,.16);
+      border-radius:16px;
+      background:rgba(255,255,255,.94);
+      backdrop-filter:blur(12px);
+      box-shadow:0 10px 28px rgba(15,23,42,.06);
+    }
+    .toolbar h1,
+    .title,
+    .doc-title{
+      font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+      letter-spacing:-.02em;
+    }
+    .sheet,
+    .card,
+    .section,
+    .panel,
+    .summary-card{
+      border-color:rgba(238,61,133,.16) !important;
+      border-radius:16px !important;
+      box-shadow:0 10px 28px rgba(15,23,42,.05) !important;
+      background:#fff !important;
+    }
+    .head,
+    .header,
+    .section-head,
+    .panel-head{
+      background:linear-gradient(180deg,#fff,#fff8fb) !important;
+      border-bottom-color:#f1dce8 !important;
+    }
+    table{
+      border-collapse:separate !important;
+      border-spacing:0 7px !important;
+      background:transparent !important;
+    }
+    thead th{
+      background:#fff4fa !important;
+      border-top:1px solid rgba(238,61,133,.14) !important;
+      border-bottom:1px solid rgba(238,61,133,.14) !important;
+      color:#5b6470 !important;
+      font-size:9px !important;
+      font-weight:900 !important;
+      letter-spacing:.08em !important;
+      text-transform:uppercase !important;
+    }
+    tbody td{
+      background:#fff !important;
+      border-top:1px solid rgba(234,221,229,.75) !important;
+      border-bottom:1px solid rgba(234,221,229,.75) !important;
+    }
+    tbody td:first-child{
+      border-left:1px solid rgba(234,221,229,.75) !important;
+      border-top-left-radius:12px !important;
+      border-bottom-left-radius:12px !important;
+    }
+    tbody td:last-child{
+      border-right:1px solid rgba(234,221,229,.75) !important;
+      border-top-right-radius:12px !important;
+      border-bottom-right-radius:12px !important;
+    }
+    .btn,
+    button,
+    a[class*="btn"]{
+      border-radius:10px !important;
+    }
+    @media print{
+      body{
+        background:#fff !important;
+        padding:0 !important;
+      }
+      .toolbar{
+        display:none !important;
+      }
+      .page{
+        max-width:none !important;
+        gap:8px !important;
+      }
+      .sheet,
+      .card,
+      .section,
+      .panel,
+      .summary-card{
+        box-shadow:none !important;
+        border-radius:8px !important;
+      }
+      table{
+        border-spacing:0 !important;
+        border-collapse:collapse !important;
+      }
+      thead th,
+      tbody td{
+        border:1px solid #d9dde5 !important;
+        border-radius:0 !important;
+      }
+    }
+
+</style>
 </head>
 <body>
   <div class="page">

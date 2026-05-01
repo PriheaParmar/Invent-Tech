@@ -536,7 +536,129 @@
       .pif-mini-grid{grid-template-columns:1fr;}
       .pif-dialog{min-height:auto;}
     }
-  </style>
+  
+
+
+    /* Batch UI polish: match cleaned Program List style */
+    .pif-wrap{
+      padding:12px;
+      background:rgba(15,23,42,.34);
+    }
+    .pif-dialog{
+      width:min(1080px, calc(100vw - 24px));
+      min-height:0;
+      max-height:calc(100vh - 24px);
+      border-radius:18px;
+      border-color:rgba(238,61,133,.16);
+      box-shadow:0 24px 60px rgba(15,23,42,.16);
+    }
+    .pif-head{
+      min-height:50px;
+      padding:9px 12px 9px 14px;
+      background:linear-gradient(180deg,#fff,#fff8fb);
+    }
+    .pif-kicker{
+      height:23px;
+      font-size:8px;
+    }
+    .pif-title{
+      font-size:20px;
+    }
+    .pif-body{
+      padding:10px;
+      background:radial-gradient(circle at top right,rgba(238,61,133,.08),transparent 26%),#fff8fb;
+    }
+    .pif-top-grid{
+      grid-template-columns:1.1fr 1.1fr .8fr;
+      gap:9px;
+      margin-bottom:9px;
+    }
+    .pif-panel{
+      border-color:rgba(238,61,133,.16);
+      border-radius:15px;
+      box-shadow:none;
+    }
+    .pif-panel-head{
+      min-height:34px;
+      padding:8px 10px;
+      background:linear-gradient(180deg,#fff,#fffafd);
+    }
+    .pif-panel-title{
+      font-size:10px;
+    }
+    .pif-panel-body{
+      padding:10px;
+    }
+    .pif-field input,
+    .pif-field select,
+    .pif-field textarea,
+    .pif-col input,
+    .pif-col select{
+      min-height:32px;
+      border-radius:10px;
+      box-shadow:none;
+    }
+    .pif-stat{
+      min-height:56px;
+      border-radius:13px;
+    }
+    .pif-size-card{
+      margin-top:9px;
+    }
+    .pif-size-premium{
+      padding:10px;
+      gap:10px;
+      background:linear-gradient(180deg,#fff,#fffafd);
+    }
+    .pif-issued-strip{
+      display:none;
+    }
+    .pif-inward-grid{
+      grid-template-columns:repeat(3, minmax(210px, 1fr));
+      gap:9px;
+    }
+    .pif-size-entry{
+      border-color:rgba(238,61,133,.15);
+      border-radius:14px;
+      box-shadow:none;
+    }
+    .pif-size-entry-head{
+      min-height:34px;
+      background:#fff4fa;
+    }
+    .pif-size-entry-body{
+      padding:9px;
+      gap:8px;
+    }
+    .pif-size-input-group input{
+      min-height:34px;
+      border-radius:10px;
+      box-shadow:none;
+    }
+    .pif-size-remarks-row{
+      margin-top:0;
+    }
+    .pif-footer{
+      position:sticky;
+      bottom:0;
+      padding:9px 12px;
+      background:rgba(255,255,255,.96);
+      backdrop-filter:blur(10px);
+      border-top:1px solid rgba(234,221,229,.95);
+    }
+    .pif-btn{
+      min-height:34px;
+      border-radius:10px;
+    }
+    @media (max-width: 1050px){
+      .pif-top-grid{grid-template-columns:1fr;}
+      .pif-inward-grid{grid-template-columns:repeat(2,minmax(190px,1fr));}
+    }
+    @media (max-width: 680px){
+      .pif-inward-grid{grid-template-columns:1fr;}
+    }
+
+</style>
 
   <div class="pif-dialog">
     <div class="pif-head">

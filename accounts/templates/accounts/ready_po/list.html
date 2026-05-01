@@ -139,9 +139,15 @@
                   </span>
                   {% endif %}
 
+                  {% if po.approval_status == "approved" or po.inwards.all|length %}
+                  <span class="yarnpo-action yarnpo-action--edit readypo-action-disabled" title="Locked after approval/inward" aria-label="Edit locked">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4z"/></svg>
+                  </span>
+                  {% else %}
                   <a class="yarnpo-action yarnpo-action--edit" href="{% url 'accounts:readypo_edit' po.id %}" title="Edit" aria-label="Edit">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4z"/></svg>
                   </a>
+                  {% endif %}
 
                   {% if can_review_ready_po %}
                   <a class="yarnpo-action yarnpo-action--review" href="{% url 'accounts:readypo_review' po.id %}" data-open-ready-review data-review-url="{% url 'accounts:readypo_review' po.id %}?embed=1" title="Review" aria-label="Review">
@@ -149,12 +155,18 @@
                   </a>
                   {% endif %}
 
+                  {% if po.approval_status == "approved" or po.inwards.all|length %}
+                  <span class="yarnpo-action yarnpo-action--delete readypo-action-disabled" title="Locked after approval/inward" aria-label="Delete locked">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                  </span>
+                  {% else %}
                   <form method="post" action="{% url 'accounts:readypo_delete' po.id %}" class="jb-inline-delete">
                     {% csrf_token %}
                     <button type="submit" class="yarnpo-action-btn yarnpo-action--delete" onclick="return confirm('Delete this Ready PO?')" title="Delete" aria-label="Delete">
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                     </button>
                   </form>
+                  {% endif %}
                 </div>
               </div>
 

@@ -1,15 +1,129 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/jobbers/form.css' %}?v=1">
 
+
+<style>
+
+  /* Batch UI polish: Program add/edit form aligned with Program List */
+  .program-form-embed{
+    --pf-pink:#ee3d85;
+    --pf-pink-soft:rgba(238,61,133,.08);
+    --pf-pink-line:rgba(238,61,133,.18);
+  }
+  .program-form-embed .pf-shell{
+    background:radial-gradient(circle at top right,rgba(238,61,133,.08),transparent 26%),#fff8fb !important;
+    border-radius:18px !important;
+    padding:12px !important;
+  }
+  .program-form-embed .pf-hero{
+    border:1px solid var(--pf-pink-line) !important;
+    border-radius:18px !important;
+    background:linear-gradient(180deg,#fff,#fff8fb) !important;
+    box-shadow:0 10px 28px rgba(15,23,42,.05) !important;
+    padding:12px !important;
+    margin-bottom:12px !important;
+  }
+  .program-form-embed .pf-kicker{
+    font-size:8px !important;
+    letter-spacing:.14em !important;
+    color:#9b285b !important;
+  }
+  .program-form-embed .pf-title{
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif !important;
+    font-size:22px !important;
+    font-weight:800 !important;
+    letter-spacing:-.02em !important;
+    color:#111827 !important;
+  }
+  .program-form-embed .pf-sub{
+    display:none !important;
+  }
+  .program-form-embed .pf-card,
+  .program-form-embed .pf-panel,
+  .program-form-embed .pf-section,
+  .program-form-embed .pf-form-card{
+    border-radius:16px !important;
+    border-color:var(--pf-pink-line) !important;
+    box-shadow:0 8px 22px rgba(15,23,42,.045) !important;
+    background:#fff !important;
+  }
+  .program-form-embed .pf-section-head,
+  .program-form-embed .pf-card-head,
+  .program-form-embed .pf-panel-head{
+    background:linear-gradient(180deg,#fff,#fffafd) !important;
+    border-bottom-color:#f1dce8 !important;
+    min-height:38px !important;
+  }
+  .program-form-embed input,
+  .program-form-embed select,
+  .program-form-embed textarea{
+    border-radius:10px !important;
+    border-color:#dfe5ee !important;
+    min-height:34px !important;
+    box-shadow:none !important;
+  }
+  .program-form-embed input:focus,
+  .program-form-embed select:focus,
+  .program-form-embed textarea:focus{
+    border-color:var(--pf-pink) !important;
+    box-shadow:0 0 0 4px var(--pf-pink-soft) !important;
+  }
+  .program-form-embed table{
+    border-collapse:separate !important;
+    border-spacing:0 7px !important;
+  }
+  .program-form-embed thead th{
+    background:#fff4fa !important;
+    border-top:1px solid rgba(238,61,133,.14) !important;
+    border-bottom:1px solid rgba(238,61,133,.14) !important;
+    color:#5b6470 !important;
+    font-size:9px !important;
+    font-weight:900 !important;
+    letter-spacing:.08em !important;
+    text-transform:uppercase !important;
+  }
+  .program-form-embed tbody td{
+    background:#fff !important;
+    border-top:1px solid rgba(234,221,229,.75) !important;
+    border-bottom:1px solid rgba(234,221,229,.75) !important;
+  }
+  .program-form-embed tbody td:first-child{
+    border-left:1px solid rgba(234,221,229,.75) !important;
+    border-top-left-radius:12px !important;
+    border-bottom-left-radius:12px !important;
+  }
+  .program-form-embed tbody td:last-child{
+    border-right:1px solid rgba(234,221,229,.75) !important;
+    border-top-right-radius:12px !important;
+    border-bottom-right-radius:12px !important;
+  }
+  .program-form-embed .pf-actions,
+  .program-form-embed .pf-footer,
+  .program-form-embed .form-actions{
+    position:sticky !important;
+    bottom:0 !important;
+    background:rgba(255,255,255,.96) !important;
+    backdrop-filter:blur(10px) !important;
+    border-top:1px solid #eadde5 !important;
+    padding:10px 12px !important;
+    z-index:5 !important;
+  }
+  .program-form-embed button,
+  .program-form-embed .btn,
+  .program-form-embed a[class*="btn"]{
+    border-radius:10px !important;
+  }
+
+</style>
 <div class="{% if full_page %}jb-page{% endif %}">
   <div class="jobbers-embed program-form-embed">
     <section class="pf-shell">
 
       <div class="pf-hero">
         <div class="pf-hero-copy">
-          <div class="pf-kicker">Production Studio</div>
+          <div class="pf-kicker">Production</div>
           <div class="pf-title">{% if mode == "edit" %}Edit Program{% else %}Create Program{% endif %}</div>
-          <div class="pf-sub">Build the production program, review the SKU snapshot, and prepare jobber planning in one unified workspace.</div>
+          <div class="pf-sub"></div>
         </div>
 
         <div class="pf-hero-stats">
@@ -667,6 +781,496 @@
         }
       </style>
 
+<style>
+  /* FINAL MATCH: Create/Edit Program form = Program List style */
+  .program-form-embed{
+    --pf-pink:#ee3d85;
+    --pf-pink-dark:#c22567;
+    --pf-pink-soft:rgba(238,61,133,.08);
+    --pf-pink-line:rgba(238,61,133,.18);
+    --pf-blue:rgba(28,109,216,1);
+    --pf-blue-soft:rgba(28,109,216,.08);
+    --pf-green:#17754a;
+    --pf-green-soft:#edf8f1;
+    --pf-bg:#fff8fb;
+    --pf-line-clean:#eadde5;
+    --pf-line-soft-clean:#f7edf3;
+    --pf-ink:#172033;
+    --pf-muted-clean:#7b8494;
+  }
+
+  .program-form-embed .pf-shell{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:12px !important;
+    padding:12px !important;
+    border-radius:20px !important;
+    background:radial-gradient(circle at top right,rgba(238,61,133,.09),transparent 28%),var(--pf-bg) !important;
+    color:var(--pf-ink) !important;
+    font-family:Inter,"Segoe UI","Helvetica Neue",Arial,sans-serif !important;
+  }
+
+  .program-form-embed .pf-hero{
+    min-height:58px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:12px !important;
+    padding:10px 12px !important;
+    border:1px solid var(--pf-pink-line) !important;
+    border-radius:18px !important;
+    background:linear-gradient(180deg,#fff,#fff8fb) !important;
+    box-shadow:0 10px 28px rgba(15,23,42,.05) !important;
+  }
+
+  .program-form-embed .pf-hero-copy{
+    flex:1 1 auto !important;
+    min-width:0 !important;
+  }
+
+  .program-form-embed .pf-kicker{
+    margin:0 0 5px !important;
+    color:#9b285b !important;
+    font-size:8px !important;
+    font-weight:950 !important;
+    letter-spacing:.15em !important;
+    text-transform:uppercase !important;
+    line-height:1 !important;
+  }
+
+  .program-form-embed .pf-title{
+    font-family:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif !important;
+    font-size:22px !important;
+    line-height:1 !important;
+    font-weight:800 !important;
+    letter-spacing:-.025em !important;
+    color:#111827 !important;
+  }
+
+  .program-form-embed .pf-sub,
+  .program-form-embed .pf-card-sub,
+  .program-form-embed .pf-muted:empty,
+  .program-form-embed .pf-actionbar > .pf-muted{
+    display:none !important;
+  }
+
+  .program-form-embed .pf-hero-stats{
+    display:flex !important;
+    flex:0 0 auto !important;
+    min-width:0 !important;
+    grid-template-columns:none !important;
+    gap:7px !important;
+  }
+
+  .program-form-embed .pf-stat{
+    min-width:96px !important;
+    min-height:38px !important;
+    padding:7px 9px !important;
+    border:1px solid var(--pf-pink-line) !important;
+    border-radius:12px !important;
+    background:#fff !important;
+    box-shadow:none !important;
+  }
+
+  .program-form-embed .pf-stat-label{
+    color:var(--pf-muted-clean) !important;
+    font-size:7px !important;
+    font-weight:950 !important;
+    letter-spacing:.10em !important;
+  }
+
+  .program-form-embed .pf-stat-value{
+    margin-top:3px !important;
+    color:#111827 !important;
+    font-size:11px !important;
+    font-weight:950 !important;
+    line-height:1 !important;
+    font-family:Inter,"Segoe UI",Arial,sans-serif !important;
+  }
+
+  .program-form-embed .pf-main-grid{
+    display:grid !important;
+    grid-template-columns:minmax(0,1.18fr) minmax(330px,.82fr) !important;
+    gap:12px !important;
+    align-items:start !important;
+  }
+
+  .program-form-embed .pf-stack{
+    display:grid !important;
+    gap:12px !important;
+    min-width:0 !important;
+  }
+
+  .program-form-embed .pf-card{
+    overflow:hidden !important;
+    border:1px solid var(--pf-pink-line) !important;
+    border-radius:17px !important;
+    background:#fff !important;
+    box-shadow:0 10px 28px rgba(15,23,42,.045) !important;
+  }
+
+  .program-form-embed .pf-card-head{
+    min-height:40px !important;
+    padding:9px 12px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    border-bottom:1px solid var(--pf-line-soft-clean) !important;
+    background:linear-gradient(180deg,#fff,#fffafd) !important;
+  }
+
+  .program-form-embed .pf-card-title{
+    display:flex !important;
+    align-items:center !important;
+    gap:7px !important;
+    color:#111827 !important;
+    font-size:10px !important;
+    font-weight:950 !important;
+    letter-spacing:.08em !important;
+    text-transform:uppercase !important;
+    line-height:1 !important;
+  }
+
+  .program-form-embed .pf-card-title:before{
+    content:"" !important;
+    width:3px !important;
+    height:12px !important;
+    border-radius:99px !important;
+    background:var(--pf-pink) !important;
+    box-shadow:0 0 0 4px var(--pf-pink-soft) !important;
+    flex:0 0 auto !important;
+  }
+
+  .program-form-embed .pf-card-body{
+    padding:11px !important;
+    background:#fff !important;
+  }
+
+  .program-form-embed .pf-fields{
+    display:grid !important;
+    grid-template-columns:repeat(12,minmax(0,1fr)) !important;
+    gap:9px !important;
+  }
+
+  .program-form-embed .pf-field{
+    grid-column:span 4 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:5px !important;
+    min-width:0 !important;
+  }
+
+  .program-form-embed .pf-field-wide{grid-column:span 6 !important;}
+  .program-form-embed .pf-field-full{grid-column:span 12 !important;}
+
+  .program-form-embed .pf-field label{
+    color:#667085 !important;
+    font-size:8px !important;
+    font-weight:950 !important;
+    letter-spacing:.08em !important;
+    text-transform:uppercase !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+  }
+
+  .program-form-embed .pf-field input,
+  .program-form-embed .pf-field select,
+  .program-form-embed .pf-field textarea{
+    width:100% !important;
+    min-height:34px !important;
+    padding:7px 9px !important;
+    border:1px solid #dfe5ee !important;
+    border-radius:10px !important;
+    background:#fff !important;
+    color:#172033 !important;
+    font-size:11px !important;
+    font-weight:850 !important;
+    box-shadow:none !important;
+    outline:none !important;
+  }
+
+  .program-form-embed .pf-field textarea{
+    min-height:74px !important;
+  }
+
+  .program-form-embed .pf-field input:focus,
+  .program-form-embed .pf-field select:focus,
+  .program-form-embed .pf-field textarea:focus{
+    border-color:var(--pf-pink) !important;
+    box-shadow:0 0 0 4px var(--pf-pink-soft) !important;
+  }
+
+  .program-form-embed .pf-checkbox{
+    min-height:34px !important;
+    padding:8px 9px !important;
+    border:1px solid #dfe5ee !important;
+    border-radius:10px !important;
+    background:#fff8fb !important;
+    align-items:center !important;
+    flex-direction:row !important;
+  }
+
+  .program-form-embed .pf-checkbox input{
+    width:15px !important;
+    height:15px !important;
+    min-height:auto !important;
+  }
+
+  .program-form-embed .pf-snapshot{
+    display:grid !important;
+    grid-template-columns:180px minmax(0,1fr) !important;
+    gap:10px !important;
+    align-items:start !important;
+  }
+
+  .program-form-embed .pf-media{
+    border:1px solid var(--pf-line-clean) !important;
+    border-radius:14px !important;
+    background:#fff8fb !important;
+    padding:9px !important;
+  }
+
+  .program-form-embed .pf-media-title,
+  .program-form-embed .pf-mini-title{
+    margin-bottom:7px !important;
+    color:#667085 !important;
+    font-size:8px !important;
+    font-weight:950 !important;
+    letter-spacing:.09em !important;
+    text-transform:uppercase !important;
+  }
+
+  .program-form-embed .pf-media-frame{
+    border-radius:12px !important;
+    border:1px solid var(--pf-line-clean) !important;
+    background:#fff !important;
+  }
+
+  .program-form-embed .pf-meta-grid{
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:7px !important;
+  }
+
+  .program-form-embed .pf-meta-card,
+  .program-form-embed .pf-mini-list{
+    border:1px solid var(--pf-line-clean) !important;
+    border-radius:12px !important;
+    background:linear-gradient(180deg,#fff,#fffafd) !important;
+    padding:8px 9px !important;
+    box-shadow:none !important;
+  }
+
+  .program-form-embed .pf-meta-label{
+    color:#8b95a7 !important;
+    font-size:7px !important;
+    font-weight:950 !important;
+    letter-spacing:.08em !important;
+  }
+
+  .program-form-embed .pf-meta-value{
+    margin-top:4px !important;
+    min-height:14px !important;
+    color:#172033 !important;
+    font-size:10px !important;
+    font-weight:900 !important;
+  }
+
+  .program-form-embed .pf-lists{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+    margin-top:9px !important;
+  }
+
+  .program-form-embed .pf-tag{
+    border-color:var(--pf-pink-line) !important;
+    background:var(--pf-pink-soft) !important;
+    color:#9b285b !important;
+    font-size:9px !important;
+    font-weight:900 !important;
+  }
+
+  .program-form-embed .pf-jobber-tools{
+    margin-bottom:9px !important;
+    justify-content:flex-end !important;
+  }
+
+  .program-form-embed .pf-jobber-wrap{
+    overflow-x:auto !important;
+    border:1px solid var(--pf-line-clean) !important;
+    border-radius:14px !important;
+    background:#fff !important;
+    padding:8px !important;
+  }
+
+  .program-form-embed .pf-jobber-table{
+    width:100% !important;
+    min-width:760px !important;
+    border-collapse:separate !important;
+    border-spacing:0 7px !important;
+    background:transparent !important;
+  }
+
+  .program-form-embed .pf-jobber-table th{
+    padding:8px 8px !important;
+    background:#fff4fa !important;
+    border-top:1px solid rgba(238,61,133,.14) !important;
+    border-bottom:1px solid rgba(238,61,133,.14) !important;
+    color:#5b6470 !important;
+    font-size:8px !important;
+    font-weight:950 !important;
+    letter-spacing:.08em !important;
+    text-transform:uppercase !important;
+  }
+
+  .program-form-embed .pf-jobber-table td{
+    padding:7px 8px !important;
+    background:#fff !important;
+    border-top:1px solid rgba(234,221,229,.75) !important;
+    border-bottom:1px solid rgba(234,221,229,.75) !important;
+    vertical-align:middle !important;
+  }
+
+  .program-form-embed .pf-jobber-table td:first-child{
+    border-left:1px solid rgba(234,221,229,.75) !important;
+    border-top-left-radius:12px !important;
+    border-bottom-left-radius:12px !important;
+  }
+
+  .program-form-embed .pf-jobber-table td:last-child{
+    border-right:1px solid rgba(234,221,229,.75) !important;
+    border-top-right-radius:12px !important;
+    border-bottom-right-radius:12px !important;
+  }
+
+  .program-form-embed .pf-jobber-table td .pf-field input,
+  .program-form-embed .pf-jobber-table td .pf-field select{
+    min-width:0 !important;
+    min-height:31px !important;
+  }
+
+  .program-form-embed .pf-delete-cell{
+    width:82px !important;
+  }
+
+  .program-form-embed .pf-delete-wrap{
+    padding-top:0 !important;
+    justify-content:center !important;
+  }
+
+  .program-form-embed .pf-btn,
+  .program-form-embed .pf-btn-secondary{
+    min-height:34px !important;
+    padding:0 12px !important;
+    border-radius:10px !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:7px !important;
+    font-size:10px !important;
+    font-weight:950 !important;
+    text-decoration:none !important;
+    box-shadow:none !important;
+    white-space:nowrap !important;
+  }
+
+  .program-form-embed .pf-btn{
+    border:1px solid rgba(238,61,133,.55) !important;
+    background:linear-gradient(135deg,var(--pf-pink),var(--pf-pink-dark)) !important;
+    color:#fff !important;
+  }
+
+  .program-form-embed .pf-btn-secondary{
+    border:1px solid var(--pf-line-clean) !important;
+    background:#fff !important;
+    color:#344054 !important;
+  }
+
+  .program-form-embed .pf-btn:hover,
+  .program-form-embed .pf-btn-secondary:hover{
+    transform:translateY(-1px) !important;
+    box-shadow:0 8px 18px rgba(15,23,42,.07) !important;
+  }
+
+  .program-form-embed .pf-actionbar{
+    position:sticky !important;
+    bottom:0 !important;
+    z-index:20 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:8px !important;
+    margin-top:12px !important;
+    padding:10px 12px !important;
+    border:1px solid var(--pf-pink-line) !important;
+    border-radius:16px !important;
+    background:rgba(255,255,255,.96) !important;
+    backdrop-filter:blur(12px) !important;
+    box-shadow:0 -6px 20px rgba(15,23,42,.045) !important;
+  }
+
+  .program-form-embed .pf-actions{
+    display:flex !important;
+    gap:8px !important;
+    flex-wrap:wrap !important;
+    justify-content:flex-end !important;
+  }
+
+  .program-form-embed .pf-error-list{
+    border:1px solid #f0d2cb !important;
+    border-radius:14px !important;
+    background:#fff2ef !important;
+    color:#bf4336 !important;
+    padding:10px 12px 10px 28px !important;
+    font-size:11px !important;
+    font-weight:800 !important;
+  }
+
+  @media (max-width: 1200px){
+    .program-form-embed .pf-main-grid{
+      grid-template-columns:1fr !important;
+    }
+    .program-form-embed .pf-snapshot{
+      grid-template-columns:170px minmax(0,1fr) !important;
+    }
+  }
+
+  @media (max-width: 860px){
+    .program-form-embed .pf-hero{
+      align-items:flex-start !important;
+      flex-direction:column !important;
+    }
+    .program-form-embed .pf-hero-stats{
+      width:100% !important;
+      display:grid !important;
+      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    }
+    .program-form-embed .pf-snapshot{
+      grid-template-columns:1fr !important;
+    }
+    .program-form-embed .pf-meta-grid,
+    .program-form-embed .pf-lists{
+      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+    .program-form-embed .pf-field,
+    .program-form-embed .pf-field-wide,
+    .program-form-embed .pf-field-full{
+      grid-column:span 12 !important;
+    }
+  }
+
+  @media (max-width: 560px){
+    .program-form-embed .pf-meta-grid,
+    .program-form-embed .pf-lists,
+    .program-form-embed .pf-hero-stats{
+      grid-template-columns:1fr !important;
+    }
+  }
+</style>
+
+
+
       <form method="post" action="{{ action_url }}" class="pf-form" novalidate>
         {% csrf_token %}
         {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
@@ -685,7 +1289,7 @@
               <div class="pf-card-head">
                 <div>
                   <div class="pf-card-title">Basic Details</div>
-                  <div class="pf-card-sub">Core program identity, dates, and approval controls.</div>
+                  <div class="pf-card-sub"></div>
                 </div>
               </div>
               <div class="pf-card-body">
@@ -723,7 +1327,7 @@
               <div class="pf-card-head">
                 <div>
                   <div class="pf-card-title">SKU Snapshot</div>
-                  <div class="pf-card-sub">Preview the selected BOM details, image, and mapped jobber pricing before starting production.</div>
+                  <div class="pf-card-sub"></div>
                 </div>
               </div>
               <div class="pf-card-body">
@@ -802,13 +1406,13 @@
               <div class="pf-card-head">
                 <div>
                   <div class="pf-card-title">Planned Jobber Pricing</div>
-                  <div class="pf-card-sub">Add the planned jobber mapping and process price before production starts.</div>
+                  <div class="pf-card-sub"></div>
                 </div>
               </div>
               <div class="pf-card-body">
                 <div class="pf-jobber-tools">
-                  <div class="pf-muted">These rows are planning rows. Actual start allocation happens inside Program Start.</div>
-                  <button type="button" class="pf-btn-secondary" id="add-jobber-row">Add Jobber Row</button>
+                  <div class="pf-muted"></div>
+                  <button type="button" class="pf-btn-secondary" id="add-jobber-row">+ Jobber</button>
                 </div>
 
                 <div class="pf-jobber-wrap">
@@ -872,7 +1476,7 @@
               <div class="pf-card-head">
                 <div>
                   <div class="pf-card-title">SKU / Planning</div>
-                  <div class="pf-card-sub">Select the production SKU and define the main planning values.</div>
+                  <div class="pf-card-sub"></div>
                 </div>
               </div>
               <div class="pf-card-body">
@@ -905,7 +1509,7 @@
               <div class="pf-card-head">
                 <div>
                   <div class="pf-card-title">Production Control</div>
-                  <div class="pf-card-sub">Keep damage and lead-time controls visible at planning time.</div>
+                  <div class="pf-card-sub"></div>
                 </div>
               </div>
               <div class="pf-card-body">
@@ -929,38 +1533,14 @@
               </div>
             </section>
 
-            <section class="pf-card">
-              <div class="pf-card-head">
-                <div>
-                  <div class="pf-card-title">Planning Notes</div>
-                  <div class="pf-card-sub">A quick visual guide for the team before moving to Start Program.</div>
-                </div>
-              </div>
-              <div class="pf-card-body">
-                <div class="pf-summary-grid">
-                  <div class="pf-summary-card">
-                    <div class="pf-summary-label">Save First</div>
-                    <div class="pf-summary-value">Program</div>
-                  </div>
-                  <div class="pf-summary-card">
-                    <div class="pf-summary-label">Then Move To</div>
-                    <div class="pf-summary-value">Start</div>
-                  </div>
-                  <div class="pf-summary-card">
-                    <div class="pf-summary-label">After Start</div>
-                    <div class="pf-summary-value">Challan</div>
-                  </div>
-                </div>
-              </div>
-            </section>
           </div>
         </div>
 
         <div class="pf-actionbar">
-          <div class="pf-muted">Save the program first, then continue with Program Start and Challan flow.</div>
+          <div class="pf-muted"></div>
           <div class="pf-actions">
             <a href="{% url 'accounts:program_list' %}{% if not full_page %}?embed=1{% endif %}" class="pf-btn-secondary">Back</a>
-            <button type="submit" class="pf-btn">{% if mode == "edit" %}Update Program{% else %}Save Program{% endif %}</button>
+            <button type="submit" class="pf-btn">{% if mode == "edit" %}Update{% else %}Save{% endif %}</button>
           </div>
         </div>
       </form>
@@ -1230,3 +1810,60 @@
     </section>
   </div>
 </div>
+
+<style>
+  /* FULL WIDTH FIX: Create/Edit Program form */
+  .jb-page{
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+
+  .jobbers-embed.program-form-embed,
+  .program-form-embed{
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+  }
+
+  .program-form-embed .pf-shell{
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    border-radius:0 !important;
+  }
+
+  .program-form-embed .pf-form{
+    width:100% !important;
+    max-width:none !important;
+  }
+
+  .program-form-embed .pf-main-grid{
+    width:100% !important;
+    max-width:none !important;
+    grid-template-columns:minmax(0,1.45fr) minmax(380px,.95fr) !important;
+  }
+
+  .program-form-embed .pf-hero,
+  .program-form-embed .pf-actionbar,
+  .program-form-embed .pf-card{
+    max-width:none !important;
+  }
+
+  @media (min-width: 1500px){
+    .program-form-embed .pf-main-grid{
+      grid-template-columns:minmax(0,1.55fr) minmax(430px,.9fr) !important;
+    }
+    .program-form-embed .pf-meta-grid{
+      grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+    }
+  }
+
+  @media (max-width: 1200px){
+    .program-form-embed .pf-main-grid{
+      grid-template-columns:1fr !important;
+    }
+  }
+</style>
+

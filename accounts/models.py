@@ -3,6 +3,7 @@ import qrcode
 from io import BytesIO
 from django.core.files.base import ContentFile
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
@@ -844,6 +845,26 @@ class GreigePurchaseOrder(OwnedModel):
 
         super().save(*args, **kwargs)
 
+    @property
+    def total_weight(self):
+        prefetched_items = _get_prefetched_related(self, "items")
+        if prefetched_items is not None:
+            return _sum_prefetched_values(prefetched_items, "quantity")
+        return self.items.aggregate(total=Sum("quantity")).get("total") or Decimal("0")
+
+    @property
+    def total_inward_qty(self):
+        prefetched_total = _sum_prefetched_nested_values(self, "items", "inward_items", "quantity")
+        if prefetched_total is not None:
+            return prefetched_total
+        return self.items.aggregate(total=Sum("inward_items__quantity")).get("total") or Decimal("0")
+
+    @property
+    def remaining_qty_total(self):
+        ordered = self.total_weight or Decimal("0")
+        inward = self.total_inward_qty or Decimal("0")
+        return ordered - inward if ordered > inward else Decimal("0")
+
     class Meta:
         ordering = ["-id"]
 
@@ -1598,7 +1619,7 @@ class TermsCondition(OwnedModel):
         unique_together = [("owner", "title")]
 
     def __str__(self):
-        return self.title
+        return self.name
 
 
 class SubCategory(OwnedModel):
@@ -1819,6 +1840,7 @@ class BOMExpenseItem(models.Model):
 
 PROGRAM_STATUS_CHOICES = (
     ("open", "Open"),
+    ("in_progress", "In Progress"),
     ("closed", "Closed"),
 )
 
@@ -1842,7 +1864,7 @@ class Program(OwnedModel):
     is_verified = models.BooleanField(default=False)
     glt_days = models.PositiveIntegerField(default=0)
     glt_on_100_days = models.PositiveIntegerField(default=0)
-    status = models.CharField(max_length=10, choices=PROGRAM_STATUS_CHOICES, default="open")
+    status = models.CharField(max_length=20, choices=PROGRAM_STATUS_CHOICES, default="open")
     firm = models.ForeignKey("Firm", on_delete=models.SET_NULL, null=True, blank=True, related_name="programs")
     damage = models.DecimalField(max_digits=8, decimal_places=2, default=0, blank=True)
     bom = models.ForeignKey("BOM", on_delete=models.PROTECT, related_name="programs")
@@ -2345,7 +2367,7 @@ MOVEMENT_TYPE_CHOICES = [
 
 
 class InventoryLot(OwnedModel):
-    lot_code = models.CharField(max_length=40, unique=True)
+    lot_code = models.CharField(max_length=80)
     stage = models.CharField(max_length=20, choices=LOT_STAGE_CHOICES, default="ready")
     material = models.ForeignKey("Material", on_delete=models.PROTECT, related_name="inventory_lots")
     unit = models.CharField(max_length=20, blank=True, default="")
@@ -2396,12 +2418,21 @@ class InventoryLot(OwnedModel):
 
     class Meta:
         ordering = ["-id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "lot_code"],
+                name="unique_inventory_lot_per_owner",
+            )
+        ]
 
     def save(self, *args, **kwargs):
         accepted = self.accepted_qty or Decimal("0")
         used = self.used_qty or Decimal("0")
-        available = accepted - used
-        self.available_qty = available if available > 0 else Decimal("0")
+
+        if used > accepted:
+            raise ValidationError("Used quantity cannot exceed accepted quantity.")
+
+        self.available_qty = accepted - used
         super().save(*args, **kwargs)
 
     def __str__(self):

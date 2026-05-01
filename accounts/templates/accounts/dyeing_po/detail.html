@@ -157,9 +157,13 @@
                 <a class="jb-secondary" href="{% url 'accounts:dyeingpo_review' po.id %}">Review</a>
               {% endif %}
 
-              <a class="jb-secondary" href="{% url 'accounts:dyeingpo_edit' po.id %}">Edit</a>
+              {% if po.approval_status == "approved" or po.inwards.all|length or existing_ready_po %}
+                <span class="jb-secondary dpd-link-muted">Edit Locked</span>
+              {% else %}
+                <a class="jb-secondary" href="{% url 'accounts:dyeingpo_edit' po.id %}">Edit</a>
+              {% endif %}
 
-              {% if po.approval_status == "approved" %}
+              {% if po.approval_status == "approved" and not existing_ready_po %}
                 <a class="jb-add" href="{% url 'accounts:dyeingpo_inward' po.id %}">Dyeing Inward</a>
               {% else %}
                 <span class="jb-add dpd-link-muted">Dyeing Inward</span>

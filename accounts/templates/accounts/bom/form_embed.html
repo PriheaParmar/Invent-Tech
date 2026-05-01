@@ -35,6 +35,26 @@
     align-items:center;
     gap:6px;
   }
+
+  /* BOM backend fix batch: clearer image upload rows */
+  .bom-form-embed input[type="file"].bom-image-input{
+    width:100%;
+    min-height:38px;
+    padding:8px;
+    border:1px dashed rgba(238,61,133,.35);
+    border-radius:12px;
+    background:#fff8fb;
+    cursor:pointer;
+  }
+  .bom-form-embed .bom-file-preview{
+    margin-top:8px;
+  }
+  .bom-form-embed .bom-file-card{
+    border:1px solid rgba(238,61,133,.16);
+    border-radius:14px;
+    background:linear-gradient(180deg,#fff,#fffafd);
+    padding:8px;
+  }
 </style>
 
 <div class="master-form-ui bom-form-ui bom-form-embed" data-bom-root="1">
@@ -99,12 +119,6 @@
           {% if item.field %} - {{ item.field }}{% endif %}: {{ item.message }}
         </div>
       {% endfor %}
-    </div>
-    {% endif %}
-
-    {% if form.errors or material_formset.errors or accessory_formset.errors or image_formset.errors or jobber_process_formset.errors or jobber_detail_formset.errors or expense_formset.errors %}
-    <div class="mf-errors">
-      <div><strong>Note:</strong> If save fails, choose the image again before resubmitting.</div>
     </div>
     {% endif %}
 

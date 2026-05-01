@@ -5,7 +5,7 @@
 
 {% block content %}
 <style>
-  .rpd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}.rpd-field{display:flex;flex-direction:column;gap:6px}.rpd-label{font-size:12px;font-weight:700;color:rgba(15,23,42,.72)}.rpd-value{min-height:42px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff;font-size:14px;color:#111827;display:flex;align-items:center}.rpd-value.is-area{min-height:84px;align-items:flex-start;white-space:pre-wrap}.rpd-span-2{grid-column:span 2}.rpd-span-3{grid-column:span 3}.rpd-block{margin-top:16px;border:1px solid rgba(15,23,42,.08);border-radius:18px;background:rgba(255,255,255,.72);overflow:hidden}.rpd-block-head{padding:16px 18px;font-weight:800;border-bottom:1px solid rgba(15,23,42,.08)}.rpd-block-body{padding:0 18px 18px}.rpd-table{width:100%;border-collapse:collapse}.rpd-table th,.rpd-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:13px;vertical-align:top}.rpd-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}@media (max-width:1100px){.rpd-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rpd-span-3{grid-column:span 2}}@media (max-width:760px){.rpd-grid{grid-template-columns:1fr}.rpd-span-2,.rpd-span-3{grid-column:span 1}}
+  .rpd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}.rpd-field{display:flex;flex-direction:column;gap:6px}.rpd-label{font-size:12px;font-weight:700;color:rgba(15,23,42,.72)}.rpd-value{min-height:42px;border:1px solid rgba(15,23,42,.1);border-radius:12px;padding:10px 12px;background:#fff;font-size:14px;color:#111827;display:flex;align-items:center}.rpd-value.is-area{min-height:84px;align-items:flex-start;white-space:pre-wrap}.rpd-span-2{grid-column:span 2}.rpd-span-3{grid-column:span 3}.rpd-block{margin-top:16px;border:1px solid rgba(15,23,42,.08);border-radius:18px;background:rgba(255,255,255,.72);overflow:hidden}.rpd-block-head{padding:16px 18px;font-weight:800;border-bottom:1px solid rgba(15,23,42,.08)}.rpd-block-body{padding:0 18px 18px}.rpd-table{width:100%;border-collapse:collapse}.rpd-table th,.rpd-table td{padding:10px 8px;border-top:1px solid rgba(15,23,42,.08);text-align:left;font-size:13px;vertical-align:top}.rpd-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}.rpd-link-muted{opacity:.45;pointer-events:none;cursor:not-allowed}@media (max-width:1100px){.rpd-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rpd-span-3{grid-column:span 2}}@media (max-width:760px){.rpd-grid{grid-template-columns:1fr}.rpd-span-2,.rpd-span-3{grid-column:span 1}}
 </style>
 
 <section class="page-section is-active">
@@ -86,8 +86,18 @@
 
             <div class="rpd-actions">
               <a class="jb-secondary" href="{% url 'accounts:readypo_list' %}">Back</a>
-              <a class="jb-secondary" href="{% url 'accounts:readypo_edit' po.id %}">Edit</a>
-              <a class="jb-add" href="{% url 'accounts:readypo_inward' po.id %}">Ready Inward</a>
+
+              {% if po.approval_status == "approved" or po.inwards.all|length %}
+                <span class="jb-secondary rpd-link-muted">Edit Locked</span>
+              {% else %}
+                <a class="jb-secondary" href="{% url 'accounts:readypo_edit' po.id %}">Edit</a>
+              {% endif %}
+
+              {% if po.approval_status == "approved" %}
+                <a class="jb-add" href="{% url 'accounts:readypo_inward' po.id %}">Ready Inward</a>
+              {% else %}
+                <span class="jb-add rpd-link-muted">Ready Inward</span>
+              {% endif %}
 
               {% if po.source_dyeing_po_id %}
                 <a class="jb-secondary" href="{% url 'accounts:dyeingpo_detail' po.source_dyeing_po_id %}">

@@ -50,7 +50,6 @@ urlpatterns = [
     path("po/ready/<int:pk>/review/", views.readypo_review, name="readypo_review"),
     path("po/ready/<int:pk>/pdf/", views.readypo_pdf, name="readypo_pdf"),
     path("po/ready/<int:pk>/delete/", views.readypo_delete, name="readypo_delete"),
-    path("po/ready/<int:pk>/review/", views.readypo_review, name="readypo_review"),
     path("po/ready/<int:pk>/inward/", views.readypo_inward, name="readypo_inward"),
     path("po/ready/inwards/<int:pk>/edit/", views.ready_inward_edit, name="ready_inward_edit"),
     path("po/ready/inwards/", views.ready_inward_tracker, name="ready_inward_tracker"),

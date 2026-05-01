@@ -94,7 +94,122 @@
       .pcap-btn-primary{border-color:rgba(238,61,133,.55);background:linear-gradient(135deg,var(--pcap-pink),var(--pcap-pink-dark));color:#fff;box-shadow:0 12px 24px rgba(238,61,133,.22);}
       .pcap-btn-primary:hover{box-shadow:0 16px 30px rgba(238,61,133,.28);}
       @media(max-width:780px){.pcap-overlay{padding:10px}.pcap-modal{max-height:94vh}.pcap-head{height:auto;min-height:54px;padding:10px 12px}.pcap-summary-top{align-items:flex-start;flex-direction:column}.pcap-pill-row{justify-content:flex-start}.pcap-grid{grid-template-columns:1fr}.pcap-box,.pcap-box:nth-child(3n){border-right:0}.pcap-actions{align-items:stretch;flex-direction:column}.pcap-actions-right{display:grid;grid-template-columns:1fr}.pcap-btn{width:100%;}.pcap-actions-left{justify-content:center}}
-    </style>
+    
+
+
+      /* Batch UI polish: match Program List premium compact style */
+      .pcap-overlay{
+        align-items:flex-start;
+        padding:14px;
+        background:rgba(15,23,42,.34);
+      }
+      .pcap-modal{
+        width:min(1040px, calc(100vw - 28px));
+        border-radius:18px;
+        border-color:rgba(238,61,133,.16);
+        box-shadow:0 24px 60px rgba(15,23,42,.16);
+      }
+      .pcap-head{
+        height:50px;
+        padding:0 12px 0 14px;
+      }
+      .pcap-title{
+        font-size:18px;
+      }
+      .pcap-body{
+        padding:10px;
+        gap:9px;
+      }
+      .pcap-summary,
+      .pcap-section{
+        border-radius:15px;
+        box-shadow:none;
+        border-color:rgba(238,61,133,.16);
+      }
+      .pcap-summary-top{
+        padding:9px 11px;
+      }
+      .pcap-grid{
+        grid-template-columns:repeat(6,minmax(0,1fr));
+      }
+      .pcap-box{
+        padding:9px 10px;
+      }
+      .pcap-box:nth-child(3n){
+        border-right:1px solid var(--pcap-line-soft);
+      }
+      .pcap-box:nth-child(6n){
+        border-right:0;
+      }
+      .pcap-table-wrap{
+        padding:8px;
+      }
+      .pcap-size-table{
+        border-spacing:0 6px;
+        border-collapse:separate;
+        border:0;
+        box-shadow:none;
+        background:transparent;
+      }
+      .pcap-size-table thead th{
+        height:28px;
+        background:#fff4fa;
+        border-top:1px solid rgba(238,61,133,.14);
+        border-bottom:1px solid rgba(238,61,133,.14);
+        color:#5b6470;
+        letter-spacing:.08em;
+        font-size:8px;
+      }
+      .pcap-size-table thead th:first-child{
+        border-left:1px solid rgba(238,61,133,.14);
+        border-top-left-radius:12px;
+        border-bottom-left-radius:12px;
+      }
+      .pcap-size-table thead th:last-child{
+        border-right:1px solid rgba(238,61,133,.14);
+        border-top-right-radius:12px;
+        border-bottom-right-radius:12px;
+      }
+      .pcap-size-table td{
+        height:32px;
+        border-top:1px solid rgba(234,221,229,.75);
+        border-bottom:1px solid rgba(234,221,229,.75);
+        background:#fff;
+      }
+      .pcap-size-table td:first-child{
+        border-left:1px solid rgba(234,221,229,.75);
+        border-top-left-radius:12px;
+        border-bottom-left-radius:12px;
+      }
+      .pcap-size-table td:last-child{
+        border-right:1px solid rgba(234,221,229,.75);
+        border-top-right-radius:12px;
+        border-bottom-right-radius:12px;
+      }
+      .pcap-field{
+        padding:10px 12px;
+      }
+      .pcap-field textarea{
+        min-height:64px;
+      }
+      .pcap-actions{
+        position:sticky;
+        bottom:0;
+        padding:9px 12px;
+        background:rgba(255,255,255,.96);
+        backdrop-filter:blur(10px);
+      }
+      .pcap-btn{
+        min-height:33px;
+        border-radius:10px;
+      }
+      @media (max-width: 920px){
+        .pcap-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+        .pcap-box:nth-child(n){border-right:1px solid var(--pcap-line-soft);}
+        .pcap-box:nth-child(2n){border-right:0;}
+      }
+
+</style>
 
     <form class="pcap-form" method="post" data-challan-popup-form="1" action="{% url 'accounts:program_challan_approve' challan.id %}?popup=1">
       {% csrf_token %}

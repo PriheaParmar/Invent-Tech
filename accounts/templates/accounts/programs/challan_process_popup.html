@@ -219,7 +219,94 @@
       .pcp-btn-close:hover{
         background:var(--pcp-pink-dark);
       }
-    </style>
+    
+
+
+      /* Batch UI polish: match Program List popup style */
+      .pcp-backdrop{
+        padding:14px;
+        background:rgba(15,23,42,.34);
+        backdrop-filter:blur(5px);
+      }
+      .pcp-dialog{
+        width:min(1080px, calc(100vw - 28px));
+        border-radius:18px;
+        border-color:rgba(238,61,133,.16);
+        box-shadow:0 24px 60px rgba(15,23,42,.16);
+      }
+      .pcp-head{
+        min-height:50px;
+        background:linear-gradient(180deg,#fff,#fff8fb);
+        border-bottom-color:#eadde5;
+      }
+      .pcp-title{
+        font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+        font-size:20px;
+        font-weight:800;
+        letter-spacing:-.02em;
+      }
+      .pcp-close{
+        width:32px;
+        height:32px;
+        border:1px solid #eadde5;
+        border-radius:11px;
+        background:#fff;
+        color:#7b6570;
+      }
+      .pcp-body{
+        padding:10px;
+        background:#fff8fb;
+      }
+      .pcp-table-wrap{
+        border-color:rgba(238,61,133,.16);
+        border-radius:15px;
+        overflow:auto;
+        background:#fff;
+        padding:8px;
+      }
+      .pcp-table{
+        min-width:900px;
+        border-collapse:separate;
+        border-spacing:0 7px;
+        background:transparent;
+      }
+      .pcp-table thead th{
+        background:#fff4fa;
+        border-top:1px solid rgba(238,61,133,.14);
+        border-bottom:1px solid rgba(238,61,133,.14);
+        border-right:0;
+        color:#5b6470;
+        font-size:9px;
+        font-weight:900;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+      }
+      .pcp-table tbody td{
+        background:#fff;
+        border-top:1px solid rgba(234,221,229,.75);
+        border-bottom:1px solid rgba(234,221,229,.75);
+        border-right:0;
+      }
+      .pcp-table tbody td:first-child{
+        border-left:1px solid rgba(234,221,229,.75);
+        border-top-left-radius:12px;
+        border-bottom-left-radius:12px;
+      }
+      .pcp-table tbody td:last-child{
+        border-right:1px solid rgba(234,221,229,.75);
+        border-top-right-radius:12px;
+        border-bottom-right-radius:12px;
+      }
+      .pcp-footer{
+        background:#fff;
+        border-top-color:#eadde5;
+      }
+      .pcp-btn-close{
+        border-radius:10px;
+        background:#ee3d85;
+      }
+
+</style>
 
     <div class="pcp-head">
       <h2 class="pcp-title" id="pcpTitle">

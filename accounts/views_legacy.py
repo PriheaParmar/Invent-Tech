@@ -6966,6 +6966,7 @@ def readypo_pdf(request, pk: int):
             pass
     return response
 
+@login_required
 def dyeingpo_list(request):
     q = (request.GET.get("q") or "").strip()
 
@@ -8923,6 +8924,15 @@ def readypo_update(request, pk: int):
         raise PermissionDenied("You do not have access to this Ready PO.")
 
     has_inwards = po.inwards.exists()
+
+    if has_inwards:
+        messages.error(request, "This Ready PO cannot be edited because inward entries already exist.")
+        return redirect("accounts:readypo_list")
+
+    if po.approval_status == "approved":
+        messages.error(request, "Approved Ready PO cannot be edited.")
+        return redirect("accounts:readypo_list")
+
     initial_source = po.source_dyeing_po
     lock_source = bool(initial_source) or has_inwards
 
@@ -9018,9 +9028,8 @@ def readypo_update(request, pk: int):
                         item_formset.save_m2m()
                         _recalculate_ready_po(po)
 
-                    messages.success(request, f"Dyeing PO {po.system_number} updated successfully.")
-                    tracker_url = reverse("accounts:dyeing_inward_tracker")
-                    return redirect(f"{tracker_url}?po={po.pk}")
+                    messages.success(request, f"Ready PO {po.system_number} updated successfully.")
+                    return redirect("accounts:readypo_detail", pk=po.pk)
 
     effective_source = initial_source if lock_source else selected_source
     source_inwards = list(effective_source.inwards.all()) if effective_source else []
@@ -9065,7 +9074,17 @@ def readypo_detail(request, pk: int):
 @require_POST
 def readypo_delete(request, pk: int):
     po = get_object_or_404(ReadyPurchaseOrder, pk=pk, owner=request.user)
+
+    if po.inwards.exists():
+        messages.error(request, "Cannot delete this Ready PO because inward entries already exist.")
+        return redirect("accounts:readypo_list")
+
+    if po.approval_status == "approved":
+        messages.error(request, "Approved Ready PO cannot be deleted.")
+        return redirect("accounts:readypo_list")
+
     po.delete()
+    messages.success(request, "Ready PO deleted successfully.")
     return redirect("accounts:readypo_list")
 
 
@@ -9100,34 +9119,35 @@ def readypo_inward(request, pk: int):
             inward_form.add_error(None, "Enter at least one inward row.")
 
         if not inward_form.errors and not item_errors:
-            inward = inward_form.save(commit=False)
-            inward.owner = po.owner
-            inward.po = po
-            inward.inward_number = _next_ready_inward_number()
-            if not inward.vendor_id and po.vendor_id:
-                inward.vendor = po.vendor
-            inward.save()
+            with transaction.atomic():
+                inward = inward_form.save(commit=False)
+                inward.owner = po.owner
+                inward.po = po
+                inward.inward_number = _next_ready_inward_number()
+                if not inward.vendor_id and po.vendor_id:
+                    inward.vendor = po.vendor
+                inward.save()
 
-            ReadyPOInwardItem.objects.bulk_create([
-                ReadyPOInwardItem(
-                    inward=inward,
-                    po_item=row["item"],
-                    quantity=row["quantity"],
-                    received_qty=row["received_qty"],
-                    accepted_qty=row["accepted_qty"],
-                    rejected_qty=row["rejected_qty"],
-                    hold_qty=row["hold_qty"],
-                    actual_rolls=row["actual_rolls"],
-                    actual_gsm=row["actual_gsm"],
-                    actual_width=row["actual_width"],
-                    dye_lot_no=row["dye_lot_no"],
-                    batch_no=row["batch_no"],
-                    shade_reference=row["shade_reference"],
-                    qc_status=row["qc_status"],
-                    remark=row["remark"],
-                )
-                for row in line_payload
-            ])
+                ReadyPOInwardItem.objects.bulk_create([
+                    ReadyPOInwardItem(
+                        inward=inward,
+                        po_item=row["item"],
+                        quantity=row["quantity"],
+                        received_qty=row["received_qty"],
+                        accepted_qty=row["accepted_qty"],
+                        rejected_qty=row["rejected_qty"],
+                        hold_qty=row["hold_qty"],
+                        actual_rolls=row["actual_rolls"],
+                        actual_gsm=row["actual_gsm"],
+                        actual_width=row["actual_width"],
+                        dye_lot_no=row["dye_lot_no"],
+                        batch_no=row["batch_no"],
+                        shade_reference=row["shade_reference"],
+                        qc_status=row["qc_status"],
+                        remark=row["remark"],
+                    )
+                    for row in line_payload
+                ])
 
             messages.success(request, f"Inward {inward.inward_number} saved successfully.")
             tracker_url = reverse("accounts:ready_inward_tracker")
@@ -9164,7 +9184,7 @@ def ready_inward_tracker(request):
             | Q(po_number__icontains=q)
             | Q(vendor__name__icontains=q)
             | Q(source_dyeing_po__system_number__icontains=q)
-            | Q(source_dyeing_inward__inward_number__icontains=q)
+            | Q(source_dyeing_po__inwards__inward_number__icontains=q)
             | Q(inwards__inward_number__icontains=q)
             | Q(firm__firm_name__icontains=q)
             | Q(items__fabric_name__icontains=q)
@@ -11119,6 +11139,90 @@ def _save_bom_jobber_detail_formset(jobber_detail_formset, bom):
     else:
         bom.jobber_details.all().delete()
 
+
+
+def _save_bom_image_formset(image_formset, bom):
+    """
+    Save BOM images reliably, including files posted from dynamically added rows.
+
+    Django inline formsets handle this normally, but this helper also has a
+    request.FILES fallback for dynamic rows so a selected BOM image is not lost.
+    """
+    image_formset.instance = bom
+
+    saved_file_keys = set()
+
+    for obj in getattr(image_formset, "deleted_objects", []):
+        obj.delete()
+
+    for form in image_formset.forms:
+        cleaned = getattr(form, "cleaned_data", None)
+        if not cleaned or cleaned.get("DELETE"):
+            continue
+
+        image = cleaned.get("image")
+        has_existing = bool(getattr(form.instance, "pk", None))
+
+        if not has_existing and not image:
+            continue
+
+        if has_existing and not image and not form.has_changed():
+            continue
+
+        obj = form.save(commit=False)
+        obj.bom = bom
+        obj.sort_order = cleaned.get("sort_order") or 0
+
+        if obj.image:
+            obj.save()
+            saved_file_keys.add(form.add_prefix("image"))
+
+    data = getattr(image_formset, "data", None)
+    files = getattr(image_formset, "files", None)
+    prefix = getattr(image_formset, "prefix", "images") or "images"
+
+    if not data or not files:
+        return
+
+    try:
+        total_forms = int(data.get(f"{prefix}-TOTAL_FORMS") or 0)
+    except (TypeError, ValueError):
+        total_forms = 0
+
+    for index in range(total_forms):
+        file_key = f"{prefix}-{index}-image"
+        if file_key in saved_file_keys:
+            continue
+
+        if _bom_truthy_flag(data.get(f"{prefix}-{index}-DELETE")):
+            continue
+
+        uploaded = files.get(file_key)
+        if not uploaded:
+            continue
+
+        raw_id = (data.get(f"{prefix}-{index}-id") or "").strip()
+        image_obj = None
+
+        if raw_id:
+            try:
+                image_obj = bom.images.get(pk=int(raw_id))
+            except (TypeError, ValueError, BOMImage.DoesNotExist):
+                image_obj = None
+
+        if image_obj is None:
+            image_obj = BOMImage(bom=bom)
+
+        image_obj.image = uploaded
+
+        raw_sort = (data.get(f"{prefix}-{index}-sort_order") or "0").strip()
+        try:
+            image_obj.sort_order = int(raw_sort or 0)
+        except (TypeError, ValueError):
+            image_obj.sort_order = 0
+
+        image_obj.save()
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def bom_create(request):
@@ -11203,7 +11307,7 @@ def bom_create(request):
                 accessory_formset.save()
 
                 image_formset.instance = bom
-                image_formset.save()
+                _save_bom_image_formset(image_formset, bom)
 
                 jobber_process_formset.instance = bom
                 jobber_process_formset.save()
@@ -11366,7 +11470,7 @@ def bom_update(request, pk: int):
                 accessory_formset.save()
 
                 image_formset.instance = bom
-                image_formset.save()
+                _save_bom_image_formset(image_formset, bom)
 
                 jobber_process_formset.instance = bom
                 jobber_process_formset.save()
@@ -11888,6 +11992,35 @@ def program_list(request):
 
         program.jobber_tracker_rows = _program_start_jobber_tracker_rows(program, start_record)
         program.size_display_rows = _program_list_size_rows(program)
+        _size_keys = [
+            ("xs_qty", "XS"),
+            ("s_qty", "S"),
+            ("m_qty", "M"),
+            ("l_qty", "L"),
+            ("xl_qty", "XL"),
+            ("xxl_qty", "XXL"),
+        ]
+        program.visible_size_columns = [
+            label
+            for key, label in _size_keys
+            if any((row.get(key) or Decimal("0")) != Decimal("0") for row in program.size_display_rows)
+        ]
+        if not program.visible_size_columns:
+            program.visible_size_columns = ["XS"]
+        _visible_keys = {"XS": "xs_qty", "S": "s_qty", "M": "m_qty", "L": "l_qty", "XL": "xl_qty", "XXL": "xxl_qty"}
+        for _row in program.size_display_rows:
+            _row["cells"] = [
+                {"label": label, "value": _row.get(_visible_keys[label]) or Decimal("0")}
+                for label in program.visible_size_columns
+            ]
+        if not program.size_display_rows:
+            program.size_display_rows = [
+                {"line_name": "CQ", "xs_qty": Decimal("0"), "s_qty": Decimal("0"), "m_qty": Decimal("0"), "l_qty": Decimal("0"), "xl_qty": Decimal("0"), "xxl_qty": Decimal("0"), "total_qty": Decimal("0")},
+                {"line_name": "FQ", "xs_qty": Decimal("0"), "s_qty": Decimal("0"), "m_qty": Decimal("0"), "l_qty": Decimal("0"), "xl_qty": Decimal("0"), "xxl_qty": Decimal("0"), "total_qty": Decimal("0")},
+                {"line_name": "DQ", "xs_qty": Decimal("0"), "s_qty": Decimal("0"), "m_qty": Decimal("0"), "l_qty": Decimal("0"), "xl_qty": Decimal("0"), "xxl_qty": Decimal("0"), "total_qty": Decimal("0")},
+                {"line_name": "FQ-DQ", "xs_qty": Decimal("0"), "s_qty": Decimal("0"), "m_qty": Decimal("0"), "l_qty": Decimal("0"), "xl_qty": Decimal("0"), "xxl_qty": Decimal("0"), "total_qty": Decimal("0")},
+                {"line_name": "TP", "xs_qty": Decimal("0"), "s_qty": Decimal("0"), "m_qty": Decimal("0"), "l_qty": Decimal("0"), "xl_qty": Decimal("0"), "xxl_qty": Decimal("0"), "total_qty": Decimal("0")},
+            ]
 
         challans = ProgramJobberChallan.objects.filter(
             owner=request.user,
@@ -11986,6 +12119,11 @@ def program_update(request, pk: int):
     )
 
 def _program_list_size_rows(program):
+    """
+    Always return all Size Progress rows for the Program List:
+    CQ / FQ / DQ / FQ-DQ / TP.
+    The template keeps the full wide XS/S/M/L/XL/XXL/Total table.
+    """
     size_order = ["XS", "S", "M", "L", "XL", "XXL"]
 
     def blank_map():
@@ -11996,26 +12134,13 @@ def _program_list_size_rows(program):
     fq_map = blank_map()
     dq_map = blank_map()
 
-    # TP = planned program size rows
     for row in program.size_rows.all():
         line_name = (getattr(row, "line_name", "") or "").strip().upper()
 
-        if line_name == "XS":
-            tp_map["XS"] += row.xs_qty or Decimal("0")
-        if line_name == "S":
-            tp_map["S"] += row.s_qty or Decimal("0")
-        if line_name == "M":
-            tp_map["M"] += row.m_qty or Decimal("0")
-        if line_name == "L":
-            tp_map["L"] += row.l_qty or Decimal("0")
-        if line_name == "XL":
-            tp_map["XL"] += row.xl_qty or Decimal("0")
-        if line_name == "XXL":
-            tp_map["XXL"] += row.xxl_qty or Decimal("0")
-
-    # Better fallback: directly sum all program rows by columns
-    if sum(tp_map.values()) == Decimal("0"):
-        for row in program.size_rows.all():
+        if line_name in size_order:
+            value = getattr(row, f"{line_name.lower()}_qty", Decimal("0")) or Decimal("0")
+            tp_map[line_name] += value
+        else:
             tp_map["XS"] += row.xs_qty or Decimal("0")
             tp_map["S"] += row.s_qty or Decimal("0")
             tp_map["M"] += row.m_qty or Decimal("0")
@@ -12023,7 +12148,6 @@ def _program_list_size_rows(program):
             tp_map["XL"] += row.xl_qty or Decimal("0")
             tp_map["XXL"] += row.xxl_qty or Decimal("0")
 
-    # CQ + FQ from challan sizes
     challan_sizes = ProgramJobberChallanSize.objects.filter(
         challan__owner=program.owner,
         challan__program=program,
@@ -12037,7 +12161,6 @@ def _program_list_size_rows(program):
         cq_map[size_name] += row.issued_qty or Decimal("0")
         fq_map[size_name] += row.inward_qty or Decimal("0")
 
-    # DQ: keep zero for now unless you have size-wise dispatch data
     fq_dq_map = {
         size: (fq_map[size] - dq_map[size])
         for size in size_order
@@ -13352,9 +13475,9 @@ def _sync_dyeing_lots_from_dyeing(owner):
         lot_code = item.dye_lot_no or item.batch_no or item.inward.inward_number
 
         lot, was_created = InventoryLot.objects.get_or_create(
+            owner=owner,
             lot_code=lot_code,
             defaults={
-                "owner": owner,
                 "stage": "dyeing",
                 "material": material,
                 "unit": item.po_item.unit if item.po_item else "",
@@ -13793,6 +13916,11 @@ def _program_start_jobber_tracker_rows(program, start_record):
     if not start_record:
         return rows
 
+    total_size_qty = (
+        start_record.size_rows.aggregate(total=Sum("qty")).get("total")
+        or Decimal("0")
+    )
+
     start_jobber_rows = (
         start_record.jobber_rows.select_related("jobber", "jobber_type")
         .prefetch_related("challans")
@@ -13805,14 +13933,16 @@ def _program_start_jobber_tracker_rows(program, start_record):
             program=program,
             start_jobber=row,
         )
+        active_challans = challans.exclude(status="rejected")
 
         challan_count = challans.count()
+        active_challan_count = active_challans.count()
         last_challan = challans.order_by("-challan_date", "-id").first()
         last_challan_date = last_challan.challan_date if last_challan else None
         last_challan_no = last_challan.challan_no if last_challan else ""
 
-        issued_qty = challans.aggregate(total=Sum("total_issued_qty")).get("total") or Decimal("0")
-        inward_qty = challans.aggregate(total=Sum("inward_qty")).get("total") or Decimal("0")
+        issued_qty = active_challans.aggregate(total=Sum("total_issued_qty")).get("total") or Decimal("0")
+        inward_qty = active_challans.aggregate(total=Sum("inward_qty")).get("total") or Decimal("0")
 
         pending_qty = issued_qty - inward_qty
         if pending_qty < Decimal("0"):
@@ -13820,43 +13950,51 @@ def _program_start_jobber_tracker_rows(program, start_record):
 
         assigned_qty = row.assigned_qty or Decimal("0")
         if assigned_qty <= 0:
-            assigned_qty = (
-                start_record.size_rows.aggregate(total=Sum("qty")).get("total")
-                or Decimal("0")
-            )
+            assigned_qty = total_size_qty
+
+        assigned_balance = assigned_qty - issued_qty
+        if assigned_balance < Decimal("0"):
+            assigned_balance = Decimal("0")
 
         jobber_price = row.jobber_price or Decimal("0")
         total_value = assigned_qty * jobber_price
 
         latest_pending_challan = (
-            ProgramJobberChallan.objects.filter(
-                owner=program.owner,
-                program=program,
-                start_jobber=row,
-                status="pending",
-            )
+            challans.filter(status="pending")
             .order_by("-challan_date", "-id")
             .first()
         )
 
+        latest_rejected_challan = (
+            challans.filter(status="rejected")
+            .order_by("-updated_at", "-challan_date", "-id")
+            .first()
+        )
+
         latest_approved_challan = (
-            ProgramJobberChallan.objects.filter(
-                owner=program.owner,
-                program=program,
-                start_jobber=row,
-                status__in=["approved", "partial"],
-            )
+            challans.filter(status__in=["approved", "partial"])
             .order_by("-challan_date", "-id")
             .first()
         )
 
         latest_open_approved_challan = None
         if latest_approved_challan:
-            latest_balance = (latest_approved_challan.total_issued_qty or Decimal("0")) - (latest_approved_challan.inward_qty or Decimal("0"))
+            latest_balance = (
+                (latest_approved_challan.total_issued_qty or Decimal("0"))
+                - (latest_approved_challan.inward_qty or Decimal("0"))
+            )
             if latest_balance > Decimal("0"):
                 latest_open_approved_challan = latest_approved_challan
 
-        if challan_count and issued_qty > Decimal("0") and inward_qty >= issued_qty:
+        can_generate = (
+            start_record
+            and getattr(start_record, "is_started", False)
+            and not latest_pending_challan
+            and not latest_open_approved_challan
+            and assigned_balance > Decimal("0")
+        )
+
+        if active_challan_count and issued_qty > Decimal("0") and inward_qty >= issued_qty:
             status = "Completed"
             status_class = "success"
         elif latest_open_approved_challan:
@@ -13865,9 +14003,12 @@ def _program_start_jobber_tracker_rows(program, start_record):
         elif latest_pending_challan:
             status = "Pending Approval"
             status_class = "primary"
-        elif issued_qty > Decimal("0"):
+        elif active_challan_count and issued_qty > Decimal("0"):
             status = "In Progress"
             status_class = "primary"
+        elif latest_rejected_challan:
+            status = "Rejected - Generate Again"
+            status_class = "danger"
         else:
             status = "Pending"
             status_class = "secondary"
@@ -13880,7 +14021,9 @@ def _program_start_jobber_tracker_rows(program, start_record):
             "issued_qty": issued_qty,
             "inward_qty": inward_qty,
             "pending_qty": pending_qty,
+            "assigned_balance": assigned_balance,
             "challan_count": challan_count,
+            "active_challan_count": active_challan_count,
             "last_challan_date": last_challan_date,
             "last_challan_no": last_challan_no,
             "status": status,
@@ -13890,7 +14033,7 @@ def _program_start_jobber_tracker_rows(program, start_record):
             "allocation_date": row.allocation_date,
             "create_url": (
                 reverse("accounts:program_challan_create", args=[program.pk, row.pk])
-                if start_record and getattr(start_record, "is_started", False) and challan_count == 0
+                if can_generate
                 else ""
             ),
             "latest_pending_challan": latest_pending_challan,
@@ -14090,7 +14233,7 @@ def program_start_save(request, pk):
         )
 
     messages.error(request, "Program did not start. Please fix the errors in the Start Program form.")
-    return redirect("accounts:program_update", pk=program.pk)
+    return redirect("accounts:program_edit", pk=program.pk)
 
 
 
@@ -14238,16 +14381,42 @@ def program_challan_manage(request, program_id):
             ch.next_action_url = ""
             ch.next_action_class = ""
 
+    total_size_qty = Decimal("0")
+    if start_record:
+        total_size_qty = (
+            start_record.size_rows.aggregate(total=Sum("qty")).get("total")
+            or Decimal("0")
+        )
+
     for row in assigned_jobbers:
         related_challans = ProgramJobberChallan.objects.filter(
             owner=request.user,
             program=program,
             start_jobber=row,
         ).order_by("-challan_date", "-id")
+        active_challans = related_challans.exclude(status="rejected")
 
         row.latest_pending_challan = related_challans.filter(status="pending").first()
-        row.latest_approved_challan = related_challans.filter(status__in=["approved", "partial"]).first()
-        row.latest_open_challan = row.latest_pending_challan or row.latest_approved_challan or related_challans.first()
+        row.latest_approved_challan = None
+        row.latest_open_challan = row.latest_pending_challan or related_challans.first()
+
+        issued_qty = active_challans.aggregate(total=Sum("total_issued_qty")).get("total") or Decimal("0")
+        assigned_qty = row.assigned_qty or Decimal("0")
+        if assigned_qty <= 0:
+            assigned_qty = total_size_qty
+        assigned_balance = assigned_qty - issued_qty
+        if assigned_balance < Decimal("0"):
+            assigned_balance = Decimal("0")
+
+        latest_approved = related_challans.filter(status__in=["approved", "partial"]).first()
+        if latest_approved:
+            latest_balance = (
+                (latest_approved.total_issued_qty or Decimal("0"))
+                - (latest_approved.inward_qty or Decimal("0"))
+            )
+            if latest_balance > Decimal("0"):
+                row.latest_approved_challan = latest_approved
+                row.latest_open_challan = latest_approved
 
         if row.latest_pending_challan:
             row.next_action_label = "Approve DC"
@@ -14257,12 +14426,12 @@ def program_challan_manage(request, program_id):
             row.next_action_label = "Program Inward"
             row.next_action_url = reverse("accounts:program_inward_form", args=[row.latest_approved_challan.id])
             row.next_action_class = "pcm-link--dark"
-        elif start_record and getattr(start_record, "is_started", False):
+        elif start_record and getattr(start_record, "is_started", False) and assigned_balance > Decimal("0"):
             row.next_action_label = "Generate Challan"
             row.next_action_url = reverse("accounts:program_challan_create", args=[program.pk, row.pk])
             row.next_action_class = ""
         else:
-            row.next_action_label = "Generate Challan"
+            row.next_action_label = "Completed"
             row.next_action_url = ""
             row.next_action_class = "pcm-link--disabled"
 
@@ -14382,6 +14551,37 @@ def program_challan_create(request, program_id, start_jobber_id):
     remaining_qty = assigned_qty - already_issued_qty
     if remaining_qty < Decimal("0"):
         remaining_qty = Decimal("0")
+
+    existing_challans = ProgramJobberChallan.objects.filter(
+        owner=request.user,
+        program=program,
+        start_jobber=start_jobber,
+    ).order_by("-challan_date", "-id")
+
+    pending_challan = existing_challans.filter(status="pending").first()
+    open_approved_challan = None
+    for existing in existing_challans.filter(status__in=["approved", "partial"]):
+        existing_balance = (
+            (existing.total_issued_qty or Decimal("0"))
+            - (existing.inward_qty or Decimal("0"))
+        )
+        if existing_balance > Decimal("0"):
+            open_approved_challan = existing
+            break
+
+    blocked_message = ""
+    if pending_challan:
+        blocked_message = "This jobber already has a challan pending approval. Approve or reject it first."
+    elif open_approved_challan:
+        blocked_message = "This jobber already has an approved challan waiting for inward."
+    elif remaining_qty <= Decimal("0"):
+        blocked_message = "No remaining assigned quantity is available for this jobber."
+
+    if blocked_message:
+        if popup_mode:
+            return JsonResponse({"ok": False, "message": blocked_message}, status=400)
+        messages.error(request, blocked_message)
+        return redirect("accounts:program_list")
 
     if request.method == "POST":
         post_data = request.POST.copy()
@@ -14550,7 +14750,21 @@ def program_challan_approve(request, pk):
 
         rejection_reason = request.POST.get("rejection_reason", "").strip()
 
+        if challan.status != "pending":
+            message = "Only pending challans can be approved or rejected."
+            if popup_mode:
+                return JsonResponse({"ok": False, "message": message}, status=400)
+            messages.error(request, message)
+            return redirect("accounts:program_list")
+
         if action in ["approve", "approved"]:
+            if (challan.total_issued_qty or Decimal("0")) <= Decimal("0"):
+                message = "Cannot approve a challan with zero issued quantity."
+                if popup_mode:
+                    return JsonResponse({"ok": False, "message": message}, status=400)
+                messages.error(request, message)
+                return redirect("accounts:program_list")
+
             challan.status = "approved"
             challan.approved_by = request.user
             challan.approved_at = timezone.now()
@@ -14680,6 +14894,14 @@ def program_inward_form(request, challan_id):
         else timezone.localtime().strftime("%H:%M")
     )
     inward_remarks = challan.last_inward_remarks or ""
+
+    if request.method != "POST":
+        if challan.status == "rejected":
+            non_field_errors.append("Rejected challan cannot receive inward.")
+        elif challan.status == "pending":
+            non_field_errors.append("Approve the challan before inward.")
+        elif challan.total_issued_qty > 0 and challan.inward_qty >= challan.total_issued_qty:
+            non_field_errors.append("This challan is already fully inwarded.")
 
     if request.method == "POST":
         selected_inward_type = (request.POST.get("inward_type") or "").strip()
@@ -15475,8 +15697,8 @@ def _build_greige_po_status_report_context(request):
             | Q(system_number__icontains=q)
             | Q(vendor__name__icontains=q)
             | Q(items__fabric_name__icontains=q)
-            | Q(items__greige_material__name__icontains=q)
-            | Q(items__finished_material__name__icontains=q)
+            | Q(items__yarn_name__icontains=q)
+            | Q(items__material__name__icontains=q)
         ).distinct()
 
     rows = []
@@ -15487,18 +15709,18 @@ def _build_greige_po_status_report_context(request):
     }
 
     for po in po_queryset:
-        ordered_qty = Decimal(po.total_weight or 0)
-        inward_qty = Decimal(po.total_inward_qty or 0)
+        ordered_qty = Decimal(getattr(po, "total_weight", Decimal("0")) or Decimal("0"))
+        inward_qty = Decimal(getattr(po, "total_inward_qty", Decimal("0")) or Decimal("0"))
         pending_qty = ordered_qty - inward_qty if ordered_qty > inward_qty else Decimal("0")
 
         item_names = []
         for item in po.items.all():
-            if getattr(item, "greige_material", None) and getattr(item.greige_material, "name", ""):
-                item_names.append(item.greige_material.name)
-            elif getattr(item, "finished_material", None) and getattr(item.finished_material, "name", ""):
-                item_names.append(item.finished_material.name)
+            if getattr(item, "material", None) and getattr(item.material, "name", ""):
+                item_names.append(item.material.name)
             elif getattr(item, "fabric_name", ""):
                 item_names.append(item.fabric_name)
+            elif getattr(item, "yarn_name", ""):
+                item_names.append(item.yarn_name)
 
         material_name = ", ".join(dict.fromkeys(item_names)) if item_names else "-"
 
@@ -18857,6 +19079,7 @@ def maintenance_create(request):
 # use the same premium normalized tracker context and templates.
 # -----------------------------------------------------------------------------
 
+@login_required
 def yarn_inward_tracker(request):
     q = (request.GET.get("q") or "").strip()
     target_inward_id = (request.GET.get("inward") or "").strip()
@@ -18954,6 +19177,7 @@ def yarn_inward_tracker(request):
     })
 
 
+@login_required
 def greige_inward_tracker(request):
     q = (request.GET.get("q") or "").strip()
     target_inward_id = (request.GET.get("inward") or "").strip()
@@ -19033,6 +19257,7 @@ def greige_inward_tracker(request):
     })
 
 
+@login_required
 def dyeing_inward_tracker(request):
     q = (request.GET.get("q") or "").strip()
     target_inward_id = (request.GET.get("inward") or "").strip()
@@ -19109,6 +19334,7 @@ def dyeing_inward_tracker(request):
     })
 
 
+@login_required
 def ready_inward_tracker(request):
     q = (request.GET.get("q") or "").strip()
     target_inward_id = (request.GET.get("inward") or "").strip()
@@ -19123,7 +19349,7 @@ def ready_inward_tracker(request):
             | Q(po_number__icontains=q)
             | Q(vendor__name__icontains=q)
             | Q(source_dyeing_po__system_number__icontains=q)
-            | Q(source_dyeing_inward__inward_number__icontains=q)
+            | Q(source_dyeing_po__inwards__inward_number__icontains=q)
             | Q(inwards__inward_number__icontains=q)
             | Q(firm__firm_name__icontains=q)
             | Q(items__fabric_name__icontains=q)

@@ -763,6 +763,85 @@
     background:linear-gradient(180deg,#fff,#fff8fc);
   }
 
+
+
+
+  /* Batch UI polish: align Challan Manage with Program List */
+  .pcm-page{
+    gap:12px;
+    padding:12px;
+    margin:-10px -12px -14px;
+    background:radial-gradient(circle at top right,rgba(238,61,133,.08),transparent 26%),#fff8fb;
+  }
+  .pcm-topbar,
+  .pcm-card{
+    border-radius:16px;
+    border-color:rgba(238,61,133,.16);
+    box-shadow:0 10px 28px rgba(15,23,42,.05);
+  }
+  .pcm-topbar{
+    padding:11px 12px;
+    background:rgba(255,255,255,.94);
+    backdrop-filter:blur(12px);
+  }
+  .pcm-header{
+    grid-template-columns:minmax(280px,1fr) minmax(360px,1fr);
+    gap:10px;
+    padding:12px;
+  }
+  .pcm-title{
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    font-size:20px;
+    font-weight:800;
+  }
+  .pcm-stat,
+  .pcm-meta-row,
+  .pcm-jobber-meta-box{
+    border-radius:12px;
+    border-color:rgba(234,221,229,.85);
+    background:linear-gradient(180deg,#fff,#fff8fb);
+  }
+  .pcm-table-wrap{
+    border-radius:14px;
+    border-color:rgba(238,61,133,.16);
+    padding:8px;
+    background:#fff;
+  }
+  .pcm-table{
+    border-collapse:separate;
+    border-spacing:0 7px;
+    background:transparent;
+  }
+  .pcm-table thead th{
+    background:#fff4fa;
+    border-top:1px solid rgba(238,61,133,.14);
+    border-bottom:1px solid rgba(238,61,133,.14);
+    color:#5b6470;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .pcm-table tbody td{
+    background:#fff;
+    border-top:1px solid rgba(234,221,229,.75);
+    border-bottom:1px solid rgba(234,221,229,.75);
+  }
+  .pcm-table tbody td:first-child{
+    border-left:1px solid rgba(234,221,229,.75);
+    border-top-left-radius:12px;
+    border-bottom-left-radius:12px;
+  }
+  .pcm-table tbody td:last-child{
+    border-right:1px solid rgba(234,221,229,.75);
+    border-top-right-radius:12px;
+    border-bottom-right-radius:12px;
+  }
+  .pcm-btn,
+  .pcm-link{
+    border-radius:10px;
+  }
+
 </style>
 
 <div class="pcm-page">

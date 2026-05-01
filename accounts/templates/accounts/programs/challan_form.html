@@ -662,7 +662,108 @@
           width:100%;
         }
       }
-    </style>
+    
+
+
+      /* Batch UI polish: align Generate Challan popup with Program List */
+      .pcc-popup-shell{
+        padding:14px;
+        background:rgba(15,23,42,.34);
+        backdrop-filter:blur(5px);
+      }
+      .pcc-popup-card{
+        width:min(1080px, calc(100vw - 28px));
+        border-radius:18px;
+        border-color:rgba(238,61,133,.16);
+        box-shadow:0 24px 60px rgba(15,23,42,.16);
+        overflow:hidden;
+      }
+      .pcc-popup-head,
+      .pcc-head{
+        min-height:50px;
+        background:linear-gradient(180deg,#fff,#fff8fb);
+        border-bottom-color:#eadde5;
+      }
+      .pcc-title,
+      .pcc-popup-title{
+        font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+        font-size:20px;
+        font-weight:800;
+        letter-spacing:-.02em;
+      }
+      .pcc-body,
+      .pcc-popup-body{
+        padding:10px;
+        background:#fff8fb;
+      }
+      .pcc-card,
+      .pcc-panel,
+      .pcc-section{
+        border-radius:15px;
+        border-color:rgba(238,61,133,.16);
+        box-shadow:none;
+      }
+      .pcc-grid,
+      .pcc-meta-grid{
+        gap:9px;
+      }
+      .pcc-field input,
+      .pcc-field select,
+      .pcc-field textarea{
+        min-height:32px;
+        border-radius:10px;
+        box-shadow:none;
+      }
+      .pcc-table-wrap{
+        border-radius:14px;
+        border-color:rgba(238,61,133,.16);
+        padding:8px;
+        background:#fff;
+      }
+      .pcc-table{
+        border-collapse:separate;
+        border-spacing:0 7px;
+        background:transparent;
+      }
+      .pcc-table thead th{
+        background:#fff4fa;
+        border-top:1px solid rgba(238,61,133,.14);
+        border-bottom:1px solid rgba(238,61,133,.14);
+        color:#5b6470;
+        font-size:9px;
+        font-weight:900;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+      }
+      .pcc-table tbody td{
+        background:#fff;
+        border-top:1px solid rgba(234,221,229,.75);
+        border-bottom:1px solid rgba(234,221,229,.75);
+      }
+      .pcc-table tbody td:first-child{
+        border-left:1px solid rgba(234,221,229,.75);
+        border-top-left-radius:12px;
+        border-bottom-left-radius:12px;
+      }
+      .pcc-table tbody td:last-child{
+        border-right:1px solid rgba(234,221,229,.75);
+        border-top-right-radius:12px;
+        border-bottom-right-radius:12px;
+      }
+      .pcc-footer,
+      .pcc-actions{
+        position:sticky;
+        bottom:0;
+        background:rgba(255,255,255,.96);
+        backdrop-filter:blur(10px);
+        border-top:1px solid #eadde5;
+      }
+      .pcc-btn{
+        min-height:34px;
+        border-radius:10px;
+      }
+
+</style>
 
     <div class="pcc-popup-head">
       <div class="pcc-popup-head-left">

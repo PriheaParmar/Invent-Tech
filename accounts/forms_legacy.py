@@ -4849,9 +4849,9 @@ class BOMForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if user:
-            self.fields["catalogue"].queryset = Catalogue.objects.filter(owner=user).order_by("name")
-            self.fields["brand"].queryset = Brand.objects.filter(owner=user).order_by("name")
-            self.fields["category"].queryset = Category.objects.filter(owner=user).order_by("name")
+            self.fields["catalogue"].queryset = Catalogue.objects.filter(owner=user, is_active=True).order_by("name")
+            self.fields["brand"].queryset = Brand.objects.filter(owner=user, is_active=True).order_by("name")
+            self.fields["category"].queryset = Category.objects.filter(owner=user, is_active=True).order_by("name")
             self.fields["main_category"].queryset = MainCategory.objects.filter(owner=user).order_by("name")
             self.fields["sub_category"].queryset = SubCategory.objects.filter(owner=user).select_related("main_category").order_by("main_category__name", "name")
             self.fields["pattern_type"].queryset = PatternType.objects.filter(owner=user).order_by("name")
@@ -4881,6 +4881,8 @@ class BOMForm(forms.ModelForm):
         self.fields["maintenance_price"].required = False
         self.fields["damage_percent"].required = False
         self.fields["final_price"].required = False
+        self.fields["final_price"].disabled = True
+        self.fields["final_price"].help_text = "Auto-calculated after save."
         self.fields["catalogue"].empty_label = "Select catalogue"
         self.fields["brand"].empty_label = "Select brand"
         self.fields["category"].empty_label = "Select category"
@@ -4979,10 +4981,11 @@ class BOMForm(forms.ModelForm):
         return value
 
     def clean_final_price(self):
-        value = self.cleaned_data.get("final_price") or Decimal("0")
-        if value < 0:
-            raise forms.ValidationError("Final price cannot be negative.")
-        return value
+        # Final price is backend-calculated from BOM rows.
+        # Ignore any posted value, even if the readonly HTML is changed in browser devtools.
+        if self.instance and self.instance.pk:
+            return self.instance.final_price or Decimal("0")
+        return Decimal("0")
 
 class BOMImageForm(forms.ModelForm):
     MAX_IMAGE_SIZE = 5 * 1024 * 1024
@@ -5197,6 +5200,7 @@ class BaseBOMMaterialItemFormSet(BaseInlineFormSet):
             return
 
         seen_material_ids = set()
+        active_material_count = 0
 
         for form in self.forms:
             if not hasattr(form, "cleaned_data"):
@@ -5212,9 +5216,14 @@ class BaseBOMMaterialItemFormSet(BaseInlineFormSet):
                 form.add_error("material", "Select material.")
                 continue
 
+            active_material_count += 1
+
             if material.pk in seen_material_ids:
                 form.add_error("material", "This material is already added in the BOM.")
             seen_material_ids.add(material.pk)
+
+        if active_material_count == 0:
+            raise forms.ValidationError("Add at least one material row before saving BOM.")
 
 
 class BaseBOMAccessoryItemFormSet(BaseInlineFormSet):
@@ -5277,6 +5286,25 @@ class BaseBOMExpenseItemFormSet(BaseInlineFormSet):
             seen_expense_ids.add(expense.pk)
 
 
+
+
+class BaseBOMImageFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+
+        for form in self.forms:
+            if not hasattr(form, "cleaned_data"):
+                continue
+            if not form.cleaned_data or form.cleaned_data.get("DELETE"):
+                continue
+
+            image = form.cleaned_data.get("image")
+            if not image and not getattr(form.instance, "pk", None):
+                # Completely blank extra image rows are allowed.
+                continue
+
 BOMMaterialItemFormSet = inlineformset_factory(
     BOM,
     BOMMaterialItem,
@@ -5289,6 +5317,7 @@ BOMImageFormSet = inlineformset_factory(
     BOM,
     BOMImage,
     form=BOMImageForm,
+    formset=BaseBOMImageFormSet,
     extra=1,
     can_delete=True,
 )
@@ -5556,6 +5585,7 @@ BOMImageFormSet = inlineformset_factory(
     BOM,
     BOMImage,
     form=BOMImageForm,
+    formset=BaseBOMImageFormSet,
     extra=1,
     can_delete=True,
 )
@@ -6267,10 +6297,13 @@ class ProgramStartJobberForm(forms.ModelForm):
             "jobber",
             "jobber_type",
             "jobber_price",
+            "assigned_qty",
             "allocation_date",
             "sort_order",
         ]
         widgets = {
+            "jobber_price": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+            "assigned_qty": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
             "allocation_date": forms.DateInput(attrs={"type": "date"}),
             "sort_order": forms.HiddenInput(),
         }
@@ -6290,12 +6323,19 @@ class ProgramStartJobberForm(forms.ModelForm):
 
         self.fields["jobber"].required = False
         self.fields["jobber_type"].required = False
+        self.fields["assigned_qty"].required = False
         self.fields["allocation_date"].required = False
 
     def clean_jobber_price(self):
         value = self.cleaned_data.get("jobber_price") or Decimal("0")
         if value < 0:
             raise forms.ValidationError("Jobber price cannot be negative.")
+        return value
+
+    def clean_assigned_qty(self):
+        value = self.cleaned_data.get("assigned_qty") or Decimal("0")
+        if value < 0:
+            raise forms.ValidationError("Assigned quantity cannot be negative.")
         return value
 
     def clean(self):
@@ -6418,12 +6458,14 @@ class BaseProgramStartJobberFormSet(BaseInlineFormSet):
             jobber = form.cleaned_data.get("jobber")
             jobber_type = form.cleaned_data.get("jobber_type")
             jobber_price = form.cleaned_data.get("jobber_price")
+            assigned_qty = form.cleaned_data.get("assigned_qty")
             allocation_date = form.cleaned_data.get("allocation_date")
 
             has_data = any([
                 jobber,
                 jobber_type,
                 jobber_price not in (None, "", 0),
+                assigned_qty not in (None, "", 0),
                 allocation_date,
             ])
 
@@ -6435,6 +6477,9 @@ class BaseProgramStartJobberFormSet(BaseInlineFormSet):
 
             if jobber_price not in (None, "") and jobber_price < 0:
                 form.add_error("jobber_price", "Jobber price cannot be negative.")
+
+            if assigned_qty not in (None, "") and assigned_qty < 0:
+                form.add_error("assigned_qty", "Assigned quantity cannot be negative.")
 
         if valid_rows == 0:
             raise ValidationError("At least one valid jobber row is required.")

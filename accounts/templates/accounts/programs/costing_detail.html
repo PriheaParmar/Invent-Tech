@@ -223,6 +223,81 @@
 
   @media (max-width: 1050px){.cost-grid{grid-template-columns:1fr}.cost-summary{grid-template-columns:repeat(2,minmax(0,1fr));}}
   @media (max-width: 720px){.cost-page{padding:8px;border-radius:18px}.cost-head{align-items:flex-start;flex-direction:column}.cost-actions{width:100%;justify-content:flex-end}.cost-summary{grid-template-columns:1fr}.cost-body{padding:10px}.cost-title{font-size:26px}.cost-table{min-width:720px}}
+
+
+
+  /* Batch UI polish: align Program Costing with Program List */
+  .cost-page{
+    margin:-10px -12px -14px;
+    padding:14px;
+    min-height:calc(100vh - 90px);
+    background:radial-gradient(circle at top right,rgba(238,61,133,.08),transparent 26%),#fff8fb;
+  }
+  .cost-shell,
+  .cost-card,
+  .cost-panel,
+  .cost-summary{
+    border-radius:16px;
+    border-color:rgba(238,61,133,.16);
+    box-shadow:0 10px 28px rgba(15,23,42,.05);
+  }
+  .cost-head,
+  .cost-toolbar{
+    border-radius:16px;
+    background:rgba(255,255,255,.94);
+    backdrop-filter:blur(12px);
+    border-color:rgba(238,61,133,.16);
+  }
+  .cost-title{
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:-.02em;
+  }
+  .cost-stat,
+  .cost-box,
+  .cost-metric{
+    border-radius:13px;
+    border-color:rgba(234,221,229,.85);
+    background:linear-gradient(180deg,#fff,#fff8fb);
+  }
+  .cost-table-wrap{
+    border-radius:14px;
+    border-color:rgba(238,61,133,.16);
+    padding:8px;
+    background:#fff;
+  }
+  .cost-table{
+    border-collapse:separate;
+    border-spacing:0 7px;
+    background:transparent;
+  }
+  .cost-table thead th{
+    background:#fff4fa;
+    border-top:1px solid rgba(238,61,133,.14);
+    border-bottom:1px solid rgba(238,61,133,.14);
+    color:#5b6470;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .cost-table tbody td{
+    background:#fff;
+    border-top:1px solid rgba(234,221,229,.75);
+    border-bottom:1px solid rgba(234,221,229,.75);
+  }
+  .cost-table tbody td:first-child{
+    border-left:1px solid rgba(234,221,229,.75);
+    border-top-left-radius:12px;
+    border-bottom-left-radius:12px;
+  }
+  .cost-table tbody td:last-child{
+    border-right:1px solid rgba(234,221,229,.75);
+    border-top-right-radius:12px;
+    border-bottom-right-radius:12px;
+  }
+
 </style>
 
 <section class="cost-page">
