@@ -1619,7 +1619,7 @@ class TermsCondition(OwnedModel):
         unique_together = [("owner", "title")]
 
     def __str__(self):
-        return self.name
+        return self.title
 
 
 class SubCategory(OwnedModel):
