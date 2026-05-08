@@ -59,17 +59,25 @@
   .rp-source-line-name{font-size:11px;font-weight:900;color:var(--rp-text);word-break:break-word;}.rp-source-line-sub,.rp-source-line-unit{font-size:9px;font-weight:800;color:var(--rp-muted);}.rp-source-line-qty{justify-self:end;padding:6px 8px;border-radius:999px;background:#fff;border:1px solid var(--rp-border);color:var(--rp-pink);font-size:10px;font-weight:900;white-space:nowrap;}
   .rp-items-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 9px 0;}.rp-caption{font-size:10px;font-weight:800;color:var(--rp-muted);}
   .rp-add{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#fff;border:1px solid var(--rp-border);color:var(--rp-pink);}
+  .rp-add.is-disabled{opacity:.45;pointer-events:none;}
+  .rp-linked-wrap{padding:9px;display:grid;gap:8px;}
+  .rp-linked-note{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 10px;border-radius:11px;border:1px solid var(--rp-border);background:linear-gradient(180deg,#fff,#fdf9fb);}
+  .rp-linked-note strong{font-size:11px;font-weight:900;color:var(--rp-text);}.rp-linked-note span{font-size:9px;font-weight:850;color:var(--rp-muted);text-transform:uppercase;letter-spacing:.1em;}
+  .rp-ready-lines{display:grid;gap:7px;}
+  .rp-ready-line{display:grid;grid-template-columns:minmax(0,2fr) minmax(140px,1fr) minmax(80px,.55fr) minmax(110px,.7fr);gap:8px;align-items:center;padding:8px 9px;border:1px solid var(--rp-border);border-radius:11px;background:#fff;}
+  .rp-ready-name{font-size:11.5px;font-weight:900;color:var(--rp-text);word-break:break-word;}.rp-ready-sub{margin-top:2px;font-size:9px;font-weight:800;color:var(--rp-muted);}.rp-ready-unit{font-size:9px;font-weight:900;color:var(--rp-muted);text-transform:uppercase;letter-spacing:.08em;}.rp-ready-qty{justify-self:end;min-width:86px;text-align:center;padding:7px 9px;border-radius:999px;background:var(--rp-pink-soft);border:1px solid #ead7df;color:var(--rp-pink);font-size:10px;font-weight:950;}
   .rp-lines{padding:9px;display:flex;flex-direction:column;gap:8px;}
-  .rp-row{border:1px solid var(--rp-border);border-radius:11px;background:#fff;overflow:hidden;}.rp-row.is-deleted{opacity:.45;}
+    .rp-row{border:1px solid var(--rp-border);border-radius:13px;background:#fff;overflow:hidden;box-shadow:0 8px 22px rgba(27,18,25,.035);}.rp-row.is-deleted{opacity:.45;}
   .rp-row-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;background:#fbfafc;border-bottom:1px solid var(--rp-border);}
   .rp-row-left{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0;}.rp-badge,.rp-meta{display:inline-flex;align-items:center;min-height:20px;padding:0 7px;border-radius:999px;font-size:8.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;}.rp-badge{background:var(--rp-pink-soft);color:var(--rp-pink);border:1px solid #e7d9df;}.rp-meta{background:#fff;border:1px solid var(--rp-border);color:var(--rp-muted);}
   .rp-remove{width:26px;height:26px;border-radius:999px;border:1px solid var(--rp-border);background:#fff;color:#9e3458;font-size:15px;display:grid;place-items:center;}.rp-remove:hover{background:#faf5f7;border-color:var(--rp-border-strong);}
-  .rp-row-body{padding:9px;display:grid;gap:8px;}.rp-row-main{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;align-items:end;}.rp-row-extra{border-top:1px solid var(--rp-border);padding-top:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;align-items:end;}
+  .rp-row-body{padding:9px;display:grid;gap:8px;}.rp-row-main{display:grid;grid-template-columns:minmax(250px,1.8fr) minmax(120px,.65fr) minmax(120px,.7fr) minmax(120px,.7fr) minmax(140px,.8fr);gap:8px;align-items:end;}.rp-row-specbox{border-top:1px solid var(--rp-border);padding-top:8px;display:grid;gap:8px;}.rp-row-specbox-title{font-size:9px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;color:var(--rp-pink);}.rp-row-specs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:end;}.rp-row-specs .span-2{grid-column:span 2;}
+  .rp-field-material select{font-weight:850;}.rp-field-qty input,.rp-field-rate input,.rp-field-amount input,.rp-field-value input{text-align:right;font-family:var(--rp-mono);font-weight:900;}.rp-hidden-field{display:none!important;}
   .rp-total-box{margin:10px 10px 0;padding:9px;border-radius:10px;border:2px solid var(--rp-pink);color:#000;}.rp-total-label{font-size:8.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#000;}.rp-total-value{margin-top:4px;font-size:19px;line-height:1;font-weight:900;letter-spacing:-.03em;font-family:var(--rp-mono);word-break:break-word;}
   .rp-summary{display:grid;grid-template-columns:1fr;gap:8px;}.rp-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:2px;}.rp-actions .rp-btn-primary,.rp-actions .rp-btn-secondary{width:100%;}.rp-hidden{display:none!important;}
-  @media(max-width:1360px){.rp-layout{grid-template-columns:minmax(0,1fr) 280px;}.rp-row-main{grid-template-columns:repeat(3,minmax(0,1fr));}}
-  @media(max-width:1140px){.rp-layout{grid-template-columns:1fr;}.rp-side-stack{position:static;}.rp-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.rp-field.span-2,.rp-field.span-3,.rp-field.span-4{grid-column:1/-1;}.rp-row-main,.rp-row-extra{grid-template-columns:repeat(2,minmax(0,1fr));}}
-  @media(max-width:760px){.rp-shell{padding:8px;border-radius:14px;}.rp-hero-top,.rp-actions-top,.rp-head,.rp-row-top,.rp-items-toolbar{flex-direction:column;align-items:stretch;}.rp-grid,.rp-row-main,.rp-row-extra,.rp-actions{grid-template-columns:1fr;}.rp-title{font-size:20px;}.rp-glance{width:100%;}.rp-btn,.rp-btn-primary,.rp-btn-secondary{width:100%;}.rp-source-line{grid-template-columns:1fr;}.rp-source-line-qty{justify-self:start;}}
+  @media(max-width:1360px){.rp-layout{grid-template-columns:minmax(0,1fr) 280px;}.rp-row-main{grid-template-columns:minmax(220px,1.5fr) minmax(110px,.65fr) minmax(110px,.7fr) minmax(110px,.7fr) minmax(125px,.75fr);}.rp-row-specs{grid-template-columns:repeat(4,minmax(0,1fr));}}
+  @media(max-width:1140px){.rp-layout{grid-template-columns:1fr;}.rp-side-stack{position:static;}.rp-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.rp-field.span-2,.rp-field.span-3,.rp-field.span-4{grid-column:1/-1;}.rp-row-main{grid-template-columns:repeat(2,minmax(0,1fr));}.rp-row-specs{grid-template-columns:repeat(2,minmax(0,1fr));}.rp-row-specs .span-2{grid-column:1/-1;}.rp-ready-line{grid-template-columns:minmax(0,1.5fr) minmax(120px,1fr) minmax(80px,.6fr) minmax(100px,.7fr);}}
+  @media(max-width:760px){.rp-shell{padding:8px;border-radius:14px;}.rp-hero-top,.rp-actions-top,.rp-head,.rp-row-top,.rp-items-toolbar,.rp-linked-note{flex-direction:column;align-items:stretch;}.rp-grid,.rp-row-main,.rp-row-specs,.rp-actions,.rp-ready-line{grid-template-columns:1fr;}.rp-row-specs .span-2{grid-column:1/-1;}.rp-title{font-size:20px;}.rp-glance{width:100%;}.rp-btn,.rp-btn-primary,.rp-btn-secondary{width:100%;}.rp-source-line{grid-template-columns:1fr;}.rp-source-line-qty,.rp-ready-qty{justify-self:start;}}
 </style>
 {% endblock %}
 
@@ -78,6 +86,7 @@
   <div class="canvas"><div class="rp-page"><div class="jobbers-embed"><div class="rp-shell">
     <form method="post" class="rp-form" id="ready-po-form">
       {% csrf_token %}
+      {% if source_inward %}<input type="hidden" name="source_inward" value="{{ source_inward.id }}">{% endif %}
       {{ item_formset.management_form }}
 
       <section class="rp-hero">
@@ -124,14 +133,14 @@
           <section class="rp-panel">
             <div class="rp-head"><div class="rp-head-title">Source Dyeing Preview</div><div class="rp-pill">{% if source_dyeing_po %}{{ source_dyeing_po.system_number }}{% else %}No Source{% endif %}</div></div>
             <div class="rp-body">
-              <div class="rp-static" id="rp-source-note" style="margin-bottom:8px;">{% if source_dyeing_po %}Source-linked mode is active. Finished material rows below can be used to fill your Ready PO rows.{% else %}No source selected. Add Ready PO item rows manually below.{% endif %}</div>
+              
               {% if source_dyeing_po %}
                 {% for inward in source_inwards %}
                   <div class="rp-source-box">
                     <div class="rp-source-head"><div><div class="rp-source-title">{{ inward.inward_number|default:"Dyeing Inward" }}</div><div class="rp-source-meta">Date: {{ inward.inward_date|date:"d M Y"|default:"-" }}</div></div><div class="rp-source-meta">{{ inward.vendor.name|default:"Vendor not set" }}</div></div>
                     <div class="rp-source-lines">
                       {% for inward_item in inward.items.all %}
-                        <div class="rp-source-line" data-source-row data-fabric="{{ inward_item.po_item.fabric_name|default:inward_item.po_item.finished_material.name|default:'Ready Item'|escape }}" data-dyeing="{{ inward_item.po_item.dyeing_name|default:''|escape }}" data-unit="{{ inward_item.po_item.unit|default:''|escape }}" data-qty="{{ inward_item.accepted_qty|default_if_none:inward_item.quantity }}">
+                        <div class="rp-source-line" data-source-row data-fabric="{{ inward_item.po_item.fabric_name|default:inward_item.po_item.finished_material.name|default:'Ready Item'|escape }}" data-dyeing="{{ inward_item.po_item.dyeing_name|default:''|escape }}" data-unit="{{ inward_item.po_item.unit|default:''|escape }}" data-qty="{{ inward_item.accepted_qty|default_if_none:inward_item.quantity }}" data-rate="{{ inward_item.po_item.rate|default_if_none:'' }}">
                           <div><div class="rp-source-line-name">{{ inward_item.po_item.fabric_name|default:inward_item.po_item.finished_material.name|default:"Ready Item" }}</div><div class="rp-source-line-sub">{{ inward_item.po_item.dyeing_name|default:"Dyeing Process" }}</div></div>
                           <div class="rp-source-line-unit">Unit: {{ inward_item.po_item.unit|default:"-" }}</div>
                           <div class="rp-source-line-qty">Accepted: {{ inward_item.accepted_qty|default_if_none:inward_item.quantity }}</div>
@@ -147,23 +156,44 @@
           </section>
 
           <section class="rp-panel">
-            <div class="rp-head"><div class="rp-head-title">Ready Details</div><button type="button" class="rp-add" id="rp-add-row-btn" aria-label="Add row"><svg style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button></div>
-            <div class="rp-items-toolbar"><div class="rp-caption" id="rp-items-caption">{% if source_dyeing_po %}Source-linked mode: rows will be filled from Dyeing inward accepted quantity.{% else %}Manual mode: select finished material and enter row details.{% endif %}</div></div>
+            <div class="rp-head">
+              <div class="rp-head-title">Ready Details</div>
+              <span class="rp-pill">Yarn Style</span>
+            </div>
+            
+
+            
             <div class="rp-lines" id="rp-item-rows">
               {% for item_form in item_formset.forms %}
                 <div class="rp-row" data-form-row>
-                  <div class="rp-row-top"><div class="rp-row-left"><span class="rp-badge">Line <span data-row-number>{{ forloop.counter }}</span></span><span class="rp-meta">Ready Item</span></div><button type="button" class="rp-remove" data-remove-row title="Remove row">×</button></div>
+                  <div class="rp-row-top">
+                    <div class="rp-row-left"><span class="rp-badge">Line <span data-row-number>{{ forloop.counter }}</span></span><span class="rp-meta">Ready Item</span></div>
+                    <span class="rp-meta">Ready Item</span>
+                  </div>
                   <div class="rp-row-body">
                     {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
                     <div class="rp-row-main">
-                      <div class="rp-field"><label>{{ item_form.finished_material.label }}</label>{{ item_form.finished_material }}{% for err in item_form.finished_material.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
-                      <div class="rp-field"><label>{{ item_form.fabric_name.label }}</label>{{ item_form.fabric_name }}{% for err in item_form.fabric_name.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
-                      <div class="rp-field"><label>{{ item_form.dyeing_name.label }}</label>{{ item_form.dyeing_name }}{% for err in item_form.dyeing_name.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                      <div class="rp-field rp-field-material"><label>Ready Material</label>{{ item_form.finished_material }}{% for err in item_form.finished_material.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
                       <div class="rp-field"><label>{{ item_form.unit.label }}</label>{{ item_form.unit }}{% for err in item_form.unit.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
-                      <div class="rp-field"><label>{{ item_form.quantity.label }}</label>{{ item_form.quantity }}{% for err in item_form.quantity.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                      <div class="rp-field rp-field-qty"><label>{{ item_form.quantity.label }}</label>{{ item_form.quantity }}{% for err in item_form.quantity.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                      <div class="rp-field rp-field-rate"><label>{{ item_form.rate.label }}</label>{{ item_form.rate }}{% for err in item_form.rate.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                      <div class="rp-field rp-field-amount"><label>Final Amount</label>{{ item_form.final_amount }}{% for err in item_form.final_amount.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                      <div class="rp-field rp-hidden-field"><label>{{ item_form.fabric_name.label }}</label>{{ item_form.fabric_name }}{% for err in item_form.fabric_name.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
                     </div>
-                    <div class="rp-row-extra">
-                      <div class="rp-field span-2"><label>{{ item_form.remark.label }}</label>{{ item_form.remark }}{% for err in item_form.remark.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                    <div class="rp-row-specbox">
+                      <div class="rp-row-specbox-title">Technical Details</div>
+                      <div class="rp-row-specs">
+                        <div class="rp-field rp-field-value"><label>{{ item_form.value.label }}</label>{{ item_form.value }}{% for err in item_form.value.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                        <div class="rp-field"><label>{{ item_form.count.label }}</label>{{ item_form.count }}{% for err in item_form.count.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                        <div class="rp-field"><label>{{ item_form.gsm.label }}</label>{{ item_form.gsm }}{% for err in item_form.gsm.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                        <div class="rp-field"><label>{{ item_form.dia.label }}</label>{{ item_form.dia }}{% for err in item_form.dia.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                        <div class="rp-field"><label>{{ item_form.gauge.label }}</label>{{ item_form.gauge }}{% for err in item_form.gauge.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                        <div class="rp-field"><label>{{ item_form.rolls.label }}</label>{{ item_form.rolls }}{% for err in item_form.rolls.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                        <div class="rp-field"><label>S/L</label>{{ item_form.sl }}{% for err in item_form.sl.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                        <div class="rp-field"><label>HSN Code</label>{{ item_form.hsn_code }}{% for err in item_form.hsn_code.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                        <div class="rp-field"><label>Dyeing / Process</label>{{ item_form.dyeing_name }}{% for err in item_form.dyeing_name.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                        <div class="rp-field span-2"><label>{{ item_form.remark.label }}</label>{{ item_form.remark }}{% for err in item_form.remark.errors %}<div class="rp-err">{{ err }}</div>{% endfor %}</div>
+                      </div>
                       {% if item_formset.can_delete %}<div class="rp-hidden">{{ item_form.DELETE }}</div>{% endif %}
                     </div>
                   </div>
@@ -199,18 +229,31 @@
 
       <template id="rp-empty-form-template">
         <div class="rp-row" data-form-row>
-          <div class="rp-row-top"><div class="rp-row-left"><span class="rp-badge">Line <span data-row-number></span></span><span class="rp-meta">Ready Item</span></div><button type="button" class="rp-remove" data-remove-row title="Remove row">×</button></div>
+          <div class="rp-row-top"><div class="rp-row-left"><span class="rp-badge">Line <span data-row-number></span></span><span class="rp-meta">Ready Item</span></div><span class="rp-meta">Ready Item</span></div>
           <div class="rp-row-body">
             {% for hidden in item_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
             <div class="rp-row-main">
-              <div class="rp-field"><label>{{ item_formset.empty_form.finished_material.label }}</label>{{ item_formset.empty_form.finished_material }}</div>
-              <div class="rp-field"><label>{{ item_formset.empty_form.fabric_name.label }}</label>{{ item_formset.empty_form.fabric_name }}</div>
-              <div class="rp-field"><label>{{ item_formset.empty_form.dyeing_name.label }}</label>{{ item_formset.empty_form.dyeing_name }}</div>
+              <div class="rp-field rp-field-material"><label>Ready Material</label>{{ item_formset.empty_form.finished_material }}</div>
               <div class="rp-field"><label>{{ item_formset.empty_form.unit.label }}</label>{{ item_formset.empty_form.unit }}</div>
-              <div class="rp-field"><label>{{ item_formset.empty_form.quantity.label }}</label>{{ item_formset.empty_form.quantity }}</div>
+              <div class="rp-field rp-field-qty"><label>{{ item_formset.empty_form.quantity.label }}</label>{{ item_formset.empty_form.quantity }}</div>
+              <div class="rp-field rp-field-rate"><label>{{ item_formset.empty_form.rate.label }}</label>{{ item_formset.empty_form.rate }}</div>
+              <div class="rp-field rp-field-amount"><label>Final Amount</label>{{ item_formset.empty_form.final_amount }}</div>
+              <div class="rp-field rp-hidden-field"><label>{{ item_formset.empty_form.fabric_name.label }}</label>{{ item_formset.empty_form.fabric_name }}</div>
             </div>
-            <div class="rp-row-extra">
-              <div class="rp-field span-2"><label>{{ item_formset.empty_form.remark.label }}</label>{{ item_formset.empty_form.remark }}</div>
+            <div class="rp-row-specbox">
+              <div class="rp-row-specbox-title">Technical Details</div>
+              <div class="rp-row-specs">
+                <div class="rp-field rp-field-value"><label>{{ item_formset.empty_form.value.label }}</label>{{ item_formset.empty_form.value }}</div>
+                <div class="rp-field"><label>{{ item_formset.empty_form.count.label }}</label>{{ item_formset.empty_form.count }}</div>
+                <div class="rp-field"><label>{{ item_formset.empty_form.gsm.label }}</label>{{ item_formset.empty_form.gsm }}</div>
+                <div class="rp-field"><label>{{ item_formset.empty_form.dia.label }}</label>{{ item_formset.empty_form.dia }}</div>
+                <div class="rp-field"><label>{{ item_formset.empty_form.gauge.label }}</label>{{ item_formset.empty_form.gauge }}</div>
+                <div class="rp-field"><label>{{ item_formset.empty_form.rolls.label }}</label>{{ item_formset.empty_form.rolls }}</div>
+                <div class="rp-field"><label>S/L</label>{{ item_formset.empty_form.sl }}</div>
+                <div class="rp-field"><label>HSN Code</label>{{ item_formset.empty_form.hsn_code }}</div>
+                <div class="rp-field"><label>Dyeing / Process</label>{{ item_formset.empty_form.dyeing_name }}</div>
+                <div class="rp-field span-2"><label>{{ item_formset.empty_form.remark.label }}</label>{{ item_formset.empty_form.remark }}</div>
+              </div>
               {% if item_formset.can_delete %}<div class="rp-hidden">{{ item_formset.empty_form.DELETE }}</div>{% endif %}
             </div>
           </div>
@@ -239,10 +282,7 @@
     const activeRowsEl = document.getElementById("rp-active-rows");
     const totalForms = document.getElementById("id_items-TOTAL_FORMS");
     const rowsContainer = document.getElementById("rp-item-rows");
-    const addRowBtn = document.getElementById("rp-add-row-btn");
-    const emptyFormTemplate = document.getElementById("rp-empty-form-template");
     const seedRows = Array.from(document.querySelectorAll("[data-source-row]"));
-
     const termsMapNode = document.getElementById("rp-terms-map");
     const shippingMapNode = document.getElementById("rp-shipping-map");
     const firmShippingMapNode = document.getElementById("rp-firm-shipping-map");
@@ -257,21 +297,20 @@
     const termsTextEl = document.getElementById("{{ form.terms_conditions.id_for_label|default:'' }}");
     let activeShippingMap = Object.assign({}, shippingMap);
 
-    if (!totalForms || !rowsContainer || !emptyFormTemplate) return;
+    if (!totalForms || !rowsContainer) return;
 
     function num(v){const n=parseFloat(v||0);return Number.isFinite(n)?n:0;}
     function getRows(){return Array.from(rowsContainer.querySelectorAll("[data-form-row]")).filter(row=>!row.classList.contains("rp-hidden"));}
     function findField(row,suffix){return row.querySelector(`[name$="${suffix}"]`);}
     function renumberRows(){const rows=getRows();rows.forEach((row,i)=>{const el=row.querySelector("[data-row-number]");if(el)el.textContent=i+1;});if(activeRowsEl)activeRowsEl.value=rows.length;}
-    function refreshTotals(){let totalQty=0;getRows().forEach(row=>{const qty=findField(row,"-quantity");totalQty+=num(qty&&qty.value);});if(totalQtyTop)totalQtyTop.textContent=totalQty.toFixed(2);if(totalQtySide)totalQtySide.textContent=totalQty.toFixed(2);renumberRows();}
+    function refreshTotals(){let totalQty=0;getRows().forEach(row=>{const qty=findField(row,"-quantity");const rate=findField(row,"-rate");const finalAmount=findField(row,"-final_amount");const qtyVal=num(qty&&qty.value);const rateVal=num(rate&&rate.value);if(finalAmount&&document.activeElement!==finalAmount){finalAmount.value=(qtyVal*rateVal).toFixed(2);}totalQty+=qtyVal;});if(totalQtyTop)totalQtyTop.textContent=totalQty.toFixed(2);if(totalQtySide)totalQtySide.textContent=totalQty.toFixed(2);renumberRows();}
 
     function updateMaterialSnapshot(row){const materialField=findField(row,"-finished_material");const fabricField=findField(row,"-fabric_name");if(!materialField||!fabricField)return;const selectedOption=materialField.options[materialField.selectedIndex];const materialText=selectedOption?selectedOption.text.trim():"";fabricField.value=materialField.value&&materialText!=="Select finished material"?materialText:"";}
-    function fillRow(row,data){const fabric=findField(row,"-fabric_name");const dyeing=findField(row,"-dyeing_name");const unit=findField(row,"-unit");const qty=findField(row,"-quantity");if(fabric&&!fabric.value)fabric.value=data.fabric||"";if(dyeing&&!dyeing.value)dyeing.value=data.dyeing||"";if(unit&&!unit.value)unit.value=data.unit||"";if(qty&&!qty.value)qty.value=data.qty||"";}
+    function fillRow(row,data){const fabric=findField(row,"-fabric_name");const dyeing=findField(row,"-dyeing_name");const unit=findField(row,"-unit");const qty=findField(row,"-quantity");const rate=findField(row,"-rate");if(fabric&&!fabric.value)fabric.value=data.fabric||"";if(dyeing&&!dyeing.value)dyeing.value=data.dyeing||"";if(unit&&!unit.value)unit.value=data.unit||"";if(qty&&!qty.value)qty.value=data.qty||"";if(rate&&!rate.value)rate.value=data.rate||"";refreshTotals();}
     function wireRow(row){row.querySelectorAll("input, select, textarea").forEach(field=>{field.addEventListener("input",refreshTotals);field.addEventListener("change",refreshTotals);});const materialField=findField(row,"-finished_material");materialField&&materialField.addEventListener("change",()=>updateMaterialSnapshot(row));updateMaterialSnapshot(row);const btn=row.querySelector("[data-remove-row]");btn&&btn.addEventListener("click",()=>{const del=row.querySelector('input[type="checkbox"][name$="-DELETE"]');if(del){del.checked=true;row.classList.add("rp-hidden","is-deleted");}else{row.remove();}refreshTotals();});}
-    function createRow(prefill){const index=parseInt(totalForms.value,10);const html=emptyFormTemplate.innerHTML.replace(/__prefix__/g,index);const wrapper=document.createElement("div");wrapper.innerHTML=html.trim();const row=wrapper.firstElementChild;rowsContainer.appendChild(row);totalForms.value=index+1;wireRow(row);if(prefill)fillRow(row,prefill);refreshTotals();return row;}
-    function rowIsBlank(row){return ["-finished_material","-fabric_name","-dyeing_name","-unit","-quantity","-remark"].every(s=>{const f=findField(row,s);return !f||!f.value;});}
-    function seedFromSourceIfPossible(){if(!sourceField||!sourceField.value||!seedRows.length)return;const blankRows=getRows().filter(rowIsBlank);seedRows.forEach((seed,idx)=>{let target=blankRows[idx];if(!target)target=createRow();fillRow(target,{fabric:seed.dataset.fabric,dyeing:seed.dataset.dyeing,unit:seed.dataset.unit,qty:seed.dataset.qty});});refreshTotals();}
-    function updateModeUI(){const hasSource=sourceField&&!!sourceField.value;const selectedText=hasSource&&sourceField.options[sourceField.selectedIndex]?sourceField.options[sourceField.selectedIndex].text:"Selected Dyeing PO";if(hasSource){if(modeChip)modeChip.textContent="Linked from Dyeing PO";if(sideMode)sideMode.value="Linked";if(sourceChip)sourceChip.textContent=selectedText;if(sideSource)sideSource.value=selectedText;if(sourceNote)sourceNote.textContent="Source-linked mode is active. Finished material rows below can be used to fill your Ready PO rows.";if(itemsCaption)itemsCaption.textContent="Source-linked mode: rows will be filled from Dyeing inward accepted quantity.";}else{if(modeChip)modeChip.textContent="Manual Ready PO";if(sideMode)sideMode.value="Manual";if(sourceChip)sourceChip.textContent="Not selected";if(sideSource)sideSource.value="-";if(sourceNote)sourceNote.textContent="No source selected. Add Ready PO item rows manually below.";if(itemsCaption)itemsCaption.textContent="Manual mode: select finished material and enter row details.";}}
+    function rowIsBlank(row){return ["-finished_material","-fabric_name","-dyeing_name","-unit","-quantity","-rate","-final_amount","-value","-count","-gsm","-dia","-gauge","-rolls","-sl","-hsn_code","-remark"].every(s=>{const f=findField(row,s);return !f||!f.value;});}
+    function seedFromSourceIfPossible(){if(!sourceField||!sourceField.value||!seedRows.length)return;const existingRows=getRows();if(existingRows.some(row=>!rowIsBlank(row)))return;const target=existingRows[0];const seed=seedRows[0];if(!target||!seed)return;fillRow(target,{fabric:seed.dataset.fabric,dyeing:seed.dataset.dyeing,unit:seed.dataset.unit,qty:seed.dataset.qty,rate:seed.dataset.rate});refreshTotals();}
+    function updateModeUI(){const hasSource=sourceField&&!!sourceField.value;const selectedText=hasSource&&sourceField.options[sourceField.selectedIndex]?sourceField.options[sourceField.selectedIndex].text:"Selected Dyeing PO";if(hasSource){if(modeChip)modeChip.textContent="Linked from Dyeing PO";if(sideMode)sideMode.value="Linked";if(sourceChip)sourceChip.textContent=selectedText;if(sideSource)sideSource.value=selectedText;if(sourceNote)sourceNote.textContent="";if(itemsCaption)itemsCaption.textContent="";}else{if(modeChip)modeChip.textContent="Manual Ready PO";if(sideMode)sideMode.value="Manual";if(sourceChip)sourceChip.textContent="Not selected";if(sideSource)sideSource.value="-";if(sourceNote)sourceNote.textContent="";if(itemsCaption)itemsCaption.textContent="";}}
 
     function fillShippingFromChoice(){if(!shippingChoiceEl||!shippingTextEl)return;const val=shippingChoiceEl.value||"";if(val&&activeShippingMap[val])shippingTextEl.value=activeShippingMap[val];}
     function rebuildShippingForFirm(firmId,forceDefault){if(!shippingChoiceEl||!shippingTextEl)return;const oldChoice=shippingChoiceEl.value||"";const oldAddress=shippingTextEl.value||"";const items=firmId&&firmShippingMap[String(firmId)]?firmShippingMap[String(firmId)]:[];activeShippingMap={};shippingChoiceEl.innerHTML='<option value="">Select shipping address</option>';items.forEach(item=>{const key=String(item.id||"");activeShippingMap[key]=item.value||"";const opt=document.createElement("option");opt.value=key;opt.textContent=item.label||"Address";shippingChoiceEl.appendChild(opt);});if(oldChoice&&activeShippingMap[oldChoice]&&!forceDefault){shippingChoiceEl.value=oldChoice;shippingTextEl.value=activeShippingMap[oldChoice]||oldAddress;return;}if(items.length){const firstKey=String(items[0].id||"");shippingChoiceEl.value=firstKey;shippingTextEl.value=activeShippingMap[firstKey]||"";}else if(forceDefault){shippingChoiceEl.value="";shippingTextEl.value="";}}
@@ -281,7 +320,6 @@
     if(firmEl){firmEl.addEventListener("change",()=>rebuildShippingForFirm(firmEl.value,true));if(firmEl.value){rebuildShippingForFirm(firmEl.value,!shippingChoiceEl||!shippingChoiceEl.value);}}
 
     getRows().forEach(wireRow);renumberRows();updateModeUI();seedFromSourceIfPossible();refreshTotals();
-    addRowBtn&&addRowBtn.addEventListener("click",()=>createRow());
     sourceField&&sourceField.addEventListener("change",()=>{updateModeUI();});
   })();
 </script>

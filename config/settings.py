@@ -11,9 +11,12 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -25,7 +28,7 @@ SECRET_KEY = 'django-insecure-$q8@45h74ir3gcs1@ump_=!#c11+58j+ao%y&*4n6b&o)txt4(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -39,7 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # your app
-    "accounts",
+    "accounts.apps.AccountsConfig",
 ]
 
 
@@ -49,6 +52,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'accounts.middleware.ERPTenantMiddleware',
+    'accounts.middleware.AuditTrailMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -129,14 +134,20 @@ LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "accounts:dashboard"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
-# Email backend for real password reset emails
+# ------------------------------------------------------------
+# Forgot Password / Password Reset Email - Gmail SMTP
+# ------------------------------------------------------------
+# This sends real password reset emails through Gmail.
+# IMPORTANT: This app password was added for your local project only.
+# Do not upload this file publicly. For production, move this value to an environment variable.
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "yourgmail@gmail.com"
-EMAIL_HOST_PASSWORD = "your-16-char-app-password"
-DEFAULT_FROM_EMAIL = f"InventTech <{EMAIL_HOST_USER}>"
+EMAIL_HOST_USER = "inventtecherp@gmail.com"
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "qmhzigajukpqsskj")
+DEFAULT_FROM_EMAIL = "InventTech <inventtecherp@gmail.com>"
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 EMAIL_TIMEOUT = 20
 
 # Session cookie lives for 30 days
@@ -147,3 +158,48 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 # Optional: expire session on browser close if user DID NOT click "remember me"
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+
+# Central ERP health logging.
+# The Deep System Health page reads this file to show recent runtime errors, warnings, failed pages, and tracebacks.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "erp_verbose": {
+            "format": "[{asctime}] {levelname} {name}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "erp_error_file": {
+            "level": "WARNING",
+            "class": "logging.FileHandler",
+            "filename": LOG_DIR / "django-errors.log",
+            "formatter": "erp_verbose",
+            "encoding": "utf-8",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["erp_error_file"],
+            "level": "WARNING",
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["erp_error_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["erp_error_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.template": {
+            "handlers": ["erp_error_file"],
+            "level": "WARNING",
+            "propagate": True,
+        },
+    },
+}

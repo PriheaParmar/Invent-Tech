@@ -1,5 +1,7 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/shared/master_list.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/shared/utility_performance.css' %}?v=1">
+<script defer src="{% static 'js/shared/utility_performance.js' %}?v=1"></script>
 
 <style>
   .materialunits-embed .jb-head {
@@ -178,7 +180,7 @@
       <div class="jb-head-actions">
         <div class="mu-chip">
           <span>Total</span>
-          <strong>{{ units|length }}</strong>
+          <strong>{{ stats.total }}</strong>
         </div>
 
         {% if not full_page %}
@@ -292,6 +294,8 @@
       </table>
     </div>
   </section>
+
+    {% include "accounts/shared/_utility_pagination.html" %}
 
   {% include "accounts/jobbers/_delete_confirm_modal.html" %}
 </div>

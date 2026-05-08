@@ -112,6 +112,8 @@
                   <a
                     class="yarnpo-action yarnpo-action--review"
                     href="{% url 'accounts:dyeingpo_review' po.id %}"
+                    data-open-dyeing-review
+                    data-review-url="{% url 'accounts:dyeingpo_review' po.id %}?embed=1"
                     title="Review"
                     aria-label="Review"
                   >
@@ -465,4 +467,121 @@
     </div>
   </div>
 </section>
+
+<div id="dyeingPoReviewModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-card yarn-review-modal-card">
+    <div id="dyeingPoReviewMount" class="yarn-review-modal-mount">
+      <div class="yarn-review-loading">Loading review panel...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const modal = document.getElementById("dyeingPoReviewModal");
+  const mount = document.getElementById("dyeingPoReviewMount");
+
+  if (!modal || !mount) return;
+
+  function setLoading(message) {
+    mount.innerHTML = '<div class="yarn-review-loading">' + (message || "Loading review panel...") + '</div>';
+  }
+
+  function openModal() {
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+  }
+
+  function closeModal() {
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+    setLoading("Loading review panel...");
+  }
+
+  async function loadReviewPanel(url) {
+    try {
+      setLoading("Loading review panel...");
+      openModal();
+
+      const response = await fetch(url, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+
+      const html = await response.text();
+      mount.innerHTML = html;
+    } catch (error) {
+      mount.innerHTML = '<div class="yarn-review-loading">Unable to load review panel.</div>';
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    const reviewTrigger = e.target.closest("[data-open-dyeing-review]");
+    if (reviewTrigger) {
+      e.preventDefault();
+      loadReviewPanel(reviewTrigger.getAttribute("data-review-url"));
+      return;
+    }
+
+    const closeTrigger = e.target.closest("[data-review-close]");
+    if (closeTrigger) {
+      e.preventDefault();
+      closeModal();
+    }
+  });
+
+  modal.addEventListener("click", function (e) {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && modal.classList.contains("show")) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener("submit", async function (e) {
+    const form = e.target.closest("[data-dyeing-review-form]");
+    if (!form) return;
+
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const submitter = e.submitter;
+
+    if (submitter && submitter.name) {
+      formData.set(submitter.name, submitter.value);
+    }
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        body: formData,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+
+      const contentType = response.headers.get("content-type") || "";
+
+      if (contentType.includes("application/json")) {
+        const data = await response.json();
+
+        if (data.ok) {
+          closeModal();
+          window.location.reload();
+          return;
+        }
+      }
+
+      const html = await response.text();
+      mount.innerHTML = html;
+    } catch (error) {
+      mount.innerHTML = '<div class="yarn-review-loading">Unable to submit review.</div>';
+    }
+  });
+})();
+</script>
+
 {% endblock %}

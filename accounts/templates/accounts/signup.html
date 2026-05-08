@@ -10,9 +10,9 @@
       <div class="pill">TEXTILE ERP</div>
 
       <div class="left-bottom">
-        <h1>Create<br>Your Admin<br>Account</h1>
+        <h1>Company<br>Admin<br>Access</h1>
         <p>
-          Start using Invent Tech to manage Inventory → Production → Dispatch.
+          Company admin accounts are created by the platform super admin. Staff accounts are created by the company admin.
         </p>
       </div>
     </section>
@@ -28,8 +28,8 @@
       </div>
 
       <div class="title">
-        <h2>Sign Up</h2>
-        <p>Create your account to continue.</p>
+        <h2>{% if signup_disabled %}Signup Disabled{% else %}Sign Up{% endif %}</h2>
+        <p>{% if signup_disabled %}Use the login provided by your ERP admin.{% else %}Create your account to continue.{% endif %}</p>
       </div>
 
       {% if error %}
@@ -47,7 +47,7 @@
             type="text"
             placeholder="Enter your username"
             value="{{ form_data.username|default:'' }}"
-            required
+            {% if signup_disabled %}disabled{% else %}required{% endif %}
           >
         </div>
 
@@ -59,7 +59,7 @@
             type="email"
             placeholder="Enter your email"
             value="{{ form_data.email|default:'' }}"
-            required
+            {% if signup_disabled %}disabled{% else %}required{% endif %}
           >
         </div>
 
@@ -73,9 +73,9 @@
               type="password"
               placeholder="Create a password"
               value="{{ form_data.password|default:'' }}"
-              required
+              {% if signup_disabled %}disabled{% else %}required{% endif %}
             >
-            <button class="pw-btn" type="button" onclick="togglePw('pw1', this)">Show</button>
+            <button class="pw-btn" type="button" onclick="togglePw('pw1', this)" {% if signup_disabled %}disabled{% endif %}>Show</button>
           </div>
         </div>
 
@@ -89,13 +89,17 @@
               type="password"
               placeholder="Confirm password"
               value="{{ form_data.password2|default:'' }}"
-              required
+              {% if signup_disabled %}disabled{% else %}required{% endif %}
             >
-            <button class="pw-btn" type="button" onclick="togglePw('pw2', this)">Show</button>
+            <button class="pw-btn" type="button" onclick="togglePw('pw2', this)" {% if signup_disabled %}disabled{% endif %}>Show</button>
           </div>
         </div>
 
-        <button class="btn" type="submit">Create Account</button>
+        {% if signup_disabled %}
+          <a class="btn" href="{% url 'accounts:login' %}" style="text-align:center;text-decoration:none;">Go to Login</a>
+        {% else %}
+          <button class="btn" type="submit">Create Account</button>
+        {% endif %}
 
         <div class="footer">
           Already have an account? <a class="link" href="{% url 'accounts:login' %}">Sign In</a>

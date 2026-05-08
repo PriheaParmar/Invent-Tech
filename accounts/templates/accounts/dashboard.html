@@ -238,7 +238,7 @@
 </style>
 {% endblock %}
 
-{% block page_title %}{{ greeting }}, {{ request.user.username|default:"Admin" }}{% endblock %}
+{% block page_title %}{{ greeting }}, {{ current_display_user.username|default:"Admin" }}{% endblock %}
 {% block page_subtitle %}Track lots, programs, and dispatch in one system.{% endblock %}
 
 {% block content %}

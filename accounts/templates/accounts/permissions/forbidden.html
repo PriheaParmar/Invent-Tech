@@ -1,0 +1,90 @@
+{% extends "accounts/base_app.html" %}
+{% block title %}Permission Required{% endblock %}
+{% block page_title %}Permission Required{% endblock %}
+{% block page_subtitle %}This ERP action is restricted for your admin level{% endblock %}
+
+{% block content %}
+<style>
+  .perm-page{min-height:calc(100vh - 130px);display:grid;place-items:center;padding:22px;background:radial-gradient(circle at top left,rgba(28,109,216,.08),transparent 32%),radial-gradient(circle at top right,rgba(238,61,133,.08),transparent 32%),#f7f8fc;}
+  .perm-card{width:min(760px,100%);background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:28px;box-shadow:0 28px 70px rgba(15,23,42,.10);overflow:hidden;}
+  .perm-top{padding:24px 26px;border-bottom:1px solid rgba(15,23,42,.07);display:flex;gap:16px;align-items:flex-start;}
+  .perm-icon{width:54px;height:54px;border-radius:20px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#1c6dd8,#ee3d85);box-shadow:0 18px 36px rgba(28,109,216,.22);flex:0 0 auto;}
+  .perm-title{margin:0;font-size:26px;line-height:1.05;color:#0f172a;font-weight:950;letter-spacing:-.03em;}
+  .perm-sub{margin:7px 0 0;color:#64748b;font-size:13px;font-weight:650;line-height:1.55;}
+  .perm-body{padding:20px 26px 24px;display:grid;gap:14px;}
+  .perm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+  .perm-box{border:1px solid rgba(15,23,42,.08);background:#fbfcff;border-radius:18px;padding:13px 14px;}
+  .perm-label{font-size:10px;text-transform:uppercase;letter-spacing:.14em;font-weight:900;color:#64748b;margin-bottom:6px;}
+  .perm-value{font-size:13px;font-weight:850;color:#0f172a;word-break:break-word;}
+  .perm-note{background:#fff7ed;border:1px solid rgba(250,189,100,.34);border-radius:18px;padding:13px 14px;color:#7c2d12;font-size:12px;font-weight:750;line-height:1.55;}
+  .perm-actions{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin-top:2px;}
+  .perm-btn{height:40px;border-radius:14px;border:1px solid rgba(15,23,42,.11);background:#fff;color:#0f172a;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;padding:0 14px;font-size:12px;font-weight:900;}
+  .perm-btn.primary{border-color:transparent;background:#1c6dd8;color:#fff;box-shadow:0 14px 30px rgba(28,109,216,.20);}
+  .perm-btn.soft{background:#f8fafc;}
+  @media(max-width:720px){.perm-top{flex-direction:column}.perm-grid{grid-template-columns:1fr}.perm-actions{justify-content:flex-start}.perm-title{font-size:22px}}
+</style>
+
+<section class="perm-page">
+  <div class="perm-card">
+    <div class="perm-top">
+      <div class="perm-icon" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3.75 19.25 7.6v4.85c0 4.2-2.8 6.95-7.25 8.05-4.45-1.1-7.25-3.85-7.25-8.05V7.6L12 3.75Z" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M9 12.1h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="perm-title">Access blocked</h2>
+        <p class="perm-sub">
+          Your login is active, but this page is outside your assigned admin level or role permission.
+          Platform admin, company admin, and staff access are now separated for safer ERP data privacy.
+        </p>
+      </div>
+    </div>
+
+    <div class="perm-body">
+      <div class="perm-grid">
+        <div class="perm-box">
+          <div class="perm-label">Required access</div>
+          <div class="perm-value">{{ required_permission|default:"Restricted ERP permission" }}</div>
+        </div>
+        <div class="perm-box">
+          <div class="perm-label">Current login</div>
+          <div class="perm-value">
+            {% if erp_actor %}{{ erp_actor.get_full_name|default:erp_actor.username }}{% elif current_login_user %}{{ current_login_user.username }}{% else %}Unknown user{% endif %}
+          </div>
+        </div>
+        <div class="perm-box">
+          <div class="perm-label">Admin scope</div>
+          <div class="perm-value">{{ admin_scope_label|default:"ERP User" }}</div>
+        </div>
+        <div class="perm-box">
+          <div class="perm-label">Access note</div>
+          <div class="perm-value">{{ admin_scope_note|default:"Role based access is enforced." }}</div>
+        </div>
+      </div>
+
+      <div class="perm-note">
+        {% if is_platform_admin %}
+          Platform super admin can manage companies, system health, and platform activity. Company ERP pages are blocked by default so company operations stay private.
+        {% elif is_company_admin %}
+          Company admin has full access inside the company. If this page is blocked, the route may require platform-only access.
+        {% else %}
+          Ask your company admin to update your role permissions or assigned firms from Users & Roles.
+        {% endif %}
+      </div>
+
+      <div class="perm-actions">
+        {% if is_platform_admin %}
+          <a class="perm-btn primary" href="{% url 'accounts:platform_company_list' %}">Go to Platform Companies</a>
+          <a class="perm-btn soft" href="{% url 'accounts:system_health' %}">System Health</a>
+        {% else %}
+          <a class="perm-btn primary" href="{% url 'accounts:dashboard' %}">Go to Dashboard</a>
+          {% if is_company_admin %}<a class="perm-btn soft" href="{% url 'accounts:role_list' %}">Users & Roles</a>{% endif %}
+        {% endif %}
+        <a class="perm-btn" href="javascript:history.back()">Back</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

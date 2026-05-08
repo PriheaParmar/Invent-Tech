@@ -101,6 +101,9 @@ from .forms import (
 
 DyeingPOReviewForm = GreigePOReviewForm
 
+from .forms_permissions import ERPCompanyForm, ERPRoleForm, TeamUserForm
+from .permissions import PERMISSION_GROUPS, has_erp_permission, get_actor, get_company, is_company_admin
+
 try:
     from .forms import DispatchChallanForm
 except ImportError:
@@ -135,6 +138,9 @@ from .models import (
     DyeingMaterialLinkDetail,
     DyeingOtherCharge,
     ERPNotification,
+    ERPCompany,
+    ERPUserProfile,
+    ERPRole,
     DyeingPOInward,    InventoryLot,
     InventoryMovement,
     
@@ -194,6 +200,296 @@ logger = logging.getLogger(__name__)
 
 
 
+
+# ============================================================
+# PLATFORM + COMPANY ROLE PERMISSIONS
+# ============================================================
+
+
+def _require_platform_admin(request):
+    actor = get_actor(request)
+    if not actor or not actor.is_authenticated or not actor.is_superuser:
+        raise PermissionDenied("Only platform super admin can access this page.")
+    return actor
+
+
+def _require_company_admin(request):
+    actor = get_actor(request)
+    if not actor or not actor.is_authenticated:
+        raise PermissionDenied("Login required.")
+    if actor.is_superuser:
+        raise PermissionDenied("Platform super admin cannot manage company roles/users directly. Login as the company admin.")
+    if not is_company_admin(request):
+        raise PermissionDenied("Only company admin can access this page.")
+    return actor
+
+
+@login_required
+def platform_company_list(request):
+    _require_platform_admin(request)
+    companies = (
+        ERPCompany.objects.select_related("admin_user")
+        .prefetch_related("user_profiles")
+        .order_by("name")
+    )
+    return render(
+        request,
+        "accounts/platform/company_list.html",
+        {
+            "companies": companies,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def platform_company_create(request):
+    _require_platform_admin(request)
+    form = ERPCompanyForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        company = form.save()
+        messages.success(request, f"{company.name} company created with admin login.")
+        return redirect("accounts:platform_company_list")
+
+    return render(
+        request,
+        "accounts/platform/company_form.html",
+        {
+            "form": form,
+            "mode": "add",
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def platform_company_update(request, pk):
+    _require_platform_admin(request)
+    company = get_object_or_404(ERPCompany.objects.select_related("admin_user"), pk=pk)
+    form = ERPCompanyForm(request.POST or None, instance=company)
+
+    if request.method == "POST" and form.is_valid():
+        company = form.save()
+        messages.success(request, f"{company.name} company updated.")
+        return redirect("accounts:platform_company_list")
+
+    return render(
+        request,
+        "accounts/platform/company_form.html",
+        {
+            "form": form,
+            "mode": "edit",
+            "company": company,
+        },
+    )
+
+
+@login_required
+@require_POST
+def platform_company_toggle(request, pk):
+    _require_platform_admin(request)
+    company = get_object_or_404(ERPCompany, pk=pk)
+    company.status = ERPCompany.STATUS_INACTIVE if company.is_active_company else ERPCompany.STATUS_ACTIVE
+    company.save(update_fields=["status", "updated_at"])
+    messages.success(request, f"{company.name} status updated.")
+    return redirect("accounts:platform_company_list")
+
+
+def _company_for_settings(request):
+    company = get_company(request)
+    if company:
+        return company
+
+    actor = get_actor(request)
+    if actor and actor.is_superuser:
+        company_id = request.GET.get("company") or request.POST.get("company")
+        if company_id:
+            return get_object_or_404(ERPCompany, pk=company_id)
+        return None
+
+    try:
+        return request.user.erp_company_admin
+    except Exception:
+        return None
+
+
+@login_required
+def role_list(request):
+    _require_company_admin(request)
+    company = _company_for_settings(request)
+    if company is None:
+        messages.warning(request, "Create an ERP company first.")
+        return redirect("accounts:platform_company_list") if get_actor(request).is_superuser else redirect("accounts:dashboard")
+
+    roles = ERPRole.objects.filter(company=company).order_by("name")
+    users = (
+        ERPUserProfile.objects.filter(company=company, user_type=ERPUserProfile.USER_TYPE_STAFF)
+        .select_related("user", "role")
+        .prefetch_related("allowed_firms")
+        .order_by("user__username")
+    )
+    firms = Firm.objects.filter(owner=company.admin_user).order_by("firm_name")
+
+    return render(
+        request,
+        "accounts/permissions/role_list.html",
+        {
+            "company": company,
+            "roles": roles,
+            "team_users": users,
+            "firms": firms,
+            "permission_groups": PERMISSION_GROUPS,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def role_create(request):
+    _require_company_admin(request)
+    company = _company_for_settings(request)
+    if company is None:
+        messages.warning(request, "Create an ERP company first.")
+        return redirect("accounts:dashboard")
+
+    form = ERPRoleForm(request.POST or None, company=company)
+
+    if request.method == "POST" and form.is_valid():
+        role = form.save()
+        messages.success(request, f"{role.name} role created.")
+        return redirect("accounts:role_list")
+
+    return render(
+        request,
+        "accounts/permissions/role_form.html",
+        {
+            "form": form,
+            "company": company,
+            "mode": "add",
+            "permission_groups": PERMISSION_GROUPS,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def role_update(request, pk):
+    _require_company_admin(request)
+    company = _company_for_settings(request)
+    role = get_object_or_404(ERPRole, pk=pk, company=company)
+    form = ERPRoleForm(request.POST or None, instance=role, company=company)
+
+    if request.method == "POST" and form.is_valid():
+        role = form.save()
+        messages.success(request, f"{role.name} role updated.")
+        return redirect("accounts:role_list")
+
+    return render(
+        request,
+        "accounts/permissions/role_form.html",
+        {
+            "form": form,
+            "company": company,
+            "role": role,
+            "mode": "edit",
+            "permission_groups": PERMISSION_GROUPS,
+        },
+    )
+
+
+@login_required
+@require_POST
+def role_delete(request, pk):
+    _require_company_admin(request)
+    company = _company_for_settings(request)
+    role = get_object_or_404(ERPRole, pk=pk, company=company)
+    role.delete()
+    messages.success(request, "Role deleted.")
+    return redirect("accounts:role_list")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def team_user_create(request):
+    _require_company_admin(request)
+    company = _company_for_settings(request)
+    if company is None:
+        messages.warning(request, "Create an ERP company first.")
+        return redirect("accounts:dashboard")
+
+    form = TeamUserForm(request.POST or None, company=company)
+
+    if request.method == "POST" and form.is_valid():
+        profile = form.save()
+        messages.success(request, f"{profile.user.username} user created.")
+        return redirect("accounts:role_list")
+
+    return render(
+        request,
+        "accounts/permissions/team_user_form.html",
+        {
+            "form": form,
+            "company": company,
+            "mode": "add",
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def team_user_update(request, pk):
+    _require_company_admin(request)
+    company = _company_for_settings(request)
+    profile = get_object_or_404(
+        ERPUserProfile.objects.select_related("user", "role"),
+        pk=pk,
+        company=company,
+        user_type=ERPUserProfile.USER_TYPE_STAFF,
+    )
+    form = TeamUserForm(
+        request.POST or None,
+        instance=profile,
+        company=company,
+        user_instance=profile.user,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        profile = form.save()
+        messages.success(request, f"{profile.user.username} user updated.")
+        return redirect("accounts:role_list")
+
+    return render(
+        request,
+        "accounts/permissions/team_user_form.html",
+        {
+            "form": form,
+            "company": company,
+            "profile": profile,
+            "mode": "edit",
+        },
+    )
+
+
+@login_required
+@require_POST
+def team_user_toggle(request, pk):
+    _require_company_admin(request)
+    company = _company_for_settings(request)
+    profile = get_object_or_404(
+        ERPUserProfile,
+        pk=pk,
+        company=company,
+        user_type=ERPUserProfile.USER_TYPE_STAFF,
+    )
+    profile.is_active = not profile.is_active
+    profile.user.is_active = profile.is_active
+    profile.user.save(update_fields=["is_active"])
+    profile.save(update_fields=["is_active", "updated_at"])
+    messages.success(request, f"{profile.user.username} status updated.")
+    return redirect("accounts:role_list")
+
+
 @login_required
 @require_POST
 def notifications_mark_all_read(request):
@@ -234,6 +530,41 @@ def _is_embed(request) -> bool:
         or request.POST.get("embed") == "1"
         or request.headers.get("X-Requested-With") == "XMLHttpRequest"
     )
+
+
+def _utility_page_size(request, default=25):
+    allowed = (10, 25, 50, 100)
+    raw = request.GET.get("per_page") or request.GET.get("page_size") or default
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        value = default
+    return value if value in allowed else default
+
+
+def _paginate_utility_queryset(request, queryset, *, default_page_size=25):
+    page_size = _utility_page_size(request, default_page_size)
+    paginator = Paginator(queryset, page_size)
+    page_obj = paginator.get_page(request.GET.get("page") or 1)
+
+    page_params = request.GET.copy()
+    page_params.pop("page", None)
+
+    size_params = request.GET.copy()
+    size_params.pop("page", None)
+    size_params.pop("per_page", None)
+    size_params.pop("page_size", None)
+
+    return {
+        "object_list": page_obj.object_list,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "page_size": page_size,
+        "page_sizes": (10, 25, 50, 100),
+        "page_querystring": page_params.urlencode(),
+        "page_size_querystring": size_params.urlencode(),
+        "total_results": paginator.count,
+    }
 
 
 
@@ -512,6 +843,13 @@ def _next_ready_po_number() -> str:
     next_id = (last.id + 1) if last else 1
     return f"RPO-{next_id:04d}"
 
+def _compact_spaces(value):
+    """Normalize user-entered/material names for safe ID/name fallback matching."""
+    if value is None:
+        return ""
+    return " ".join(str(value).strip().split())
+
+
 def _firm_address(firm):
     if not firm:
         return ""
@@ -564,12 +902,38 @@ def _recalculate_yarn_po(po: YarnPurchaseOrder):
     )
 
 
-def _can_review_yarn_po(user):
-    return bool(
-        user.is_superuser
-        or user.is_staff
-        or user.username.lower() == "admin"
-    )
+def _can_review_yarn_po(request_or_user):
+    """
+    Review permission must be checked against the real ERP actor, not only
+    request.user. Staff requests are tenant-bridged so request.user may be the
+    company owner, while request.erp_actor is the person actually logged in.
+    """
+    if hasattr(request_or_user, "erp_actor") or hasattr(request_or_user, "erp_is_company_admin"):
+        return has_erp_permission(request_or_user, "yarn_po.review")
+
+    user = request_or_user
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+
+    if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False) or user.username.lower() == "admin":
+        return True
+
+    try:
+        profile = user.erp_profile
+    except Exception:
+        profile = None
+
+    if not profile or not getattr(profile, "is_active", False):
+        return False
+    if not getattr(user, "is_active", True):
+        return False
+    if getattr(profile, "company", None) and not getattr(profile.company, "is_active_company", True):
+        return False
+    if getattr(profile, "is_company_admin", False):
+        return True
+
+    role = getattr(profile, "role", None)
+    return bool(role and getattr(role, "is_active", False) and "yarn_po.review" in (role.permissions or []))
 
 def _greige_po_lock_reason(po: GreigePurchaseOrder):
     if getattr(po, "approval_status", "") == "approved":
@@ -691,61 +1055,30 @@ def _yarn_po_delete_lock_reason(po: YarnPurchaseOrder):
 
 @require_http_methods(["GET", "POST"])
 def signup_view(request):
+    """Public signup is disabled for this ERP.
+
+    Company admins must be created by the platform super admin from
+    Platform → Companies, and company staff must be created by the company
+    admin from Settings → Roles & Users. This prevents profile-less users from
+    entering company ERP data without a tenant/profile scope.
+    """
     if request.user.is_authenticated:
         return redirect("accounts:dashboard")
-
-    error = None
-    form_data = {
-        "username": "",
-        "email": "",
-        "password": "",
-        "password2": "",
-    }
-
-    if request.method == "POST":
-        username = request.POST.get("username", "").strip()
-        email = request.POST.get("email", "").strip().lower()
-        password = request.POST.get("password", "")
-        password2 = request.POST.get("password2", "")
-
-        form_data.update({
-            "username": username,
-            "email": email,
-            "password": password,
-            "password2": password2,
-        })
-
-        if not username or not email or not password or not password2:
-            error = "Username, email, password, and confirm password are required."
-        elif password != password2:
-            error = "Passwords do not match."
-        elif User.objects.filter(username__iexact=username).exists():
-            error = "Username already taken."
-        elif User.objects.filter(email__iexact=email).exists():
-            error = "Email already registered."
-        else:
-            try:
-                validate_email(email)
-                temp_user = User(username=username, email=email)
-                validate_password(password, user=temp_user)
-            except ValidationError as exc:
-                error = " ".join(exc.messages)
-            else:
-                user = User.objects.create_user(
-                    username=username,
-                    email=email,
-                    password=password
-                )
-                login(request, user)
-                return redirect("accounts:dashboard")
 
     return render(
         request,
         "accounts/signup.html",
         {
-            "error": error,
-            "form_data": form_data,
+            "error": "Public signup is disabled. Ask the platform admin to create your company/admin account.",
+            "form_data": {
+                "username": "",
+                "email": "",
+                "password": "",
+                "password2": "",
+            },
+            "signup_disabled": True,
         },
+        status=403 if request.method == "POST" else 200,
     )
 
 @require_http_methods(["GET", "POST"])
@@ -1139,7 +1472,14 @@ def profile_save(request):
             status=400,
         )
 
-    u = request.user
+    # Save the real logged-in account, not the legacy data-owner account.
+    # ERPTenantMiddleware keeps the real login user in request.erp_actor and may
+    # temporarily point request.user to the company admin so old owner=request.user
+    # queries can still share company data.
+    u = get_actor(request)
+    if not u or not getattr(u, "is_authenticated", False):
+        return JsonResponse({"ok": False, "message": "Login session expired. Please login again."}, status=403)
+
     u.first_name = form.cleaned_data["first_name"]
     u.last_name = form.cleaned_data["last_name"]
     u.email = form.cleaned_data["email"]
@@ -1437,13 +1777,15 @@ def _material_list_context(request):
 
     all_materials = _material_qs_for_user(request.user)
 
-    return {
-        "materials": qs,
+    page_data = _paginate_utility_queryset(request, qs)
+
+    ctx = {
+        "materials": page_data.pop("object_list"),
         "q": q,
         "selected_type": selected_type,
         "selected_kind": selected_kind,
         "status": status,
-        "type_choices": type_choices,
+        "type_choices": type_choices.only("id", "name", "material_kind"),
         "kind_choices": Material.MATERIAL_KIND_CHOICES,
         "stats": {
             "total": all_materials.count(),
@@ -1452,6 +1794,8 @@ def _material_list_context(request):
             "kinds": all_materials.values("material_kind").distinct().count(),
         },
     }
+    ctx.update(page_data)
+    return ctx
 
 @login_required
 def material_kind_picker(request):
@@ -1877,8 +2221,7 @@ def location_delete(request, pk: int):
 # ==========================
 @login_required
 def firm_list(request):
-    firm = Firm.objects.filter(owner=request.user).first()
-    firms = [firm] if firm else []
+    firms = Firm.objects.filter(owner=request.user).order_by("firm_name", "id")
 
     tpl = _pick_template(
         "accounts/firms/list_embed.html" if _is_embed(request) else "accounts/firms/list.html",
@@ -1890,14 +2233,6 @@ def firm_list(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def firm_create(request):
-    existing = Firm.objects.filter(owner=request.user).first()
-
-    if existing:
-        url = reverse("accounts:firm_edit", args=[existing.id])
-        if request.GET.get("embed") == "1":
-            url += "?embed=1"
-        return redirect(url)
-
     form = FirmForm(request.POST or None)
     address_formset = FirmAddressFormSet(request.POST or None, prefix="addresses")
 
@@ -2024,8 +2359,10 @@ def _materialshade_list_context(request):
     if selected_kind:
         filtered_base = filtered_base.filter(material_kind=selected_kind)
 
-    return {
-        "shades": qs,
+    page_data = _paginate_utility_queryset(request, qs)
+
+    ctx = {
+        "shades": page_data.pop("object_list"),
         "q": q,
         "selected_kind": selected_kind,
         "kind_choices": Material.MATERIAL_KIND_CHOICES,
@@ -2035,6 +2372,8 @@ def _materialshade_list_context(request):
             "with_notes": filtered_base.exclude(notes="").exclude(notes__isnull=True).count(),
         },
     }
+    ctx.update(page_data)
+    return ctx
 
 
 @login_required
@@ -2174,8 +2513,10 @@ def _materialtype_list_context(request):
     if selected_kind:
         filtered_base = filtered_base.filter(material_kind=selected_kind)
 
-    return {
-        "types": qs,
+    page_data = _paginate_utility_queryset(request, qs)
+
+    ctx = {
+        "types": page_data.pop("object_list"),
         "q": q,
         "selected_kind": selected_kind,
         "kind_choices": Material.MATERIAL_KIND_CHOICES,
@@ -2184,6 +2525,8 @@ def _materialtype_list_context(request):
             "with_description": filtered_base.exclude(description="").exclude(description__isnull=True).count(),
         },
     }
+    ctx.update(page_data)
+    return ctx
 
 
 @login_required
@@ -2314,8 +2657,10 @@ def materialsubtype_list(request):
     if selected_kind:
         filtered_base = filtered_base.filter(material_type__material_kind=selected_kind)
 
+    page_data = _paginate_utility_queryset(request, qs)
+
     ctx = {
-        "sub_types": qs,
+        "sub_types": page_data.pop("object_list"),
         "q": q,
         "selected_kind": selected_kind,
         "kind_choices": Material.MATERIAL_KIND_CHOICES,
@@ -2325,6 +2670,7 @@ def materialsubtype_list(request):
             "types": filtered_base.values("material_type").distinct().count(),
         },
     }
+    ctx.update(page_data)
 
     tpl = "accounts/material_sub_types/list_embed.html" if _is_embed(request) else "accounts/material_sub_types/list.html"
     return render(request, tpl, ctx)
@@ -3958,7 +4304,7 @@ def yarnpo_list(request):
         )
     )
 
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -3979,7 +4325,7 @@ def yarnpo_list(request):
         {
             "orders": orders,
             "q": q,
-            "can_review_yarn_po": _can_review_yarn_po(request.user),
+            "can_review_yarn_po": _can_review_yarn_po(request),
         },
     )
 
@@ -4780,7 +5126,7 @@ def yarn_inward_tracker(request):
         .order_by("-id")
     )
 
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -4875,7 +5221,7 @@ def yarn_inward_tracker(request):
         .order_by("-id")
     )
 
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -4994,7 +5340,7 @@ def yarnpo_review(request, pk: int):
         raise PermissionDenied("You do not have access to this PO.")
 
     embed_mode = _is_embed(request)
-    can_review = _can_review_yarn_po(request.user)
+    can_review = _can_review_yarn_po(request)
 
     review_form = YarnPOReviewForm(request.POST or None)
 
@@ -5029,7 +5375,7 @@ def yarnpo_review(request, pk: int):
                 po.approval_status = "rejected"
                 po.rejection_reason = review_form.cleaned_data["rejection_reason"].strip()
 
-            po.reviewed_by = request.user
+            po.reviewed_by = get_actor(request) or request.user
             po.reviewed_at = timezone.now()
             po.save(update_fields=[
                 "approval_status",
@@ -5761,7 +6107,7 @@ def greige_inward_tracker(request):
     target_inward_id = (request.GET.get("inward") or "").strip()
 
     qs = _greige_po_queryset().filter(inwards__isnull=False).distinct()
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -5839,7 +6185,7 @@ def greige_inward_tracker(request):
 
     qs = _greige_po_queryset().filter(inwards__isnull=False).distinct()
 
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -6009,7 +6355,7 @@ def greigepo_list(request):
 
     qs = _greige_po_queryset()
 
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -6034,7 +6380,7 @@ def greigepo_list(request):
         {
             "orders": orders,
             "q": q,
-            "can_review_greige_po": _can_review_yarn_po(request.user),
+            "can_review_greige_po": _can_review_yarn_po(request),
         },
     )
 
@@ -6489,7 +6835,7 @@ def greige_inward_tracker(request):
     target_inward_id = (request.GET.get("inward") or "").strip()
 
     qs = _greige_po_queryset().filter(inwards__isnull=False).distinct()
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -6566,7 +6912,7 @@ def greige_inward_tracker(request):
     target_inward_id = (request.GET.get("inward") or "").strip()
 
     qs = _greige_po_queryset().filter(inwards__isnull=False).distinct()
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -6970,7 +7316,7 @@ def dyeingpo_list(request):
     q = (request.GET.get("q") or "").strip()
 
     qs = _dyeing_po_queryset()
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -6995,9 +7341,79 @@ def dyeingpo_list(request):
         {
             "orders": qs,
             "q": q,
-            "can_review_dyeing_po": _can_review_yarn_po(request.user),
+            "can_review_dyeing_po": _can_review_yarn_po(request),
         },
     )
+
+def _dyeing_link_details_for_source(owner, vendor_id=None, greige_material_id=None, greige_material_name="", finished_material_id=None):
+    """Return active dyeing-link details for a source greige item.
+
+    Match order:
+    1. exact vendor + exact material id/name
+    2. vendor + normalized material name fallback
+    3. vendor-only fallback, so the PO form does not stay empty when old material IDs differ
+    """
+    qs = (
+        DyeingMaterialLinkDetail.objects
+        .select_related("link__vendor", "link__material", "finished_material__unit")
+        .filter(link__owner=owner, link__is_active=True, is_active=True)
+        .exclude(finished_material__isnull=True)
+    )
+
+    if vendor_id:
+        qs = qs.filter(link__vendor_id=vendor_id)
+
+    if finished_material_id:
+        qs = qs.filter(finished_material_id=finished_material_id)
+
+    base_qs = qs
+    material_filter = Q()
+    greige_material_name = _compact_spaces(greige_material_name)
+
+    if greige_material_id:
+        material_filter |= Q(link__material_id=greige_material_id)
+    if greige_material_name:
+        material_filter |= Q(link__material__name__iexact=greige_material_name)
+
+    if material_filter:
+        material_qs = base_qs.filter(material_filter)
+
+        if not material_qs.exists() and greige_material_name:
+            same_name_material_ids = [
+                material.pk
+                for material in Material.objects.filter(
+                    Q(owner=owner) | Q(owner__isnull=True),
+                    material_kind="greige",
+                ).only("id", "name")
+                if _compact_spaces(material.name).lower() == greige_material_name.lower()
+            ]
+            if same_name_material_ids:
+                material_qs = base_qs.filter(link__material_id__in=same_name_material_ids)
+
+        if material_qs.exists():
+            return material_qs.order_by("sort_order", "dyeing_name", "pk")
+
+    return base_qs.order_by("link__material__name", "sort_order", "dyeing_name", "pk")
+
+
+def _first_dyeing_link_detail_for_source(owner, vendor_id=None, source_item=None):
+    greige_material_id = getattr(source_item, "material_id", None) if source_item else None
+    greige_material_name = ""
+
+    if source_item is not None:
+        greige_material_name = (
+            getattr(source_item.material, "name", "")
+            if getattr(source_item, "material_id", None)
+            else ""
+        ) or getattr(source_item, "fabric_name", "") or ""
+
+    return _dyeing_link_details_for_source(
+        owner=owner,
+        vendor_id=vendor_id,
+        greige_material_id=greige_material_id,
+        greige_material_name=greige_material_name,
+    ).first()
+
 
 def _po_header_maps_from_form(form):
     firm_shipping_map = {}
@@ -7049,6 +7465,21 @@ def dyeingpo_create(request, greige_po_id=None):
         if not _can_access_greige_po(request.user, source_greige_po):
             raise PermissionDenied("You do not have access to this Greige PO.")
 
+    # Also support the normal add page where the user first selects a
+    # Source Greige PO from the dropdown. This lets the item formset build
+    # source-item, finished-material, and dyeing-master choices correctly
+    # before validation runs.
+    if source_greige_po is None:
+        posted_source_id = (
+            request.POST.get("source_greige_po")
+            or request.GET.get("source_greige_po")
+            or ""
+        ).strip()
+        if posted_source_id.isdigit():
+            source_greige_po = get_object_or_404(_greige_po_queryset(), pk=int(posted_source_id))
+            if not _can_access_greige_po(request.user, source_greige_po):
+                raise PermissionDenied("You do not have access to this Greige PO.")
+
     inward_id = (request.POST.get("source_greige_inward") or request.GET.get("inward") or "").strip()
     if source_greige_po is not None and inward_id:
         selected_source_inward = get_object_or_404(
@@ -7072,7 +7503,19 @@ def dyeingpo_create(request, greige_po_id=None):
         first_source_item = source_greige_po.items.select_related("material").first()
 
     if first_source_item is not None:
-        initial_items = [{
+        source_material_name = _compact_spaces(
+            (first_source_item.material.name if first_source_item.material_id else "")
+            or first_source_item.fabric_name
+            or ""
+        )
+
+        linked_detail = _first_dyeing_link_detail_for_source(
+            owner=request.user,
+            vendor_id=(source_greige_po.vendor_id if source_greige_po else None),
+            source_item=first_source_item,
+        )
+
+        initial_row = {
             "source_greige_po_item": first_source_item.pk,
             "greige_name": (
                 first_source_item.fabric_name
@@ -7081,7 +7524,25 @@ def dyeingpo_create(request, greige_po_id=None):
             "total_qty": first_source_item.quantity or Decimal("0"),
             "source_input_qty": first_source_item.quantity or Decimal("0"),
             "remark": first_source_item.remark or "",
-        }]
+        }
+
+        if linked_detail is not None:
+            initial_row.update({
+                "dyeing_master_detail": linked_detail.pk,
+                "finished_material": linked_detail.finished_material_id,
+                "fabric_name": linked_detail.finished_material.name if linked_detail.finished_material_id else "",
+                "dyeing_type": linked_detail.dyeing_type or "",
+                "dyeing_name": linked_detail.dyeing_name or "",
+                "unit": (
+                    linked_detail.finished_material.unit.name
+                    if linked_detail.finished_material_id and getattr(linked_detail.finished_material, "unit", None)
+                    else ""
+                ),
+                "rate": linked_detail.price or Decimal("0"),
+                "expected_loss_percent": linked_detail.weight_loss or Decimal("0"),
+            })
+
+        initial_items = [initial_row]
 
     if request.method == "POST":
         form = DyeingPurchaseOrderForm(
@@ -7335,7 +7796,9 @@ def dyeingpo_create(request, greige_po_id=None):
             "dyeing_name": detail.dyeing_name or "",
             "percentage_no_of_colors": str(detail.percentage_no_of_colors or Decimal("0")),
             "link_material_name": detail.link.material.name if detail.link_id and detail.link.material_id else "",
+            "link_material_name_key": _compact_spaces(detail.link.material.name).lower() if detail.link_id and detail.link.material_id else "",
             "vendor_name": detail.link.vendor.name if detail.link_id and detail.link.vendor_id else "",
+            "vendor_name_key": _compact_spaces(detail.link.vendor.name).lower() if detail.link_id and detail.link.vendor_id else "",
         }
 
     selected_source_id = ""
@@ -7361,7 +7824,9 @@ def dyeingpo_create(request, greige_po_id=None):
             "id": str(item.pk),
             "material_id": str(item.material_id) if item.material_id else "",
             "material_name": item.material.name if item.material_id else "",
+            "material_name_key": _compact_spaces(item.material.name).lower() if item.material_id else "",
             "fabric_name": item.fabric_name or (item.material.name if item.material_id else ""),
+            "fabric_name_key": _compact_spaces(item.fabric_name or (item.material.name if item.material_id else "")).lower(),
             "quantity": str(item.quantity or Decimal("0")),
             "remark": item.remark or "",
         }
@@ -7382,6 +7847,8 @@ def dyeingpo_create(request, greige_po_id=None):
         "source_greige_po": source_greige_po,
         "selected_source_inward": selected_source_inward,
         "selected_source_id": selected_source_id,
+        "source_vendor_id": str(source_greige_po.vendor_id) if source_greige_po and source_greige_po.vendor_id else "",
+        "source_vendor_name": source_greige_po.vendor.name if source_greige_po and source_greige_po.vendor_id else "",
         "source_item_map_json": source_item_map,
         "dyeing_master_map_json": dyeing_master_map,
         "greige_item_material_map_json": greige_item_material_map,
@@ -7558,8 +8025,10 @@ def dyeingpo_update(request, pk: int):
             "id": str(detail.pk),
             "vendor_id": str(detail.link.vendor_id) if detail.link_id and detail.link.vendor_id else "",
             "vendor_name": detail.link.vendor.name if detail.link_id and detail.link.vendor_id else "",
+            "vendor_name_key": _compact_spaces(detail.link.vendor.name).lower() if detail.link_id and detail.link.vendor_id else "",
             "material_id": str(detail.link.material_id) if detail.link_id and detail.link.material_id else "",
             "link_material_name": detail.link.material.name if detail.link_id and detail.link.material_id else "",
+            "link_material_name_key": _compact_spaces(detail.link.material.name).lower() if detail.link_id and detail.link.material_id else "",
             "finished_material_id": str(detail.finished_material_id) if detail.finished_material_id else "",
             "finished_material_name": detail.finished_material.name if detail.finished_material_id else "",
             "rate": str(detail.price or Decimal("0")),
@@ -7583,7 +8052,7 @@ def dyeingpo_update(request, pk: int):
             "mode": "edit",
             "po_obj": po,
             "system_number_preview": po.system_number,
-            "dyeing_master_map_json": json.dumps(dyeing_master_map),
+            "dyeing_master_map_json": dyeing_master_map,
             "source_greige_po": po.source_greige_po,
             "selected_source_inward": po.source_greige_inward,
             "source_inwards": list(po.source_greige_po.inwards.all()) if po.source_greige_po else [],
@@ -8333,7 +8802,7 @@ def dyeing_inward_tracker(request):
 
     qs = _dyeing_po_queryset().filter(inwards__isnull=False).distinct()
 
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -8407,7 +8876,7 @@ def dyeing_inward_tracker(request):
 
     qs = _dyeing_po_queryset().filter(inwards__isnull=False).distinct()
 
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -8591,6 +9060,47 @@ def dyeing_inward_edit(request, pk: int):
             "next_inward_number_preview": inward.inward_number,
         },
     )
+
+
+
+@login_required
+@require_POST
+def dyeing_inward_delete(request, pk: int):
+    inward = get_object_or_404(
+        DyeingPOInward.objects.select_related("po__owner", "po__vendor", "po__firm"),
+        pk=pk,
+    )
+    po = inward.po
+
+    if not _can_access_dyeing_po(request.user, po):
+        raise PermissionDenied("You do not have access to this Dyeing inward.")
+
+    tracker_url = reverse("accounts:dyeing_inward_tracker")
+
+    if po.ready_pos.exists():
+        messages.error(
+            request,
+            "This inward cannot be deleted because a Ready PO has already been generated from this Dyeing PO."
+        )
+        return redirect(f"{tracker_url}?inward={inward.pk}")
+
+    linked_lots = InventoryLot.objects.filter(dyeing_inward_item__inward=inward)
+    used_or_closed_lots = linked_lots.filter(Q(used_qty__gt=0) | Q(is_closed=True))
+    if used_or_closed_lots.exists():
+        messages.error(
+            request,
+            "This inward cannot be deleted because its stock lot is already used or closed."
+        )
+        return redirect(f"{tracker_url}?inward={inward.pk}")
+
+    inward_number = inward.inward_number
+
+    with transaction.atomic():
+        linked_lots.delete()
+        inward.delete()
+
+    messages.success(request, f"Inward {inward_number} deleted successfully.")
+    return redirect(tracker_url)
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -8796,7 +9306,7 @@ def readypo_list(request):
     q = (request.GET.get("q") or "").strip()
 
     qs = _ready_po_queryset()
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -8814,7 +9324,7 @@ def readypo_list(request):
         {
             "orders": qs,
             "q": q,
-            "can_review_ready_po": _can_review_yarn_po(request.user),
+            "can_review_ready_po": _can_review_yarn_po(request),
         },
     )
 
@@ -8846,7 +9356,7 @@ def readypo_review(request, pk: int):
         return redirect("accounts:readypo_list")
 
     embed_mode = _is_embed(request)
-    can_review = _can_review_yarn_po(request.user)
+    can_review = _can_review_yarn_po(request)
 
     review_form = ReadyPOReviewForm(request.POST or None)
 
@@ -8881,7 +9391,7 @@ def readypo_review(request, pk: int):
                 po.approval_status = "rejected"
                 po.rejection_reason = review_form.cleaned_data["rejection_reason"].strip()
 
-            po.reviewed_by = request.user
+            po.reviewed_by = get_actor(request) or request.user
             po.reviewed_at = timezone.now()
             po.save(update_fields=[
                 "approval_status",
@@ -9174,7 +9684,7 @@ def ready_inward_tracker(request):
     target_inward_id = (request.GET.get("inward") or "").strip()
 
     qs = _ready_po_queryset().filter(inwards__isnull=False).distinct()
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -9242,7 +9752,7 @@ def ready_inward_tracker(request):
     target_inward_id = (request.GET.get("inward") or "").strip()
 
     qs = _ready_po_queryset().filter(inwards__isnull=False).distinct()
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -9451,14 +9961,18 @@ def _materialunit_list_context(request, form=None):
 
     all_units = MaterialUnit.objects.filter(owner=request.user)
 
-    return {
-        "units": units,
+    page_data = _paginate_utility_queryset(request, units)
+
+    ctx = {
+        "units": page_data.pop("object_list"),
         "form": form if form is not None else MaterialUnitForm(user=request.user),
         "q": q,
         "stats": {
             "total": all_units.count(),
         },
     }
+    ctx.update(page_data)
+    return ctx
 
 
 @login_required
@@ -9600,13 +10114,17 @@ def _expense_list_context(request):
 
     all_expenses = Expense.objects.filter(owner=request.user)
 
-    return {
-        "expenses": qs,
+    page_data = _paginate_utility_queryset(request, qs)
+
+    ctx = {
+        "expenses": page_data.pop("object_list"),
         "q": q,
         "stats": {
             "total": all_expenses.count(),
         },
     }
+    ctx.update(page_data)
+    return ctx
 
 
 @login_required
@@ -9734,8 +10252,10 @@ def _accessory_list_context(request, form=None):
 
     all_accessories = Accessory.objects.filter(owner=request.user)
 
-    return {
-        "accessories": accessories,
+    page_data = _paginate_utility_queryset(request, accessories)
+
+    ctx = {
+        "accessories": page_data.pop("object_list"),
         "form": form if form is not None else AccessoryForm(user=request.user),
         "q": q,
         "stats": {
@@ -9744,6 +10264,8 @@ def _accessory_list_context(request, form=None):
             "with_default_unit": all_accessories.exclude(default_unit__isnull=True).count(),
         },
     }
+    ctx.update(page_data)
+    return ctx
 
 
 @login_required
@@ -9864,13 +10386,17 @@ def _dyeing_other_charge_list_context(request):
 
     all_charges = DyeingOtherCharge.objects.filter(owner=request.user)
 
-    return {
-        "charges": qs,
+    page_data = _paginate_utility_queryset(request, qs)
+
+    ctx = {
+        "charges": page_data.pop("object_list"),
         "q": q,
         "stats": {
             "total": all_charges.count(),
         },
     }
+    ctx.update(page_data)
+    return ctx
 
 
 @login_required
@@ -10404,14 +10930,18 @@ def _termscondition_list_context(request):
 
     all_terms = TermsCondition.objects.filter(owner=request.user)
 
-    return {
-        "terms_conditions": qs,
+    page_data = _paginate_utility_queryset(request, qs)
+
+    ctx = {
+        "terms_conditions": page_data.pop("object_list"),
         "q": q,
         "stats": {
             "total": all_terms.count(),
             "with_content": all_terms.exclude(content="").count(),
         },
     }
+    ctx.update(page_data)
+    return ctx
 
 
 @login_required
@@ -10557,14 +11087,18 @@ def _inwardtype_list_context(request):
 
     all_inward_types = InwardType.objects.filter(owner=request.user)
 
-    return {
-        "inward_types": qs,
+    page_data = _paginate_utility_queryset(request, qs)
+
+    ctx = {
+        "inward_types": page_data.pop("object_list"),
         "q": q,
         "stats": {
             "total": all_inward_types.count(),
             "with_description": all_inward_types.exclude(description="").count(),
         },
     }
+    ctx.update(page_data)
+    return ctx
 
 
 @login_required
@@ -10845,7 +11379,7 @@ def greigepo_review(request, pk: int):
         raise PermissionDenied("You do not have access to this Greige PO.")
 
     embed_mode = _is_embed(request)
-    can_review = _can_review_yarn_po(request.user)
+    can_review = _can_review_yarn_po(request)
 
     review_form = GreigePOReviewForm(request.POST or None)
 
@@ -10880,7 +11414,7 @@ def greigepo_review(request, pk: int):
                 po.approval_status = "rejected"
                 po.rejection_reason = review_form.cleaned_data["rejection_reason"].strip()
 
-            po.reviewed_by = request.user
+            po.reviewed_by = get_actor(request) or request.user
             po.reviewed_at = timezone.now()
             po.save(update_fields=[
                 "approval_status",
@@ -10943,7 +11477,7 @@ def dyeingpo_review(request, pk: int):
         return redirect("accounts:dyeingpo_list")
 
     embed_mode = _is_embed(request)
-    can_review = _can_review_yarn_po(request.user)
+    can_review = _can_review_yarn_po(request)
 
     review_form = DyeingPOReviewForm(request.POST or None)
 
@@ -10978,7 +11512,7 @@ def dyeingpo_review(request, pk: int):
                 po.approval_status = "rejected"
                 po.rejection_reason = review_form.cleaned_data["rejection_reason"].strip()
 
-            po.reviewed_by = request.user
+            po.reviewed_by = get_actor(request) or request.user
             po.reviewed_at = timezone.now()
             po.save(update_fields=[
                 "approval_status",
@@ -11050,11 +11584,15 @@ def _bom_list_context(request):
             | Q(product_name__icontains=q)
         )
 
-    return {
-        "boms": qs,
+    page_data = _paginate_utility_queryset(request, qs)
+
+    ctx = {
+        "boms": page_data.pop("object_list"),
         "q": q,
         "full_page": not _is_embed(request),
     }
+    ctx.update(page_data)
+    return ctx
 
 def _bom_list_url(request):
     url = reverse("accounts:bom_list")
@@ -12187,8 +12725,33 @@ def _program_list_size_rows(program):
 
 
 
-def _can_verify_program(user):
-    return bool(user.is_authenticated and (user.is_staff or user.is_superuser))
+def _can_verify_program(request_or_user):
+    """Use ERP permissions so company admins and permitted staff can verify programs."""
+    if hasattr(request_or_user, "erp_actor") or hasattr(request_or_user, "erp_is_company_admin"):
+        return has_erp_permission(request_or_user, "program.verify")
+
+    user = request_or_user
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+        return True
+
+    try:
+        profile = user.erp_profile
+    except Exception:
+        profile = None
+
+    if not profile or not getattr(profile, "is_active", False):
+        return False
+    if not getattr(user, "is_active", True):
+        return False
+    if getattr(profile, "company", None) and not getattr(profile.company, "is_active_company", True):
+        return False
+    if getattr(profile, "is_company_admin", False):
+        return True
+
+    role = getattr(profile, "role", None)
+    return bool(role and getattr(role, "is_active", False) and "program.verify" in (role.permissions or []))
 
 
 def _program_verification_response(request, program, message, status=400):
@@ -12209,7 +12772,7 @@ def program_verify(request, pk: int):
     popup_mode = _is_program_popup(request)
 
     if request.method == "POST":
-        if not _can_verify_program(request.user):
+        if not _can_verify_program(request):
             return _program_verification_response(
                 request,
                 program,
@@ -12248,7 +12811,7 @@ def program_verify(request, pk: int):
         {
             "program": program,
             "popup_mode": popup_mode,
-            "can_verify_program": _can_verify_program(request.user),
+            "can_verify_program": _can_verify_program(request),
         },
     )
 @login_required
@@ -13249,8 +13812,10 @@ def _dyeing_material_link_list_context(request):
     all_links = DyeingMaterialLink.objects.filter(owner=request.user)
     detail_rows_count = DyeingMaterialLinkDetail.objects.filter(link__owner=request.user).count()
 
-    return {
-        "links": qs,
+    page_data = _paginate_utility_queryset(request, qs)
+
+    ctx = {
+        "links": page_data.pop("object_list"),
         "q": q,
         "stats": {
             "total": all_links.count(),
@@ -13259,6 +13824,8 @@ def _dyeing_material_link_list_context(request):
             "details": detail_rows_count,
         },
     }
+    ctx.update(page_data)
+    return ctx
 
 def _dyeing_material_link_list_context(request):
     q = (request.GET.get("q") or "").strip()
@@ -13722,18 +14289,40 @@ def qr_code_detail(request, pk):
 @login_required
 def costing_snapshot_list(request):
     qs = CostingSnapshot.objects.filter(owner=request.user).select_related("bom", "program").order_by("-id")
-    return render(request, "accounts/costing/list.html", {"snapshots": qs})
+    form = CostingSnapshotForm(user=request.user)
+    return render(
+        request,
+        "accounts/costing/list.html",
+        {
+            "snapshots": qs,
+            "form": form,
+        },
+    )
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def costing_snapshot_create(request):
     form = CostingSnapshotForm(request.POST or None, user=request.user)
-    if request.method == "POST" and form.is_valid():
-        obj = form.save(commit=False)
-        obj.owner = request.user
-        obj.save()
-        messages.success(request, "Costing snapshot saved successfully.")
-        return redirect("accounts:costing_snapshot_list")
+    if request.method == "POST":
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
+            messages.success(request, "Costing snapshot saved successfully.")
+            return redirect("accounts:costing_snapshot_list")
+
+        qs = CostingSnapshot.objects.filter(owner=request.user).select_related("bom", "program").order_by("-id")
+        return render(
+            request,
+            "accounts/costing/list.html",
+            {
+                "snapshots": qs,
+                "form": form,
+                "open_costing_modal": True,
+            },
+        )
+
     return render(request, "accounts/costing/form.html", {"form": form})
 
 def _program_start_standard_size_rows(program):
@@ -14299,8 +14888,33 @@ def _is_program_popup(request):
     )
 
 
-def _can_approve_program_jobber_challan(user):
-    return bool(user.is_authenticated and (user.is_staff or user.is_superuser))
+def _can_approve_program_jobber_challan(request_or_user):
+    """Use ERP permissions so company admins and permitted staff can approve DCs."""
+    if hasattr(request_or_user, "erp_actor") or hasattr(request_or_user, "erp_is_company_admin"):
+        return has_erp_permission(request_or_user, "program.approve_challan")
+
+    user = request_or_user
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+        return True
+
+    try:
+        profile = user.erp_profile
+    except Exception:
+        profile = None
+
+    if not profile or not getattr(profile, "is_active", False):
+        return False
+    if not getattr(user, "is_active", True):
+        return False
+    if getattr(profile, "company", None) and not getattr(profile.company, "is_active_company", True):
+        return False
+    if getattr(profile, "is_company_admin", False):
+        return True
+
+    role = getattr(profile, "role", None)
+    return bool(role and getattr(role, "is_active", False) and "program.approve_challan" in (role.permissions or []))
 
 
 @login_required
@@ -14765,7 +15379,7 @@ def program_challan_approve(request, pk):
                 return redirect("accounts:program_list")
 
             challan.status = "approved"
-            challan.approved_by = request.user
+            challan.approved_by = get_actor(request) or request.user
             challan.approved_at = timezone.now()
             challan.rejection_reason = ""
             challan.save(update_fields=[
@@ -15905,14 +16519,20 @@ def _build_yarn_po_status_report_context(request):
     }
 
     for po in po_queryset:
-        ordered_qty = Decimal(po.total_qty or 0)
-        inward_qty = Decimal(po.total_inward_qty or 0)
+        ordered_qty = Decimal(getattr(po, "total_weight", None) or 0)
+        if not ordered_qty:
+            for item in po.items.all():
+                ordered_qty += Decimal(getattr(item, "quantity", None) or 0)
+
+        inward_qty = Decimal(getattr(po, "total_inward_qty", None) or 0)
         pending_qty = ordered_qty - inward_qty if ordered_qty > inward_qty else Decimal("0")
 
         item_names = []
         for item in po.items.all():
             if getattr(item, "material", None) and getattr(item.material, "name", ""):
                 item_names.append(item.material.name)
+            elif getattr(item, "material_type", None) and getattr(item.material_type, "name", ""):
+                item_names.append(item.material_type.name)
             elif getattr(item, "material_name", ""):
                 item_names.append(item.material_name)
 
@@ -16938,7 +17558,6 @@ def _build_dispatch_pending_report_context(request):
             "bom__brand",
             "bom__main_category",
             "bom__sub_category",
-            "client",
             "firm",
         )
         .prefetch_related("dispatches")
@@ -16950,7 +17569,7 @@ def _build_dispatch_pending_report_context(request):
             Q(program_no__icontains=q)
             | Q(bom__sku__icontains=q)
             | Q(bom__product_name__icontains=q)
-            | Q(client__name__icontains=q)
+            | Q(firm__name__icontains=q)
         )
 
     rows = []
@@ -16963,7 +17582,7 @@ def _build_dispatch_pending_report_context(request):
     for program in programs:
         bom = getattr(program, "bom", None)
 
-        produced_qty = Decimal(program.total_qty or 0)
+        produced_qty = Decimal(getattr(program, "total_qty", None) or 0)
 
         dispatched_qty = Decimal("0")
         last_dispatch_date = None
@@ -16981,7 +17600,7 @@ def _build_dispatch_pending_report_context(request):
                 "program_date": program.program_date,
                 "sku_name": bom.sku if bom and getattr(bom, "sku", "") else "-",
                 "product_name": bom.product_name if bom and getattr(bom, "product_name", "") else "-",
-                "client_name": program.client.name if getattr(program, "client", None) else "-",
+                "client_name": program.firm.name if getattr(program, "firm", None) else "-",
                 "produced_qty": produced_qty,
                 "dispatched_qty": dispatched_qty,
                 "pending_qty": pending_qty,
@@ -18622,6 +19241,17 @@ def _build_program_costing_context(program):
             cutting_qty += _program_costing_decimal(size_row.qty)
 
     if cutting_qty <= 0:
+        for size_row in program.size_rows.all():
+            cutting_qty += (
+                _program_costing_decimal(size_row.xs_qty)
+                + _program_costing_decimal(size_row.s_qty)
+                + _program_costing_decimal(size_row.m_qty)
+                + _program_costing_decimal(size_row.l_qty)
+                + _program_costing_decimal(size_row.xl_qty)
+                + _program_costing_decimal(size_row.xxl_qty)
+            )
+
+    if cutting_qty <= 0:
         cutting_qty = _program_costing_decimal(program.total_qty)
 
     cutting_qty = _program_costing_money(cutting_qty)
@@ -18711,9 +19341,13 @@ def _build_program_costing_context(program):
         process_rows_source = list(
             program.jobber_rows.select_related("jobber", "jobber_type").all()
         )
-    elif bom:
+    elif bom and bom.jobber_details.exists():
         process_rows_source = list(
             bom.jobber_details.select_related("jobber", "jobber_type").all()
+        )
+    elif bom:
+        process_rows_source = list(
+            bom.jobber_type_processes.select_related("jobber_type").all()
         )
 
     process_map = {
@@ -18733,7 +19367,7 @@ def _build_program_costing_context(program):
             continue
 
         jobber_type_name = getattr(getattr(row, "jobber_type", None), "name", "") or ""
-        jobber_name = getattr(getattr(row, "jobber", None), "name", "") or ""
+        jobber_name = getattr(getattr(row, "jobber", None), "name", "") or jobber_type_name
 
         bucket = _program_costing_bucket(jobber_type_name)
         process_map[bucket]["unit_cost"] += unit_cost
@@ -18884,21 +19518,46 @@ def _build_program_costing_context(program):
 
 @login_required
 def program_costing_detail(request, program_id):
-    program = get_object_or_404(Program.objects.filter(owner=request.user).select_related('bom','firm'), pk=program_id)
-    snapshots = program.costing_snapshots.all().order_by('-id')
+    program_qs = (
+        Program.objects.filter(owner=request.user)
+        .select_related("bom", "firm")
+        .prefetch_related(
+            "size_rows",
+            "jobber_rows__jobber",
+            "jobber_rows__jobber_type",
+            "bom__material_items__material",
+            "bom__accessory_items__accessory",
+            "bom__expense_items__expense",
+            "bom__jobber_details__jobber",
+            "bom__jobber_details__jobber_type",
+            "bom__jobber_type_processes__jobber_type",
+            "start_record__fabric_rows__material",
+            "start_record__size_rows",
+            "start_record__jobber_rows__jobber",
+            "start_record__jobber_rows__jobber_type",
+        )
+    )
+    program = get_object_or_404(program_qs, pk=program_id)
+
+    snapshots = program.costing_snapshots.all().order_by("-id")
     latest_snapshot = snapshots.first()
+    live_context = _build_program_costing_context(program)
+
     costing_rows = [
-        ("Material Cost", getattr(latest_snapshot, 'material_cost', 0) if latest_snapshot else 0),
-        ("Accessory Cost", getattr(latest_snapshot, 'accessory_cost', 0) if latest_snapshot else 0),
-        ("Process Cost", getattr(latest_snapshot, 'process_cost', 0) if latest_snapshot else 0),
-        ("Expense Cost", getattr(latest_snapshot, 'expense_cost', 0) if latest_snapshot else 0),
-        ("Overhead Cost", getattr(latest_snapshot, 'overhead_cost', 0) if latest_snapshot else 0),
-        ("Wastage Cost", getattr(latest_snapshot, 'wastage_cost', 0) if latest_snapshot else 0),
-        ("Total Cost", getattr(latest_snapshot, 'total_cost', 0) if latest_snapshot else 0),
-        ("Target Selling Price", getattr(latest_snapshot, 'target_selling_price', 0) if latest_snapshot else 0),
-        ("MRP", getattr(latest_snapshot, 'mrp', 0) if latest_snapshot else 0),
+        ("Material Cost", live_context.get("material_final_total", Decimal("0"))),
+        ("Cutting Qty", live_context.get("cutting_qty", Decimal("0"))),
+        ("Damage %", live_context.get("damage_percent", Decimal("0"))),
+        ("Final Cost", live_context.get("final_cost", Decimal("0"))),
     ]
-    return render(request, 'accounts/programs/costing_detail.html', {'program': program, 'snapshots': snapshots, 'latest_snapshot': latest_snapshot, 'costing_rows': costing_rows})
+
+    context = {
+        "program": program,
+        "snapshots": snapshots,
+        "latest_snapshot": latest_snapshot,
+        "costing_rows": costing_rows,
+        **live_context,
+    }
+    return render(request, "accounts/programs/costing_detail.html", context)
 
 
 # =========================================================
@@ -19105,7 +19764,7 @@ def yarn_inward_tracker(request):
         .order_by("-id")
     )
 
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -19182,7 +19841,7 @@ def greige_inward_tracker(request):
     target_inward_id = (request.GET.get("inward") or "").strip()
 
     qs = _greige_po_queryset().filter(inwards__isnull=False).distinct()
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -19263,7 +19922,7 @@ def dyeing_inward_tracker(request):
 
     qs = _dyeing_po_queryset().filter(inwards__isnull=False).distinct()
 
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -19339,7 +19998,7 @@ def ready_inward_tracker(request):
     target_inward_id = (request.GET.get("inward") or "").strip()
 
     qs = _ready_po_queryset().filter(inwards__isnull=False).distinct()
-    if not _can_review_yarn_po(request.user):
+    if not _can_review_yarn_po(request):
         qs = qs.filter(owner=request.user)
 
     if q:
@@ -19782,3 +20441,1058 @@ def _build_simple_dyeing_po_pdf_response(po):
 
 def _build_simple_ready_po_pdf_response(po):
     return _build_dye_ready_yarn_style_pdf(po, title="READY PURCHASE ORDER", po_kind="ready")
+
+
+
+from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# DEEP SYSTEM HEALTH / ERROR LOG DASHBOARD
+# ---------------------------------------------------------------------------
+
+
+def _health_rel(path, base_dir):
+    try:
+        return str(Path(path).resolve().relative_to(Path(base_dir).resolve()))
+    except Exception:
+        try:
+            return str(Path(path))
+        except Exception:
+            return str(path)
+
+
+def _health_safe_tail(path, max_lines=2200):
+    """Return a safe tail from a text log file without crashing on bad encoding."""
+    try:
+        path = Path(path)
+    except Exception:
+        return []
+
+    if not path.exists() or not path.is_file():
+        return []
+
+    try:
+        with path.open("r", encoding="utf-8", errors="replace") as handle:
+            lines = handle.readlines()
+    except Exception:
+        try:
+            with path.open("r", encoding="latin-1", errors="replace") as handle:
+                lines = handle.readlines()
+        except Exception:
+            return []
+
+    return [line.rstrip("\n") for line in lines[-max_lines:]]
+
+
+def _health_project_files(base_dir, suffixes=None, include_migrations=True):
+    """Yield project files while avoiding venv/git/cache/media folders."""
+    base_dir = Path(base_dir)
+    skip_parts = {
+        ".git",
+        ".idea",
+        ".vscode",
+        "__pycache__",
+        "venv",
+        "env",
+        ".venv",
+        "node_modules",
+        "media",
+        "staticfiles",
+    }
+    if not include_migrations:
+        skip_parts.add("migrations")
+
+    roots = [
+        base_dir / "accounts",
+        base_dir / "config",
+        base_dir / "templates",
+        base_dir / "static",
+    ]
+
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in root.rglob("*"):
+            try:
+                if not path.is_file():
+                    continue
+                if any(part in skip_parts for part in path.parts):
+                    continue
+                if suffixes and path.suffix.lower() not in suffixes:
+                    continue
+                yield path
+            except Exception:
+                continue
+
+
+def _health_file_text(path):
+    try:
+        return Path(path).read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return ""
+
+
+def _health_line_no(text, pos):
+    try:
+        return text[:pos].count("\n") + 1
+    except Exception:
+        return 1
+
+
+def _health_collect_url_names():
+    """Collect URL names including namespaced names such as accounts:dashboard and duplicate definitions."""
+    from collections import Counter
+    from django.urls import get_resolver
+
+    names = set()
+    counter = Counter()
+    rows = []
+
+    def walk(patterns, namespaces=None):
+        namespaces = namespaces or []
+        for pattern in patterns:
+            child_patterns = getattr(pattern, "url_patterns", None)
+            if child_patterns is not None:
+                namespace = getattr(pattern, "namespace", None)
+                next_namespaces = namespaces + ([namespace] if namespace else [])
+                walk(child_patterns, next_namespaces)
+                continue
+
+            name = getattr(pattern, "name", None)
+            if not name:
+                continue
+            full_name = ":".join(namespaces + [name]) if namespaces else name
+            route = str(getattr(pattern, "pattern", ""))
+            callback = getattr(pattern, "callback", None)
+            callback_name = getattr(callback, "__name__", str(callback))
+            names.add(name)
+            names.add(full_name)
+            counter[full_name] += 1
+            rows.append({
+                "name": full_name,
+                "route": route,
+                "view": callback_name,
+            })
+
+    try:
+        walk(get_resolver().url_patterns)
+    except Exception:
+        pass
+
+    duplicates = []
+    for name, count in counter.items():
+        if count <= 1:
+            continue
+        samples = [row for row in rows if row["name"] == name][:4]
+        duplicates.append({
+            "name": name,
+            "count": count,
+            "samples": "; ".join(f"{row['route']} → {row['view']}" for row in samples),
+        })
+
+    return names, duplicates[:80]
+
+
+def _health_find_broken_url_references(base_dir):
+    import re
+
+    known_names, duplicate_url_names = _health_collect_url_names()
+    rows = []
+    seen = set()
+
+    patterns = [
+        ("template", re.compile(r"{%\s*url\s+(['\"])(?P<name>[^'\"]+)\1")),
+        ("reverse", re.compile(r"\breverse(?:_lazy)?\s*\(\s*(['\"])(?P<name>[^'\"]+)\1")),
+        ("redirect", re.compile(r"\bredirect\s*\(\s*(['\"])(?P<name>[^'\"]+)\1")),
+    ]
+
+    for path in _health_project_files(base_dir, {".html", ".py"}):
+        text = _health_file_text(path)
+        if not text:
+            continue
+        for source, regex in patterns:
+            for match in regex.finditer(text):
+                url_name = (match.group("name") or "").strip()
+                if not url_name:
+                    continue
+                # redirect('/literal/path/') is valid and not a URL name.
+                if source == "redirect" and (url_name.startswith("/") or url_name.startswith("http") or url_name.endswith(".html")):
+                    continue
+                # Skip variables accidentally captured from uncommon syntax.
+                if "{" in url_name or "}" in url_name or " " in url_name:
+                    continue
+                if url_name in known_names:
+                    continue
+                key = (str(path), source, url_name)
+                if key in seen:
+                    continue
+                seen.add(key)
+                rows.append({
+                    "file": _health_rel(path, base_dir),
+                    "name": url_name,
+                    "source": source,
+                    "line": _health_line_no(text, match.start()),
+                })
+
+    return rows[:150], duplicate_url_names
+
+
+def _health_template_name_from_path(path):
+    parts = list(Path(path).parts)
+    if "templates" in parts:
+        index = parts.index("templates")
+        return "/".join(parts[index + 1:])
+    return Path(path).name
+
+
+def _health_find_missing_templates(base_dir):
+    import re
+    from django.template import TemplateDoesNotExist
+    from django.template.loader import get_template
+
+    rows = []
+    seen = set()
+
+    template_patterns = [
+        re.compile(r"render\s*\([^,]+,\s*['\"](?P<name>[^'\"]+\.html)['\"]"),
+        re.compile(r"get_template\s*\(\s*['\"](?P<name>[^'\"]+\.html)['\"]"),
+        re.compile(r"select_template\s*\(\s*\[\s*['\"](?P<name>[^'\"]+\.html)['\"]"),
+        re.compile(r"{%\s*(?:include|extends)\s+['\"](?P<name>[^'\"]+\.html)['\"]"),
+    ]
+
+    for path in _health_project_files(base_dir, {".py", ".html"}):
+        text = _health_file_text(path)
+        if not text:
+            continue
+
+        for regex in template_patterns:
+            for match in regex.finditer(text):
+                template_name = (match.group("name") or "").strip()
+                if not template_name:
+                    continue
+                key = (template_name, str(path))
+                if key in seen:
+                    continue
+                seen.add(key)
+                try:
+                    get_template(template_name)
+                except TemplateDoesNotExist as exc:
+                    rows.append({
+                        "file": _health_rel(path, base_dir),
+                        "name": template_name,
+                        "line": _health_line_no(text, match.start()),
+                        "error": str(exc),
+                    })
+                except Exception as exc:
+                    rows.append({
+                        "file": _health_rel(path, base_dir),
+                        "name": template_name,
+                        "line": _health_line_no(text, match.start()),
+                        "error": str(exc),
+                    })
+
+    return rows[:150]
+
+
+def _health_compile_all_templates(base_dir):
+    """Compile every project template to catch TemplateSyntaxError, bad tags, missing includes, etc."""
+    from django.template import TemplateDoesNotExist, TemplateSyntaxError
+    from django.template.loader import get_template
+
+    rows = []
+    checked = 0
+    for path in _health_project_files(base_dir, {".html"}):
+        if "templates" not in Path(path).parts:
+            continue
+        checked += 1
+        template_name = _health_template_name_from_path(path)
+        try:
+            get_template(template_name)
+        except TemplateSyntaxError as exc:
+            rows.append({
+                "file": _health_rel(path, base_dir),
+                "template": template_name,
+                "kind": "TemplateSyntaxError",
+                "error": str(exc),
+            })
+        except TemplateDoesNotExist as exc:
+            rows.append({
+                "file": _health_rel(path, base_dir),
+                "template": template_name,
+                "kind": "TemplateDoesNotExist",
+                "error": str(exc),
+            })
+        except Exception as exc:
+            rows.append({
+                "file": _health_rel(path, base_dir),
+                "template": template_name,
+                "kind": exc.__class__.__name__,
+                "error": str(exc),
+            })
+
+    return {"checked": checked, "items": rows[:150]}
+
+
+def _health_find_missing_static(base_dir):
+    import re
+    from django.contrib.staticfiles import finders
+
+    rows = []
+    seen = set()
+    patterns = [
+        ("template static tag", re.compile(r"{%\s*static\s+['\"](?P<path>[^'\"]+)['\"]")),
+        ("hardcoded /static/", re.compile(r"(?:href|src)=[\"'](?P<path>/static/[^\"']+)[\"']")),
+        ("css url", re.compile(r"url\([\"']?(?P<path>/static/[^\)\"']+)[\"']?\)")),
+    ]
+
+    for path in _health_project_files(base_dir, {".html", ".css", ".js"}):
+        text = _health_file_text(path)
+        if not text:
+            continue
+        for source, regex in patterns:
+            for match in regex.finditer(text):
+                static_path = (match.group("path") or "").strip()
+                if not static_path or "{{" in static_path or "{%" in static_path:
+                    continue
+                if static_path.startswith("/static/"):
+                    static_path = static_path[len("/static/"):]
+                static_path = static_path.split("?")[0].split("#")[0].strip()
+                if not static_path:
+                    continue
+                key = (static_path, str(path))
+                if key in seen:
+                    continue
+                seen.add(key)
+                try:
+                    found = finders.find(static_path)
+                except Exception:
+                    found = None
+                if not found:
+                    rows.append({
+                        "file": _health_rel(path, base_dir),
+                        "path": static_path,
+                        "source": source,
+                        "line": _health_line_no(text, match.start()),
+                    })
+
+    return rows[:150]
+
+
+def _health_collect_errors(base_dir):
+    import re
+
+    log_candidates = [
+        Path(base_dir) / "logs" / "django-errors.log",
+        Path(base_dir) / "logs" / "django.log",
+        Path(base_dir) / "django-errors.log",
+        Path(base_dir) / "error.log",
+        Path(base_dir) / "server.log",
+        Path(base_dir) / "debug.log",
+    ]
+
+    error_markers = (
+        "ERROR", "CRITICAL", "WARNING", "Traceback", "Exception", "Internal Server Error",
+        "OperationalError", "ProgrammingError", "IntegrityError", "DatabaseError",
+        "TemplateDoesNotExist", "TemplateSyntaxError", "NoReverseMatch", "Resolver404",
+        "AttributeError", "NameError", "ValueError", "TypeError", "ImportError", "ModuleNotFoundError",
+        "FieldError", "ValidationError", "SuspiciousOperation", "DisallowedHost", "Forbidden",
+        "Not Found:", "Bad Request:", " 500 ", " 404 ", " 403 ", " 400 ",
+    )
+
+    category_patterns = [
+        ("Database", re.compile(r"OperationalError|ProgrammingError|IntegrityError|DatabaseError|no such table", re.I)),
+        ("Template", re.compile(r"TemplateDoesNotExist|TemplateSyntaxError|Unclosed tag|Invalid block tag", re.I)),
+        ("URL/Reverse", re.compile(r"NoReverseMatch|Resolver404|Reverse for", re.I)),
+        ("Python", re.compile(r"AttributeError|NameError|TypeError|ValueError|ImportError|ModuleNotFoundError", re.I)),
+        ("HTTP", re.compile(r"Internal Server Error|Not Found:|Forbidden|Bad Request| 500 | 404 | 403 | 400 ", re.I)),
+        ("Security", re.compile(r"SuspiciousOperation|DisallowedHost|CSRF", re.I)),
+    ]
+
+    errors = []
+    failed_pages = {}
+    page_patterns = [
+        re.compile(r"(?P<kind>Internal Server Error|Not Found|Forbidden|Bad Request):\s+(?P<path>\S+)"),
+        re.compile(r"\"(?:GET|POST|PUT|PATCH|DELETE)\s+(?P<path>[^\"\s]+)[^\"]*\"\s+(?P<status>500|404|403|400)"),
+    ]
+
+    def classify(text):
+        for label, regex in category_patterns:
+            if regex.search(text):
+                return label
+        return "Runtime"
+
+    for log_path in log_candidates:
+        lines = _health_safe_tail(log_path, max_lines=2600)
+        if not lines:
+            continue
+
+        source = log_path.name
+        for idx, line in enumerate(lines):
+            joined_context = "\n".join(lines[max(0, idx - 2): min(len(lines), idx + 10)])
+            if any(marker in line for marker in error_markers):
+                start = max(0, idx - 5)
+                end = min(len(lines), idx + 18)
+                snippet = "\n".join(lines[start:end]).strip()
+                errors.append({
+                    "source": source,
+                    "line": idx + 1,
+                    "title": line.strip()[:260],
+                    "category": classify(joined_context),
+                    "snippet": snippet[:5000],
+                })
+
+            for regex in page_patterns:
+                match = regex.search(line)
+                if match:
+                    path = match.groupdict().get("path") or "-"
+                    status = match.groupdict().get("status") or match.groupdict().get("kind") or "500"
+                    key = (status, path)
+                    failed_pages[key] = failed_pages.get(key, 0) + 1
+
+    errors = errors[-60:][::-1]
+    failed_rows = [
+        {"status": status, "path": path, "count": count}
+        for (status, path), count in sorted(failed_pages.items(), key=lambda item: item[1], reverse=True)
+    ][:80]
+
+    return errors, failed_rows, [_health_rel(p, base_dir) for p in log_candidates if p.exists()]
+
+
+def _health_pending_migrations():
+    from django.db import DEFAULT_DB_ALIAS, connections
+    from django.db.migrations.executor import MigrationExecutor
+
+    try:
+        connection = connections[DEFAULT_DB_ALIAS]
+        executor = MigrationExecutor(connection)
+        conflicts = executor.loader.detect_conflicts()
+        targets = executor.loader.graph.leaf_nodes()
+        plan = executor.migration_plan(targets)
+    except Exception as exc:
+        return {
+            "ok": False,
+            "error": str(exc),
+            "items": [],
+            "conflicts": [],
+        }
+
+    rows = []
+    for migration, backwards in plan:
+        if backwards:
+            continue
+        rows.append({
+            "app": migration.app_label,
+            "name": migration.name,
+        })
+
+    conflict_rows = []
+    for app_label, names in (conflicts or {}).items():
+        conflict_rows.append({"app": app_label, "names": ", ".join(names)})
+
+    return {
+        "ok": True,
+        "error": "",
+        "items": rows,
+        "conflicts": conflict_rows,
+    }
+
+
+def _health_database_status():
+    from django.apps import apps
+    from django.conf import settings
+    from django.db import connection
+
+    info = {
+        "ok": True,
+        "engine": settings.DATABASES.get("default", {}).get("ENGINE", ""),
+        "name": str(settings.DATABASES.get("default", {}).get("NAME", "")),
+        "vendor": "",
+        "size": "",
+        "table_count": 0,
+        "missing_model_tables": [],
+        "warnings": [],
+        "error": "",
+    }
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        info["vendor"] = connection.vendor
+    except Exception as exc:
+        info["ok"] = False
+        info["error"] = str(exc)
+        return info
+
+    try:
+        existing_tables = set(connection.introspection.table_names())
+        info["table_count"] = len(existing_tables)
+        for model in apps.get_models():
+            table = model._meta.db_table
+            if table and table not in existing_tables:
+                info["missing_model_tables"].append({
+                    "model": f"{model._meta.app_label}.{model.__name__}",
+                    "table": table,
+                })
+    except Exception as exc:
+        info["warnings"].append(f"Could not inspect database tables: {exc}")
+
+    try:
+        db_name = settings.DATABASES.get("default", {}).get("NAME")
+        db_path = Path(db_name)
+        if db_path.exists() and db_path.is_file():
+            size_mb = db_path.stat().st_size / (1024 * 1024)
+            info["size"] = f"{size_mb:.2f} MB"
+            if size_mb > 750:
+                info["warnings"].append("SQLite database is large. Consider PostgreSQL before production use.")
+    except Exception:
+        pass
+
+    if "sqlite3" in info["engine"]:
+        info["warnings"].append("SQLite is fine for local development, but production ERP should use PostgreSQL or MySQL.")
+
+    return info
+
+
+def _health_settings_warnings():
+    from django.conf import settings
+
+    warnings = []
+
+    if getattr(settings, "DEBUG", False):
+        warnings.append("DEBUG=True is enabled. Keep it only for development.")
+    if not getattr(settings, "ALLOWED_HOSTS", []):
+        warnings.append("ALLOWED_HOSTS is empty. Configure it before deployment.")
+    secret = getattr(settings, "SECRET_KEY", "")
+    if secret.startswith("django-insecure-"):
+        warnings.append("SECRET_KEY uses a development-style value. Use environment variables in production.")
+    email_user = getattr(settings, "EMAIL_HOST_USER", "")
+    if "yourgmail" in email_user or not email_user:
+        warnings.append("Email SMTP credentials are placeholders.")
+    if getattr(settings, "TIME_ZONE", "") == "UTC":
+        warnings.append("TIME_ZONE is UTC. For India textile ERP usage, consider Asia/Kolkata if reports use local dates.")
+    if not getattr(settings, "STATIC_ROOT", None):
+        warnings.append("STATIC_ROOT is not configured. collectstatic deployment may be incomplete.")
+    if str(getattr(settings, "DATABASES", {}).get("default", {}).get("NAME", "")).endswith("db.sqlite3"):
+        warnings.append("Default db.sqlite3 is being used. Good for dev, weak for multi-company production.")
+
+    return warnings
+
+
+def _health_django_system_checks():
+    from django.core.checks import ERROR, WARNING, run_checks
+
+    rows = []
+    try:
+        messages = run_checks()
+    except Exception as exc:
+        return {"ok": False, "error": str(exc), "items": []}
+
+    for msg in messages:
+        if getattr(msg, "level", 0) < WARNING:
+            continue
+        rows.append({
+            "level": "ERROR" if getattr(msg, "level", 0) >= ERROR else "WARNING",
+            "id": getattr(msg, "id", ""),
+            "message": str(getattr(msg, "msg", msg)),
+            "hint": getattr(msg, "hint", "") or "",
+            "object": str(getattr(msg, "obj", "") or ""),
+        })
+
+    return {"ok": True, "error": "", "items": rows[:120]}
+
+
+def _health_python_compile_checks(base_dir):
+    import py_compile
+
+    rows = []
+    checked = 0
+    for path in _health_project_files(base_dir, {".py"}, include_migrations=True):
+        checked += 1
+        try:
+            py_compile.compile(str(path), doraise=True)
+        except py_compile.PyCompileError as exc:
+            rows.append({
+                "file": _health_rel(path, base_dir),
+                "error": str(exc),
+            })
+        except Exception as exc:
+            rows.append({
+                "file": _health_rel(path, base_dir),
+                "error": str(exc),
+            })
+
+    return {"checked": checked, "items": rows[:150]}
+
+
+def _health_python_import_checks():
+    import importlib
+
+    modules = [
+        "accounts.models",
+        "accounts.forms",
+        "accounts.forms_legacy",
+        "accounts.permissions",
+        "accounts.navigation",
+        "accounts.urls",
+        "accounts.views.core",
+        "accounts.views.masters",
+        "accounts.views.procurement",
+        "accounts.views.production",
+        "accounts.views.inventory",
+        "accounts.views.sales",
+    ]
+    rows = []
+    for module in modules:
+        try:
+            importlib.import_module(module)
+        except Exception as exc:
+            rows.append({
+                "module": module,
+                "error": f"{exc.__class__.__name__}: {exc}",
+            })
+    return rows
+
+
+def _health_model_str_checks():
+    """Call str() on one existing object per model to catch small bugs like __str__ using a missing field."""
+    from django.apps import apps
+    from django.db import DatabaseError, OperationalError, ProgrammingError
+
+    rows = []
+    checked = 0
+    for model in apps.get_models():
+        try:
+            manager = getattr(model, "objects", None)
+            if manager is None:
+                continue
+            obj = manager.all().only("pk").first()
+            if obj is None:
+                continue
+            checked += 1
+            str(obj)
+        except (OperationalError, ProgrammingError) as exc:
+            rows.append({
+                "model": f"{model._meta.app_label}.{model.__name__}",
+                "pk": "-",
+                "error": f"DB table/query problem: {exc}",
+            })
+        except DatabaseError as exc:
+            rows.append({
+                "model": f"{model._meta.app_label}.{model.__name__}",
+                "pk": "-",
+                "error": f"DatabaseError: {exc}",
+            })
+        except Exception as exc:
+            rows.append({
+                "model": f"{model._meta.app_label}.{model.__name__}",
+                "pk": getattr(locals().get("obj", None), "pk", "-"),
+                "error": f"{exc.__class__.__name__}: {exc}",
+            })
+
+    return {"checked": checked, "items": rows[:150]}
+
+
+def _health_duplicate_python_symbols(base_dir):
+    import ast
+    from collections import Counter, defaultdict
+
+    rows = []
+    parse_errors = []
+    for path in _health_project_files(base_dir, {".py"}, include_migrations=False):
+        text = _health_file_text(path)
+        if not text:
+            continue
+        try:
+            tree = ast.parse(text, filename=str(path))
+        except SyntaxError as exc:
+            parse_errors.append({"file": _health_rel(path, base_dir), "error": str(exc)})
+            continue
+        except Exception as exc:
+            parse_errors.append({"file": _health_rel(path, base_dir), "error": str(exc)})
+            continue
+
+        names = defaultdict(list)
+        for node in ast.iter_child_nodes(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                kind = "class" if isinstance(node, ast.ClassDef) else "function"
+                names[(kind, node.name)].append(getattr(node, "lineno", 0))
+        for (kind, name), lines in names.items():
+            if len(lines) > 1:
+                rows.append({
+                    "file": _health_rel(path, base_dir),
+                    "kind": kind,
+                    "name": name,
+                    "count": len(lines),
+                    "lines": ", ".join(str(line) for line in lines[:8]),
+                })
+
+    return {"duplicates": rows[:150], "parse_errors": parse_errors[:80]}
+
+
+def _health_project_file_warnings(base_dir):
+    warnings = []
+    base_dir = Path(base_dir)
+    checks = [
+        (base_dir / "venv", "venv folder is inside the project ZIP/folder. Do not ship it to clients or production."),
+        (base_dir / ".git", ".git folder is inside the project folder. Do not include it in client ZIP/deploy builds."),
+        (base_dir / "db.sqlite3", "db.sqlite3 exists in project root. Back it up before migrations and avoid shipping real customer data."),
+    ]
+    for path, message in checks:
+        try:
+            if path.exists():
+                warnings.append(message)
+        except Exception:
+            pass
+    return warnings
+
+
+def _health_build_critical_issues(**groups):
+    issues = []
+
+    def add(title, detail, severity="bad", source=""):
+        issues.append({
+            "title": title,
+            "detail": detail,
+            "severity": severity,
+            "source": source,
+        })
+
+    for row in groups.get("migration_conflicts", []):
+        add("Migration conflict", f"{row.get('app')}: {row.get('names')}", "bad", "migrations")
+    if groups.get("pending") and not groups["pending"].get("ok"):
+        add("Migration check failed", groups["pending"].get("error", ""), "bad", "migrations")
+    for row in groups.get("missing_tables", [])[:10]:
+        add("Missing database table", f"{row.get('model')} expects {row.get('table')}", "bad", "database")
+    for row in groups.get("python_errors", [])[:10]:
+        add("Python compile error", f"{row.get('file')}: {row.get('error')}", "bad", "python")
+    for row in groups.get("import_errors", [])[:10]:
+        add("Import error", f"{row.get('module')}: {row.get('error')}", "bad", "imports")
+    for row in groups.get("template_errors", [])[:10]:
+        add("Template compile error", f"{row.get('template')}: {row.get('error')}", "bad", "templates")
+    for row in groups.get("broken_links", [])[:10]:
+        add("Broken URL reference", f"{row.get('name')} in {row.get('file')} line {row.get('line')}", "bad", "urls")
+    for row in groups.get("model_str_errors", [])[:10]:
+        add("Model __str__ error", f"{row.get('model')} pk={row.get('pk')}: {row.get('error')}", "bad", "models")
+    for row in groups.get("system_check_errors", [])[:10]:
+        add("Django system check", f"{row.get('id')} {row.get('message')}", "warn" if row.get("level") == "WARNING" else "bad", "checks")
+    for warning in groups.get("file_warnings", [])[:6]:
+        add("Project file warning", warning, "warn", "files")
+
+    return issues[:40]
+
+
+@login_required
+def system_health_view(request):
+    """
+    Deep ERP internal System Health page.
+
+    Shows runtime logs plus live diagnostic checks for Python files, templates,
+    URL references, static files, database tables, migrations, model __str__,
+    Django system checks, duplicate code symbols, and deployment warnings.
+    No model/migration is needed because every check is calculated live.
+    """
+    from django.conf import settings
+
+    base_dir = Path(settings.BASE_DIR)
+
+    pending = _health_pending_migrations()
+    database = _health_database_status()
+    errors, failed_pages, log_files = _health_collect_errors(base_dir)
+    broken_links, duplicate_url_names = _health_find_broken_url_references(base_dir)
+    missing_templates = _health_find_missing_templates(base_dir)
+    template_compile = _health_compile_all_templates(base_dir)
+    missing_static = _health_find_missing_static(base_dir)
+    settings_warnings = _health_settings_warnings()
+    system_checks = _health_django_system_checks()
+    python_compile = _health_python_compile_checks(base_dir)
+    import_errors = _health_python_import_checks()
+    model_str_checks = _health_model_str_checks()
+    duplicate_symbols = _health_duplicate_python_symbols(base_dir)
+    file_warnings = _health_project_file_warnings(base_dir)
+
+    migration_conflicts = pending.get("conflicts", []) if pending.get("ok") else []
+    missing_tables = database.get("missing_model_tables", [])
+    system_check_items = system_checks.get("items", [])
+
+    critical_issues = _health_build_critical_issues(
+        pending=pending,
+        migration_conflicts=migration_conflicts,
+        missing_tables=missing_tables,
+        python_errors=python_compile.get("items", []),
+        import_errors=import_errors,
+        template_errors=template_compile.get("items", []),
+        broken_links=broken_links,
+        model_str_errors=model_str_checks.get("items", []),
+        system_check_errors=system_check_items,
+        file_warnings=file_warnings,
+    )
+
+    total_issues = (
+        len(errors)
+        + len(failed_pages)
+        + len(broken_links)
+        + len(duplicate_url_names)
+        + len(missing_templates)
+        + len(template_compile.get("items", []))
+        + len(missing_static)
+        + len(pending.get("items", []))
+        + len(migration_conflicts)
+        + len(missing_tables)
+        + len(settings_warnings)
+        + len(database.get("warnings", []))
+        + len(system_check_items)
+        + len(python_compile.get("items", []))
+        + len(import_errors)
+        + len(model_str_checks.get("items", []))
+        + len(duplicate_symbols.get("duplicates", []))
+        + len(duplicate_symbols.get("parse_errors", []))
+        + len(file_warnings)
+    )
+
+    cards = [
+        {
+            "label": "Total issues",
+            "value": total_issues,
+            "state": "bad" if critical_issues else ("warn" if total_issues else "good"),
+            "note": "all deep checks combined",
+        },
+        {
+            "label": "Critical issues",
+            "value": len(critical_issues),
+            "state": "bad" if critical_issues else "good",
+            "note": "fix these first",
+        },
+        {
+            "label": "Recent log errors",
+            "value": len(errors),
+            "state": "bad" if errors else "good",
+            "note": "runtime tracebacks/warnings",
+        },
+        {
+            "label": "Failed pages",
+            "value": len(failed_pages),
+            "state": "bad" if failed_pages else "good",
+            "note": "500/404/403/400 in logs",
+        },
+        {
+            "label": "Python compile",
+            "value": len(python_compile.get("items", [])),
+            "state": "bad" if python_compile.get("items") else "good",
+            "note": f"{python_compile.get('checked', 0)} files checked",
+        },
+        {
+            "label": "Template compile",
+            "value": len(template_compile.get("items", [])),
+            "state": "bad" if template_compile.get("items") else "good",
+            "note": f"{template_compile.get('checked', 0)} templates checked",
+        },
+        {
+            "label": "Broken URL names",
+            "value": len(broken_links),
+            "state": "bad" if broken_links else "good",
+            "note": "template/reverse/redirect refs",
+        },
+        {
+            "label": "Missing static",
+            "value": len(missing_static),
+            "state": "warn" if missing_static else "good",
+            "note": "CSS/JS/image references",
+        },
+        {
+            "label": "Pending migrations",
+            "value": len(pending.get("items", [])) if pending.get("ok") else "!",
+            "state": "bad" if (not pending.get("ok") or pending.get("items") or migration_conflicts) else "good",
+            "note": "database schema status",
+        },
+        {
+            "label": "DB missing tables",
+            "value": len(missing_tables),
+            "state": "bad" if missing_tables else "good",
+            "note": "model table existence",
+        },
+        {
+            "label": "Model __str__ bugs",
+            "value": len(model_str_checks.get("items", [])),
+            "state": "bad" if model_str_checks.get("items") else "good",
+            "note": f"{model_str_checks.get('checked', 0)} models sampled",
+        },
+        {
+            "label": "Settings warnings",
+            "value": len(settings_warnings),
+            "state": "warn" if settings_warnings else "good",
+            "note": "deployment readiness",
+        },
+    ]
+
+    context = {
+        "cards": cards,
+        "critical_issues": critical_issues,
+        "recent_errors": errors,
+        "failed_pages": failed_pages,
+        "broken_links": broken_links,
+        "duplicate_url_names": duplicate_url_names,
+        "missing_templates": missing_templates,
+        "template_compile": template_compile,
+        "missing_static": missing_static,
+        "pending": pending,
+        "migration_conflicts": migration_conflicts,
+        "database": database,
+        "settings_warnings": settings_warnings,
+        "system_checks": system_checks,
+        "python_compile": python_compile,
+        "import_errors": import_errors,
+        "model_str_checks": model_str_checks,
+        "duplicate_symbols": duplicate_symbols,
+        "file_warnings": file_warnings,
+        "log_files": log_files,
+        "generated_at": timezone.localtime(),
+        "base_dir": str(base_dir),
+    }
+    return render(request, "accounts/system_health/index.html", context)
+
+
+
+@login_required
+def activity_log_view(request):
+    """Scoped audit trail page.
+
+    Company admins see their own company activity. Platform super admin sees only
+    platform/system-scope logs by default, not daily company ERP activity.
+    """
+    from .models import AuditLog
+
+    actor = get_actor(request)
+    profile = getattr(actor, "erp_profile", None) if actor and getattr(actor, "is_authenticated", False) else None
+    is_legacy_admin = bool(actor and getattr(actor, "is_authenticated", False) and not actor.is_superuser and not profile)
+
+    if not (actor and actor.is_authenticated and (actor.is_superuser or is_company_admin(request) or is_legacy_admin)):
+        return render(
+            request,
+            "accounts/permissions/forbidden.html",
+            {"required_permission": "Admin only: activity log", "erp_actor": actor},
+            status=403,
+        )
+
+    base_qs = AuditLog.objects.select_related("company", "actor", "owner").all()
+    scope_label = "Company Activity"
+
+    if actor.is_superuser:
+        # Platform owner privacy rule: do not show company activity by default.
+        base_qs = base_qs.filter(company__isnull=True)
+        scope_label = "Platform Activity"
+    else:
+        company = get_company(request)
+        if company:
+            base_qs = base_qs.filter(company=company)
+            scope_label = f"{company.name} Activity"
+        else:
+            owner = getattr(request, "erp_owner", None) or actor
+            base_qs = base_qs.filter(Q(owner=owner) | Q(actor=actor))
+            scope_label = "Own Activity"
+
+    qs = base_qs
+
+    q = (request.GET.get("q") or "").strip()
+    action = (request.GET.get("action") or "").strip()
+    severity = (request.GET.get("severity") or "").strip()
+    module = (request.GET.get("module") or "").strip()
+    user = (request.GET.get("user") or "").strip()
+    date_from = (request.GET.get("date_from") or "").strip()
+    date_to = (request.GET.get("date_to") or "").strip()
+
+    if q:
+        qs = qs.filter(
+            Q(message__icontains=q)
+            | Q(actor_username__icontains=q)
+            | Q(actor_display__icontains=q)
+            | Q(actor_ip__icontains=q)
+            | Q(module__icontains=q)
+            | Q(object_model__icontains=q)
+            | Q(object_repr__icontains=q)
+            | Q(object_pk__icontains=q)
+            | Q(path__icontains=q)
+        )
+    if action:
+        qs = qs.filter(action=action)
+    if severity:
+        qs = qs.filter(severity=severity)
+    if module:
+        qs = qs.filter(module=module)
+    if user:
+        qs = qs.filter(actor_username=user)
+    if date_from:
+        try:
+            qs = qs.filter(created_at__date__gte=date_from)
+        except Exception:
+            pass
+    if date_to:
+        try:
+            qs = qs.filter(created_at__date__lte=date_to)
+        except Exception:
+            pass
+
+    total_count = qs.count()
+    critical_count = qs.filter(severity__in=[AuditLog.SEVERITY_ERROR, AuditLog.SEVERITY_SECURITY]).count()
+    warning_count = qs.filter(severity=AuditLog.SEVERITY_WARNING).count()
+    change_count = qs.filter(action__in=[AuditLog.ACTION_CREATE, AuditLog.ACTION_UPDATE, AuditLog.ACTION_DELETE]).count()
+    login_count = qs.filter(action__in=[AuditLog.ACTION_LOGIN, AuditLog.ACTION_LOGIN_FAILED, AuditLog.ACTION_LOGOUT]).count()
+
+    action_breakdown = list(qs.values("action").annotate(total=Count("id")).order_by("-total")[:10])
+    severity_breakdown = list(qs.values("severity").annotate(total=Count("id")).order_by("severity"))
+    module_breakdown = list(qs.exclude(module="").values("module").annotate(total=Count("id")).order_by("-total")[:10])
+    top_users = list(qs.exclude(actor_username="").values("actor_username").annotate(total=Count("id")).order_by("-total")[:10])
+
+    action_choices = AuditLog.ACTION_CHOICES
+    severity_choices = AuditLog.SEVERITY_CHOICES
+    # Filter dropdowns must use the scoped queryset, never all companies.
+    module_choices = list(
+        base_qs.exclude(module="")
+        .values_list("module", flat=True)
+        .distinct()
+        .order_by("module")[:120]
+    )
+    user_choices = list(
+        base_qs.exclude(actor_username="")
+        .values_list("actor_username", flat=True)
+        .distinct()
+        .order_by("actor_username")[:120]
+    )
+
+    paginator = Paginator(qs, 50)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    cards = [
+        {"label": "Total Events", "value": total_count, "state": "good", "note": "matching current filters"},
+        {"label": "Critical", "value": critical_count, "state": "bad" if critical_count else "good", "note": "errors/security events"},
+        {"label": "Warnings", "value": warning_count, "state": "warn" if warning_count else "good", "note": "HTTP 4xx/login failed"},
+        {"label": "Data Changes", "value": change_count, "state": "good", "note": "create/update/delete"},
+        {"label": "Login Events", "value": login_count, "state": "good", "note": "login/logout/failed"},
+    ]
+
+    context = {
+        "page_obj": page_obj,
+        "logs": page_obj.object_list,
+        "cards": cards,
+        "action_breakdown": action_breakdown,
+        "severity_breakdown": severity_breakdown,
+        "module_breakdown": module_breakdown,
+        "top_users": top_users,
+        "action_choices": action_choices,
+        "severity_choices": severity_choices,
+        "module_choices": module_choices,
+        "user_choices": user_choices,
+        "filters": {
+            "q": q,
+            "action": action,
+            "severity": severity,
+            "module": module,
+            "user": user,
+            "date_from": date_from,
+            "date_to": date_to,
+        },
+        "generated_at": timezone.localtime(),
+        "is_platform_admin": bool(actor and actor.is_superuser),
+        "scope_label": scope_label,
+    }
+    return render(request, "accounts/system_activity/index.html", context)

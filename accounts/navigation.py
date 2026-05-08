@@ -7,11 +7,12 @@ RAW_SIDEBAR_GROUPS = [
     {
         "label": "Main",
         "items": [
-            {"label": "Dashboard", "url_name": "accounts:dashboard", "icon": "home"},
+            {"label": "Dashboard", "url_name": "accounts:dashboard", "icon": "home", "permission": "dashboard.view"},
             {
                 "label": "Utilities",
                 "url_name": "accounts:utilities",
                 "icon": "settings",
+                "permission": "master.view",
                 "match_prefixes": ["/utilities/", "/master/"],
             },
         ],
@@ -23,18 +24,21 @@ RAW_SIDEBAR_GROUPS = [
             "label": "Procurement",
             "url_name": "accounts:po_home",
             "icon": "po",
+            "any_permissions": ["yarn_po.view", "greige_po.view", "dyeing_po.view", "ready_po.view"],
             "match_prefixes": ["/po/"],
         },
         {
             "label": "Production",
             "url_name": "accounts:program_list",
             "icon": "production",
+            "permission": "program.view",
             "match_prefixes": ["/production/"],
         },
         {
             "label": "Reports",
             "url_name": "accounts:reports_home",
             "icon": "document",
+            "permission": "reports.view",
             "match_prefixes": ["/reports/"],
             "match_url_names": [
                 "reports_home",
@@ -48,18 +52,21 @@ RAW_SIDEBAR_GROUPS = [
             "label": "Inventory",
             "url_name": "accounts:stock_lot_wise",
             "icon": "inventory",
+            "permission": "inventory.view",
             "match_prefixes": ["/inventory/stock-lot-wise/"],
         },
         {
             "label": "Dispatch",
             "url_name": "accounts:dispatch_list",
             "icon": "dispatch",
+            "permission": "dispatch.view",
             "match_prefixes": ["/dispatch/"],
         },
         {
             "label": "Invoices",
             "url_name": "accounts:invoice_list",
             "icon": "invoice",
+            "permission": "invoice.view",
             "match_prefixes": ["/sales/invoices/"],
         },
     ],
@@ -71,24 +78,28 @@ RAW_SIDEBAR_GROUPS = [
                 "label": "QC Register",
                 "url_name": "accounts:quality_check_list",
                 "icon": "quality",
+                "permission": "qc.view",
                 "match_prefixes": ["/qc/"],
             },
             {
                 "label": "Lot Register",
                 "url_name": "accounts:inventory_lot_list",
                 "icon": "lot",
+                "permission": "inventory.view",
                 "match_prefixes": ["/inventory/lots/"],
             },
             {
                 "label": "Add QR Label",
                 "url_name": "accounts:qr_code_add",
                 "icon": "qr",
+                "permission": "qr.manage",
                 "match_prefixes": ["/qr/"],
             },
             {
                 "label": "Costing",
                 "url_name": "accounts:costing_snapshot_list",
                 "icon": "costing",
+                "permission": "costing.view",
                 "match_prefixes": ["/costing/"],
             },
         ],
@@ -97,9 +108,42 @@ RAW_SIDEBAR_GROUPS = [
         "label": "Admin",
         "items": [
             {
+                "label": "Users & Roles",
+                "url_name": "accounts:role_list",
+                "icon": "settings",
+                "permission": "settings.manage",
+                "company_admin_only": True,
+                "match_prefixes": ["/settings/roles/"],
+            },
+            {
+                "label": "Platform Companies",
+                "url_name": "accounts:platform_company_list",
+                "icon": "settings",
+                "permission": "platform.manage",
+                "platform_only": True,
+                "match_prefixes": ["/platform/companies/"],
+            },
+            {
+                "label": "System Health",
+                "url_name": "accounts:system_health",
+                "icon": "maintenance",
+                "permission": "system_health.view",
+                "platform_only": True,
+                "match_prefixes": ["/system/health/"],
+            },
+            {
+                "label": "Activity Log",
+                "url_name": "accounts:activity_log",
+                "icon": "settings",
+                "permission": "activity_log.view",
+                "admin_only": True,
+                "match_prefixes": ["/system/activity/"],
+            },
+            {
                 "label": "Maintenance",
                 "url_name": "accounts:maintenance_list",
                 "icon": "maintenance",
+                "permission": "maintenance.view",
                 "match_prefixes": ["/maintenance/"],
             },
         ],
@@ -210,6 +254,13 @@ def _resolve_groups(raw_groups, request):
     for raw_group in _clone_groups(raw_groups):
         items = []
         for raw_item in raw_group.get("items", []):
+            try:
+                from .permissions import can_see_sidebar_item
+                if not can_see_sidebar_item(request, raw_item):
+                    continue
+            except Exception:
+                pass
+
             resolved_url = _resolve_url(raw_item.get("url_name"))
             item = {
                 **raw_item,
@@ -231,6 +282,9 @@ def _resolve_groups(raw_groups, request):
                 )
             ).lower()
             items.append(item)
+
+        if not items:
+            continue
 
         group = {
             **raw_group,

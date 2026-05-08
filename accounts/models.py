@@ -62,6 +62,222 @@ class UserExtra(models.Model):
         return self.user.username
 
 
+
+
+# ============================================================
+# PRODUCT / TENANT / ROLE PERMISSIONS
+# ============================================================
+
+
+class ERPCompany(models.Model):
+    STATUS_ACTIVE = "active"
+    STATUS_INACTIVE = "inactive"
+    STATUS_TRIAL = "trial"
+    STATUS_SUSPENDED = "suspended"
+
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, "Active"),
+        (STATUS_INACTIVE, "Inactive"),
+        (STATUS_TRIAL, "Trial"),
+        (STATUS_SUSPENDED, "Suspended"),
+    ]
+
+    name = models.CharField(max_length=180)
+    slug = models.SlugField(max_length=180, unique=True)
+    admin_user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="erp_company_admin",
+    )
+    contact_person = models.CharField(max_length=120, blank=True, default="")
+    phone = models.CharField(max_length=20, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
+    subscription_start = models.DateField(null=True, blank=True)
+    subscription_end = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "ERP Company"
+        verbose_name_plural = "ERP Companies"
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def is_active_company(self):
+        return self.status in {self.STATUS_ACTIVE, self.STATUS_TRIAL}
+
+
+class ERPRole(models.Model):
+    company = models.ForeignKey(ERPCompany, on_delete=models.CASCADE, related_name="roles")
+    name = models.CharField(max_length=120)
+    description = models.TextField(blank=True, default="")
+    permissions = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("company", "name")]
+
+    def __str__(self):
+        return f"{self.company.name} - {self.name}"
+
+    def has_permission(self, code):
+        return code in (self.permissions or [])
+
+
+class ERPUserProfile(models.Model):
+    USER_TYPE_COMPANY_ADMIN = "company_admin"
+    USER_TYPE_STAFF = "staff"
+
+    USER_TYPE_CHOICES = [
+        (USER_TYPE_COMPANY_ADMIN, "Company Admin"),
+        (USER_TYPE_STAFF, "Staff User"),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="erp_profile",
+    )
+    company = models.ForeignKey(ERPCompany, on_delete=models.CASCADE, related_name="user_profiles")
+    role = models.ForeignKey(ERPRole, on_delete=models.SET_NULL, null=True, blank=True, related_name="user_profiles")
+    user_type = models.CharField(max_length=30, choices=USER_TYPE_CHOICES, default=USER_TYPE_STAFF)
+    allowed_firms = models.ManyToManyField("Firm", blank=True, related_name="allowed_user_profiles")
+    phone = models.CharField(max_length=20, blank=True, default="")
+    designation = models.CharField(max_length=80, blank=True, default="")
+    department = models.CharField(max_length=80, blank=True, default="")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["company__name", "user__username"]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.company.name}"
+
+    @property
+    def is_company_admin(self):
+        return self.user_type == self.USER_TYPE_COMPANY_ADMIN
+
+    @property
+    def effective_owner(self):
+        return self.company.admin_user
+
+
+class AuditLog(models.Model):
+    ACTION_CREATE = "create"
+    ACTION_UPDATE = "update"
+    ACTION_DELETE = "delete"
+    ACTION_LOGIN = "login"
+    ACTION_LOGOUT = "logout"
+    ACTION_LOGIN_FAILED = "login_failed"
+    ACTION_HTTP_ERROR = "http_error"
+    ACTION_EXCEPTION = "exception"
+    ACTION_EXPORT = "export"
+    ACTION_APPROVE = "approve"
+    ACTION_REJECT = "reject"
+    ACTION_OTHER = "other"
+
+    ACTION_CHOICES = [
+        (ACTION_CREATE, "Created"),
+        (ACTION_UPDATE, "Updated"),
+        (ACTION_DELETE, "Deleted"),
+        (ACTION_LOGIN, "Login"),
+        (ACTION_LOGOUT, "Logout"),
+        (ACTION_LOGIN_FAILED, "Login Failed"),
+        (ACTION_HTTP_ERROR, "HTTP Error"),
+        (ACTION_EXCEPTION, "Exception"),
+        (ACTION_EXPORT, "Export"),
+        (ACTION_APPROVE, "Approved"),
+        (ACTION_REJECT, "Rejected"),
+        (ACTION_OTHER, "Other"),
+    ]
+
+    SEVERITY_INFO = "info"
+    SEVERITY_WARNING = "warning"
+    SEVERITY_ERROR = "error"
+    SEVERITY_SECURITY = "security"
+
+    SEVERITY_CHOICES = [
+        (SEVERITY_INFO, "Info"),
+        (SEVERITY_WARNING, "Warning"),
+        (SEVERITY_ERROR, "Error"),
+        (SEVERITY_SECURITY, "Security"),
+    ]
+
+    company = models.ForeignKey(
+        ERPCompany,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="owned_audit_logs",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="actor_audit_logs",
+    )
+    actor_username = models.CharField(max_length=150, blank=True, default="")
+    actor_display = models.CharField(max_length=180, blank=True, default="")
+    actor_ip = models.CharField(max_length=80, blank=True, default="")
+    actor_user_agent = models.TextField(blank=True, default="")
+    session_key = models.CharField(max_length=80, blank=True, default="")
+
+    action = models.CharField(max_length=40, choices=ACTION_CHOICES, default=ACTION_OTHER)
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default=SEVERITY_INFO)
+    module = models.CharField(max_length=80, blank=True, default="")
+
+    object_model = models.CharField(max_length=150, blank=True, default="")
+    object_pk = models.CharField(max_length=80, blank=True, default="")
+    object_repr = models.CharField(max_length=260, blank=True, default="")
+
+    message = models.CharField(max_length=500, blank=True, default="")
+    path = models.CharField(max_length=300, blank=True, default="")
+    method = models.CharField(max_length=12, blank=True, default="")
+    status_code = models.PositiveIntegerField(null=True, blank=True)
+
+    old_values = models.JSONField(default=dict, blank=True)
+    new_values = models.JSONField(default=dict, blank=True)
+    changed_fields = models.JSONField(default=list, blank=True)
+    extra = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [
+            models.Index(fields=["company", "-created_at"]),
+            models.Index(fields=["owner", "-created_at"]),
+            models.Index(fields=["actor", "-created_at"]),
+            models.Index(fields=["action", "-created_at"]),
+            models.Index(fields=["severity", "-created_at"]),
+            models.Index(fields=["object_model", "object_pk"]),
+        ]
+        verbose_name = "Audit Log"
+        verbose_name_plural = "Audit Logs"
+
+    def __str__(self):
+        who = self.actor_username or self.actor_display or "System"
+        return f"{self.get_action_display()} by {who} at {self.created_at:%Y-%m-%d %H:%M}"
+
+
 class OwnedModel(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -483,7 +699,7 @@ class Firm(models.Model):
         ("other", "Other"),
     ]
 
-    owner = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="firm")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="firms")
     firm_name = models.CharField(max_length=180)
     firm_type = models.CharField(max_length=20, choices=FIRM_TYPE_CHOICES, default="company")
     address_line = models.CharField(max_length=255, blank=True)
@@ -1403,7 +1619,17 @@ class ReadyPurchaseOrderItem(models.Model):
     dyeing_name = models.CharField(max_length=150, blank=True, default="")
     unit = models.CharField(max_length=20, blank=True, default="")
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    dia = models.CharField(max_length=30, blank=True, default="")
+    gauge = models.CharField(max_length=30, blank=True, default="")
+    rolls = models.CharField(max_length=30, blank=True, default="")
+    count = models.CharField(max_length=30, blank=True, default="")
+    gsm = models.CharField(max_length=30, blank=True, default="")
+    sl = models.CharField(max_length=30, blank=True, default="")
+    hsn_code = models.CharField(max_length=30, blank=True, default="")
     remark = models.CharField(max_length=255, blank=True, default="")
+    rate = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     @property
     def inward_qty_total(self):

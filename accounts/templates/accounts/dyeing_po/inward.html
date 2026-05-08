@@ -760,6 +760,53 @@
     justify-content:flex-end;
   }
 
+  .di-history-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-top:6px;
+  }
+
+  .di-history-actions form{
+    margin:0;
+    display:inline-flex;
+  }
+
+  .di-history-action{
+    min-height:26px;
+    padding:0 9px;
+    border-radius:8px;
+    border:1px solid var(--di-line);
+    background:#fff;
+    color:var(--di-text);
+    font-family:var(--font-ui);
+    font-size:10px;
+    font-weight:800;
+    text-decoration:none;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .di-history-action:hover{
+    border-color:var(--di-blue-line);
+    background:var(--di-blue-soft);
+    color:var(--di-blue-dark);
+  }
+
+  .di-history-action.danger{
+    color:var(--di-danger);
+  }
+
+  .di-history-action.is-disabled{
+    color:var(--di-muted);
+    cursor:not-allowed;
+    background:#f8fafc;
+  }
+
   .di-meta-chip{
     display:inline-flex;
     align-items:center;
@@ -1335,6 +1382,18 @@
                             {% else %}
                               <span class="di-chip warn">Pending</span>
                             {% endif %}
+
+                            <div class="di-history-actions">
+                              <a class="di-history-action" href="{% url 'accounts:dyeing_inward_edit' inward.id %}">Edit</a>
+                              {% if existing_ready_po %}
+                                <span class="di-history-action is-disabled" title="Ready PO already exists">Delete Locked</span>
+                              {% else %}
+                                <form method="post" action="{% url 'accounts:dyeing_inward_delete' inward.id %}" onsubmit="return confirm('Delete this Dyeing inward? This will remove its inward lines and linked stock lots if they are not used.');">
+                                  {% csrf_token %}
+                                  <button type="submit" class="di-history-action danger">Delete</button>
+                                </form>
+                              {% endif %}
+                            </div>
                           </div>
                         </div>
 

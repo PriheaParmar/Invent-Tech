@@ -283,6 +283,14 @@
 
                     <div class="dit-inward-actions">
                       {% if inward_block.edit_url %}<a href="{{ inward_block.edit_url }}" class="dit-link">Edit</a>{% endif %}
+                      {% if inward_block.delete_url and not inward_block.next_started %}
+                        <form class="dit-generate-form" method="post" action="{{ inward_block.delete_url }}" onsubmit="return confirm('Delete this Dyeing inward? This will remove its inward lines and linked stock lots if they are not used.');">
+                          {% csrf_token %}
+                          <button type="submit" class="dit-generate-btn" style="border-color:rgba(239,68,68,.22);background:var(--dit-red-soft);color:#b91c1c;">Delete</button>
+                        </form>
+                      {% elif inward_block.delete_url %}
+                        <span class="dit-inline-status pending" title="Ready PO already generated">Delete Locked</span>
+                      {% endif %}
                       {% if inward_block.next_started and inward_block.next_view_url %}
                         <a class="dit-generated-link" href="{{ inward_block.next_view_url }}">{{ inward_block.next_view_label }}</a>
                       {% elif inward_block.next_generate_url %}

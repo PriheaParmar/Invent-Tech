@@ -409,6 +409,7 @@
 
     <form method="post" action="{{ action_url }}{% if not full_page %}?embed=1{% endif %}" class="mf-form">
       {% csrf_token %}
+      {{ form.is_active.as_hidden }}
       {% if not full_page %}
       <input type="hidden" name="embed" value="1">
       {% endif %}
@@ -485,6 +486,7 @@
                     {% for hidden in detail_form.hidden_fields %}
                       {{ hidden }}
                     {% endfor %}
+                    {{ detail_form.is_active.as_hidden }}
 
                     <td>
                       {{ detail_form.finished_material }}
@@ -563,6 +565,7 @@
                 {% for hidden in formset.empty_form.hidden_fields %}
                   {{ hidden }}
                 {% endfor %}
+                {{ formset.empty_form.is_active.as_hidden }}
                 <td>{{ formset.empty_form.finished_material }}</td>
                 <td>{{ formset.empty_form.dyeing_type }}</td>
                 <td>{{ formset.empty_form.dyeing_name }}</td>

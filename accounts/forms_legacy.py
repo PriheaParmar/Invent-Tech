@@ -135,7 +135,7 @@ def _compact_spaces(value):
 def _material_unit_choices(user, current_value=""):
     qs = MaterialUnit.objects.none()
     if user is not None:
-        qs = MaterialUnit.objects.filter(owner=user).order_by("name")
+        qs = MaterialUnit.objects.filter(owner=user).only("id", "name", "owner_id").order_by("name")
 
     choices = [("", "Select unit")] + [(obj.name, obj.name) for obj in qs]
     values = {value for value, _label in choices}
@@ -1338,7 +1338,7 @@ class CategoryForm(forms.ModelForm):
 class BrandForm(forms.ModelForm):
     class Meta:
         model = Brand
-        fields = ["name", "description"]
+        fields = ["name", "description", "is_active"]
         widgets = {
             "name": forms.TextInput(attrs={
                 "placeholder": "Enter brand name",
@@ -1348,6 +1348,9 @@ class BrandForm(forms.ModelForm):
             "description": forms.Textarea(attrs={
                 "placeholder": "Optional short description",
                 "rows": 3,
+            }),
+            "is_active": forms.CheckboxInput(attrs={
+                "class": "mf-status-checkbox",
             }),
         }
 
@@ -1464,7 +1467,7 @@ class SubCategoryForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.user = user
 
-        main_category_qs = MainCategory.objects.filter(owner=user).order_by("name") if user else MainCategory.objects.none()
+        main_category_qs = MainCategory.objects.filter(owner=user).only("id", "name", "owner_id").order_by("name") if user else MainCategory.objects.none()
         self.fields["main_category"].queryset = main_category_qs
         self.fields["main_category"].empty_label = "Select Main Category"
 
@@ -1568,7 +1571,7 @@ class MaterialSubTypeForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.user = user
 
-        type_qs = MaterialType.objects.all()
+        type_qs = MaterialType.objects.only("id", "name", "material_kind", "owner_id")
         if user is not None:
             type_qs = type_qs.filter(owner=user)
         type_qs = type_qs.order_by("name")
@@ -1576,6 +1579,7 @@ class MaterialSubTypeForm(forms.ModelForm):
         self.fields["material_type"].queryset = type_qs
         self.fields["material_type"].empty_label = "Select Material Type"
         self.fields["material_type"].label_from_instance = lambda o: f"{o.get_material_kind_display()} — {o.name}"
+        _mark_large_selects_for_search(self)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -1680,12 +1684,13 @@ class AccessoryForm(forms.ModelForm):
         self.user = user
 
         if user is not None:
-            self.fields["default_unit"].queryset = MaterialUnit.objects.filter(owner=user).order_by("name")
+            self.fields["default_unit"].queryset = MaterialUnit.objects.filter(owner=user).only("id", "name", "owner_id").order_by("name")
         else:
             self.fields["default_unit"].queryset = MaterialUnit.objects.none()
 
         self.fields["default_unit"].required = False
         self.fields["default_unit"].empty_label = "Select default unit"
+        _mark_large_selects_for_search(self)
 
     def clean_name(self):
         name = (self.cleaned_data.get("name") or "").strip()
@@ -1806,6 +1811,13 @@ class InwardTypeForm(forms.ModelForm):
 # MATERIAL MASTER
 # ============================================================
 
+def _mark_large_selects_for_search(form):
+    for field in form.fields.values():
+        widget = getattr(field, "widget", None)
+        if isinstance(widget, forms.Select):
+            css = widget.attrs.get("class", "")
+            widget.attrs["class"] = (css + " js-utility-select").strip()
+
 class MaterialForm(forms.Form):
     MAX_IMAGE_SIZE = 5 * 1024 * 1024
     ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
@@ -1892,22 +1904,22 @@ class MaterialForm(forms.Form):
             self.initial["material_kind"] = kind
             self.fields["material_kind"].initial = kind
 
-        type_qs = MaterialType.objects.filter(owner=user) if user else MaterialType.objects.none()
+        type_qs = MaterialType.objects.filter(owner=user).only("id", "name", "material_kind", "owner_id") if user else MaterialType.objects.none()
         if kind:
             type_qs = type_qs.filter(material_kind=kind)
         type_qs = type_qs.order_by("name")
 
-        sub_type_qs = MaterialSubType.objects.filter(owner=user) if user else MaterialSubType.objects.none()
+        sub_type_qs = MaterialSubType.objects.filter(owner=user).only("id", "name", "material_kind", "material_type_id", "material_type__name", "owner_id") if user else MaterialSubType.objects.none()
         if kind:
             sub_type_qs = sub_type_qs.filter(material_kind=kind)
         sub_type_qs = sub_type_qs.select_related("material_type").order_by("material_type__name", "name")
 
-        shade_qs = MaterialShade.objects.filter(owner=user) if user else MaterialShade.objects.none()
+        shade_qs = MaterialShade.objects.filter(owner=user).only("id", "name", "material_kind", "owner_id") if user else MaterialShade.objects.none()
         if kind:
             shade_qs = shade_qs.filter(Q(material_kind=kind) | Q(material_kind__isnull=True) | Q(material_kind=""))
         shade_qs = shade_qs.order_by("name")
 
-        unit_qs = MaterialUnit.objects.filter(owner=user).order_by("name") if user else MaterialUnit.objects.none()
+        unit_qs = MaterialUnit.objects.filter(owner=user).only("id", "name", "owner_id").order_by("name") if user else MaterialUnit.objects.none()
 
         self.fields["material_type"].queryset = type_qs
         self.fields["material_sub_type"].queryset = sub_type_qs
@@ -1922,6 +1934,7 @@ class MaterialForm(forms.Form):
         self.fields["material_type"].widget.attrs.update({"data-role": "material-type"})
         self.fields["material_sub_type"].widget.attrs.update({"data-role": "material-sub-type"})
         self.fields["material_shade"].widget.attrs.update({"data-role": "material-shade"})
+        _mark_large_selects_for_search(self)
 
         self.fields["material_code"].widget.attrs.update({
             "placeholder": "Auto if left blank",
@@ -2785,6 +2798,7 @@ class YarnPurchaseOrderItemForm(forms.ModelForm):
         unit_choices = _material_unit_choices(user, current_unit)
 
         self.fields["unit"].required = False
+        _mark_large_selects_for_search(self)
         self.fields["unit"].choices = unit_choices
         self.fields["unit"].widget = forms.Select(choices=unit_choices)
         self.fields["final_amount"].widget.attrs.update({"readonly": "readonly"})
@@ -3646,10 +3660,12 @@ class ReadyPOReviewForm(forms.Form):
 class DyeingPOInwardForm(forms.ModelForm):
     class Meta:
         model = DyeingPOInward
-        fields = ["vendor", "inward_date", "notes"]
+        fields = ["vendor", "inward_type", "inward_date", "notes"]
         widgets = {
-            "inward_date": forms.DateInput(attrs={"type": "date"}),
-            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes"}),
+            "vendor": forms.Select(attrs={"class": "form-select"}),
+            "inward_type": forms.Select(attrs={"class": "form-select"}),
+            "inward_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional inward notes", "class": "form-control"}),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -3662,11 +3678,27 @@ class DyeingPOInwardForm(forms.ModelForm):
         )
         self.fields["vendor"].empty_label = "Select vendor"
 
+        self.fields["inward_type"].required = True
+        self.fields["inward_type"].queryset = (
+            InwardType.objects.filter(owner=user).order_by("name")
+            if user else InwardType.objects.none()
+        )
+        self.fields["inward_type"].empty_label = "Select inward type"
+
 class DyeingPurchaseOrderItemForm(forms.ModelForm):
+    linked_greige_material = forms.ModelChoiceField(
+        queryset=Material.objects.none(),
+        required=False,
+        empty_label="Select Greige Material",
+        widget=forms.Select(attrs={"class": "form-select"}),
+        label="Greige Material",
+    )
+
     class Meta:
         model = DyeingPurchaseOrderItem
         fields = [
             "source_greige_po_item",
+            "linked_greige_material",
             "greige_name",
             "dyeing_master_detail",
             "finished_material",
@@ -3710,6 +3742,8 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
         for field_name in self.fields:
             self.fields[field_name].required = False
 
+        self.fields["linked_greige_material"].empty_label = "Select Greige Material"
+
         # -----------------------------
         # Source greige item queryset
         # -----------------------------
@@ -3733,6 +3767,7 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
 
         vendor_id = None
         greige_material_id = None
+        greige_material_name = ""
 
         # -----------------------------
         # Detect vendor
@@ -3741,11 +3776,44 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
             vendor_id = self.instance.po.vendor_id
         elif self.po_instance and self.po_instance.vendor_id:
             vendor_id = self.po_instance.vendor_id
+        elif source_greige_po is not None and getattr(source_greige_po, "vendor_id", None):
+            vendor_id = source_greige_po.vendor_id
 
         if self.is_bound:
             bound_vendor = (self.data.get("vendor") or self.data.get("po-vendor") or "").strip()
             if bound_vendor.isdigit():
                 vendor_id = int(bound_vendor)
+
+        # -----------------------------
+        # Vendor-linked greige material queryset
+        # -----------------------------
+        linked_greige_qs = Material.objects.none()
+        linked_greige_ids = []
+
+        if user and vendor_id:
+            linked_greige_ids = list(
+                DyeingMaterialLink.objects
+                .filter(
+                    owner=user,
+                    vendor_id=vendor_id,
+                    is_active=True,
+                    details__is_active=True,
+                )
+                .exclude(material_id__isnull=True)
+                .values_list("material_id", flat=True)
+                .distinct()
+            )
+
+            linked_greige_qs = (
+                Material.objects
+                .filter(
+                    Q(owner=user) | Q(owner__isnull=True),
+                    material_kind="greige",
+                    is_active=True,
+                    pk__in=linked_greige_ids,
+                )
+                .order_by("name")
+            )
 
         # -----------------------------
         # Detect current selected source item
@@ -3776,10 +3844,68 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
         # -----------------------------
         if self.selected_source_inward and self.selected_source_inward.items.exists():
             inward_item = self.selected_source_inward.items.select_related("po_item__material").first()
-            if inward_item and inward_item.po_item and inward_item.po_item.material_id:
-                greige_material_id = inward_item.po_item.material_id
+            if inward_item and inward_item.po_item:
+                if inward_item.po_item.material_id:
+                    greige_material_id = inward_item.po_item.material_id
+                greige_material_name = (
+                    getattr(inward_item.po_item.material, "name", "")
+                    if inward_item.po_item.material_id
+                    else ""
+                ) or (inward_item.po_item.fabric_name or "")
+        elif current_source_item:
+            if current_source_item.material_id:
+                greige_material_id = current_source_item.material_id
+            greige_material_name = (
+                getattr(current_source_item.material, "name", "")
+                if current_source_item.material_id
+                else ""
+            ) or (current_source_item.fabric_name or "")
+
+        # -----------------------------
+        # Detect current selected vendor-linked greige material
+        # -----------------------------
+        current_linked_greige_id = None
+
+        if self.is_bound:
+            bound_linked_greige = (self.data.get(self.add_prefix("linked_greige_material")) or "").strip()
+            if bound_linked_greige.isdigit():
+                current_linked_greige_id = int(bound_linked_greige)
+        elif self.initial.get("linked_greige_material"):
+            try:
+                current_linked_greige_id = int(self.initial.get("linked_greige_material"))
+            except (TypeError, ValueError):
+                current_linked_greige_id = None
+        elif self.instance.pk and self.instance.dyeing_master_detail_id and self.instance.dyeing_master_detail.link_id:
+            current_linked_greige_id = self.instance.dyeing_master_detail.link.material_id
         elif current_source_item and current_source_item.material_id:
-            greige_material_id = current_source_item.material_id
+            current_linked_greige_id = current_source_item.material_id
+
+        if current_linked_greige_id:
+            if current_linked_greige_id not in linked_greige_ids and user:
+                linked_greige_ids.append(current_linked_greige_id)
+                linked_greige_qs = (
+                    Material.objects
+                    .filter(
+                        Q(owner=user) | Q(owner__isnull=True),
+                        material_kind="greige",
+                        is_active=True,
+                        pk__in=linked_greige_ids,
+                    )
+                    .order_by("name")
+                )
+
+            selected_linked_material = linked_greige_qs.filter(pk=current_linked_greige_id).first()
+            if selected_linked_material:
+                greige_material_id = selected_linked_material.pk
+                greige_material_name = selected_linked_material.name or greige_material_name
+                self.fields["linked_greige_material"].initial = selected_linked_material.pk
+                self.initial["linked_greige_material"] = selected_linked_material.pk
+
+        self.fields["linked_greige_material"].queryset = linked_greige_qs.only(
+            "id", "name", "material_kind", "owner_id", "is_active"
+        )
+
+        greige_material_name = _compact_spaces(greige_material_name)
 
         # -----------------------------
         # Dyeing master queryset
@@ -3787,14 +3913,48 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
         master_qs = (
             DyeingMaterialLinkDetail.objects
             .select_related("link__vendor", "link__material", "finished_material__unit")
-            .filter(link__is_active=True)
+            .filter(link__is_active=True, is_active=True)
             .order_by("dyeing_name", "pk")
         )
+
+        if user:
+            master_qs = master_qs.filter(link__owner=user)
 
         if vendor_id:
             master_qs = master_qs.filter(link__vendor_id=vendor_id)
 
+        # Keep a vendor-scoped fallback. In real data, old greige materials can be
+        # re-created with a new ID while keeping the same visible name, so an ID-only
+        # filter can make Finished Material / Dyeing Master look empty.
+        base_master_qs = master_qs
+        material_filter = Q()
+        if greige_material_id:
+            material_filter |= Q(link__material_id=greige_material_id)
+        if greige_material_name:
+            material_filter |= Q(link__material__name__iexact=greige_material_name)
 
+        if material_filter:
+            material_master_qs = base_master_qs.filter(material_filter)
+
+            if not material_master_qs.exists() and greige_material_name and user:
+                same_name_material_ids = [
+                    obj.pk
+                    for obj in Material.objects.filter(
+                        Q(owner=user) | Q(owner__isnull=True),
+                        material_kind="greige",
+                    ).only("id", "name")
+                    if _compact_spaces(obj.name).lower() == greige_material_name.lower()
+                ]
+                if same_name_material_ids:
+                    material_master_qs = base_master_qs.filter(link__material_id__in=same_name_material_ids)
+
+            # If there is no exact source-material match, do not leave the UI empty.
+            # Show vendor-scoped masters so the user can select the correct mapping,
+            # and validation below will use the same fallback logic.
+            if material_master_qs.exists():
+                master_qs = material_master_qs
+            else:
+                master_qs = base_master_qs
 
         current_master_id = None
         if self.instance.pk and self.instance.dyeing_master_detail_id:
@@ -3836,7 +3996,7 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
 
         self.fields["dyeing_master_detail"].queryset = master_qs
         self.fields["dyeing_master_detail"].label_from_instance = (
-            lambda obj: f"{obj.dyeing_name} | {obj.get_dyeing_type_display()} | {obj.finished_material.name if obj.finished_material_id else '-'}"
+            lambda obj: f"{obj.dyeing_name} | {obj.get_dyeing_type_display()}"
         )
 
         # -----------------------------
@@ -3869,7 +4029,32 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
 
             finished_qs = Material.objects.filter(pk__in=finished_ids)
 
-        self.fields["finished_material"].queryset = finished_qs.order_by("name")
+        self.fields["finished_material"].queryset = finished_qs.only("id", "name", "material_kind", "owner_id", "is_active").order_by("name")
+
+        if not self.is_bound:
+            first_detail = master_qs.exclude(finished_material_id__isnull=True).first()
+            if first_detail:
+                if first_detail.link_id and first_detail.link.material_id and not self.initial.get("linked_greige_material"):
+                    self.fields["linked_greige_material"].initial = first_detail.link.material_id
+                    self.initial["linked_greige_material"] = first_detail.link.material_id
+                if not current_finished_material_id:
+                    self.fields["finished_material"].initial = first_detail.finished_material_id
+                if not current_master_id:
+                    self.fields["dyeing_master_detail"].initial = first_detail.pk
+                if not self.initial.get("fabric_name") and first_detail.finished_material_id:
+                    self.initial["fabric_name"] = first_detail.finished_material.name
+                if not self.initial.get("dyeing_type"):
+                    self.initial["dyeing_type"] = first_detail.dyeing_type or ""
+                if not self.initial.get("dyeing_name"):
+                    self.initial["dyeing_name"] = first_detail.dyeing_name or ""
+                if not self.initial.get("rate"):
+                    self.initial["rate"] = first_detail.price or Decimal("0")
+                if not self.initial.get("expected_loss_percent"):
+                    self.initial["expected_loss_percent"] = first_detail.weight_loss or Decimal("0")
+                if not self.initial.get("unit") and first_detail.finished_material_id and getattr(first_detail.finished_material, "unit", None):
+                    self.initial["unit"] = first_detail.finished_material.unit.name
+
+        _mark_large_selects_for_search(self)
 
         # -----------------------------
         # Readonly fields
@@ -3891,6 +4076,7 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
         cleaned_data = super().clean()
 
         source_item = cleaned_data.get("source_greige_po_item")
+        linked_greige_material = cleaned_data.get("linked_greige_material")
         master_detail = cleaned_data.get("dyeing_master_detail")
         finished_material = cleaned_data.get("finished_material")
 
@@ -3898,28 +4084,80 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
         rate = cleaned_data.get("rate") or Decimal("0")
         loss_percent = cleaned_data.get("expected_loss_percent") or Decimal("0")
 
-        greige_material_id = source_item.material_id if source_item and source_item.material_id else None
+        greige_material_id = None
+        greige_material_name = ""
+
+        if linked_greige_material:
+            greige_material_id = linked_greige_material.pk
+            greige_material_name = linked_greige_material.name or ""
+        elif source_item:
+            greige_material_id = source_item.material_id if source_item and source_item.material_id else None
+            greige_material_name = (
+                getattr(source_item.material, "name", "")
+                if source_item.material_id
+                else ""
+            ) or (source_item.fabric_name or "")
+
+        greige_material_name = _compact_spaces(greige_material_name)
         vendor_id = None
 
         if self.po_instance and self.po_instance.vendor_id:
             vendor_id = self.po_instance.vendor_id
         elif self.instance.pk and self.instance.po_id and self.instance.po.vendor_id:
             vendor_id = self.instance.po.vendor_id
+        elif self.source_greige_po is not None and getattr(self.source_greige_po, "vendor_id", None):
+            vendor_id = self.source_greige_po.vendor_id
 
         if self.is_bound:
             bound_vendor = (self.data.get("vendor") or self.data.get("po-vendor") or "").strip()
             if bound_vendor.isdigit():
                 vendor_id = int(bound_vendor)
 
+        if linked_greige_material:
+            if getattr(linked_greige_material, "material_kind", "") != "greige":
+                self.add_error("linked_greige_material", "Only greige material is allowed.")
+            if self.user is not None:
+                owner_id = getattr(linked_greige_material, "owner_id", None)
+                if owner_id not in (self.user.id, None):
+                    self.add_error("linked_greige_material", "Selected greige material is not available for this user.")
+
         if finished_material and finished_material.material_kind != "finished":
             self.add_error("finished_material", "Only finished material is allowed.")
 
-        allowed_master_qs = DyeingMaterialLinkDetail.objects.filter(link__is_active=True)
+        allowed_master_qs = DyeingMaterialLinkDetail.objects.filter(link__is_active=True, is_active=True)
+
+        if self.user:
+            allowed_master_qs = allowed_master_qs.filter(link__owner=self.user)
 
         if vendor_id:
             allowed_master_qs = allowed_master_qs.filter(link__vendor_id=vendor_id)
 
+        clean_material_filter = Q()
+        if greige_material_id:
+            clean_material_filter |= Q(link__material_id=greige_material_id)
+        if greige_material_name:
+            clean_material_filter |= Q(link__material__name__iexact=greige_material_name)
 
+        if clean_material_filter:
+            base_allowed_master_qs = allowed_master_qs
+            material_allowed_qs = base_allowed_master_qs.filter(clean_material_filter)
+
+            if not material_allowed_qs.exists() and greige_material_name and self.user:
+                same_name_material_ids = [
+                    obj.pk
+                    for obj in Material.objects.filter(
+                        Q(owner=self.user) | Q(owner__isnull=True),
+                        material_kind="greige",
+                    ).only("id", "name")
+                    if _compact_spaces(obj.name).lower() == greige_material_name.lower()
+                ]
+                if same_name_material_ids:
+                    material_allowed_qs = base_allowed_master_qs.filter(link__material_id__in=same_name_material_ids)
+
+            if material_allowed_qs.exists():
+                allowed_master_qs = material_allowed_qs
+            else:
+                allowed_master_qs = base_allowed_master_qs
 
         if finished_material:
             allowed_master_qs = allowed_master_qs.filter(finished_material_id=finished_material.pk)
@@ -3942,8 +4180,29 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
         if master_detail and master_detail.pk not in allowed_master_ids:
             self.add_error(
                 "dyeing_master_detail",
-               "Selected dyeing master is not linked with the selected vendor/finished material."
+               "Selected dyeing master is not linked with the selected vendor, greige material, and finished material."
             )
+
+        if master_detail and greige_material_id and master_detail.link_id and master_detail.link.material_id != greige_material_id:
+            selected_link_name = _compact_spaces(
+                master_detail.link.material.name
+                if master_detail.link_id and master_detail.link.material_id
+                else ""
+            ).lower()
+            selected_source_name = greige_material_name.lower()
+            exact_source_match_exists = DyeingMaterialLinkDetail.objects.filter(
+                link__is_active=True,
+                is_active=True,
+                link__owner=self.user,
+                link__vendor_id=vendor_id,
+                link__material_id=greige_material_id,
+            ).exists() if self.user and vendor_id else False
+
+            if exact_source_match_exists and selected_link_name != selected_source_name:
+                self.add_error(
+                    "dyeing_master_detail",
+                    "Selected dyeing master is not linked with the selected source greige material."
+                )
 
         if master_detail and finished_material and master_detail.finished_material_id:
             if master_detail.finished_material_id != finished_material.pk:
@@ -3955,6 +4214,12 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
                     "finished_material",
                     "Selected finished material does not match the chosen dyeing master."
                 )
+
+        if master_detail and not linked_greige_material and master_detail.link_id and master_detail.link.material_id:
+            cleaned_data["linked_greige_material"] = master_detail.link.material
+            linked_greige_material = cleaned_data["linked_greige_material"]
+            greige_material_id = linked_greige_material.pk
+            greige_material_name = _compact_spaces(linked_greige_material.name)
 
         if master_detail and not finished_material and master_detail.finished_material_id:
             cleaned_data["finished_material"] = master_detail.finished_material
@@ -4000,11 +4265,14 @@ class DyeingPurchaseOrderItemForm(forms.ModelForm):
         cleaned_data["expected_output_qty"] = total_qty - (total_qty * loss_percent / Decimal("100"))
         cleaned_data["line_final_amount"] = total_qty * rate
 
-        if not cleaned_data.get("greige_name") and source_item:
-            cleaned_data["greige_name"] = (
-                source_item.fabric_name
-                or (source_item.material.name if source_item.material_id else "")
-            )
+        if not cleaned_data.get("greige_name"):
+            if linked_greige_material:
+                cleaned_data["greige_name"] = linked_greige_material.name or ""
+            elif source_item:
+                cleaned_data["greige_name"] = (
+                    source_item.fabric_name
+                    or (source_item.material.name if source_item.material_id else "")
+                )
 
         return cleaned_data
 
@@ -4015,6 +4283,7 @@ DyeingPurchaseOrderItemFormSet = inlineformset_factory(
     form=DyeingPurchaseOrderItemForm,
     fields=[
         "source_greige_po_item",
+        "linked_greige_material",
         "greige_name",
         "dyeing_master_detail",
         "finished_material",
@@ -4350,21 +4619,43 @@ class ReadyPurchaseOrderItemForm(forms.ModelForm):
     class Meta:
         model = ReadyPurchaseOrderItem
         fields = [
+            "source_dyeing_po_item",
             "finished_material",
             "fabric_name",
             "dyeing_name",
             "unit",
             "quantity",
+            "rate",
+            "final_amount",
+            "value",
+            "count",
+            "gsm",
+            "dia",
+            "gauge",
+            "rolls",
+            "sl",
+            "hsn_code",
             "remark",
         ]
         widgets = {
+            "source_dyeing_po_item": forms.HiddenInput(),
             "finished_material": forms.Select(),
             "fabric_name": forms.TextInput(attrs={
                 "placeholder": "Auto from selected material",
                 "readonly": "readonly",
             }),
-            "dyeing_name": forms.TextInput(attrs={"placeholder": "Enter process / dyeing reference"}),
+            "dyeing_name": forms.TextInput(attrs={"placeholder": "Dyeing / process"}),
             "quantity": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "0.00"}),
+            "rate": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "0.00"}),
+            "final_amount": forms.NumberInput(attrs={"step": "0.01", "readonly": "readonly", "placeholder": "0.00"}),
+            "value": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "0"}),
+            "count": forms.TextInput(attrs={"placeholder": "Count"}),
+            "gsm": forms.TextInput(attrs={"placeholder": "GSM"}),
+            "dia": forms.TextInput(attrs={"placeholder": "Dia"}),
+            "gauge": forms.TextInput(attrs={"placeholder": "Gauge"}),
+            "rolls": forms.TextInput(attrs={"placeholder": "Rolls"}),
+            "sl": forms.TextInput(attrs={"placeholder": "S/L"}),
+            "hsn_code": forms.TextInput(attrs={"placeholder": "HSN code"}),
             "remark": forms.TextInput(attrs={"placeholder": "Enter remark"}),
         }
 
@@ -4373,6 +4664,12 @@ class ReadyPurchaseOrderItemForm(forms.ModelForm):
 
         material_qs = _ready_finished_material_queryset(user)
         self.fields["finished_material"].queryset = material_qs
+        self.fields["source_dyeing_po_item"].required = False
+        self.fields["source_dyeing_po_item"].queryset = (
+            DyeingPurchaseOrderItem.objects.filter(po__owner=user)
+            if user else DyeingPurchaseOrderItem.objects.none()
+        )
+        self.fields["source_dyeing_po_item"].widget = forms.HiddenInput()
 
         current_unit = (self.initial.get("unit") or getattr(self.instance, "unit", "") or "").strip()
         if self.is_bound:
@@ -4384,12 +4681,29 @@ class ReadyPurchaseOrderItemForm(forms.ModelForm):
         self.fields["unit"].choices = unit_choices
         self.fields["unit"].widget = forms.Select(choices=unit_choices)
 
-        self.fields["finished_material"].required = False
-        self.fields["fabric_name"].required = False
-        self.fields["dyeing_name"].required = False
-        self.fields["unit"].required = False
-        self.fields["quantity"].required = False
-        self.fields["remark"].required = False
+        for field_name in [
+            "source_dyeing_po_item",
+            "finished_material",
+            "fabric_name",
+            "dyeing_name",
+            "unit",
+            "quantity",
+            "rate",
+            "final_amount",
+            "value",
+            "count",
+            "gsm",
+            "dia",
+            "gauge",
+            "rolls",
+            "sl",
+            "hsn_code",
+            "remark",
+        ]:
+            self.fields[field_name].required = False
+
+        self.fields["final_amount"].widget.attrs.update({"readonly": "readonly"})
+        _mark_large_selects_for_search(self)
 
         if not self.is_bound:
             instance_name = (getattr(self.instance, "fabric_name", "") or "").strip()
@@ -4418,9 +4732,22 @@ class ReadyPurchaseOrderItemForm(forms.ModelForm):
         finished_material = cleaned_data.get("finished_material")
         fabric_name = _compact_spaces(cleaned_data.get("fabric_name"))
         dyeing_name = _compact_spaces(cleaned_data.get("dyeing_name"))
-        quantity = cleaned_data.get("quantity")
-        remark = _compact_spaces(cleaned_data.get("remark"))
         unit = (cleaned_data.get("unit") or "").strip()
+        quantity = cleaned_data.get("quantity")
+        rate = cleaned_data.get("rate")
+        value = cleaned_data.get("value")
+        remark = _compact_spaces(cleaned_data.get("remark"))
+
+        spec_values = [
+            value,
+            cleaned_data.get("count"),
+            cleaned_data.get("gsm"),
+            cleaned_data.get("dia"),
+            cleaned_data.get("gauge"),
+            cleaned_data.get("rolls"),
+            cleaned_data.get("sl"),
+            cleaned_data.get("hsn_code"),
+        ]
 
         has_any_data = any([
             finished_material,
@@ -4428,7 +4755,9 @@ class ReadyPurchaseOrderItemForm(forms.ModelForm):
             dyeing_name,
             unit,
             quantity,
+            rate,
             remark,
+            *spec_values,
         ])
 
         if not has_any_data:
@@ -4436,6 +4765,7 @@ class ReadyPurchaseOrderItemForm(forms.ModelForm):
             cleaned_data["dyeing_name"] = ""
             cleaned_data["remark"] = ""
             cleaned_data["unit"] = ""
+            cleaned_data["final_amount"] = Decimal("0")
             return cleaned_data
 
         if not finished_material:
@@ -4456,10 +4786,29 @@ class ReadyPurchaseOrderItemForm(forms.ModelForm):
         elif quantity <= 0:
             self.add_error("quantity", "Quantity must be greater than 0.")
 
+        if rate in (None, ""):
+            rate = Decimal("0")
+            cleaned_data["rate"] = rate
+        elif rate < 0:
+            self.add_error("rate", "Rate cannot be negative.")
+
+        if value not in (None, "") and value < 0:
+            self.add_error("value", "Value cannot be negative.")
+
+        quantity = cleaned_data.get("quantity") or Decimal("0")
+        rate = cleaned_data.get("rate") or Decimal("0")
+        cleaned_data["final_amount"] = (quantity * rate).quantize(Decimal("0.01"))
         cleaned_data["fabric_name"] = _compact_spaces(cleaned_data.get("fabric_name"))
         cleaned_data["dyeing_name"] = dyeing_name
         cleaned_data["remark"] = remark
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.final_amount = (instance.quantity or Decimal("0")) * (instance.rate or Decimal("0"))
+        if commit:
+            instance.save()
+        return instance
 
 
 class BaseReadyPurchaseOrderItemFormSet(BaseInlineFormSet):
@@ -4467,7 +4816,7 @@ class BaseReadyPurchaseOrderItemFormSet(BaseInlineFormSet):
         super().clean()
 
         seen_rows = set()
-        has_active_row = False
+        active_row_count = 0
 
         for form in self.forms:
             if not hasattr(form, "cleaned_data"):
@@ -4482,21 +4831,42 @@ class BaseReadyPurchaseOrderItemFormSet(BaseInlineFormSet):
             dyeing_name = (form.cleaned_data.get("dyeing_name") or "").strip().lower()
             unit = (form.cleaned_data.get("unit") or "").strip().lower()
             quantity = form.cleaned_data.get("quantity")
+            rate = form.cleaned_data.get("rate")
+            value = form.cleaned_data.get("value")
             remark = (form.cleaned_data.get("remark") or "").strip()
 
-            has_any_data = any([finished_material_id, fabric_name, dyeing_name, unit, quantity, remark])
+            has_any_data = any([
+                finished_material_id,
+                fabric_name,
+                dyeing_name,
+                unit,
+                quantity,
+                rate,
+                value,
+                form.cleaned_data.get("count"),
+                form.cleaned_data.get("gsm"),
+                form.cleaned_data.get("dia"),
+                form.cleaned_data.get("gauge"),
+                form.cleaned_data.get("rolls"),
+                form.cleaned_data.get("sl"),
+                form.cleaned_data.get("hsn_code"),
+                remark,
+            ])
             if not has_any_data:
                 continue
 
-            has_active_row = True
+            active_row_count += 1
 
             duplicate_key = (finished_material_id or fabric_name, dyeing_name, unit)
             if (finished_material_id or fabric_name) and duplicate_key in seen_rows:
                 form.add_error("finished_material", "Duplicate ready item row.")
             seen_rows.add(duplicate_key)
 
-        if not has_active_row:
-            raise forms.ValidationError("Add at least one ready item row.")
+        if active_row_count > 1:
+            raise forms.ValidationError("Only one ready item row is allowed in Ready PO details.")
+
+        if not active_row_count:
+            raise forms.ValidationError("Fill one ready item row.")
 
 
 ReadyPurchaseOrderItemFormSet = inlineformset_factory(
@@ -4505,14 +4875,27 @@ ReadyPurchaseOrderItemFormSet = inlineformset_factory(
     form=ReadyPurchaseOrderItemForm,
     formset=BaseReadyPurchaseOrderItemFormSet,
     fields=[
+        "source_dyeing_po_item",
         "finished_material",
         "fabric_name",
         "dyeing_name",
         "unit",
         "quantity",
+        "rate",
+        "final_amount",
+        "value",
+        "count",
+        "gsm",
+        "dia",
+        "gauge",
+        "rolls",
+        "sl",
+        "hsn_code",
         "remark",
     ],
     extra=1,
+    max_num=1,
+    validate_max=True,
     can_delete=True,
 )
 
@@ -4584,6 +4967,7 @@ class DyeingMaterialLinkForm(forms.ModelForm):
             Material.objects
             .filter(Q(owner=user) | Q(owner__isnull=True), material_kind="greige", is_active=True)
             .select_related("material_type")
+            .only("id", "name", "material_kind", "owner_id", "is_active", "material_type_id", "material_type__name")
             .order_by("name")
             if user else Material.objects.none()
         )
@@ -4596,6 +4980,11 @@ class DyeingMaterialLinkForm(forms.ModelForm):
 
         self.fields["material"].queryset = material_qs
         self.fields["material"].empty_label = "Select Material"
+
+        self.fields["is_active"].required = False
+        self.fields["is_active"].initial = True
+        if not self.instance.pk:
+            self.initial["is_active"] = True
 
     def clean(self):
         cleaned_data = super().clean()
@@ -4618,6 +5007,10 @@ class DyeingMaterialLinkForm(forms.ModelForm):
 
         if material and material_type and getattr(material, "material_type_id", None) != material_type.id:
             self.add_error("material", "Selected material does not belong to selected material type.")
+
+        active_key = self.add_prefix("is_active")
+        if self.is_bound and active_key not in self.data and "is_active" not in self.data:
+            cleaned_data["is_active"] = True
 
         if self.user is not None and vendor and material:
             qs = DyeingMaterialLink.objects.filter(
@@ -4648,6 +5041,7 @@ class DyeingMaterialLinkDetailForm(forms.ModelForm):
             "is_active",
         ]
         widgets = {
+            "source_dyeing_po_item": forms.HiddenInput(),
             "finished_material": forms.Select(),
             "dyeing_type": forms.Select(),
             "dyeing_name": forms.TextInput(attrs={
@@ -4680,7 +5074,8 @@ class DyeingMaterialLinkDetailForm(forms.ModelForm):
 
         self.fields["finished_material"].required = True
 
-        # ✅ Important: new rows should be active by default
+        # Important: the current UI does not show an Active checkbox, so keep rows active.
+        self.fields["is_active"].required = False
         self.fields["is_active"].initial = True
         if not self.instance.pk:
             self.initial["is_active"] = True
@@ -4692,7 +5087,7 @@ class DyeingMaterialLinkDetailForm(forms.ModelForm):
                 Q(owner=self.user) | Q(owner__isnull=True)
             )
 
-        self.fields["finished_material"].queryset = finished_qs.order_by("name")
+        self.fields["finished_material"].queryset = finished_qs.only("id", "name", "material_kind", "owner_id", "is_active").order_by("name")
 
     def clean_finished_material(self):
         finished_material = self.cleaned_data.get("finished_material")
@@ -4709,6 +5104,13 @@ class DyeingMaterialLinkDetailForm(forms.ModelForm):
                 raise forms.ValidationError("Selected finished material is not available for this user.")
 
         return finished_material
+
+    def clean(self):
+        cleaned_data = super().clean()
+        active_key = self.add_prefix("is_active")
+        if self.is_bound and active_key not in self.data and "is_active" not in self.data:
+            cleaned_data["is_active"] = True
+        return cleaned_data
 
     def clean_dyeing_name(self):
         value = (self.cleaned_data.get("dyeing_name") or "").strip()
@@ -4849,12 +5251,12 @@ class BOMForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if user:
-            self.fields["catalogue"].queryset = Catalogue.objects.filter(owner=user, is_active=True).order_by("name")
-            self.fields["brand"].queryset = Brand.objects.filter(owner=user, is_active=True).order_by("name")
-            self.fields["category"].queryset = Category.objects.filter(owner=user, is_active=True).order_by("name")
-            self.fields["main_category"].queryset = MainCategory.objects.filter(owner=user).order_by("name")
-            self.fields["sub_category"].queryset = SubCategory.objects.filter(owner=user).select_related("main_category").order_by("main_category__name", "name")
-            self.fields["pattern_type"].queryset = PatternType.objects.filter(owner=user).order_by("name")
+            self.fields["catalogue"].queryset = Catalogue.objects.filter(owner=user, is_active=True).only("id", "name", "owner_id", "is_active").order_by("name")
+            self.fields["brand"].queryset = Brand.objects.filter(owner=user, is_active=True).only("id", "name", "owner_id", "is_active").order_by("name")
+            self.fields["category"].queryset = Category.objects.filter(owner=user, is_active=True).only("id", "name", "owner_id", "is_active").order_by("name")
+            self.fields["main_category"].queryset = MainCategory.objects.filter(owner=user).only("id", "name", "owner_id").order_by("name")
+            self.fields["sub_category"].queryset = SubCategory.objects.filter(owner=user).select_related("main_category").only("id", "name", "owner_id", "main_category_id", "main_category__name").order_by("main_category__name", "name")
+            self.fields["pattern_type"].queryset = PatternType.objects.filter(owner=user).only("id", "name", "owner_id").order_by("name")
         else:
             self.fields["catalogue"].queryset = Catalogue.objects.none()
             self.fields["brand"].queryset = Brand.objects.none()
@@ -4889,6 +5291,7 @@ class BOMForm(forms.ModelForm):
         self.fields["main_category"].empty_label = "Select main category"
         self.fields["sub_category"].empty_label = "Select sub category"
         self.fields["pattern_type"].empty_label = "Select pattern type"
+        _mark_large_selects_for_search(self)
 
     def clean_bom_code(self):
         value = (self.cleaned_data.get("bom_code") or "").strip().upper()
@@ -5050,12 +5453,13 @@ class BOMMaterialItemForm(forms.ModelForm):
                 is_active=True,
             )
             .select_related("material_type")
+            .only("id", "name", "material_kind", "owner_id", "is_active", "material_type_id", "material_type__name")
             .order_by("name")
             if user else Material.objects.none()
         )
 
         self.fields["unit"].queryset = (
-            MaterialUnit.objects.filter(owner=user).order_by("name")
+            MaterialUnit.objects.filter(owner=user).only("id", "name", "owner_id").order_by("name")
             if user else MaterialUnit.objects.none()
         )
 
@@ -5131,11 +5535,11 @@ class BOMAccessoryItemForm(forms.ModelForm):
         self.user = user
 
         self.fields["accessory"].queryset = (
-            Accessory.objects.filter(owner=user).order_by("name")
+            Accessory.objects.filter(owner=user).only("id", "name", "owner_id", "default_unit_id").order_by("name")
             if user else Accessory.objects.none()
         )
         self.fields["unit"].queryset = (
-            MaterialUnit.objects.filter(owner=user).order_by("name")
+            MaterialUnit.objects.filter(owner=user).only("id", "name", "owner_id").order_by("name")
             if user else MaterialUnit.objects.none()
         )
 
@@ -6282,7 +6686,7 @@ class ProgramStartFabricForm(forms.ModelForm):
             .order_by("name")
             if user else Material.objects.none()
         )
-        self.fields["unit"].queryset = MaterialUnit.objects.filter(owner=user).order_by("name") if user else MaterialUnit.objects.none()
+        self.fields["unit"].queryset = MaterialUnit.objects.filter(owner=user).only("id", "name", "owner_id").order_by("name") if user else MaterialUnit.objects.none()
         self.fields["material"].required = False
         self.fields["unit"].required = False
 class ProgramStartSizeForm(forms.ModelForm):

@@ -994,9 +994,21 @@
                     <div class="yp-grid yp-source-grid">
                       <div class="yp-field">
                         <label>Inward Number</label>
-                        <div class="yp-static-value">
-                          {% if selected_source_inward %}{{ selected_source_inward.inward_number }}{% else %}No inward selected{% endif %}
-                        </div>
+                        {% if source_greige_po and source_inwards %}
+                          <select id="id_source_greige_inward" name="source_greige_inward" class="form-select" data-source-inward-select>
+                            <option value="">Select source inward</option>
+                            {% for inward in source_inwards %}
+                              <option value="{{ inward.pk }}" {% if selected_source_inward and selected_source_inward.pk == inward.pk %}selected{% endif %}>
+                                {{ inward.inward_number }}{% if inward.inward_date %} · {{ inward.inward_date|date:"d-m-Y" }}{% endif %}
+                              </option>
+                            {% endfor %}
+                          </select>
+                        {% elif selected_source_inward %}
+                          <input type="hidden" name="source_greige_inward" value="{{ selected_source_inward.pk }}">
+                          <div class="yp-static-value">{{ selected_source_inward.inward_number }}</div>
+                        {% else %}
+                          <div class="yp-static-value">No inward selected</div>
+                        {% endif %}
                       </div>
 
                       <div class="yp-field">
@@ -1038,7 +1050,7 @@
                   </div>
 
                   <div class="yp-items-toolbar">
-                    <div class="yp-items-caption">Select source greige item, then finished material and linked dyeing master.</div>
+                    <div class="yp-items-caption">Select linked greige material, then finished material and dyeing process.</div>
                   </div>
 
                   <div id="poRows" class="yp-lines">
@@ -1060,13 +1072,19 @@
 
                       <div class="yp-row-body">
                         <div class="yp-row-main">
-                          <div class="yp-field">
+                          <div class="yp-field yp-hidden" data-system-source-field>
                             <label>Source Greige Item</label>
                             {{ item_form.source_greige_po_item }}
                             {% for err in item_form.source_greige_po_item.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
                           </div>
 
                           <div class="yp-field">
+                            <label>Greige Material</label>
+                            {{ item_form.linked_greige_material }}
+                            {% for err in item_form.linked_greige_material.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
+                          </div>
+
+                          <div class="yp-field yp-hidden" data-system-greige-name-field>
                             <label>Greige Name</label>
                             {{ item_form.greige_name }}
                             {% for err in item_form.greige_name.errors %}<div class="yp-err">{{ err }}</div>{% endfor %}
@@ -1204,8 +1222,9 @@
 
                       <div class="yp-row-body">
                         <div class="yp-row-main">
-                          <div class="yp-field"><label>Source Greige Item</label>{{ item_form.source_greige_po_item }}</div>
-                          <div class="yp-field"><label>Greige Name</label>{{ item_form.greige_name }}</div>
+                          <div class="yp-field yp-hidden" data-system-source-field><label>Source Greige Item</label>{{ item_form.source_greige_po_item }}</div>
+                          <div class="yp-field"><label>Greige Material</label>{{ item_form.linked_greige_material }}</div>
+                          <div class="yp-field yp-hidden" data-system-greige-name-field><label>Greige Name</label>{{ item_form.greige_name }}</div>
                           <div class="yp-field"><label>Finished Material</label>{{ item_form.finished_material }}</div>
                           <div class="yp-field"><label>Dyeing Master</label>{{ item_form.dyeing_master_detail }}</div>
                         </div>
@@ -1410,7 +1429,13 @@ const sourceItemMap = sourceItemMapEl ? JSON.parse(sourceItemMapEl.textContent) 
 const greigeItemMaterialMap = greigeItemMaterialMapEl ? JSON.parse(greigeItemMaterialMapEl.textContent) : {};
 
     const allMasters = Object.values(dyeingMasterMap);
+    const sourceVendorId = "{{ source_vendor_id|default:''|escapejs }}";
+    const sourceVendorName = "{{ source_vendor_name|default:''|escapejs }}";
     const vendorEl = document.getElementById("{{ form.vendor.id_for_label }}");
+    const sourcePoEl = document.getElementById("{{ form.source_greige_po.id_for_label|default:'' }}");
+    const sourceInwardEl = document.getElementById("id_source_greige_inward");
+    const existingSourceGreigeId = "{{ source_greige_po.pk|default:'' }}";
+    const dyeingFromGreigeUrlPattern = "{% url 'accounts:dyeingpo_add_from_greige' 0 %}";
 
     const subtotalPreview = document.getElementById("subtotalPreview");
     const totalWeightPreview = document.getElementById("totalWeightPreview");
@@ -1429,8 +1454,99 @@ const greigeItemMaterialMap = greigeItemMaterialMapEl ? JSON.parse(greigeItemMat
       return Number.isFinite(n) ? n : 0;
     }
 
+    function buildDyeingFromGreigeUrl(sourceId) {
+      return dyeingFromGreigeUrlPattern.replace(/0\/?$/, `${sourceId}/`);
+    }
+
+    function redirectToSelectedSource(sourceId, inwardId = "") {
+      if (!sourceId) return;
+      const url = new URL(buildDyeingFromGreigeUrl(sourceId), window.location.origin);
+      if (inwardId) url.searchParams.set("inward", inwardId);
+      window.location.href = url.toString();
+    }
+
     function getSelectedVendorId() {
-      return vendorEl ? (vendorEl.value || "") : "";
+      const selectedVendor = vendorEl ? (vendorEl.value || "") : "";
+      return selectedVendor || sourceVendorId || "";
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+    }
+
+    function getSelectedVendorName() {
+      if (vendorEl) {
+        const opt = vendorEl.options && vendorEl.selectedIndex >= 0 ? vendorEl.options[vendorEl.selectedIndex] : null;
+        const selectedName = normalizeText(opt ? opt.textContent : "");
+        if (selectedName) return selectedName;
+      }
+      return normalizeText(sourceVendorName || "");
+    }
+
+    function masterMatchesVendor(master) {
+      const vendorId = getSelectedVendorId();
+      const vendorName = getSelectedVendorName();
+      if (!vendorId && !vendorName) return false;
+      if (vendorId && String(master.vendor_id || "") === String(vendorId)) return true;
+      if (vendorName && normalizeText(master.vendor_name || master.vendor_name_key || "") === vendorName) return true;
+      return false;
+    }
+
+    function getRowSourceItem(row) {
+      const sourceItemId = getRowSourceItemId(row);
+      return sourceItemId ? (sourceItemMap[String(sourceItemId)] || null) : null;
+    }
+
+    function getRowLinkedGreigeSelect(row) {
+      return row.querySelector('select[name$="-linked_greige_material"]');
+    }
+
+    function getRowLinkedGreigeId(row) {
+      const linkedSelect = getRowLinkedGreigeSelect(row);
+      return linkedSelect ? (linkedSelect.value || "") : "";
+    }
+
+    function getRowLinkedGreigeName(row) {
+      const linkedSelect = getRowLinkedGreigeSelect(row);
+      if (!linkedSelect || !linkedSelect.value) return "";
+      const option = linkedSelect.options[linkedSelect.selectedIndex];
+      return normalizeText(option ? option.textContent : "");
+    }
+
+    function getRowSourceMaterialId(row) {
+      const sourceItemId = getRowSourceItemId(row);
+      if (!sourceItemId) return "";
+      return greigeItemMaterialMap[String(sourceItemId)] || "";
+    }
+
+    function getRowMaterialName(row) {
+      const linkedName = getRowLinkedGreigeName(row);
+      if (linkedName) return linkedName;
+
+      const item = getRowSourceItem(row);
+      if (!item) return "";
+      return normalizeText(item.material_name || item.material_name_key || item.fabric_name || item.fabric_name_key || "");
+    }
+
+    function masterMatchesSource(master, row) {
+      const greigeMaterialId = getRowMaterialId(row);
+      const greigeMaterialName = getRowMaterialName(row);
+
+      if (!greigeMaterialId && !greigeMaterialName) return true;
+      if (greigeMaterialId && String(master.material_id || "") === String(greigeMaterialId)) return true;
+      if (greigeMaterialName && normalizeText(master.link_material_name || master.link_material_name_key || "") === greigeMaterialName) return true;
+      return false;
+    }
+
+    function matchingMastersForRow(row, finishedMaterialId = "") {
+      const vendorMatched = allMasters.filter((master) => masterMatchesVendor(master));
+      const vendorPool = vendorMatched.length ? vendorMatched : allMasters;
+
+      const exactSourceMatches = vendorPool.filter((master) => masterMatchesSource(master, row));
+      const sourcePool = exactSourceMatches.length ? exactSourceMatches : vendorPool;
+
+      if (!finishedMaterialId) return sourcePool;
+      return sourcePool.filter((master) => String(master.finished_material_id || "") === String(finishedMaterialId));
     }
 
     function getRowSourceItemId(row) {
@@ -1439,9 +1555,9 @@ const greigeItemMaterialMap = greigeItemMaterialMapEl ? JSON.parse(greigeItemMat
     }
 
     function getRowMaterialId(row) {
-      const sourceItemId = getRowSourceItemId(row);
-      if (!sourceItemId) return "";
-      return greigeItemMaterialMap[String(sourceItemId)] || "";
+      const linkedGreigeId = getRowLinkedGreigeId(row);
+      if (linkedGreigeId) return linkedGreigeId;
+      return getRowSourceMaterialId(row);
     }
 
     function resetMasterPreview(row) {
@@ -1569,6 +1685,60 @@ if (firmEl) {
 if (firmEl && firmEl.value) {
   rebuildShippingForFirm(firmEl.value);
 }
+    function rebuildLinkedGreigeOptions(row, autoSelectFirst = true) {
+      const linkedSelect = getRowLinkedGreigeSelect(row);
+      if (!linkedSelect) return;
+
+      const currentValue = linkedSelect.value || "";
+      const sourceMaterialId = getRowSourceMaterialId(row);
+
+      linkedSelect.innerHTML = '<option value="">Select Greige Material</option>';
+
+      const materialMap = new Map();
+      allMasters
+        .filter((master) => masterMatchesVendor(master))
+        .forEach((master) => {
+          if (master.material_id) {
+            materialMap.set(
+              String(master.material_id),
+              master.link_material_name || "Greige Material"
+            );
+          }
+        });
+
+      [...materialMap.entries()]
+        .sort((a, b) => String(a[1]).localeCompare(String(b[1])))
+        .forEach(([id, label]) => {
+          const option = document.createElement("option");
+          option.value = id;
+          option.textContent = label;
+          linkedSelect.appendChild(option);
+        });
+
+      if (currentValue && materialMap.has(String(currentValue))) {
+        linkedSelect.value = currentValue;
+      } else if (sourceMaterialId && materialMap.has(String(sourceMaterialId))) {
+        linkedSelect.value = sourceMaterialId;
+      } else if (autoSelectFirst) {
+        const first = [...materialMap.keys()][0];
+        linkedSelect.value = first || "";
+      } else {
+        linkedSelect.value = "";
+      }
+    }
+
+    function applyLinkedGreigeRow(row, overwriteName = false) {
+      const linkedSelect = getRowLinkedGreigeSelect(row);
+      const greigeNameInput = row.querySelector('input[name$="-greige_name"]');
+      if (!linkedSelect || !greigeNameInput || !linkedSelect.value) return;
+
+      const option = linkedSelect.options[linkedSelect.selectedIndex];
+      const label = option ? option.textContent.trim() : "";
+      if (label && (overwriteName || !greigeNameInput.value)) {
+        greigeNameInput.value = label;
+      }
+    }
+
     function rebuildSourceItemOptions(row) {
       const sourceSelect = row.querySelector('select[name$="-source_greige_po_item"]');
       if (!sourceSelect) return;
@@ -1596,25 +1766,33 @@ if (firmEl && firmEl.value) {
       applySourceItemRow(row);
     }
 
+    function syncSourceItemToLinkedGreige(row) {
+      const sourceSelect = row.querySelector('select[name$="-source_greige_po_item"]');
+      const linkedGreigeId = getRowLinkedGreigeId(row);
+      if (!sourceSelect || !linkedGreigeId) return;
+
+      const matchingSource = Object.values(sourceItemMap).find((item) => {
+        return String(item.material_id || "") === String(linkedGreigeId);
+      });
+
+      if (matchingSource && sourceSelect.querySelector(`option[value="${matchingSource.id}"]`)) {
+        sourceSelect.value = matchingSource.id;
+      } else if (!Object.keys(sourceItemMap).length) {
+        sourceSelect.value = "";
+      }
+    }
+
     function buildFinishedMaterialOptions(row, autoSelectFirst = true) {
       const finishedMaterialSelect = row.querySelector('select[name$="-finished_material"]');
       if (!finishedMaterialSelect) return;
 
       const currentValue = finishedMaterialSelect.value || "";
-      const vendorId = getSelectedVendorId();
-
       finishedMaterialSelect.innerHTML = '<option value="">Select Finished Material</option>';
-
-      if (!vendorId) {
-        finishedMaterialSelect.value = "";
-        return;
-      }
 
       const materialMap = new Map();
 
-      allMasters.forEach((master) => {
-        const vendorMatch = String(master.vendor_id || "") === String(vendorId);
-        if (vendorMatch && master.finished_material_id) {
+      matchingMastersForRow(row).forEach((master) => {
+        if (master.finished_material_id) {
           materialMap.set(
             String(master.finished_material_id),
             master.finished_material_name || "Finished Material"
@@ -1647,27 +1825,22 @@ if (firmEl && firmEl.value) {
       if (!masterSelect) return;
 
       const currentValue = masterSelect.value || "";
-      const vendorId = getSelectedVendorId();
       const finishedMaterialId = finishedMaterialSelect ? (finishedMaterialSelect.value || "") : "";
 
       masterSelect.innerHTML = '<option value="">Select Dyeing Master</option>';
 
-      if (!vendorId || !finishedMaterialId) {
+      if (!finishedMaterialId) {
         masterSelect.value = "";
         resetMasterPreview(row);
         return;
       }
 
-      const filteredMasters = allMasters.filter((master) => {
-        const vendorMatch = String(master.vendor_id || "") === String(vendorId);
-        const finishedMaterialMatch = String(master.finished_material_id || "") === String(finishedMaterialId);
-        return vendorMatch && finishedMaterialMatch;
-      });
+      const filteredMasters = matchingMastersForRow(row, finishedMaterialId);
 
       filteredMasters.forEach((master) => {
         const option = document.createElement("option");
         option.value = master.id;
-        option.textContent = `${master.dyeing_name || "-"} | ${master.dyeing_type || "-"} | ${master.finished_material_name || "-"}`;
+        option.textContent = `${master.dyeing_name || "-"} | ${master.dyeing_type || "-"}`;
         masterSelect.appendChild(option);
       });
 
@@ -1695,7 +1868,7 @@ if (firmEl && firmEl.value) {
       const selectedOption = sourceSelect.options[sourceSelect.selectedIndex];
 
       if (!sourceItemId) {
-        if (greigeNameInput) greigeNameInput.value = "";
+        if (greigeNameInput && !getRowLinkedGreigeId(row)) greigeNameInput.value = "";
         return;
       }
 
@@ -1741,7 +1914,14 @@ if (firmEl && firmEl.value) {
         return;
       }
 
-      if (vendorId && String(selected.vendor_id || "") !== String(vendorId)) {
+      if (!masterMatchesVendor(selected)) {
+        masterSelect.value = "";
+        resetMasterPreview(row);
+        refreshTotals();
+        return;
+      }
+
+      if (!masterMatchesSource(selected, row)) {
         masterSelect.value = "";
         resetMasterPreview(row);
         refreshTotals();
@@ -1790,6 +1970,7 @@ if (firmEl && firmEl.value) {
       const expectedOutput = row.querySelector('input[name$="-expected_output_qty"]');
       const lineFinal = row.querySelector('input[name$="-line_final_amount"]');
       const sourceSelect = row.querySelector('select[name$="-source_greige_po_item"]');
+      const linkedGreigeSelect = getRowLinkedGreigeSelect(row);
       const masterSelect = row.querySelector('select[name$="-dyeing_master_detail"]');
       const finishedMaterialSelect = row.querySelector('select[name$="-finished_material"]');
 
@@ -1798,7 +1979,10 @@ if (firmEl && firmEl.value) {
       if (lineFinal) lineFinal.setAttribute("readonly", "readonly");
 
 rebuildSourceItemOptions(row);
+rebuildLinkedGreigeOptions(row, true);
+syncSourceItemToLinkedGreige(row);
 applySourceItemRow(row);
+applyLinkedGreigeRow(row, true);
 buildFinishedMaterialOptions(row, true);
 buildMasterOptions(row, true);
 applyDyeingMasterRow(row);
@@ -1812,7 +1996,26 @@ applyDyeingMasterRow(row);
 
         resetMasterPreview(row);
         rebuildSourceItemOptions(row);
+        rebuildLinkedGreigeOptions(row, true);
+        syncSourceItemToLinkedGreige(row);
         applySourceItemRow(row);
+        applyLinkedGreigeRow(row, true);
+        buildFinishedMaterialOptions(row, true);
+        buildMasterOptions(row, true);
+        applyDyeingMasterRow(row);
+      });
+
+      linkedGreigeSelect?.addEventListener("change", () => {
+        const finishedInput = row.querySelector('select[name$="-finished_material"]');
+        const masterInput = row.querySelector('select[name$="-dyeing_master_detail"]');
+
+        if (finishedInput) finishedInput.value = "";
+        if (masterInput) masterInput.value = "";
+
+        resetMasterPreview(row);
+        syncSourceItemToLinkedGreige(row);
+        applySourceItemRow(row);
+        applyLinkedGreigeRow(row, true);
         buildFinishedMaterialOptions(row, true);
         buildMasterOptions(row, true);
         applyDyeingMasterRow(row);
@@ -1845,7 +2048,10 @@ applyDyeingMasterRow(row);
 
         resetMasterPreview(row);
         rebuildSourceItemOptions(row);
+        rebuildLinkedGreigeOptions(row, true);
+        syncSourceItemToLinkedGreige(row);
         applySourceItemRow(row);
+        applyLinkedGreigeRow(row, true);
         buildFinishedMaterialOptions(row, true);
         buildMasterOptions(row, true);
         applyDyeingMasterRow(row);
@@ -1867,19 +2073,39 @@ applyDyeingMasterRow(row);
       refreshTotals();
     });
 
+sourcePoEl?.addEventListener("change", () => {
+  const sourceId = sourcePoEl.value || "";
+  if (sourceId && sourceId !== existingSourceGreigeId) {
+    redirectToSelectedSource(sourceId);
+  }
+});
+
+sourceInwardEl?.addEventListener("change", () => {
+  const inwardId = sourceInwardEl.value || "";
+  const sourceId = existingSourceGreigeId || (sourcePoEl ? sourcePoEl.value : "");
+  if (sourceId) {
+    redirectToSelectedSource(sourceId, inwardId);
+  }
+});
+
 vendorEl?.addEventListener("change", () => {
   rowsWrap.querySelectorAll("[data-row]").forEach((row) => {
     if (row.style.display === "none") return;
 
     const finishedInput = row.querySelector('select[name$="-finished_material"]');
+    const linkedInput = getRowLinkedGreigeSelect(row);
     const masterInput = row.querySelector('select[name$="-dyeing_master_detail"]');
 
+    if (linkedInput) linkedInput.value = "";
     if (finishedInput) finishedInput.value = "";
     if (masterInput) masterInput.value = "";
 
     resetMasterPreview(row);
     rebuildSourceItemOptions(row);
+    rebuildLinkedGreigeOptions(row, true);
+    syncSourceItemToLinkedGreige(row);
     applySourceItemRow(row);
+    applyLinkedGreigeRow(row, true);
     buildFinishedMaterialOptions(row, true);
     buildMasterOptions(row, true);
     applyDyeingMasterRow(row);

@@ -39,6 +39,7 @@ urlpatterns = [
     path("po/dyeing/<int:pk>/pdf/", views.dyeingpo_pdf, name="dyeingpo_pdf"),
     path("po/dyeing/<int:pk>/inward/", views.dyeingpo_inward, name="dyeingpo_inward"),
     path("po/dyeing/inwards/<int:pk>/edit/", views.dyeing_inward_edit, name="dyeing_inward_edit"),
+    path("po/dyeing/inwards/<int:pk>/delete/", views.dyeing_inward_delete, name="dyeing_inward_delete"),
     path("po/dyeing/inwards/", views.dyeing_inward_tracker, name="dyeing_inward_tracker"),
     path("po/dyeing/<int:pk>/generate-ready/", views.generate_ready_po_from_dyeing, name="generate_ready_po_from_dyeing"),
 

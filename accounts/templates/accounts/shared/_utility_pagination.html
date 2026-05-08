@@ -1,0 +1,35 @@
+{% if paginator and paginator.count > page_size %}
+<div class="ut-pager" data-utility-pager>
+  <div class="ut-pager__summary">
+    Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ paginator.count }} records
+  </div>
+
+  <div class="ut-pager__sizes" aria-label="Rows per page">
+    <span>Rows</span>
+    {% for size in page_sizes %}
+      <a class="ut-pager__size{% if page_size == size %} is-active{% endif %}"
+         href="?per_page={{ size }}{% if page_size_querystring %}&{{ page_size_querystring }}{% endif %}">{{ size }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="ut-pager__nav" aria-label="Pagination">
+    {% if page_obj.has_previous %}
+      <a href="?page=1{% if page_querystring %}&{{ page_querystring }}{% endif %}" aria-label="First page">First</a>
+      <a href="?page={{ page_obj.previous_page_number }}{% if page_querystring %}&{{ page_querystring }}{% endif %}" aria-label="Previous page">Prev</a>
+    {% else %}
+      <span class="is-disabled">First</span>
+      <span class="is-disabled">Prev</span>
+    {% endif %}
+
+    <strong>Page {{ page_obj.number }} / {{ paginator.num_pages }}</strong>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if page_querystring %}&{{ page_querystring }}{% endif %}" aria-label="Next page">Next</a>
+      <a href="?page={{ paginator.num_pages }}{% if page_querystring %}&{{ page_querystring }}{% endif %}" aria-label="Last page">Last</a>
+    {% else %}
+      <span class="is-disabled">Next</span>
+      <span class="is-disabled">Last</span>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

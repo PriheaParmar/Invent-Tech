@@ -179,8 +179,8 @@
   }
   .cost-section-pill{font-size:11px;font-weight:900;color:var(--cost-blue);background:rgba(28,109,216,.08);border:1px solid rgba(28,109,216,.12);border-radius:999px;padding:6px 9px;}
 
-  .cost-table-wrap{overflow:auto;}
-  .cost-table{width:100%;border-collapse:separate;border-spacing:0;min-width:760px;}
+  .cost-table-wrap{overflow:visible;}
+  .cost-table{width:100%;border-collapse:separate;border-spacing:0;min-width:0;}
   .cost-table thead th{
     position:sticky;top:0;z-index:1;
     padding:10px 12px;
@@ -222,7 +222,7 @@
   .snapshot-row span:last-child{font-size:14px;font-weight:950;color:#172033;font-variant-numeric:tabular-nums;}
 
   @media (max-width: 1050px){.cost-grid{grid-template-columns:1fr}.cost-summary{grid-template-columns:repeat(2,minmax(0,1fr));}}
-  @media (max-width: 720px){.cost-page{padding:8px;border-radius:18px}.cost-head{align-items:flex-start;flex-direction:column}.cost-actions{width:100%;justify-content:flex-end}.cost-summary{grid-template-columns:1fr}.cost-body{padding:10px}.cost-title{font-size:26px}.cost-table{min-width:720px}}
+  @media (max-width: 720px){.cost-page{padding:8px;border-radius:18px}.cost-head{align-items:flex-start;flex-direction:column}.cost-actions{width:100%;justify-content:flex-end}.cost-summary{grid-template-columns:1fr}.cost-body{padding:10px}.cost-title{font-size:26px}.cost-table{min-width:0}}
 
 
 
@@ -298,6 +298,15 @@
     border-bottom-right-radius:12px;
   }
 
+  .cost-table th,
+  .cost-table td{word-break:break-word;}
+  .cost-table th:first-child,.cost-table td:first-child{width:16%;}
+  .cost-table th:nth-child(2),.cost-table td:nth-child(2){width:34%;}
+  .cost-table th:nth-child(3),.cost-table td:nth-child(3),
+  .cost-table th:nth-child(4),.cost-table td:nth-child(4),
+  .cost-table th:nth-child(5),.cost-table td:nth-child(5){width:16%;}
+
+
 </style>
 
 <section class="cost-page">
@@ -310,7 +319,7 @@
           <div class="cost-meta">
             <span class="cost-chip">SKU <strong>{{ program.bom.sku|default:"-" }}</strong></span>
             {% if program.bom.product_name %}<span class="cost-chip">Product <strong>{{ program.bom.product_name }}</strong></span>{% endif %}
-            {% if program.firm %}<span class="cost-chip">Firm <strong>{{ program.firm.name }}</strong></span>{% endif %}
+            {% if program.firm %}<span class="cost-chip">Firm <strong>{{ program.firm.firm_name }}</strong></span>{% endif %}
           </div>
         </div>
         <div class="cost-actions">
